@@ -842,10 +842,16 @@ string DataSet::get_project_type_string(const DataSet::ProjectType& new_project_
     {
         return "ImageClassification";
     }
+    else if (new_project_type == ProjectType::TextClassification)
+    {
+        return "TextClassification";
+    }
     else if(new_project_type == ProjectType::AutoAssociation)
     {
         return "AutoAssociation";
     }
+
+    return "unknown";
 }
 
 
@@ -10614,9 +10620,7 @@ void DataSet::save_data_binary(const string& binary_data_file_name) const
 
     if(regex_search(binary_data_file_name, accent_regex))
     {
-        wstring_convert<codecvt_utf8<wchar_t>> conv;
-        wstring file_name_wide = conv.from_bytes(binary_data_file_name);
-        file.open(file_name_wide, ios::binary);
+        file.open(string_to_wide_string(binary_data_file_name), ios::binary);
     }
     else
     {
@@ -10759,6 +10763,7 @@ void DataSet::save_auto_associative_data_binary(const string& binary_data_file_n
             value = associative_data(j,i);
 
             file.write(reinterpret_cast<char*>(&value), size);
+
         }
     }
 
@@ -10813,9 +10818,7 @@ void DataSet::load_data_binary()
 
     if(regex_search(data_file_name, accent_regex))
     {
-        wstring_convert<codecvt_utf8<wchar_t>> conv;
-        wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide, ios::binary);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }
     else
     {
@@ -14743,9 +14746,7 @@ void DataSet::read_csv_1()
 
     if (std::regex_search(data_file_name, accent_regex))
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }else
     {
         file.open(data_file_name.c_str());
@@ -14991,9 +14992,7 @@ void DataSet::read_csv_2_simple()
 
     if(regex_search(data_file_name, accent_regex))
     {
-        wstring_convert<codecvt_utf8<wchar_t>> conv;
-        wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }else
     {
         file.open(data_file_name.c_str());
@@ -15098,9 +15097,7 @@ void DataSet::read_csv_3_simple()
 
     if (std::regex_search(data_file_name, accent_regex))
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }else
     {
         file.open(data_file_name.c_str());
@@ -15231,9 +15228,7 @@ void DataSet::read_csv_3_language_model()
 
     if (std::regex_search(data_file_name, accent_regex))
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }else
     {
         file.open(data_file_name.c_str());
@@ -15356,9 +15351,7 @@ void DataSet::read_csv_2_complete()
 
     if(regex_search(data_file_name, accent_regex))
     {
-        wstring_convert<codecvt_utf8<wchar_t>> conv;
-        wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }
     else
     {
@@ -15519,9 +15512,7 @@ void DataSet::read_csv_3_complete()
 
     if(regex_search(data_file_name, accent_regex))
     {
-        wstring_convert<codecvt_utf8<wchar_t>> conv;
-        wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
+        file.open(string_to_wide_string(data_file_name), ios::binary);
     }
     else
     {

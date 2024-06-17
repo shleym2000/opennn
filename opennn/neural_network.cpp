@@ -395,6 +395,10 @@ string NeuralNetwork::get_project_type_string() const
     {
         return "ImageClassification";
     }
+    else if (project_type == ProjectType::TextClassification)
+    {
+        return "TextClassification";
+    }
     else if(project_type == ProjectType::TextGeneration)
     {
         return "TextGeneration";
@@ -402,7 +406,9 @@ string NeuralNetwork::get_project_type_string() const
     else if(project_type == ProjectType::AutoAssociation)
     {
         return "AutoAssociation";
-    }        
+    }
+
+    return "unknown";
 }
 
 
@@ -2484,7 +2490,7 @@ string NeuralNetwork::generate_phrase(TextGenerationAlphabet& text_generation_al
 
         input_data = text_generation_alphabet.multiple_one_hot_encode(result.substr(result.length() - first_letters.length()));
 
-    }while(result.length() < length);
+    }while(static_cast<Index>(result.length()) < length);
 
     return result;
 }
