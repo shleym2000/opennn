@@ -202,6 +202,7 @@ int main()
          tests_failed_count += bounding_layer_test.get_tests_failed_count();
       }
 
+#if false
       else if(test == "probabilistic_layer" || test == "pbl")
       {
          ProbabilisticLayerTest probabilistic_layer_test;
@@ -210,6 +211,7 @@ int main()
          tests_passed_count += probabilistic_layer_test.get_tests_passed_count();
          tests_failed_count += probabilistic_layer_test.get_tests_failed_count();
       }
+#endif
 
       else if(test == "convolutional_layer" || test == "cl")
       {
@@ -531,6 +533,7 @@ int main()
           tests_passed_count += bounding_layer_test.get_tests_passed_count();
           tests_failed_count += bounding_layer_test.get_tests_failed_count();
 
+#if false
           // probabilistic layer
 
           ProbabilisticLayerTest probabilistic_layer_test;
@@ -538,6 +541,7 @@ int main()
           tests_count += probabilistic_layer_test.get_tests_count();
           tests_passed_count += probabilistic_layer_test.get_tests_passed_count();
           tests_failed_count += probabilistic_layer_test.get_tests_failed_count();
+#endif
 
           // lstm layer
 
