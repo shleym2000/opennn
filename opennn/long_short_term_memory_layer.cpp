@@ -2184,7 +2184,9 @@ string LongShortTermMemoryLayer::write_activation_function_expression() const
 
 pair<type*, dimensions> LongShortTermMemoryLayerForwardPropagation::get_outputs_pair() const
 {
-    return pair<type*, dimensions>();
+    const Index neurons_number = layer->get_neurons_number();
+
+    return pair<type*, dimensions>(outputs_data, { batch_samples_number, neurons_number });
 }
 
 
@@ -2198,6 +2200,8 @@ void LongShortTermMemoryLayerForwardPropagation::set(const Index& new_batch_samp
     batch_samples_number = new_batch_samples_number;
 
     outputs.resize(batch_samples_number, neurons_number);
+
+    outputs_data = outputs.data();
 
     previous_hidden_state_activations.resize(neurons_number);
     previous_cell_states.resize(neurons_number);
