@@ -13,30 +13,6 @@
 
 // System includes
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <exception>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <limits.h>
-#include <list>
-#include <map>
-#include <random>
-#include <regex>
-#include <regex>
-#include <sstream>
-#include <stdexcept>
-#include <stdio.h>
-#include <stdlib.h>
-=======
->>>>>>> patch-1
-=======
->>>>>>> patch-3
 #include <string>
 
 // OpenNN includes
