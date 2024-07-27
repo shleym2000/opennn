@@ -14,6 +14,7 @@
 // System includes
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -34,6 +35,8 @@
 #include <stdlib.h>
 =======
 >>>>>>> patch-1
+=======
+>>>>>>> patch-3
 #include <string>
 
 // OpenNN includes
