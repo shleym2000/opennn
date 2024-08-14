@@ -17,15 +17,14 @@
 // Eigen includes
 
 #include "config.h"
-//#include "tensors.h"
 #include "word_bag.h"
 
 using namespace std;
 
 namespace opennn
 {
-    Index count_tokens(const string&, const char& = ' ');
-    Tensor<string, 1> get_tokens(const string&, const char& =' ');
+//    Index count_tokens(const string&, const char& = ' ');
+//    Tensor<string, 1> get_tokens(const string&, const char& =' ');
     void fill_tokens(const string&, const string&, Tensor<string, 1>&);
 
     Index count_tokens(const string&, const string&);
@@ -117,7 +116,7 @@ namespace opennn
 
     string multiple_one_hot_decode(const Tensor<type, 2>&);
 
-    Tensor<type, 2> str_to_input(const string&);
+    //Tensor<type, 2> str_to_input(const string&);
 
     // Preprocess methods
 
@@ -283,7 +282,7 @@ namespace opennn
 
 
 
-        void print_tokens(const Tensor<Tensor<string,1>,1>&);
+    void print_tokens(const Tensor<Tensor<string,1>,1>&);
 }
 
 #endif // OPENNNSTRINGS_H
