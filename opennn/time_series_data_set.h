@@ -62,10 +62,13 @@ public:
     Tensor<Index, 1> get_input_time_series_raw_variables_indices() const;
     Tensor<Index, 1> get_target_time_series_raw_variables_indices() const;
 
+    const string& get_time_raw_variable() const;
+
     void set_time_series_data(const Tensor<type, 2>&);
     void set_time_series_raw_variables_number(const Index&);
 
     Tensor<type, 2> get_time_series_raw_variable_data(const Index&) const;
+    const string& get_group_by_column() const;
 
     void set_lags_number(const Index&);
     void set_steps_ahead_number(const Index&);
