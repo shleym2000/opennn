@@ -177,7 +177,7 @@ protected:
 
 
     template <int rank>
-    void linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -186,7 +186,7 @@ protected:
 
 
     template <int rank>
-    void exponential_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void exponential_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = (y > 0).select(y, y.exp() - type(1));
 
@@ -214,7 +214,7 @@ protected:
 
 
     template <int rank>
-    void hard_sigmoid(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void hard_sigmoid(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = ((y*type(0.2) + type(0.5)).cwiseMin(type(2.5)).cwiseMax(type(-2.5))).eval();
 
@@ -226,7 +226,7 @@ protected:
 
 
     template <int rank>
-    void hyperbolic_tangent(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void hyperbolic_tangent(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = y.tanh();
 
@@ -237,7 +237,7 @@ protected:
 
 
     template <int rank>
-    void logistic(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void logistic(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = (type(1) + (-y).exp()).inverse();
 
@@ -248,7 +248,7 @@ protected:
 
 
     template <int rank>
-    void rectified_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void rectified_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = y.cwiseMax(type(0));
 
@@ -259,7 +259,7 @@ protected:
 
 
     template <int rank>
-    void leaky_rectified_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void leaky_rectified_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -267,7 +267,7 @@ protected:
 
 
     template <int rank>
-    void scaled_exponential_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void scaled_exponential_linear(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -301,7 +301,7 @@ protected:
 
 
     template <int rank>
-    void soft_plus(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void soft_plus(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = (type(1) + y.exp()).log();
 
@@ -318,7 +318,7 @@ protected:
 
 
     template <int rank>
-    void soft_sign(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx = Tensor<type, rank>()) const
+    void soft_sign(Tensor<type, rank>& y, Tensor<type, rank>& dy_dx) const
     {
         y.device(*thread_pool_device) = (y / (1 + y.abs())).eval();
 

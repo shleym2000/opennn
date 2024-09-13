@@ -155,7 +155,7 @@ public:
                                Tensor<type, 1>&) const;
 
    void calculate_activations(Tensor<type, 1>&,
-                              Tensor<type, 1>& = Tensor<type, 1>()) const;
+                              Tensor<type, 1>&) const;
 
    void calculate_recurrent_activations(Tensor<type, 1>&) const;
 
