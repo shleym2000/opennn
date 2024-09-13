@@ -696,29 +696,27 @@ void LongShortTermMemoryLayer::calculate_activations(Tensor<type, 1>& activation
 
 void LongShortTermMemoryLayer::calculate_recurrent_activations(Tensor<type, 1>& activations) const
 {
-    Tensor<type, 1> dummy;
-
     switch(recurrent_activation_function)
     {
-    case ActivationFunction::Linear: linear(activations, dummy); return;
+    case ActivationFunction::Linear: linear(activations); return;
 
-    case ActivationFunction::Logistic: logistic(activations, dummy); return;
+    case ActivationFunction::Logistic: logistic(activations); return;
 
-    case ActivationFunction::HyperbolicTangent: hyperbolic_tangent(activations, dummy); return;
+    case ActivationFunction::HyperbolicTangent: hyperbolic_tangent(activations); return;
 
-    case ActivationFunction::RectifiedLinear: rectified_linear(activations, dummy); return;
+    case ActivationFunction::RectifiedLinear: rectified_linear(activations); return;
 
-    case ActivationFunction::ScaledExponentialLinear: scaled_exponential_linear(activations, dummy); return;
+    case ActivationFunction::ScaledExponentialLinear: scaled_exponential_linear(activations); return;
 
-    case ActivationFunction::SoftPlus: soft_plus(activations, dummy); return;
+    case ActivationFunction::SoftPlus: soft_plus(activations); return;
 
-    case ActivationFunction::SoftSign: soft_sign(activations, dummy); return;
+    case ActivationFunction::SoftSign: soft_sign(activations); return;
 
-    case ActivationFunction::HardSigmoid: hard_sigmoid(activations, dummy); return;
+    case ActivationFunction::HardSigmoid: hard_sigmoid(activations); return;
 
-    case ActivationFunction::ExponentialLinear: exponential_linear(activations, dummy); return;
+    case ActivationFunction::ExponentialLinear: exponential_linear(activations); return;
 
-    default: rectified_linear(activations, dummy); return;
+    default: rectified_linear(activations); return;
     }
 }
 

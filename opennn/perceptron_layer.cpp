@@ -417,8 +417,7 @@ void PerceptronLayer::forward_propagate(const Tensor<pair<type*, dimensions>, 1>
     }
     else
     {
-        Tensor<type, 2> dummy;
-        calculate_activations(outputs, dummy);
+        calculate_activations(outputs);
     }
 }
 

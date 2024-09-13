@@ -385,7 +385,7 @@ void ProbabilisticLayer::calculate_activations(const Tensor<type, 2>& combinatio
     {
     case ActivationFunction::Binary: binary(combinations, activations); return;
 
-    case ActivationFunction::Logistic: { Tensor<type, 2> dummy; logistic(activations, dummy); } return;
+    case ActivationFunction::Logistic: logistic(activations); return;
 
     case ActivationFunction::Competitive: competitive(combinations, activations); return;
 

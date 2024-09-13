@@ -318,8 +318,7 @@ void ConvolutionalLayer::forward_propagate(const Tensor<pair<type*, dimensions>,
     }
     else
     {
-        Tensor<float, 4> dummy;
-        calculate_activations(outputs, dummy);
+        calculate_activations(outputs);
     }
 }
 
