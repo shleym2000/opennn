@@ -13,6 +13,7 @@
 
 #include "../opennn/unit_testing.h"
 #include "../opennn/probabilistic_layer_3d.h"
+#include "../opennn/numerical_differentiation.h"
 
 namespace opennn
 {

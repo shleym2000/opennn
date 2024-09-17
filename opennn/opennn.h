@@ -80,6 +80,7 @@
 
 // Utilities
 
+#include "numerical_differentiation.h"
 #include "correlations.h"
 #include "response_optimization.h"
 #include "images.h"

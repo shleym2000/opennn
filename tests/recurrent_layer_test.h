@@ -13,6 +13,7 @@
 
 #include "../opennn/unit_testing.h"
 #include "../opennn/recurrent_layer.h"
+#include "../opennn/numerical_differentiation.h"
 
 namespace opennn
 {
