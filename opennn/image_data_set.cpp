@@ -888,11 +888,10 @@ void ImageDataSet::read_bmp()
 
     const fs::path path = data_path;
 
-    for (const fs::directory_entry& current_directory : fs::directory_iterator(path))
+    for(const fs::directory_entry& current_directory : fs::directory_iterator(path))
     {
-        if (is_directory(current_directory))
+        if(is_directory(current_directory))
             directory_path.emplace_back(current_directory.path().string());
-    }
 
     const Index folders_number = directory_path.size();
 
