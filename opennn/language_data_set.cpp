@@ -2189,7 +2189,7 @@ void LanguageDataSet::write_data_file_wordpiece(ofstream& file,
         
         for(Index j = 0; j < max_context_length + 1; j++)
         {
-            if(j < line_tokens.size() && token_counter < max_context_length + 1)
+            if(j < Index(line_tokens.size()) && token_counter < max_context_length + 1)
             {
                 word = line_tokens[j];
 
@@ -2273,7 +2273,7 @@ void LanguageDataSet::write_data_file_wordpiece(ofstream& file,
 
         for(Index j = 0; j < max_completion_length + 1; j++)
         {
-            if(j < line_tokens.size() && token_counter < max_completion_length + 1)
+            if(j < Index(line_tokens.size()) && token_counter < max_completion_length + 1)
             {
                 word = line_tokens[j];
                 
