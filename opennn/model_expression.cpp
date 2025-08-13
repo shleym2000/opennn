@@ -332,7 +332,7 @@ string ModelExpression::write_subheader_api() const{
         "</p>\n"
         "</div>\n"
         "<h4>\n"
-       "<?php\n\n";
+        "<?php\n\n";
 }
 
 
