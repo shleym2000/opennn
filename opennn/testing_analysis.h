@@ -152,7 +152,7 @@ public:
 
     // Binary classifcation
 
-    Tensor<type, 1> calculate_binary_classification_tests() const;
+    Tensor<type, 1> calculate_binary_classification_tests(const type& = 0.50) const;
 
     void print_binary_classification_tests() const;
 
@@ -253,9 +253,9 @@ public:
 
     // Serialization
 
-    virtual void from_XML(const XMLDocument&);
+    void from_XML(const XMLDocument&);
 
-    virtual void to_XML(XMLPrinter&) const;
+    void to_XML(XMLPrinter&) const;
 
     void save(const filesystem::path&) const;
     void load(const filesystem::path&);
