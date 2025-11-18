@@ -175,12 +175,12 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
         }
 
         const Index current_raw_var_index = correlations_rank_descending[raw_variable_index];
-        const string current_use = dataset->get_raw_variables()[current_raw_var_index].use;
+        const string current_use = dataset->get_raw_variables()[current_raw_var_index].role;
 
         if(current_use == "InputTarget")
-            dataset->set_raw_variable_use(current_raw_var_index, "InputTarget");
+            dataset->set_raw_variable_role(current_raw_var_index, "InputTarget");
         else
-            dataset->set_raw_variable_use(current_raw_var_index, "Input");
+            dataset->set_raw_variable_role(current_raw_var_index, "Input");
 
         const Index input_raw_variables_number = dataset->get_raw_variables_number("Input");
         const Index input_variables_number = dataset->get_variables_number("Input");
@@ -248,10 +248,10 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
             if(display) cout << "Selection failure" << endl;
             selection_failures++;
 
-            if(dataset->get_raw_variables()[current_raw_var_index].use == "InputTarget")
-                dataset->set_raw_variable_use(current_raw_var_index, "Target");
+            if(dataset->get_raw_variables()[current_raw_var_index].role == "InputTarget")
+                dataset->set_raw_variable_role(current_raw_var_index, "Target");
             else
-                dataset->set_raw_variable_use(current_raw_var_index, "None");
+                dataset->set_raw_variable_role(current_raw_var_index, "None");
         }
         else
         {
@@ -319,7 +319,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
         neural_network->set_input_dimensions({ past_time_steps, optimal_processed_variables_number });
 
         if(time_raw_variable_indices.size() == 1)
-            dataset->set_raw_variable_use(time_raw_variable_indices[0], "Time");
+            dataset->set_raw_variable_role(time_raw_variable_indices[0], "Time");
     }
     else
     {
@@ -338,22 +338,22 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     if(time_series_dataset)
     {
-        vector<string> final_input_names;
+        vector<string> final_feature_names;
         const vector<string> base_names = dataset->get_raw_variable_names("Input");
         const Index time_steps = time_series_dataset->get_past_time_steps();
-        final_input_names.reserve(base_names.size() * time_steps);
+        final_feature_names.reserve(base_names.size() * time_steps);
         for(const string& base_name : base_names)
         {
             for(Index j = 0; j < time_steps; j++)
             {
                 string name = (base_name.empty() ? "variable" : base_name) + "_lag" + to_string(j);
-                final_input_names.push_back(name);
+                final_feature_names.push_back(name);
             }
         }
-        neural_network->set_input_names(final_input_names);
+        neural_network->set_feature_names(final_feature_names);
     }
     else
-        neural_network->set_input_names(dataset->get_variable_names("Input"));
+        neural_network->set_feature_names(dataset->get_variable_names("Input"));
 
     if(neural_network->has("Scaling2d"))
     {
