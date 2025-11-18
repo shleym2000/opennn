@@ -121,13 +121,13 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 {
     ostringstream buffer;
 
-    vector<string> input_names;
+    vector<string> feature_names;
     vector<string> output_names;
 
     for(const Dataset::RawVariable& raw_variable : raw_variables)
-        if(raw_variable.use == "Input")
-            input_names.push_back(raw_variable.name);
-        else if(raw_variable.use == "Target")
+        if(raw_variable.role == "Input")
+            feature_names.push_back(raw_variable.name);
+        else if(raw_variable.role == "Target")
             output_names.push_back(raw_variable.name);
 
     vector<string> fixed_output_names = fix_output_names(output_names);
@@ -141,8 +141,8 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 
     buffer << write_comments_c();
 
-    for(size_t i = 0; i < input_names.size(); i++)
-        buffer << "\n// \t " << i << ")  " << input_names[i];
+    for(size_t i = 0; i < feature_names.size(); i++)
+        buffer << "\n// \t " << i << ")  " << feature_names[i];
 
     buffer << "\n \n \n#include <stdio.h>\n"
               "#include <stdlib.h>\n"
@@ -152,7 +152,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 
     for (const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if (raw_var.use != "Input")
+        if (raw_var.role != "Input")
             continue;
 
         if (raw_var.type == Dataset::RawVariableType::Binary || raw_var.type == Dataset::RawVariableType::Categorical)
@@ -203,7 +203,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 
     for (const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if (raw_var.use == "Input")
+        if (raw_var.role == "Input")
         {
             if (raw_var.type == Dataset::RawVariableType::Categorical)
                 for (const string& cat : raw_var.categories)
@@ -253,7 +253,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 
     for(const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if (raw_var.use != "Input")
+        if (raw_var.role != "Input")
             continue;
 
         if (raw_var.type == Dataset::RawVariableType::Categorical)
@@ -302,7 +302,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
     input_index = 0;
     for(const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if (raw_var.use != "Input")
+        if (raw_var.role != "Input")
             continue;
 
         if (raw_var.type == Dataset::RawVariableType::Categorical)
@@ -476,10 +476,10 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
     vector<string> output_names = neural_network->get_output_names();
 
     for(const Dataset::RawVariable& var : raw_variables)
-        if(var.use == "Input")
+        if(var.role == "Input")
             original_inputs.push_back(var.name);
 
-    const vector<string> fixed_input_names = fix_input_names(original_inputs);
+    const vector<string> fixed_feature_names = fix_feature_names(original_inputs);
     const vector<string> fixed_output_names = fix_output_names(output_names);
     const Index inputs_number = original_inputs.size();
     const Index outputs_number = output_names.size();
@@ -509,7 +509,7 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
     buffer << "$params = $_GET;\n\n";
 
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "$" << fixed_input_names[i] << " = isset($params['num" << i << "']) ? floatval($params['num" << i << "']) : 0;\n";
+        buffer << "$" << fixed_feature_names[i] << " = isset($params['num" << i << "']) ? floatval($params['num" << i << "']) : 0;\n";
 
     buffer << "\n// One-hot encoding conversion (do not modify)\n";
 
@@ -524,14 +524,14 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 
         if(var.type == Dataset::RawVariableType::Categorical)
             for(size_t j = 0; j < var.categories.size(); ++j)
-                buffer << "$" << replace_reserved_keywords(var.categories[j]) << " = ($" << fixed_input_names[i] << " == " << j << ") ? 1 : 0;\n";
+                buffer << "$" << replace_reserved_keywords(var.categories[j]) << " = ($" << fixed_feature_names[i] << " == " << j << ") ? 1 : 0;\n";
     }
 
     buffer << "\n";
 
     for(const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if(raw_var.use != "Input")
+        if(raw_var.role != "Input")
             continue;
 
         if(raw_var.type == Dataset::RawVariableType::Binary || raw_var.type == Dataset::RawVariableType::Categorical)
@@ -573,7 +573,7 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 
     for(const Dataset::RawVariable& var : raw_variables)
     {
-        if(var.use == "Input")
+        if(var.role == "Input")
         {
             if(var.type == Dataset::RawVariableType::Categorical)
                 for (const string& cat : var.categories) all_possible_vars.push_back(cat);
@@ -876,20 +876,20 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
     vector<string> found_tokens;
     vector<string> found_mathematical_expressions;
 
-    vector<string> input_names;
+    vector<string> feature_names;
     vector<string> output_names;
 
     for(const Dataset::RawVariable& raw_variable : raw_variables)
-        if(raw_variable.use == "Input")
-            input_names.push_back(raw_variable.name);
-        else if(raw_variable.use == "Target")
+        if(raw_variable.role == "Input")
+            feature_names.push_back(raw_variable.name);
+        else if(raw_variable.role == "Target")
             output_names.push_back(raw_variable.name);
 
 
-    const Index inputs_number = input_names.size();
+    const Index inputs_number = feature_names.size();
     const Index outputs_number = output_names.size();
 
-    vector<string> fixes_input_names = fix_input_names(input_names);
+    vector<string> fixes_feature_names = fix_feature_names(feature_names);
     vector<string> fixes_output_names = fix_output_names(output_names);
 
     string token;
@@ -897,7 +897,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     for (const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if(raw_var.use != "Input")
+        if(raw_var.role != "Input")
             continue;
 
         if(raw_var.type == Dataset::RawVariableType::Binary || raw_var.type == Dataset::RawVariableType::Categorical)
@@ -953,7 +953,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
     buffer << header_javascript();
 
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "\n\t " << i + 1 << ")  " << input_names[i];
+        buffer << "\n\t " << i + 1 << ")  " << feature_names[i];
 
     buffer << subheader_javascript();
 
@@ -970,7 +970,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
         for(size_t k = 0; k < raw_variables.size() && inputs_processed < inputs_number; ++k)
         {
-            if(raw_variables[k].use != "Input")
+            if(raw_variables[k].role != "Input")
                 continue;
 
             const vector<string> raw_variable_categories = raw_variables[k].categories;
@@ -982,18 +982,18 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
                 buffer << "<!-- "<< to_string(input) <<"scaling layer -->" << endl;
                 buffer << "<tr style=\"height:3.5em\">" << endl;
-                buffer << "<td> " << input_names[inputs_processed] << " </td>" << endl;
+                buffer << "<td> " << feature_names[inputs_processed] << " </td>" << endl;
                 buffer << "<td class=\"neural-cell\">" << endl;
 
                 if(min_value==0 && max_value==0)
                 {
-                    buffer << "<input type=\"range\" id=\"" << fixes_input_names[inputs_processed] << "\" value=\"" << min_value << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"" << (max_value - min_value)/100 << "\" onchange=\"updateTextInput1(this.value, '" << fixes_input_names[inputs_processed] << "_text')\" />" << endl;
-                    buffer << "<input class=\"tabla\" type=\"number\" id=\"" << fixes_input_names[inputs_processed] << "_text\" value=\"" << min_value << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_input_names[inputs_processed] << "')\">" << endl;
+                    buffer << "<input type=\"range\" id=\"" << fixes_feature_names[inputs_processed] << "\" value=\"" << min_value << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"" << (max_value - min_value)/100 << "\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[inputs_processed] << "_text')\" />" << endl;
+                    buffer << "<input class=\"tabla\" type=\"number\" id=\"" << fixes_feature_names[inputs_processed] << "_text\" value=\"" << min_value << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[inputs_processed] << "')\">" << endl;
                 }
                 else
                 {
-                    buffer << "<input type=\"range\" id=\"" << fixes_input_names[inputs_processed] << "\" value=\"" << (min_value + max_value)/2 << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"" << (max_value - min_value)/100 << "\" onchange=\"updateTextInput1(this.value, '" << fixes_input_names[inputs_processed] << "_text')\" />" << endl;
-                    buffer << "<input class=\"tabla\" type=\"number\" id=\"" << fixes_input_names[inputs_processed] << "_text\" value=\"" << (min_value + max_value)/2 << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_input_names[inputs_processed] << "')\">" << endl;
+                    buffer << "<input type=\"range\" id=\"" << fixes_feature_names[inputs_processed] << "\" value=\"" << (min_value + max_value)/2 << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"" << (max_value - min_value)/100 << "\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[inputs_processed] << "_text')\" />" << endl;
+                    buffer << "<input class=\"tabla\" type=\"number\" id=\"" << fixes_feature_names[inputs_processed] << "_text\" value=\"" << (min_value + max_value)/2 << "\" min=\"" << min_value << "\" max=\"" << max_value << "\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[inputs_processed] << "')\">" << endl;
                 }
 
                 buffer << "</td>" << endl;
@@ -1009,7 +1009,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
                 buffer << "<!-- 5scaling layer -->" << endl;
                 buffer << "<tr style=\"height:3.5em\">" << endl;
 
-                buffer << "<td> " << input_names[inputs_processed] << " </td>" << endl;
+                buffer << "<td> " << feature_names[inputs_processed] << " </td>" << endl;
 
                 buffer << "<td class=\"neural-cell\">" << endl;
                 buffer << "<select id=\"Select" << categories << "\">" << endl;
@@ -1031,7 +1031,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
                 buffer << "<!-- 5scaling layer -->" << endl;
                 buffer << "<tr style=\"height:3.5em\">" << endl;
 
-                buffer << "<td> " << input_names[inputs_processed] << " </td>" << endl;
+                buffer << "<td> " << feature_names[inputs_processed] << " </td>" << endl;
 
                 buffer << "<td class=\"neural-cell\">" << endl;
                 buffer << "<select id=\"Select" << categories << "\">" << endl;
@@ -1053,7 +1053,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
                 buffer << "<!-- 5scaling layer -->" << endl;
                 buffer << "<tr style=\"height:3.5em\">" << endl;
 
-                buffer << "<td> " << input_names[inputs_processed] << " </td>" << endl;
+                buffer << "<td> " << feature_names[inputs_processed] << " </td>" << endl;
 
                 buffer << "<td class=\"neural-cell\">" << endl;
                 buffer << "<select id=\"Select" << categories << "\">" << endl;
@@ -1079,10 +1079,10 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         for(Index i = 0; i < inputs_number; i++)
             buffer << "<!-- "<< to_string(i) <<"no scaling layer -->" << endl
                    << "<tr style=\"height:3.5em\">" << endl
-                   << "<td> " << input_names[i] << " </td>" << endl
+                   << "<td> " << feature_names[i] << " </td>" << endl
                    << "<td class=\"neural-cell\">" << endl
-                   << "<input type=\"range\" id=\"" << fixes_input_names[i] << "\" value=\"0\" min=\"-1\" max=\"1\" step=\"0.01\" onchange=\"updateTextInput1(this.value, '" << fixes_input_names[i] << "_text')\" />" << endl
-                   << "<input type=\"number\" id=\"" << fixes_input_names[i] << "_text\" value=\"0\" min=\"-1\" max=\"1\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_input_names[i] << "')\">" << endl
+                   << "<input type=\"range\" id=\"" << fixes_feature_names[i] << "\" value=\"0\" min=\"-1\" max=\"1\" step=\"0.01\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[i] << "_text')\" />" << endl
+                   << "<input type=\"number\" id=\"" << fixes_feature_names[i] << "_text\" value=\"0\" min=\"-1\" max=\"1\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[i] << "')\">" << endl
                    << "</td>" << endl
                    << "</tr>\n" << endl;
 
@@ -1178,18 +1178,18 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     for(size_t k = 0; k < raw_variables.size() && inputs_processed < inputs_number; ++k)
     {
-        if(raw_variables[k].use != "Input")
+        if(raw_variables[k].role != "Input")
             continue;
 
         const vector<string> raw_variable_categories = raw_variables[k].categories;
 
         if(raw_variables[k].type == Dataset::RawVariableType::Numeric) // INPUT & NUMERIC
         {
-            buffer << "\t" << "var " << fixes_input_names[inputs_processed] << " = (parseFloat(document.getElementById(\"" << fixes_input_names[inputs_processed] << "_text\").value) || 0); " << endl;
-            buffer << "\t" << "inputs.push(" << fixes_input_names[inputs_processed] << ");" << endl;
+            buffer << "\t" << "var " << fixes_feature_names[inputs_processed] << " = (parseFloat(document.getElementById(\"" << fixes_feature_names[inputs_processed] << "_text\").value) || 0); " << endl;
+            buffer << "\t" << "inputs.push(" << fixes_feature_names[inputs_processed] << ");" << endl;
 
-            variables_input_fixed.push_back(fixes_input_names[inputs_processed]);
-            variables_input.push_back(input_names[inputs_processed]);
+            variables_input_fixed.push_back(fixes_feature_names[inputs_processed]);
+            variables_input.push_back(feature_names[inputs_processed]);
         }
         else if(raw_variables[k].type == Dataset::RawVariableType::Binary)// INPUT & BINARY
         {
@@ -1198,17 +1198,17 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
             buffer << "\t" << "var selectElement" << j << "= document.getElementById('Select" << j << "');" << endl;
             buffer << "\t" << "var selectedValue" << j << "= +selectElement" << j << ".value;" << endl;
 
-            buffer << "\t" << "var " << fixes_input_names[inputs_processed] << "= 0;" << endl;
-            aux_buffer = aux_buffer + "inputs.push(" + fixes_input_names[inputs_processed] + ");" + "\n";
+            buffer << "\t" << "var " << fixes_feature_names[inputs_processed] << "= 0;" << endl;
+            aux_buffer = aux_buffer + "inputs.push(" + fixes_feature_names[inputs_processed] + ");" + "\n";
 
             buffer << "switch (selectedValue" << j << "){" << endl;
 
             buffer << "\t" << "case " << 0 << ":";
-            buffer << "\n" << "\t\t" << fixes_input_names[inputs_processed] << " = " << "0;" << endl;
+            buffer << "\n" << "\t\t" << fixes_feature_names[inputs_processed] << " = " << "0;" << endl;
             buffer << "\tbreak;" << endl;
 
             buffer << "case " << 1 << ":";
-            buffer << "\n" << "\t\t" << fixes_input_names[inputs_processed] << " = " << "1;" << endl;
+            buffer << "\n" << "\t\t" << fixes_feature_names[inputs_processed] << " = " << "1;" << endl;
             buffer << "\tbreak;" << endl;
 
             buffer << "\t" << "default:" << endl;
@@ -1218,8 +1218,8 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
             buffer << aux_buffer << endl;
 
             j += 1;
-            variables_input_fixed.push_back(fixes_input_names[inputs_processed]);
-            variables_input.push_back(input_names[inputs_processed]);
+            variables_input_fixed.push_back(fixes_feature_names[inputs_processed]);
+            variables_input.push_back(feature_names[inputs_processed]);
         }
         else if(raw_variables[k].type == Dataset::RawVariableType::Categorical) // INPUT & CATEGORICAL
         {
@@ -1419,7 +1419,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     vector<string> original_inputs;
 
     for(const Dataset::RawVariable& var : raw_variables)
-        if (var.use == "Input")
+        if (var.role == "Input")
             original_inputs.push_back(var.name);
 
     vector<string> original_outputs = neural_network->get_output_names();
@@ -1445,7 +1445,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     for(const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if(raw_var.use != "Input")
+        if(raw_var.role != "Input")
             continue;
 
         if(raw_var.type == Dataset::RawVariableType::Binary || raw_var.type == Dataset::RawVariableType::Categorical)
@@ -1496,7 +1496,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     for(const Dataset::RawVariable& raw_var : raw_variables)
     {
-        if(raw_var.use == "Input")
+        if(raw_var.role == "Input")
         {
             if(raw_var.type == Dataset::RawVariableType::Categorical)
                 for(const string& cat : raw_var.categories)
@@ -1534,7 +1534,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     Index total_input_vars = 0;
     for(const Dataset::RawVariable& var : raw_variables)
     {
-        if(var.use == "Input")
+        if(var.role == "Input")
         {
             if(var.type == Dataset::RawVariableType::Categorical)
             {
@@ -1560,7 +1560,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     buffer << "\tdef __init__(self):\n"
            << "\t\t" << "self.inputs_number = " << to_string(total_input_vars) << "\n"
-           << "\t\t" << "self.input_names = [" << inputs_list_str << "]\n\n";
+           << "\t\t" << "self.feature_names = [" << inputs_list_str << "]\n\n";
 
     buffer << "\t@staticmethod\n"
            << "\tdef Linear(x):\n"
@@ -1601,7 +1601,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     Index input_idx = 0;
     for(const Dataset::RawVariable& var : raw_variables)
     {
-        if(var.use == "Input")
+        if(var.role == "Input")
         {
             if(var.type == Dataset::RawVariableType::Categorical)
                 for(const string& cat : var.categories)
@@ -1650,7 +1650,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     buffer << "def main():\n"
            << "\n\t# Introduce your input values here\n";
 
-    vector<string> fixed_raw_names = fix_input_names(original_inputs);
+    vector<string> fixed_raw_names = fix_feature_names(original_inputs);
 
     map<string, Dataset::RawVariable> raw_vars_map;
     for(const Dataset::RawVariable& var : raw_variables)
@@ -1816,18 +1816,18 @@ vector<string> ModelExpression::fix_get_expression_outputs(const string& str,
 }
 
 
-vector<string> ModelExpression::fix_input_names(const vector<string>& input_names) const
+vector<string> ModelExpression::fix_feature_names(const vector<string>& feature_names) const
 {
-    const Index inputs_number = input_names.size();
-    vector<string> fixes_input_names(inputs_number);
+    const Index inputs_number = feature_names.size();
+    vector<string> fixes_feature_names(inputs_number);
 
     for(Index i = 0; i < inputs_number; i++)
-        if(input_names[i].empty())
-            fixes_input_names[i] = "input_" + to_string(i);
+        if(feature_names[i].empty())
+            fixes_feature_names[i] = "input_" + to_string(i);
         else
-            fixes_input_names[i] = replace_reserved_keywords(input_names[i]);
+            fixes_feature_names[i] = replace_reserved_keywords(feature_names[i]);
 
-    return fixes_input_names;
+    return fixes_feature_names;
 
 }
 
