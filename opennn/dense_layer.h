@@ -33,6 +33,7 @@ public:
     type get_dropout_rate() const;
 
     bool get_batch_normalization() const;
+
     Tensor<type, 1> get_scales() const;
     Tensor<type, 1> get_offsets() const;
 

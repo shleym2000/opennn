@@ -6,8 +6,8 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef PERCEPTRONLAYER3D_H
-#define PERCEPTRONLAYER3D_H
+#ifndef DENSELAYER3D_H
+#define DENSELAYER3D_H
 
 #include "layer.h"
 

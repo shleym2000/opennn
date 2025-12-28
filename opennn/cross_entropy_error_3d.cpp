@@ -7,6 +7,7 @@
 //   artelnics@artelnics.com
 
 #include "registry.h"
+#include "dataset.h"
 #include "neural_network.h"
 #include "cross_entropy_error_3d.h"
 
@@ -17,39 +18,55 @@ CrossEntropyError3d::CrossEntropyError3d(const NeuralNetwork* new_neural_network
     : LossIndex(new_neural_network, new_dataset)
 {
     name = "CrossEntropyError3d";
-
-    throw runtime_error("CrossEntropyError3d is not yet implemented. Please check back in a future version.");
 }
 
 
 void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
                                                  const ForwardPropagation& forward_propagation,
                                                  BackPropagation& back_propagation) const
-{    
-    /*
-    // Batch
-
-    const Index samples_number = batch.get_samples_number();
-
+{
     const TensorView targets_view = batch.get_target_view();
-
     const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
 
-    // Forward propagation
-
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorMap<Tensor<type, 3>> outputs = tensor_map<3>(outputs_view);
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const Index batch_size = outputs.dimension(0);
+    const Index sequence_length = outputs.dimension(1);
 
-    // Back propagation
+    // 3. Prepare Masking
+    // In sequence tasks, we ignore padding. We assume target 0 is padding if built_mask is used.
+    // If you want to include all tokens, you can skip the mask multiplication.
 
-    Tensor<type, 0>& error = back_propagation.error;
+    back_propagation.mask.device(*device) = (targets != targets.constant(0.0f));
+    const Tensor<bool, 2>& mask = back_propagation.mask;
 
-    error.device(*device)
-        = ((targets * (outputs + epsilon).log() + (type(1) - targets) * ((type(1) - outputs + epsilon).log())).sum()) / type(-samples_number);
+    // 4. Reshape outputs to [Batch, Sequence] to match targets
+    auto outputs_2d = outputs.reshape(array_2(batch_size, sequence_length));
 
-    if(isnan(error())) throw runtime_error("\nError is NAN.");
-*/
+    // 5. Calculate element-wise Binary Cross Entropy:
+    // Loss = -(target * log(output) + (1 - target) * log(1 - output))
+
+    // We reuse the errors member in back_propagation to store element-wise loss
+    Tensor<type, 2>& elementwise_loss = back_propagation.errors;
+
+    elementwise_loss.device(*device) = -(targets * (outputs_2d + epsilon).log() +
+        (targets.constant(1.0f) - targets) * (targets.constant(1.0f) - outputs_2d + epsilon).log());
+
+    // 6. Aggregate Error
+    // Sum only the non-masked (non-padding) elements
+    Tensor<type, 0> total_masked_loss;
+    total_masked_loss.device(*device) = (elementwise_loss * mask.cast<type>()).sum();
+
+    Tensor<type, 0> active_elements;
+    active_elements.device(*device) = mask.cast<type>().sum();
+
+
+    // Average the error over the number of non-padded tokens
+    if (active_elements() > 0.0f)
+        back_propagation.error.device(*device) = total_masked_loss / active_elements();
+    else
+        back_propagation.error.setZero();
 }
 
 
@@ -57,8 +74,59 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
                                                    const ForwardPropagation& forward_propagation,
                                                    BackPropagation& back_propagation) const
 {
-    // @todo
+    const TensorView targets_view = batch.get_target_view();
+    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorMap<Tensor<type, 3>> outputs = tensor_map<3>(outputs_view);
+
+    const Index batch_size = outputs.dimension(0);
+    const Index sequence_length = outputs.dimension(1);
+    const Index vocabulary_size = outputs.dimension(2);
+
+    // 3. Prepare Masking
+    // We assume index 0 is the [PAD] token.
+    // The mask is true for actual words and false for padding.
+    back_propagation.mask.device(*device) = (targets != targets.constant(0.0f));
+    const Tensor<bool, 2>& mask = back_propagation.mask;
+
+    type total_log_loss = 0.0f;
+    Index active_tokens_count = 0;
+
+    // 4. Calculate Cross Entropy Sum
+    // We need to find the probability the model assigned to the *correct* index.
+    // In C++, a nested loop with OpenMP is the most efficient way to handle this 3D indexing.
+
+    #pragma omp parallel for reduction(+:total_log_loss, active_tokens_count)
+    for (Index i = 0; i < batch_size; ++i)
+    {
+        for (Index j = 0; j < sequence_length; ++j)
+        {
+            // Only calculate loss if the token is not padding
+            if (mask(i, j))
+            {
+                const Index target_index = static_cast<Index>(targets(i, j));
+
+                // Safety check for vocabulary bounds
+                if (target_index >= 0 && target_index < vocabulary_size)
+                {
+                    // Loss = -log(probability_of_correct_class)
+                    const type probability = outputs(i, j, target_index);
+                    total_log_loss -= log(probability + epsilon);
+                    active_tokens_count++;
+                }
+            }
+        }
+    }
+
+    // 5. Final Loss Calculation
+    // Average the loss across all non-padding tokens in the batch
+
+    active_tokens_count > 0
+        ? back_propagation.error.setValues({total_log_loss/static_cast<type>(active_tokens_count)})
+        : back_propagation.error.setZero();
 }
+
 
 
 void CrossEntropyError3d::calculate_error(const Batch& batch,
@@ -70,6 +138,9 @@ void CrossEntropyError3d::calculate_error(const Batch& batch,
     outputs_number == 1
         ? calculate_binary_error(batch, forward_propagation, back_propagation)
         : calculate_multiple_error(batch, forward_propagation, back_propagation);
+
+    if (isnan(back_propagation.error()))
+        throw runtime_error("Error is NAN.");
 }
 
 

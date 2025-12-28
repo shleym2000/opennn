@@ -21,7 +21,7 @@ TEST(Transformer, GeneralConstructor)
     const Index input_dimensions = get_random_index(1, 10);
     const Index context_dimension = get_random_index(1, 10);
     const Index embedding_depth = get_random_index(1, 10);
-    const Index perceptron_depth = get_random_index(1, 10);
+    const Index dense_depth = get_random_index(1, 10);
     const Index heads_number = get_random_index(1, 10);
     const Index layers_number = get_random_index(1, 10);
 /*
@@ -30,7 +30,7 @@ TEST(Transformer, GeneralConstructor)
                             input_dimensions, 
                             context_dimension, 
                             embedding_depth, 
-                            perceptron_depth, 
+                            dense_depth,
                             heads_number, 
                             layers_number);
 
@@ -50,12 +50,12 @@ TEST(Transformer, GeneralConstructor)
     input_dimensions = 5;
     context_dimension = 6;
     embedding_depth = 10;
-    perceptron_depth = 12;
+    dense_depth = 12;
     heads_number = 4;
     layers_number = 1;
 
     Transformer transformer_3({ input_length, context_length, input_dimensions, context_dimension,
-                                embedding_depth, perceptron_depth, heads_number, layers_number });
+                                embedding_depth, dense_depth, heads_number, layers_number });
 
     EXPECT_EQ(transformer_3.get_layers_number() == 2 + 7 * layers_number + 10 * layers_number + 1);
 
@@ -64,7 +64,7 @@ TEST(Transformer, GeneralConstructor)
     layers_number = 3;
 
     Transformer transformer_4({ input_length, context_length, input_dimensions, context_dimension,
-                                embedding_depth, perceptron_depth, heads_number, layers_number });
+                                embedding_depth, dense_depth, heads_number, layers_number });
 
     EXPECT_EQ(transformer_4.get_layers_number() == 2 + 7 * layers_number + 10 * layers_number + 1);
 */
@@ -82,20 +82,20 @@ TEST(Transformer, Outputs)
 
     Tensor<type, 1> parameters;
 
-    // Test two layers perceptron with all zeros
+    // Test two dense layers with all zeros
 
     Index input_length = 1;
     Index context_length = 1;
     Index input_dimensions = 1;
     Index context_dimension = 1;
     Index embedding_depth = 1;
-    Index perceptron_depth = 1;
+    Index dense_depth = 1;
     Index heads_number = 1;
     Index layers_number = 1;
     Index batch_size = 1;
 
     Transformer transformer(input_length, context_length, input_dimensions, context_dimension,
-                      embedding_depth, perceptron_depth, heads_number, layers_number);
+                      embedding_depth, dense_depth, heads_number, layers_number);
 
     transformer.set_parameters_constant(type(0));
 
@@ -258,7 +258,7 @@ TEST(Transformer, ForwardPropagate)
     Index context_dimension = 6;
 
     Index embedding_depth = 4;
-    Index perceptron_depth = 6;
+    Index dense_depth = 6;
     Index heads_number = 4;
     Index layers_number = 1;
 
@@ -298,7 +298,7 @@ TEST(Transformer, ForwardPropagate)
     batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
         
     transformer.set({ input_length, context_length, input_dimensions, context_dimension,
-                        embedding_depth, perceptron_depth, heads_number, layers_number });
+                        embedding_depth, dense_depth, heads_number, layers_number });
 
     ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
@@ -327,7 +327,7 @@ TEST(Transformer, ForwardPropagate)
         context_dimension = 6;
 
         embedding_depth = 4;
-        perceptron_depth = 6;
+        dense_depth = 6;
         heads_number = 4;
         layers_number = 3;
 
@@ -367,7 +367,7 @@ TEST(Transformer, ForwardPropagate)
         batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
 
         transformer.set({ input_length, context_length, input_dimensions, context_dimension,
-                          embedding_depth, perceptron_depth, heads_number, layers_number });
+                          embedding_depth, dense_depth, heads_number, layers_number });
 
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 

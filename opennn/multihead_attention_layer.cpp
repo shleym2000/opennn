@@ -257,7 +257,7 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     Tensor<type, 1>& projection_bias_deltas = this_back_propagation->projection_bias_deltas;
     Tensor<type, 3>& concatenated_attention_output_deltas = this_back_propagation->concatenated_attention_output_deltas;
     Tensor<type, 4>& attention_output_deltas = this_back_propagation->attention_output_deltas;
-    Tensor<type, 4>& attention_weight_deltas_xxx = this_back_propagation->attention_weight_deltas_xxx;
+    Tensor<type, 4>& attention_weight_deltas = this_back_propagation->attention_weight_deltas;
     Tensor<type, 4>& query_deltas = this_back_propagation->query_deltas;
     Tensor<type, 4>& key_deltas = this_back_propagation->key_deltas;
     Tensor<type, 4>& value_deltas = this_back_propagation->value_deltas;
@@ -301,16 +301,16 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
                .broadcast(array_5(1, 1, source_sequence_length, 1, 1))
          ).sum(array_1(3));
 
-    attention_weight_deltas_xxx.device(*device) =
+    attention_weight_deltas.device(*device) =
         (attention_output_deltas.reshape(array_5(batch_size, heads_number, query_sequence_length, 1, head_dimension))
              .broadcast(array_5(1, 1, 1, source_sequence_length, 1))
          * value.reshape(array_5(batch_size, heads_number, 1, source_sequence_length, head_dimension))
                .broadcast(array_5(1, 1, query_sequence_length, 1, 1))
          ).sum(array_1(4));
 
-    auto dot_product = (attention_weights * attention_weight_deltas_xxx).sum(array_1(3));
+    auto dot_product = (attention_weights * attention_weight_deltas).sum(array_1(3));
 
-    softmax_deltas.device(*device) = attention_weights * (attention_weight_deltas_xxx -
+    softmax_deltas.device(*device) = attention_weights * (attention_weight_deltas -
         dot_product.reshape(array_4(batch_size, heads_number, query_sequence_length, 1))
         .broadcast(array_4(1, 1, 1, source_sequence_length)));
 
@@ -560,7 +560,7 @@ void MultiHeadAttentionBackPropagation::initialize()
     key_deltas_reshaped.resize(batch_size, source_sequence_length, embedding_dimension);
     value_deltas_reshaped.resize(batch_size, source_sequence_length, embedding_dimension);
 
-    attention_weight_deltas_xxx.resize(batch_size, heads_number, source_sequence_length, query_sequence_length);
+    attention_weight_deltas.resize(batch_size, heads_number, source_sequence_length, query_sequence_length);
 
     attention_output_deltas.resize(batch_size, heads_number, query_sequence_length, head_dimension);
 

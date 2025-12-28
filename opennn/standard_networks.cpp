@@ -674,22 +674,22 @@ void Transformer::set(const Index& input_sequence_length,
                                        embedding_dimension,
                                        feed_forward_dimension,
                                        "RectifiedLinear",
-                                       "encoder_internal_perceptron_" + to_string(i+1)));
+                                       "encoder_internal_dense_" + to_string(i+1)));
 
         add_layer(make_unique<Dense3d>(input_sequence_length,
                                        feed_forward_dimension,
                                        embedding_dimension,
                                        "HyperbolicTangent",
-                                       "encoder_external_perceptron_" + to_string(i+1)));
+                                       "encoder_external_dense_" + to_string(i+1)));
 
         const Index ff_idx = get_layers_number() - 1;
 
         add_layer(make_unique<Addition<3>>(dimensions{input_sequence_length, embedding_dimension},
-                                           "encoder_perceptron_addition_" + to_string(i+1)),
+                                           "encoder_dense_addition_" + to_string(i+1)),
                   {norm_1_idx, ff_idx});
 
         add_layer(make_unique<Normalization3d>(dimensions{input_sequence_length, embedding_dimension},
-                                               "encoder_perceptron_normalization_" + to_string(i+1)));
+                                               "encoder_dense_normalization_" + to_string(i+1)));
 
         current_enc_idx = get_layers_number() - 1;
     }
@@ -739,22 +739,22 @@ void Transformer::set(const Index& input_sequence_length,
                                        embedding_dimension,
                                        feed_forward_dimension,
                                        "RectifiedLinear",
-                                       "decoder_internal_perceptron_" + to_string(i+1)));
+                                       "decoder_internal_dense_" + to_string(i+1)));
 
         add_layer(make_unique<Dense3d>(decoder_sequence_length,
                                        feed_forward_dimension,
                                        embedding_dimension,
                                        "HyperbolicTangent",
-                                       "decoder_external_perceptron_" + to_string(i+1)));
+                                       "decoder_external_dense_" + to_string(i+1)));
 
         const Index ff_idx = get_layers_number() - 1;
 
         add_layer(make_unique<Addition<3>>(dimensions{decoder_sequence_length, embedding_dimension},
-                                           "decoder_perceptron_addition_" + to_string(i+1)),
+                                           "decoder_dense_addition_" + to_string(i+1)),
                   {norm_2_idx, ff_idx});
 
         add_layer(make_unique<Normalization3d>(dimensions{decoder_sequence_length, embedding_dimension},
-                                               "decoder_perceptron_normalization_" + to_string(i+1)));
+                                               "decoder_dense_normalization_" + to_string(i+1)));
 
         current_dec_idx = get_layers_number() - 1;
     }

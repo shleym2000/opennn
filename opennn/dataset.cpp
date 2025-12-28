@@ -4508,7 +4508,7 @@ vector<TensorView> Batch::get_input_views() const
 
 TensorView Batch::get_target_view() const
 {
-    return { (type*)target_tensor.data() , target_dimensions};
+    return {(type*)target_tensor.data() , target_dimensions};
 }
 
 

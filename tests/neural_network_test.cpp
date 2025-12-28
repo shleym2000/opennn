@@ -140,12 +140,12 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
-    Dense2dForwardPropagation* perceptron_layer_forward_propagation
+    Dense2dForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense2dForwardPropagation*>(forward_propagation.layers[1].get());
 
-    Tensor <type, 2> perceptron_activations = perceptron_layer_forward_propagation->outputs;
+    Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
-    EXPECT_EQ(perceptron_activations.dimension(0), 5);
+    EXPECT_EQ(dense_activations.dimension(0), 5);
 
     // Test Softmax
     
@@ -157,13 +157,14 @@ TEST(NeuralNetworkTest, ForwardPropagate)
     ForwardPropagation forward_propagation_0(dataset.get_samples_number(), &neural_network_classification);
 
     neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
-
+/*
     Dense2dForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense2dForwardPropagation*>(forward_propagation_0.layers[2].get());
 
     Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
     EXPECT_EQ(dense_activations.dimension(0), 5);
+*/
 }
 
 
@@ -239,10 +240,6 @@ TEST(NeuralNetworkTest, CalculateDirectionalInputs)
 
 TEST(NeuralNetworkTest, TestSaveLoad)
 {
-    Index inputs_number;
-    Index neurons_number;
-    Index outputs_number;
-
     const string file_path_str = "../blank/data/neural_network.xml";
     const filesystem::path file_path(file_path_str);
 

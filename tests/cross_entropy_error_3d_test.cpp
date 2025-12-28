@@ -170,7 +170,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
 
     LanguageDataset dataset;
 
-    Index perceptron_depth;
+    Index dense_depth;
     Index heads_number;
     Index layers_number;
 
@@ -190,7 +190,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         context_dimension = 10;
 
         depth = 4; 
-        perceptron_depth = 6; 
+        dense_depth = 6;
         heads_number = 4;
         layers_number = 1;
         
@@ -210,7 +210,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
         
         transformer.set({ inputs_number, context_length, input_dimensions, context_dimension,
-                          depth, perceptron_depth, heads_number, layers_number });
+                          depth, dense_depth, heads_number, layers_number });
         
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
         
@@ -231,22 +231,20 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         EXPECT_EQ(equal_gradients);
         
         // debugging
-
-        
         *    input_embedding from parameter 0 to 23
         *    context_embedding from parameter 24 to 51
         *    context_self_attention_1 from parameter 52 to 359
         *    context_self_attention_normalization_1 from parameter 360 to 367
-        *    encoder_internal_perceptron_1 from parameter 368 to 397
-        *    encoder_external_perceptron_1 from parameter 398 to 425
-        *    encoder_perceptron_normalization_1 from parameter 426 to 433
+        *    encoder_internal_dense_1 from parameter 368 to 397
+        *    encoder_external_dense_1 from parameter 398 to 425
+        *    encoder_dense_normalization_1 from parameter 426 to 433
         *    input_self_attention_1 from parameter 434 to 741
         *    input_self_attention_normalization_1 from parameter 742 to 749
         *    cross_attention_1 from parameter 750 to 1057
         *    cross_attention_normalization_1 from parameter 1058 to 1065
-        *    decoder_internal_perceptron_1 from parameter 1066 to 1095
-        *    decoder_external_perceptron_1 from parameter 1096 to 1123
-        *    decoder_perceptron_normalization_1 from parameter 1124 to 1131
+        *    decoder_internal_dense_1 from parameter 1066 to 1095
+        *    decoder_external_dense_1 from parameter 1096 to 1123
+        *    decoder_dense_normalization_1 from parameter 1124 to 1131
         *    dense from parameter 1132 to 1161
         
         Index parameter_index = 0;

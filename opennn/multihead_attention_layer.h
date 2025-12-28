@@ -142,7 +142,7 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 4> attention_weight_deltas_xxx;
+    Tensor<type, 4> attention_weight_deltas;
     Tensor<type, 4> attention_output_deltas;
     Tensor<type, 3> concatenated_attention_output_deltas;
 
