@@ -362,28 +362,29 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
 
 void MultiHeadAttention::apply_causal_mask(Tensor<type, 4>& attention_scores) const
 {
-    //throw runtime_error("MultiHeadAttention::apply_causal_mask is not yet implemented. Please check back in a future version.");
-    // const Index batch_size = attention_scores.dimension(2);
+    // @todo
 
-    // const Index context_input_size = source_sequence_length * query_sequence_length;
+    const Index batch_size = attention_scores.dimension(2);
 
-    // for(Index head_index = 0; head_index < heads_number; head_index++)
-    // {
-    //     for(Index sample_index = 0; sample_index < batch_size; sample_index++)
-    //     {
-    //         type* sample_attention_scores_data = attention_scores.data()
-    //         + (sample_index + head_index * batch_size) * context_input_size;
+    const Index context_input_size = source_sequence_length * query_sequence_length;
 
-    //         // + (sample_index + head_index) * context_input_size * batch_size;
-    //         // + (sample_index * heads_number + head_index) * context_input_size * batch_size;
+    for(Index head_index = 0; head_index < heads_number; head_index++)
+    {
+        for(Index sample_index = 0; sample_index < batch_size; sample_index++)
+        {
+            type* sample_attention_scores_data = attention_scores.data()
+             + (sample_index + head_index * batch_size) * context_input_size;
 
-    //         TensorMap<Tensor<type, 2>> sample_attention_scores(sample_attention_scores_data,
-    //                                                            source_sequence_length,
-    //                                                            query_sequence_length);
+             // + (sample_index + head_index) * context_input_size * batch_size;
+             // + (sample_index * heads_number + head_index) * context_input_size * batch_size;
 
-    //         sample_attention_scores.device(*device) += causal_mask;
-    //     }
-    // }
+             TensorMap<Tensor<type, 2>> sample_attention_scores(sample_attention_scores_data,
+                                                                source_sequence_length,
+                                                                query_sequence_length);
+
+             sample_attention_scores.device(*device) += causal_mask;
+         }
+     }
 }
 
 

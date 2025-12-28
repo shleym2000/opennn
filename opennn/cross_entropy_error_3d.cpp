@@ -25,7 +25,7 @@ CrossEntropyError3d::CrossEntropyError3d(const NeuralNetwork* new_neural_network
 void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
                                                  const ForwardPropagation& forward_propagation,
                                                  BackPropagation& back_propagation) const
-{
+{    
     /*
     // Batch
 

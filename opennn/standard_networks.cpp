@@ -6,6 +6,8 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
+#include <stdexcept>
+
 #include "standard_networks.h"
 #include "multihead_attention_layer.h"
 #include "scaling_layer_2d.h"
@@ -25,9 +27,6 @@
 #include "multihead_attention_layer.h"
 #include "dense_layer_3d.h"
 #include "strings_utilities.h"
-
-#include <iostream>
-#include <stdexcept>
 
 using namespace std;
 
