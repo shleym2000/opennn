@@ -305,17 +305,17 @@ TEST(Transformer, ForwardPropagate)
 
     transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
 
-    Probabilistic3DForwardPropagation* probabilistic_layer_forward_propagation
-        = static_cast<Probabilistic3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
+    Dense3DForwardPropagation* dense_layer_forward_propagation
+        = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
         
-    Tensor<type, 3> probabilistic_activations = probabilistic_layer_forward_propagation->outputs;
+    Tensor<type, 3> dense_activations = dense_layer_forward_propagation->outputs;
         
-    EXPECT_EQ(probabilistic_activations.rank() == 3);
-    EXPECT_EQ(probabilistic_activations.dimension(0) == batch_size);
-    EXPECT_EQ(probabilistic_activations.dimension(1) == input_length);
-    EXPECT_EQ(probabilistic_activations.dimension(2) == input_dimensions + 1);
+    EXPECT_EQ(dense_activations.rank() == 3);
+    EXPECT_EQ(dense_activations.dimension(0) == batch_size);
+    EXPECT_EQ(dense_activations.dimension(1) == input_length);
+    EXPECT_EQ(dense_activations.dimension(2) == input_dimensions + 1);
 
-    EXPECT_EQ(check_activations_sums(probabilistic_activations));
+    EXPECT_EQ(check_activations_sums(dense_activations));
 
     {
         // Test
@@ -374,17 +374,17 @@ TEST(Transformer, ForwardPropagate)
 
         transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
 
-        Probabilistic3DForwardPropagation* probabilistic_layer_forward_propagation
-            = static_cast<Probabilistic3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
+        Dense3DForwardPropagation* dense_layer_forward_propagation
+            = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
 
-        Tensor<type, 3> probabilistic_activations = probabilistic_layer_forward_propagation->outputs;
+        Tensor<type, 3> dense_activations = dense_layer_forward_propagation->outputs;
 
-        EXPECT_EQ(probabilistic_activations.rank() == 3);
-        EXPECT_EQ(probabilistic_activations.dimension(0) == batch_size);
-        EXPECT_EQ(probabilistic_activations.dimension(1) == input_length);
-        EXPECT_EQ(probabilistic_activations.dimension(2) == input_dimensions + 1);
+        EXPECT_EQ(dense_activations.rank() == 3);
+        EXPECT_EQ(dense_activations.dimension(0) == batch_size);
+        EXPECT_EQ(dense_activations.dimension(1) == input_length);
+        EXPECT_EQ(dense_activations.dimension(2) == input_dimensions + 1);
 
-        EXPECT_EQ(check_activations_sums(probabilistic_activations));
+        EXPECT_EQ(check_activations_sums(dense_activations));
     }
 */
 }

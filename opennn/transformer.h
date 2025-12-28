@@ -18,23 +18,23 @@ class Transformer final : public NeuralNetwork
 {
 public:
 
-    Transformer(const Index& decoder_length = 0,
-                const Index& input_length = 0,
-                const Index& decoder_dimensions = 0,
-                const Index& input_dimension = 0,
-                const Index& embedding_dimension = 0,
-                const Index& perceptron_depth = 0,
-                const Index& heads_number = 0,
-                const Index& layers_number = 0);
+    Transformer(const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0);
 
-    void set(const Index& decoder_length = 0,
-             const Index& input_length = 0,
-             const Index& decoder_dimensions = 0,
-             const Index& input_dimension = 0,
-             const Index& embedding_dimension = 0,
-             const Index& perceptron_depth = 0,
-             const Index& heads_number = 0,
-             const Index& layers_number = 0);
+    void set(const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0);
 
     Index get_input_sequence_length() const;
     Index get_decoder_sequence_length() const;

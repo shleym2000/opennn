@@ -19,7 +19,7 @@ class Embedding final : public Layer
 
 public:
 
-    Embedding(const dimensions& = dimensions({0, 0}),
+    Embedding(const dimensions& = {0, 0},
               const Index& = 0,
               const string& = "embedding_layer");
 

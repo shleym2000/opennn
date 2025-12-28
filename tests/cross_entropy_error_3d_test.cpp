@@ -74,11 +74,11 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
         "embedding_layer"
         ));
 
-    neural_network.add_layer(make_unique<Probabilistic3d>(
+    neural_network.add_layer(make_unique<Dense3d>(
         inputs_number,
         depth,
         neurons_number,
-        "probabilistic_layer_3d"
+        "dense_layer_3d"
         ));
     neural_network.set_parameters_random();
 
@@ -143,8 +143,8 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
     Embedding* embedding_layer = new Embedding(input_dimensions, inputs_number, depth);
     neural_network.add_layer(embedding_layer);
 
-    Probabilistic3d* probabilistic_layer_3d = new Probabilistic3d(inputs_number, depth, input_dimensions + 1);
-    neural_network.add_layer(probabilistic_layer_3d);
+    Dense3d* dense_layer_3d = new Dense3d(inputs_number, depth, input_dimensions + 1);
+    neural_network.add_layer(dense_layer_3d);
 
     forward_propagation.set(batch_size, &neural_network);
     neural_network.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
@@ -248,7 +248,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         *    decoder_internal_perceptron_1 from parameter 1066 to 1095
         *    decoder_external_perceptron_1 from parameter 1096 to 1123
         *    decoder_perceptron_normalization_1 from parameter 1124 to 1131
-        *    probabilistic from parameter 1132 to 1161
+        *    dense from parameter 1132 to 1161
         
         Index parameter_index = 0;
         for(Index i = 0; i < transformer.get_layers().size(); i++)

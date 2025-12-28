@@ -29,7 +29,7 @@ class Addition final : public Layer
 
 public:
 
-    Addition(const dimensions& new_input_dimensions = dimensions({}), const string& new_name = "")
+    Addition(const dimensions& new_input_dimensions = {}, const string& new_name = "")
     {
         set(new_input_dimensions, new_name);
     }

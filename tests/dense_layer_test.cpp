@@ -3,7 +3,7 @@
 #include "../opennn/tensors.h"
 #include "../opennn/dense_layer.h"
 #include "../opennn/layer.h"
-#include "../opennn/neural_network.h"
+//#include "../opennn/neural_network.h"
 
 using namespace opennn;
 
@@ -73,10 +73,10 @@ TEST(Dense2dTest, ForwardPropagate)
     );
 
     EXPECT_EQ(dense2d_layer.get_name(), "Dense2d");
-    EXPECT_EQ(dense2d_layer.get_input_dimensions(), dimensions({ inputs_number }));
-    EXPECT_EQ(dense2d_layer.get_output_dimensions(), dimensions({ outputs_number }));
+    EXPECT_EQ(dense2d_layer.get_input_dimensions(), dimensions{inputs_number});
+    EXPECT_EQ(dense2d_layer.get_output_dimensions(), dimensions{outputs_number});
 
-    const TensorView output_view = forward_propagation->get_output_pair();
+    const TensorView output_view = forward_propagation->get_output_view();
 
     ASSERT_EQ(output_view.rank(), 2) << "Output should be a 2D tensor (batch_size, outputs_number).";
     EXPECT_EQ(output_view.dims[0], batch_size);

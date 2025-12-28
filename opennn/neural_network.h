@@ -100,11 +100,11 @@ public:
     void set_layers_number(const Index&);
 
     void set_layer_input_indices(const vector<vector<Index>>&);
-    void set_layer_inputs_indices(const Index&, const vector<Index>&);
+    void set_layer_input_indices(const Index&, const vector<Index>&);
 
-    void set_layer_inputs_indices(const string&, const vector<string>&);
-    void set_layer_inputs_indices(const string&, const initializer_list<string>&);
-    void set_layer_inputs_indices(const string&, const string&);
+    void set_layer_input_indices(const string&, const vector<string>&);
+    void set_layer_input_indices(const string&, const initializer_list<string>&);
+    void set_layer_input_indices(const string&, const string&);
 
     void set_feature_names(const vector<string>&);
     void set_output_names(const vector<string>&);

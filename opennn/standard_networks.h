@@ -1,7 +1,7 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   STANDARD   N E T W O R K   C L A S S   H E A D E R
+//   S T A N D A R D   N E T W O R K S  C L A S S   H E A D E R
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com

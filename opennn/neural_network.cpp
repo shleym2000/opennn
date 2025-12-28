@@ -290,13 +290,13 @@ void NeuralNetwork::set_layer_input_indices(const vector<vector<Index>>& new_lay
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const Index& layer_index, const vector<Index>& new_layer_input_indices)
+void NeuralNetwork::set_layer_input_indices(const Index& layer_index, const vector<Index>& new_layer_input_indices)
 {
     layer_input_indices[layer_index] = new_layer_input_indices;
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const string& layer_label,
+void NeuralNetwork::set_layer_input_indices(const string& layer_label,
                                              const vector<string>& new_layer_input_labels)
 {
     const Index layer_index = get_layer_index(layer_label);
@@ -312,14 +312,14 @@ void NeuralNetwork::set_layer_inputs_indices(const string& layer_label,
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const string& layer_label,
+void NeuralNetwork::set_layer_input_indices(const string& layer_label,
                                              const initializer_list<string>& new_layer_input_labels_list)
 {
-    set_layer_inputs_indices(layer_label, vector<string>(new_layer_input_labels_list));
+    set_layer_input_indices(layer_label, vector<string>(new_layer_input_labels_list));
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const string& layer_label, const string& new_layer_input_labels)
+void NeuralNetwork::set_layer_input_indices(const string& layer_label, const string& new_layer_input_labels)
 {
     const Index layer_index = get_layer_index(layer_label);
 
@@ -512,7 +512,7 @@ void NeuralNetwork::set_parameters_glorot()
 }
 
 
-void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
+void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       ForwardPropagation& forward_propagation,
                                       const bool& is_training) const
 {
@@ -528,7 +528,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
     }
 
     const vector<vector<TensorView>> layer_input_pairs
-        = forward_propagation.get_layer_input_pairs(input_pair, is_training);
+        = forward_propagation.get_layer_input_pairs(input_view, is_training);
 
     for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate(layer_input_pairs[i],
@@ -537,7 +537,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
 }
 
 
-void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
+void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       const Tensor<type, 1>& new_parameters,
                                       ForwardPropagation& forward_propagation)
 {
@@ -546,7 +546,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
 
     set_parameters(new_parameters);
 
-    forward_propagate(input_pair, forward_propagation, true);
+    forward_propagate(input_view, forward_propagation, true);
 
     set_parameters(original_parameters);
 }
