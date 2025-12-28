@@ -604,8 +604,8 @@ struct Batch
 {
     Batch(const Index& = 0, const Dataset* = nullptr);
 
-    vector<TensorView> get_input_pairs() const;
-    TensorView get_target_pair() const;
+    vector<TensorView> get_input_views() const;
+    TensorView get_target_view() const;
 
     Index get_samples_number() const;
 

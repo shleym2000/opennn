@@ -53,8 +53,6 @@
 // Neural network
 #include "neural_network.h"
 #include "standard_networks.h"
-#include "transformer.h"
-#include "vgg16.h"
 
 // Loss functions
 #include "loss_index.h"

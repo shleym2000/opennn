@@ -188,34 +188,7 @@ public:
         return Tensor<type, output_rank>();
     }
 
-
-    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs_1, const Tensor<type, 3>& inputs_2)
-    {
-        const Index layers_number = get_layers_number();
-
-        if (layers_number == 0)
-           return Tensor<type, 3>();
-
-        const Index batch_size = inputs_1.dimension(0);
-
-        ForwardPropagation forward_propagation(batch_size, this);
-
-        const TensorView input_pair_1((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}});
-        const TensorView input_pair_2((type*)inputs_2.data(), {{inputs_2.dimension(0), inputs_2.dimension(1), inputs_2.dimension(2)}});
-
-        vector<TensorView> input_views(2);
-        input_views[0] = input_pair_1;
-        input_views[1] = input_pair_2;
-
-        forward_propagate(input_views, forward_propagation, false);
-
-        const vector<string> layer_labels = get_layer_labels();
-
-        const TensorView outputs_view
-           = forward_propagation.layers[layers_number - 1]->get_output_view();
-
-        return tensor_map<3>(outputs_view);
-    }
+    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs_1, const Tensor<type, 3>& inputs_2);
 
     Tensor<type, 2> calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 

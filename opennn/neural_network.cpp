@@ -512,6 +512,32 @@ void NeuralNetwork::set_parameters_glorot()
 }
 
 
+Tensor<type, 3> NeuralNetwork::calculate_outputs(const Tensor<type, 3> &inputs_1, const Tensor<type, 3> &inputs_2)
+{
+    const Index layers_number = get_layers_number();
+
+    if (layers_number == 0)
+        return Tensor<type, 3>();
+
+    const Index batch_size = inputs_1.dimension(0);
+
+    ForwardPropagation forward_propagation(batch_size, this);
+
+    const vector<TensorView> input_views = {
+                                            TensorView((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}}),
+                                            TensorView((type*)inputs_2.data(), {{inputs_2.dimension(0), inputs_2.dimension(1), inputs_2.dimension(2)}})};
+
+    forward_propagate(input_views, forward_propagation, false);
+
+    const vector<string> layer_labels = get_layer_labels();
+
+    const TensorView outputs_view
+        = forward_propagation.layers[layers_number - 1]->get_output_view();
+
+    return tensor_map<3>(outputs_view);
+}
+
+
 void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       ForwardPropagation& forward_propagation,
                                       const bool& is_training) const

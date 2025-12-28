@@ -8,7 +8,6 @@
 
 #include "dataset.h"
 #include "time_series_dataset.h"
-//#include "image_dataset.h"
 #include "statistics.h"
 #include "scaling.h"
 #include "correlations.h"
@@ -4495,7 +4494,7 @@ bool Batch::is_empty() const
 
 
 
-vector<TensorView> Batch::get_input_pairs() const
+vector<TensorView> Batch::get_input_views() const
 {
     vector<TensorView> input_views = {{(type*)input_tensor.data(), input_dimensions}};
 
@@ -4507,7 +4506,7 @@ vector<TensorView> Batch::get_input_pairs() const
 }
 
 
-TensorView Batch::get_target_pair() const
+TensorView Batch::get_target_view() const
 {
     return { (type*)target_tensor.data() , target_dimensions};
 }
