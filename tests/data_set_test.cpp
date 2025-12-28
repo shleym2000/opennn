@@ -1293,7 +1293,7 @@ TEST(Dataset, BatchFill)
     Tensor<type, 2> target_data(3,1);
     target_data.setValues({{1},{0},{1}});
 /*
-    const vector<TensorView> input_views = batch.get_input_pairs();
+    const vector<TensorView> input_views = batch.get_input_views();
     const Tensor<type, 2> inputs = input_views[0].to_tensor_map<2>();
 
     ASSERT_EQ(inputs.dimension(0), input_data.dimension(0));
@@ -1306,7 +1306,7 @@ TEST(Dataset, BatchFill)
         }
     }
 
-    const TensorView targets_view = batch.get_target_pair();
+    const TensorView targets_view = batch.get_target_view();
     const Tensor<type, 2> targets = targets_view.to_tensor_map<2>();
 
     ASSERT_EQ(targets.dimension(0), target_data.dimension(0));

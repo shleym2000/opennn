@@ -138,7 +138,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     ForwardPropagation forward_propagation(dataset.get_samples_number(), &neural_network_aproximation);
 
-    neural_network_aproximation.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+    neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
     Dense2dForwardPropagation* perceptron_layer_forward_propagation
         = static_cast<Dense2dForwardPropagation*>(forward_propagation.layers[1].get());
@@ -156,7 +156,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     ForwardPropagation forward_propagation_0(dataset.get_samples_number(), &neural_network_classification);
 
-    neural_network_classification.forward_propagate(batch.get_input_pairs(), forward_propagation_0, is_training);
+    neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
 
     Dense2dForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense2dForwardPropagation*>(forward_propagation_0.layers[2].get());

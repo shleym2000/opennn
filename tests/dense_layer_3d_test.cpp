@@ -2,7 +2,7 @@
 
 #include "../opennn/tensors.h"
 #include "../opennn/dense_layer_3d.h"
-#include "../opennn/neural_network.h"
+//#include "../opennn/neural_network.h"
 
 using namespace opennn;
 

@@ -77,7 +77,7 @@ TEST(NormalizedSquaredErrorTest, BackPropagateLM)
     normalized_squared_error.set_normalization_coefficient();
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_pairs(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
 
     BackPropagation back_propagation(samples_number, &normalized_squared_error);
     normalized_squared_error.back_propagate(batch, forward_propagation, back_propagation);

@@ -5,7 +5,6 @@
 #include "../opennn/embedding_layer.h"
 #include "../opennn/dense_layer_3d.h"
 #include "../opennn/language_dataset.h"
-#include "../opennn/transformer.h"
 #include "gtest/gtest.h"
 
 using namespace opennn;
@@ -86,7 +85,7 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
     neural_network.print();
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_pairs(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
 
     // Loss index
 
@@ -147,7 +146,7 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
     neural_network.add_layer(dense_layer_3d);
 
     forward_propagation.set(batch_size, &neural_network);
-    neural_network.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
     // Loss index
 
@@ -215,7 +214,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
         
-        transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+        transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
         
         // Loss index
 

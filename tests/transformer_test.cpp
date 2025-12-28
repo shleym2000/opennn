@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "../opennn/transformer.h"
+#include "../opennn/standard_networks.h"
 
 using namespace opennn;
 
@@ -10,7 +10,6 @@ TEST(Transformer, DefaultConstructor)
 
     EXPECT_EQ(transformer.is_empty(), true);
     EXPECT_EQ(transformer.get_layers_number(), 0);
-
 }
 
 
@@ -303,7 +302,7 @@ TEST(Transformer, ForwardPropagate)
 
     ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
-    transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+    transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
     Dense3DForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
@@ -372,7 +371,7 @@ TEST(Transformer, ForwardPropagate)
 
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
-        transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+        transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
         Dense3DForwardPropagation* dense_layer_forward_propagation
             = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);

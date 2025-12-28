@@ -2,7 +2,6 @@
 
 #include "../opennn/language_dataset.h"
 #include "../opennn/standard_networks.h"
-#include "../opennn/transformer.h"
 #include "../opennn/mean_squared_error.h"
 #include "../opennn/cross_entropy_error_3d.h"
 #include "../opennn/stochastic_gradient_descent.h"

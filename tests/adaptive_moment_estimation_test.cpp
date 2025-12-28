@@ -4,8 +4,6 @@
 #include "../opennn/training_strategy.h"
 #include "../opennn/adaptive_moment_estimation.h"
 #include "../opennn/mean_squared_error.h"
-
-#include "../opennn/transformer.h"
 #include "../opennn/language_dataset.h"
 #include "../opennn/cross_entropy_error_3d.h"
 #include "gtest/gtest.h"

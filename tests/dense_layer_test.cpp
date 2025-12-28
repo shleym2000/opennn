@@ -1,9 +1,8 @@
 #include "pch.h"
 
 #include "../opennn/tensors.h"
-#include "../opennn/dense_layer.h"
 #include "../opennn/layer.h"
-//#include "../opennn/neural_network.h"
+#include "../opennn/dense_layer.h"
 
 using namespace opennn;
 
