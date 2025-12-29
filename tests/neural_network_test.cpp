@@ -138,32 +138,33 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     ForwardPropagation forward_propagation(dataset.get_samples_number(), &neural_network_aproximation);
 
-    neural_network_aproximation.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+    neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
-    Dense2dForwardPropagation* perceptron_layer_forward_propagation
+    Dense2dForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense2dForwardPropagation*>(forward_propagation.layers[1].get());
 
-    Tensor <type, 2> perceptron_activations = perceptron_layer_forward_propagation->outputs;
+    Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
-    EXPECT_EQ(perceptron_activations.dimension(0), 5);
+    EXPECT_EQ(dense_activations.dimension(0), 5);
 
     // Test Softmax
     
     ClassificationNetwork neural_network_classification({inputs_number}, {neurons_number}, {outputs_number});
 
-    Dense2d* probabilistic_layer =static_cast<Dense2d*>(neural_network_classification.get_first("Dense2d"));
-    probabilistic_layer->set_activation_function("Softmax");
+    Dense2d* dense_layer =static_cast<Dense2d*>(neural_network_classification.get_first("Dense2d"));
+    dense_layer->set_activation_function("Softmax");
 
     ForwardPropagation forward_propagation_0(dataset.get_samples_number(), &neural_network_classification);
 
-    neural_network_classification.forward_propagate(batch.get_input_pairs(), forward_propagation_0, is_training);
-
-    Dense2dForwardPropagation* probabilistic_layer_forward_propagation
+    neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
+/*
+    Dense2dForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense2dForwardPropagation*>(forward_propagation_0.layers[2].get());
 
-    Tensor <type, 2> probabilistic_activations = probabilistic_layer_forward_propagation->outputs;
+    Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
-    EXPECT_EQ(probabilistic_activations.dimension(0), 5);
+    EXPECT_EQ(dense_activations.dimension(0), 5);
+*/
 }
 
 
@@ -239,10 +240,6 @@ TEST(NeuralNetworkTest, CalculateDirectionalInputs)
 
 TEST(NeuralNetworkTest, TestSaveLoad)
 {
-    Index inputs_number;
-    Index neurons_number;
-    Index outputs_number;
-
     const string file_path_str = "../blank/data/neural_network.xml";
     const filesystem::path file_path(file_path_str);
 

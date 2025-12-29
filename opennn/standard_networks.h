@@ -1,7 +1,7 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   STANDARD   N E T W O R K   C L A S S   H E A D E R
+//   S T A N D A R D   N E T W O R K S  C L A S S   H E A D E R
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
@@ -81,6 +81,19 @@ public:
 };
 
 
+class VGG16 final : public NeuralNetwork
+{
+public:
+
+    VGG16(const dimensions& input_dimensions, const dimensions& target_dimensions);
+
+    VGG16(const filesystem::path&);
+
+    void set(const dimensions& input_dimensions, const dimensions& target_dimensions);
+
+};
+
+
 class TextClassificationNetwork : public NeuralNetwork
 {
 
@@ -91,6 +104,47 @@ public:
                               const dimensions& output_dimensions,
                               const vector<string>& new_input_vocabulary = vector<string>());
 };
+
+
+class Transformer final : public NeuralNetwork
+{
+public:
+
+    Transformer(const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0,
+                const Index& = 0);
+
+    void set(const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0,
+             const Index& = 0);
+
+    Index get_input_sequence_length() const;
+    Index get_decoder_sequence_length() const;
+    Index get_embedding_dimension() const;
+    Index get_heads_number() const;
+
+    void set_dropout_rate(const type&);
+    void set_input_vocabulary(const vector<string>&);
+    void set_output_vocabulary(const vector<string>&);
+
+    string calculate_outputs(const string&);
+
+private:
+
+    unordered_map<string, Index> input_vocabulary_map;
+    unordered_map<Index, string> output_inverse_vocabulary_map;
+};
+
 
 } // namespace opennn
 

@@ -4,8 +4,6 @@
 #include "../opennn/training_strategy.h"
 #include "../opennn/adaptive_moment_estimation.h"
 #include "../opennn/mean_squared_error.h"
-
-#include "../opennn/transformer.h"
 #include "../opennn/language_dataset.h"
 #include "../opennn/cross_entropy_error_3d.h"
 #include "gtest/gtest.h"
@@ -67,7 +65,7 @@ TEST(AdaptiveMomentEstimationTest, TrainTransformer)
     // constexpr Index input_dimensions = 5;
     // constexpr Index context_dimension = 6;
     // constexpr Index depth = 4;
-    // constexpr Index perceptron_depth = 6;
+    // constexpr Index dense_depth = 6;
     // constexpr Index heads_number = 4;
     // constexpr Index layers_number = 1;
     // constexpr type training_loss_goal = static_cast<type>(0.05);
@@ -92,7 +90,7 @@ TEST(AdaptiveMomentEstimationTest, TrainTransformer)
     //     input_dimensions,
     //     context_dimension,
     //     depth,
-    //     perceptron_depth,
+    //     dense_depth,
     //     heads_number,
     //     layers_number
     // });

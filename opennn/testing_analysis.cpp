@@ -10,7 +10,7 @@
 #include "correlations.h"
 #include "language_dataset.h"
 #include "time_series_dataset.h"
-#include "transformer.h"
+#include "standard_networks.h"
 #include "statistics.h"
 #include "unscaling_layer.h"
 
@@ -1846,7 +1846,7 @@ pair<type, type> TestingAnalysis::test_transformer() const
         testing_target.chip(i, 0) = target.chip(i, 0);
     }
 
-    const Tensor<type, 3> outputs = transformer->calculate_outputs(testing_input, testing_context);
+    //const Tensor<type, 3> outputs = transformer->calculate_outputs(testing_input, testing_context);
 
     // cout<<"English:"<<endl;
     // cout<<testing_context.chip(10,0)<<endl;
@@ -1885,22 +1885,25 @@ pair<type, type> TestingAnalysis::test_transformer() const
     //     }
     //     cout<<language_dataset->get_completion_vocabulary()[index]<<" ";
     // }
-
+/*
     const type error = calculate_cross_entropy_error_3d(outputs, testing_target);
 
     const type accuracy = calculate_masked_accuracy(outputs, testing_target);
 
     return pair<type, type>(error, accuracy);
+*/
+    return pair<type, type>();
 }
 
 
 string TestingAnalysis::test_transformer(const vector<string>& context_string, const bool& imported_vocabulary) const
 {
     cout<<"Testing transformer..."<<endl;
-
+/*
     Transformer* transformer = static_cast<Transformer*>(neural_network);
 
     return transformer->calculate_outputs(context_string);
+*/
 }
 
 

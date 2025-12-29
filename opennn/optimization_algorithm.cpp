@@ -13,8 +13,6 @@
 #include "scaling_layer_2d.h"
 #include "scaling_layer_3d.h"
 #include "unscaling_layer.h"
-#include "embedding_layer.h"
-//#include "transformer.h"
 #include "loss_index.h"
 #include "optimization_algorithm.h"
 

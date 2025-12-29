@@ -128,7 +128,7 @@ void NormalizedSquaredError::calculate_error(const Batch& batch,
 
     const Index samples_number = batch.get_samples_number();
 
-    const TensorView targets_view = batch.get_target_pair();
+    const TensorView targets_view = batch.get_target_view();
 
     const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
 

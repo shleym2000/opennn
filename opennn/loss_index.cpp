@@ -114,7 +114,7 @@ void LossIndex::calculate_errors_lm(const Batch& batch,
 
     const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
 
-    const TensorView targets_view = batch.get_target_pair();
+    const TensorView targets_view = batch.get_target_view();
 
     const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
 
@@ -243,7 +243,7 @@ void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
     const vector<vector<TensorView>> layer_input_pairs
-        = forward_propagation.get_layer_input_pairs(batch.get_input_pairs(), true);
+        = forward_propagation.get_layer_input_pairs(batch.get_input_views(), true);
 
     const vector<vector<TensorView>> layer_delta_pairs
         = back_propagation_lm.get_layer_delta_pairs();
@@ -329,7 +329,7 @@ void LossIndex::calculate_layers_error_gradient(const Batch& batch,
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
     const vector<vector<TensorView>> layer_input_pairs
-        = forward_propagation.get_layer_input_pairs(batch.get_input_pairs(), true);
+        = forward_propagation.get_layer_input_pairs(batch.get_input_views(), true);
 
     const vector<vector<TensorView>> layer_delta_pairs
         = back_propagation.get_layer_delta_pairs();
@@ -634,7 +634,7 @@ type LossIndex::calculate_numerical_error() const
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
-    neural_network->forward_propagate(batch.get_input_pairs(),
+    neural_network->forward_propagate(batch.get_input_views(),
                                       forward_propagation);
 
     BackPropagation back_propagation(samples_number, this);
@@ -665,7 +665,7 @@ Tensor<type, 1> LossIndex::calculate_gradient()
     Tensor<type, 1> parameters;
     neural_network->get_parameters(parameters);
 
-    neural_network->forward_propagate(batch.get_input_pairs(),
+    neural_network->forward_propagate(batch.get_input_views(),
                                       parameters,
                                       forward_propagation);
 
@@ -716,7 +716,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient()
 
         parameters_forward(i) += h;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           parameters_forward,
                                           forward_propagation);
 
@@ -727,7 +727,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient()
         parameters_forward(i) -= h;
         parameters_backward(i) -= h;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           parameters_backward,
                                           forward_propagation);
 
@@ -780,7 +780,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient_lm()
 
         parameters_forward(i) += h;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           parameters_forward,
                                           forward_propagation);
 
@@ -796,7 +796,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient_lm()
 
         parameters_backward(i) -= h;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           parameters_backward,
                                           forward_propagation);
 
@@ -845,7 +845,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_input_deltas()
     Tensor<type, 1> numerical_inputs_derivatives(values_number);
     numerical_inputs_derivatives.setConstant(type(0));
 
-    const vector<TensorView>& input_views = batch.get_input_pairs();
+    const vector<TensorView>& input_views = batch.get_input_views();
 
     TensorMap<Tensor<type, 4>> inputs_vector = tensor_map<4>(input_views[0]);
 
@@ -899,7 +899,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
 
     const Index parameters_number = parameters.size();
 
-    neural_network->forward_propagate(batch.get_input_pairs(),
+    neural_network->forward_propagate(batch.get_input_views(),
                                       parameters,
                                       forward_propagation);
 
@@ -922,7 +922,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
         h = calculate_h(parameters(j));
 
         parameters_backward(j) -= h;
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           parameters_backward,
                                           forward_propagation);
 
@@ -936,7 +936,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
 
         parameters_forward(j) += h;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           parameters_forward,
                                           forward_propagation);
 
@@ -977,7 +977,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
     const Index parameters_number = parameters.size();
 
-    neural_network->forward_propagate(batch.get_input_pairs(),
+    neural_network->forward_propagate(batch.get_input_views(),
                                       parameters,
                                       forward_propagation);
 
@@ -1025,7 +1025,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
         x_backward_2i(i) -= static_cast<type>(2.0) * h_i;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           x_backward_2i,
                                           forward_propagation);
 
@@ -1041,7 +1041,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
         x_backward_i(i) -= h_i;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           x_backward_i,
                                           forward_propagation);
 
@@ -1057,7 +1057,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
         x_forward_i(i) += h_i;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           x_forward_i,
                                           forward_propagation);
 
@@ -1073,7 +1073,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
         x_forward_2i(i) += static_cast<type>(2.0) * h_i;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           x_forward_2i,
                                           forward_propagation);
 
@@ -1099,7 +1099,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
             x_backward_ij(i) -= h_i;
             x_backward_ij(j) -= h_j;
 
-            neural_network->forward_propagate(batch.get_input_pairs(),
+            neural_network->forward_propagate(batch.get_input_views(),
                                               x_backward_ij,
                                               forward_propagation);
 
@@ -1117,7 +1117,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
             x_forward_ij(i) += h_i;
             x_forward_ij(j) += h_j;
 
-            neural_network->forward_propagate(batch.get_input_pairs(),
+            neural_network->forward_propagate(batch.get_input_views(),
                                               x_forward_ij,
                                               forward_propagation);
 
@@ -1135,7 +1135,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
             x_backward_i_forward_j(i) -= h_i;
             x_backward_i_forward_j(j) += h_j;
 
-            neural_network->forward_propagate(batch.get_input_pairs(),
+            neural_network->forward_propagate(batch.get_input_views(),
                                               x_backward_i_forward_j,
                                               forward_propagation);
 
@@ -1153,7 +1153,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
             x_forward_i_backward_j(i) += h_i;
             x_forward_i_backward_j(j) -= h_j;
 
-            neural_network->forward_propagate(batch.get_input_pairs(),
+            neural_network->forward_propagate(batch.get_input_views(),
                                               x_forward_i_backward_j,
                                               forward_propagation);
 

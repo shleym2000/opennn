@@ -19,7 +19,7 @@ class Embedding final : public Layer
 
 public:
 
-    Embedding(const dimensions& = dimensions({0, 0}),
+    Embedding(const dimensions& = {0, 0},
               const Index& = 0,
               const string& = "embedding_layer");
 
@@ -37,15 +37,12 @@ public:
              const Index& = 0,
              const string & = "embedding_layer");
 
+    void set_scale_embedding(const bool& new_scale_embedding);
+    void set_add_positional_encoding(const bool& new_add_positional_encoding);
+
     void set_dropout_rate(const type&);
 
     void set_parameters_random() override;
-
-    void embedding_lookup(const Tensor<type, 2>&, Tensor<type, 3>&);
-    void add_positional_encodings(Tensor<type, 3>&) const;
-
-    bool scale_embedding = false;
-    bool positional_encoding_xxx = false;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -98,6 +95,9 @@ private:
 
     Tensor<type, 2> weights;
 
+    bool scale_embedding = false;
+    bool add_positional_encoding = false;
+
     Tensor<type, 2> positional_encoding;
 
     type dropout_rate = type(0);
@@ -108,7 +108,7 @@ struct EmbeddingForwardPropagation final : LayerForwardPropagation
 {
     EmbeddingForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_pair() const override;
+    TensorView get_output_view() const override;
 
     void initialize() override;
 

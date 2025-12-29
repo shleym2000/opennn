@@ -19,12 +19,12 @@
 
 #include "../../opennn/training_strategy.h"
 #include "../../opennn/language_dataset.h"
+#include "../../opennn/standard_networks.h"
 #include "../../opennn/embedding_layer.h"
 #include "../../opennn/flatten_layer.h"
 #include "../../opennn/multihead_attention_layer.h"
 #include "../../opennn/normalization_layer_3d.h"
 #include "../../opennn/dense_layer.h"
-#include "../../opennn/transformer.h"
 
 using namespace std;
 using namespace opennn;

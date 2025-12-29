@@ -33,6 +33,7 @@ public:
     type get_dropout_rate() const;
 
     bool get_batch_normalization() const;
+
     Tensor<type, 1> get_scales() const;
     Tensor<type, 1> get_offsets() const;
 
@@ -151,7 +152,7 @@ struct Dense2dForwardPropagation final : LayerForwardPropagation
     Dense2dForwardPropagation(const Index& = 0, Layer* = nullptr);
     virtual ~Dense2dForwardPropagation() = default;
 
-    TensorView get_output_pair() const override;
+    TensorView get_output_view() const override;
 
     void initialize() override;
 

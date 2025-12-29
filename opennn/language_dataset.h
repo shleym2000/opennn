@@ -10,7 +10,6 @@
 #define LANGUAGEDataset_H
 
 #include "dataset.h"
-//#include <iostream>
 
 namespace opennn
 {

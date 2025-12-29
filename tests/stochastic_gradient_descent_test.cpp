@@ -2,7 +2,6 @@
 
 #include "../opennn/language_dataset.h"
 #include "../opennn/standard_networks.h"
-#include "../opennn/transformer.h"
 #include "../opennn/mean_squared_error.h"
 #include "../opennn/cross_entropy_error_3d.h"
 #include "../opennn/stochastic_gradient_descent.h"
@@ -107,7 +106,7 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
     LanguageDataset language_dataset;
 
     Index depth;
-    Index perceptron_depth;
+    Index dense_depth;
     Index heads_number;
     Index layers_number;
 
@@ -125,14 +124,14 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
     context_dimension = 6;
 
     depth = 4;
-    perceptron_depth = 6;
+    dense_depth = 6;
     heads_number = 4;
     layers_number = 1;
 /*
     language_dataset.set_data_random_language_model(samples_number, inputs_number, context_length, input_dimensions, context_dimension);
 
     transformer.set({ inputs_number, context_length, input_dimensions, context_dimension,
-                        depth, perceptron_depth, heads_number, layers_number });
+                        depth, dense_depth, heads_number, layers_number });
 
     stochastic_gradient_descent.set_loss_goal(NUMERIC_LIMITS_MIN);
 

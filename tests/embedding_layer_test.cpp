@@ -45,7 +45,7 @@ TEST(Embedding, ForwardPropagate)
     const Index embedding_dimension = get_random_index(1, 10);
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Embedding>(dimensions({ vocabulary_size, sequence_length }), embedding_dimension));
+    neural_network.add_layer(make_unique<Embedding>(dimensions{vocabulary_size, sequence_length}, embedding_dimension));
 
     Embedding embedding_layer({vocabulary_size, sequence_length}, embedding_dimension);
     embedding_layer.set_parameters_random();
@@ -73,7 +73,7 @@ TEST(Embedding, ForwardPropagate)
 
      EmbeddingForwardPropagation forward(batch_size, &layer);
 
-     const TensorView output_view = forward.get_output_pair();
+     const TensorView output_view = forward.get_output_view();
 
      const TensorMap<Tensor<type, 3>> out = tensor_map<3>(output_view);
 
@@ -115,7 +115,7 @@ TEST(Embedding, BackPropagate)
 
     first_layer->forward_propagate({ input_view }, forward_propagation, false);
 
-    const TensorView embedding_output_view = forward_propagation->get_output_pair();
+    const TensorView embedding_output_view = forward_propagation->get_output_view();
 
     ASSERT_EQ(embedding_output_view.dims.size(), 3);
     EXPECT_EQ(embedding_output_view.dims[0], batch_size); 

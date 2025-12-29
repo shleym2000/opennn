@@ -236,7 +236,7 @@ TEST(MeanSquaredErrorTest, BackPropagateLm)
     ApproximationNetwork neural_network({ inputs_number }, { neurons_number }, { dataset.get_target_dimensions()});
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_pairs(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
