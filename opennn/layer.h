@@ -128,6 +128,8 @@ protected:
             logistic(activations, activation_derivatives);
         else if (activation_function == "Softmax")
             softmax(activations);
+        else if (activation_function == "Competitive")
+            throw runtime_error("Competitive 3d not implemented");
         else if (activation_function == "HyperbolicTangent")
             hyperbolic_tangent(activations, activation_derivatives);
         else if (activation_function == "RectifiedLinear")
@@ -323,7 +325,7 @@ struct LayerForwardPropagation
 
     virtual void initialize() = 0;
 
-    virtual TensorView get_output_pair() const = 0;
+    virtual TensorView get_output_view() const = 0;
 
     virtual void print() const {}
 

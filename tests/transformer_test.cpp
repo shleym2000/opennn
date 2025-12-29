@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "../opennn/transformer.h"
+#include "../opennn/standard_networks.h"
 
 using namespace opennn;
 
@@ -10,7 +10,6 @@ TEST(Transformer, DefaultConstructor)
 
     EXPECT_EQ(transformer.is_empty(), true);
     EXPECT_EQ(transformer.get_layers_number(), 0);
-
 }
 
 
@@ -22,7 +21,7 @@ TEST(Transformer, GeneralConstructor)
     const Index input_dimensions = get_random_index(1, 10);
     const Index context_dimension = get_random_index(1, 10);
     const Index embedding_depth = get_random_index(1, 10);
-    const Index perceptron_depth = get_random_index(1, 10);
+    const Index dense_depth = get_random_index(1, 10);
     const Index heads_number = get_random_index(1, 10);
     const Index layers_number = get_random_index(1, 10);
 /*
@@ -31,7 +30,7 @@ TEST(Transformer, GeneralConstructor)
                             input_dimensions, 
                             context_dimension, 
                             embedding_depth, 
-                            perceptron_depth, 
+                            dense_depth,
                             heads_number, 
                             layers_number);
 
@@ -51,12 +50,12 @@ TEST(Transformer, GeneralConstructor)
     input_dimensions = 5;
     context_dimension = 6;
     embedding_depth = 10;
-    perceptron_depth = 12;
+    dense_depth = 12;
     heads_number = 4;
     layers_number = 1;
 
     Transformer transformer_3({ input_length, context_length, input_dimensions, context_dimension,
-                                embedding_depth, perceptron_depth, heads_number, layers_number });
+                                embedding_depth, dense_depth, heads_number, layers_number });
 
     EXPECT_EQ(transformer_3.get_layers_number() == 2 + 7 * layers_number + 10 * layers_number + 1);
 
@@ -65,7 +64,7 @@ TEST(Transformer, GeneralConstructor)
     layers_number = 3;
 
     Transformer transformer_4({ input_length, context_length, input_dimensions, context_dimension,
-                                embedding_depth, perceptron_depth, heads_number, layers_number });
+                                embedding_depth, dense_depth, heads_number, layers_number });
 
     EXPECT_EQ(transformer_4.get_layers_number() == 2 + 7 * layers_number + 10 * layers_number + 1);
 */
@@ -83,20 +82,20 @@ TEST(Transformer, Outputs)
 
     Tensor<type, 1> parameters;
 
-    // Test two layers perceptron with all zeros
+    // Test two dense layers with all zeros
 
     Index input_length = 1;
     Index context_length = 1;
     Index input_dimensions = 1;
     Index context_dimension = 1;
     Index embedding_depth = 1;
-    Index perceptron_depth = 1;
+    Index dense_depth = 1;
     Index heads_number = 1;
     Index layers_number = 1;
     Index batch_size = 1;
 
     Transformer transformer(input_length, context_length, input_dimensions, context_dimension,
-                      embedding_depth, perceptron_depth, heads_number, layers_number);
+                      embedding_depth, dense_depth, heads_number, layers_number);
 
     transformer.set_parameters_constant(type(0));
 
@@ -259,7 +258,7 @@ TEST(Transformer, ForwardPropagate)
     Index context_dimension = 6;
 
     Index embedding_depth = 4;
-    Index perceptron_depth = 6;
+    Index dense_depth = 6;
     Index heads_number = 4;
     Index layers_number = 1;
 
@@ -299,23 +298,23 @@ TEST(Transformer, ForwardPropagate)
     batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
         
     transformer.set({ input_length, context_length, input_dimensions, context_dimension,
-                        embedding_depth, perceptron_depth, heads_number, layers_number });
+                        embedding_depth, dense_depth, heads_number, layers_number });
 
     ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
-    transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+    transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
-    Probabilistic3DForwardPropagation* probabilistic_layer_forward_propagation
-        = static_cast<Probabilistic3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
+    Dense3DForwardPropagation* dense_layer_forward_propagation
+        = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
         
-    Tensor<type, 3> probabilistic_activations = probabilistic_layer_forward_propagation->outputs;
+    Tensor<type, 3> dense_activations = dense_layer_forward_propagation->outputs;
         
-    EXPECT_EQ(probabilistic_activations.rank() == 3);
-    EXPECT_EQ(probabilistic_activations.dimension(0) == batch_size);
-    EXPECT_EQ(probabilistic_activations.dimension(1) == input_length);
-    EXPECT_EQ(probabilistic_activations.dimension(2) == input_dimensions + 1);
+    EXPECT_EQ(dense_activations.rank() == 3);
+    EXPECT_EQ(dense_activations.dimension(0) == batch_size);
+    EXPECT_EQ(dense_activations.dimension(1) == input_length);
+    EXPECT_EQ(dense_activations.dimension(2) == input_dimensions + 1);
 
-    EXPECT_EQ(check_activations_sums(probabilistic_activations));
+    EXPECT_EQ(check_activations_sums(dense_activations));
 
     {
         // Test
@@ -328,7 +327,7 @@ TEST(Transformer, ForwardPropagate)
         context_dimension = 6;
 
         embedding_depth = 4;
-        perceptron_depth = 6;
+        dense_depth = 6;
         heads_number = 4;
         layers_number = 3;
 
@@ -368,23 +367,23 @@ TEST(Transformer, ForwardPropagate)
         batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
 
         transformer.set({ input_length, context_length, input_dimensions, context_dimension,
-                          embedding_depth, perceptron_depth, heads_number, layers_number });
+                          embedding_depth, dense_depth, heads_number, layers_number });
 
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
-        transformer.forward_propagate(batch.get_input_pairs(), forward_propagation, is_training);
+        transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
-        Probabilistic3DForwardPropagation* probabilistic_layer_forward_propagation
-            = static_cast<Probabilistic3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
+        Dense3DForwardPropagation* dense_layer_forward_propagation
+            = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
 
-        Tensor<type, 3> probabilistic_activations = probabilistic_layer_forward_propagation->outputs;
+        Tensor<type, 3> dense_activations = dense_layer_forward_propagation->outputs;
 
-        EXPECT_EQ(probabilistic_activations.rank() == 3);
-        EXPECT_EQ(probabilistic_activations.dimension(0) == batch_size);
-        EXPECT_EQ(probabilistic_activations.dimension(1) == input_length);
-        EXPECT_EQ(probabilistic_activations.dimension(2) == input_dimensions + 1);
+        EXPECT_EQ(dense_activations.rank() == 3);
+        EXPECT_EQ(dense_activations.dimension(0) == batch_size);
+        EXPECT_EQ(dense_activations.dimension(1) == input_length);
+        EXPECT_EQ(dense_activations.dimension(2) == input_dimensions + 1);
 
-        EXPECT_EQ(check_activations_sums(probabilistic_activations));
+        EXPECT_EQ(check_activations_sums(dense_activations));
     }
 */
 }

@@ -290,13 +290,13 @@ void NeuralNetwork::set_layer_input_indices(const vector<vector<Index>>& new_lay
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const Index& layer_index, const vector<Index>& new_layer_input_indices)
+void NeuralNetwork::set_layer_input_indices(const Index& layer_index, const vector<Index>& new_layer_input_indices)
 {
     layer_input_indices[layer_index] = new_layer_input_indices;
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const string& layer_label,
+void NeuralNetwork::set_layer_input_indices(const string& layer_label,
                                              const vector<string>& new_layer_input_labels)
 {
     const Index layer_index = get_layer_index(layer_label);
@@ -312,14 +312,14 @@ void NeuralNetwork::set_layer_inputs_indices(const string& layer_label,
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const string& layer_label,
+void NeuralNetwork::set_layer_input_indices(const string& layer_label,
                                              const initializer_list<string>& new_layer_input_labels_list)
 {
-    set_layer_inputs_indices(layer_label, vector<string>(new_layer_input_labels_list));
+    set_layer_input_indices(layer_label, vector<string>(new_layer_input_labels_list));
 }
 
 
-void NeuralNetwork::set_layer_inputs_indices(const string& layer_label, const string& new_layer_input_labels)
+void NeuralNetwork::set_layer_input_indices(const string& layer_label, const string& new_layer_input_labels)
 {
     const Index layer_index = get_layer_index(layer_label);
 
@@ -512,7 +512,33 @@ void NeuralNetwork::set_parameters_glorot()
 }
 
 
-void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
+Tensor<type, 3> NeuralNetwork::calculate_outputs(const Tensor<type, 3> &inputs_1, const Tensor<type, 3> &inputs_2)
+{
+    const Index layers_number = get_layers_number();
+
+    if (layers_number == 0)
+        return Tensor<type, 3>();
+
+    const Index batch_size = inputs_1.dimension(0);
+
+    ForwardPropagation forward_propagation(batch_size, this);
+
+    const vector<TensorView> input_views = {
+                                            TensorView((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}}),
+                                            TensorView((type*)inputs_2.data(), {{inputs_2.dimension(0), inputs_2.dimension(1), inputs_2.dimension(2)}})};
+
+    forward_propagate(input_views, forward_propagation, false);
+
+    const vector<string> layer_labels = get_layer_labels();
+
+    const TensorView outputs_view
+        = forward_propagation.layers[layers_number - 1]->get_output_view();
+
+    return tensor_map<3>(outputs_view);
+}
+
+
+void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       ForwardPropagation& forward_propagation,
                                       const bool& is_training) const
 {
@@ -528,7 +554,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
     }
 
     const vector<vector<TensorView>> layer_input_pairs
-        = forward_propagation.get_layer_input_pairs(input_pair, is_training);
+        = forward_propagation.get_layer_input_pairs(input_view, is_training);
 
     for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate(layer_input_pairs[i],
@@ -537,7 +563,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
 }
 
 
-void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
+void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       const Tensor<type, 1>& new_parameters,
                                       ForwardPropagation& forward_propagation)
 {
@@ -546,7 +572,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_pair,
 
     set_parameters(new_parameters);
 
-    forward_propagate(input_pair, forward_propagation, true);
+    forward_propagate(input_view, forward_propagation, true);
 
     set_parameters(original_parameters);
 }
@@ -640,7 +666,7 @@ Tensor<type, 2> NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data
 
             layers[0]->forward_propagate({scaled_inputs_tensor}, forward_propagation.layers[0], is_training);
 
-            const TensorView outputs_view = forward_propagation.layers[0]->get_output_pair();
+            const TensorView outputs_view = forward_propagation.layers[0]->get_output_view();
             scaled_outputs = tensor_map<2>(outputs_view);
         }
         else
@@ -668,7 +694,7 @@ Tensor<type, 2> NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data
 
                 layers[i]->forward_propagate({inputs_tensor}, forward_propagation.layers[i], is_training);
 
-                scaled_outputs = tensor_map<2>(forward_propagation.layers[i]->get_output_pair());
+                scaled_outputs = tensor_map<2>(forward_propagation.layers[i]->get_output_view());
 
                 last_layer_outputs = scaled_outputs;
                 last_layer_outputs_dimensions = get_dimensions(last_layer_outputs);
@@ -855,43 +881,6 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
         information(dense2d_layer_index, 3) = dense2d_layer->get_activation_function();
 
         dense2d_layer_index++;
-    }
-
-    return information;
-}
-
-
-Tensor<string, 2> NeuralNetwork::get_probabilistic_layer_information() const
-{
-    const Index layers_number = get_layers_number();
-
-    Index probabilistic_layers_number = 0;
-
-    for(Index i = 0; i < layers_number; i++)
-        if (layers[i]->get_label().find("classification") != string::npos)
-            probabilistic_layers_number++;
-
-    Tensor<string, 2> information(probabilistic_layers_number,4);
-
-    Index probabilistic_layer_index = 0;
-
-    for(Index i = 0; i < layers_number; i++)
-    {
-        const string& name = layers[i]->get_name();
-        const string label = layers[i]->get_label();
-
-        if (name != "Dense2d" || label.find("dense2d") != string::npos)
-            continue;
-
-        information(probabilistic_layer_index, 0) = label;
-        information(probabilistic_layer_index, 1) = to_string(layers[i]->get_input_dimensions()[0]);
-        information(probabilistic_layer_index, 2) = to_string(layers[i]->get_output_dimensions()[0]);
-
-        const Dense2d* dense_2d = static_cast<Dense2d*>(layers[i].get());
-
-        information(probabilistic_layer_index, 3) = dense_2d->get_activation_function();
-
-        probabilistic_layer_index++;
     }
 
     return information;
@@ -1385,7 +1374,7 @@ TensorView ForwardPropagation::get_last_trainable_layer_outputs_pair() const
 
     const unique_ptr<LayerForwardPropagation>& layer_forward_propagation = layers[last_trainable_layer_index];
 
-    return layer_forward_propagation->get_output_pair();
+    return layer_forward_propagation->get_output_view();
 }
 
 
@@ -1419,7 +1408,7 @@ vector<vector<TensorView>> ForwardPropagation::get_layer_input_pairs(const vecto
         for (Index input_index = 0; input_index < static_cast<Index>(input_layer_indices.size()); input_index++)
         {
             const Index input_layer_index = input_layer_indices[input_index];
-            layer_input_pairs[layer_index][input_index] = layers[input_layer_index]->get_output_pair();
+            layer_input_pairs[layer_index][input_index] = layers[input_layer_index]->get_output_view();
         }
     }
 

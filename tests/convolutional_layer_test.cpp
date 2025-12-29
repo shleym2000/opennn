@@ -115,7 +115,7 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
 
     convolutional_layer.forward_propagate(input_views, forward_propagation, true);
 
-    const TensorView output_view = forward_propagation->get_output_pair();
+    const TensorView output_view = forward_propagation->get_output_view();
     const dimensions expected_output_dims = convolutional_layer.get_output_dimensions();
 
     ASSERT_EQ(output_view.dims.size(), 4);
@@ -179,7 +179,7 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
     ConvolutionalBackPropagation* back_propagation =
         static_cast<ConvolutionalBackPropagation*>(back_propagation_base.get());
 
-    TensorView output_view = forward_propagation->get_output_pair();
+    TensorView output_view = forward_propagation->get_output_view();
 
     ASSERT_EQ(output_view.dims.size(), 4);
 

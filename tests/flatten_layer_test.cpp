@@ -45,7 +45,7 @@ TEST_F(FlattenLayerTest, ForwardPropagate)
 
     flatten_layer->forward_propagate({ input_view }, forward_propagation, false);
 
-    const TensorView output_pair = forward_propagation->get_output_pair();
+    const TensorView output_pair = forward_propagation->get_output_view();
     const dimensions& output_dims = output_pair.dims;
 
     ASSERT_EQ(output_dims.size(), 2) << "Flatten<4> should produce a 2D tensor (batch, features).";

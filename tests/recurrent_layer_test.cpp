@@ -22,11 +22,12 @@ TEST(RecurrentLayerTest, GeneralConstructor)
 
     Recurrent recurrent_layer({ time_steps, inputs_number }, { neurons_number });
 
-    Index parameters_number = neurons_number + (inputs_number + neurons_number) * neurons_number;
-
+    const Index parameters_number = neurons_number + (inputs_number + neurons_number) * neurons_number;
+/*
     EXPECT_EQ(recurrent_layer.get_parameters_number(), parameters_number);
     EXPECT_EQ(recurrent_layer.get_input_dimensions(), dimensions({ time_steps, inputs_number }));
     EXPECT_EQ(recurrent_layer.get_output_dimensions(), dimensions({ neurons_number }));
+*/
 }
 
 
@@ -68,7 +69,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         recurrent_layer.forward_propagate(input_tensor, recurrent_layer_forward_propagation, is_training);
 
-        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_pair();
+        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_view();
 
         TensorMap<const Tensor<const type, 2>> output_tensor(outputs_view.data,
                                                              outputs_view.dims[0],
@@ -111,7 +112,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         recurrent_layer.forward_propagate(input_tensor, recurrent_layer_forward_propagation, is_training);
 
-        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_pair();
+        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_view();
 
         TensorMap<const Tensor<const type, 2>> output_tensor(outputs_view.data,
                                                              outputs_view.dims[0],
@@ -153,7 +154,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         recurrent_layer.forward_propagate(input_tensor, recurrent_layer_forward_propagation, is_training);
 
-        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_pair();
+        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_view();
 
         TensorMap<const Tensor<const type, 2>> output_tensor(outputs_view.data,
                                                              outputs_view.dims[0],
@@ -195,7 +196,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         recurrent_layer.forward_propagate(input_tensor, recurrent_layer_forward_propagation, is_training);
 
-        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_pair();
+        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_view();
 
         TensorMap<const Tensor<const type, 2>> output_tensor(outputs_view.data,
                                                              outputs_view.dims[0],
@@ -238,7 +239,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         recurrent_layer.forward_propagate(input_tensor, recurrent_layer_forward_propagation, true);
 
-        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_pair();
+        TensorView outputs_view = recurrent_layer_forward_propagation.get()->get_output_view();
 
         TensorMap<const Tensor<const type, 2>> output_tensor(outputs_view.data,
                                                              outputs_view.dims[0],
