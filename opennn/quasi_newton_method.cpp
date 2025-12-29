@@ -345,7 +345,7 @@ TrainingResults QuasiNewtonMethod::train()
 
         // Neural network
 
-        neural_network->forward_propagate(training_batch.get_input_pairs(),
+        neural_network->forward_propagate(training_batch.get_input_views(),
                                           training_forward_propagation,
                                           is_training);
 
@@ -373,7 +373,7 @@ TrainingResults QuasiNewtonMethod::train()
 
         if(has_selection)
         {
-            neural_network->forward_propagate(selection_batch.get_input_pairs(),
+            neural_network->forward_propagate(selection_batch.get_input_views(),
                                               selection_forward_propagation,
                                               is_training);
 
@@ -601,7 +601,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
         potential_parameters.device(*device)
             = parameters + training_direction * triplet.B.first;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           potential_parameters, forward_propagation);
 
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
@@ -619,7 +619,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
         potential_parameters.device(*device)
             = parameters + training_direction*triplet.B.first;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           potential_parameters,
                                           forward_propagation);
 
@@ -637,7 +637,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
             potential_parameters.device(*device)
                 = parameters + training_direction*triplet.B.first;
 
-            neural_network->forward_propagate(batch.get_input_pairs(),
+            neural_network->forward_propagate(batch.get_input_views(),
                                               potential_parameters,
                                               forward_propagation);
 
@@ -653,7 +653,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
         potential_parameters.device(*device)
             = parameters + training_direction*triplet.U.first;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           potential_parameters,
                                           forward_propagation);
 
@@ -670,7 +670,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
             potential_parameters.device(*device)
                 = parameters + training_direction*triplet.U.first;
 
-            neural_network->forward_propagate(batch.get_input_pairs(), potential_parameters, forward_propagation);
+            neural_network->forward_propagate(batch.get_input_views(), potential_parameters, forward_propagation);
 
             loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
@@ -733,7 +733,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
     {
         potential_parameters.device(*device) = parameters + training_direction * alpha;
 
-        neural_network->forward_propagate(batch.get_input_pairs(), potential_parameters, forward_propagation);
+        neural_network->forward_propagate(batch.get_input_views(), potential_parameters, forward_propagation);
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
         const type new_loss = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
 

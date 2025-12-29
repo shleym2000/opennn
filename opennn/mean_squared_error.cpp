@@ -35,7 +35,7 @@ void MeanSquaredError::calculate_error(const Batch& batch,
     if (outputs_number == 0 || samples_number == 0)
         throw runtime_error("MeanSquaredError: outputs_number or samples_number is zero.");
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(batch.get_target_pair());
+    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(batch.get_target_view());
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 

@@ -95,7 +95,7 @@ TEST(CrossEntropyError2d, calculate_binary_error)
     ForwardPropagation forward_propagation(5, &neural_network);
     BackPropagation back_propagation(5, &cross_entropy_error);
 
-    const vector<TensorView> batch_input_pairs = batch.get_input_pairs();
+    const vector<TensorView> batch_input_pairs = batch.get_input_views();
     neural_network.forward_propagate(batch_input_pairs, forward_propagation, false);
 
     cross_entropy_error.calculate_binary_error(batch, forward_propagation, back_propagation);
@@ -149,7 +149,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
     ForwardPropagation forward_propagation(5, &neural_network);
     BackPropagation back_propagation(5, &cross_entropy_error);
 
-    const vector<TensorView> batch_input_pairs = batch.get_input_pairs();
+    const vector<TensorView> batch_input_pairs = batch.get_input_views();
     neural_network.forward_propagate(batch_input_pairs, forward_propagation, true);
 
     cross_entropy_error.calculate_multiple_error(batch, forward_propagation, back_propagation);
@@ -203,7 +203,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
      ForwardPropagation forward_propagation(5, &neural_network);
      BackPropagation back_propagation(5, &cross_entropy_error);
 
-     const vector<TensorView> batch_input_pairs = batch.get_input_pairs();
+     const vector<TensorView> batch_input_pairs = batch.get_input_views();
      neural_network.forward_propagate(batch_input_pairs, forward_propagation, true);
 
      cross_entropy_error.calculate_binary_output_delta(batch, forward_propagation, back_propagation);
@@ -253,7 +253,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
      ForwardPropagation forward_propagation(5, &neural_network);
      BackPropagation back_propagation(5, &cross_entropy_error);
 
-     const vector<TensorView> batch_input_pairs = batch.get_input_pairs();
+     const vector<TensorView> batch_input_pairs = batch.get_input_views();
      neural_network.forward_propagate(batch_input_pairs, forward_propagation, true);
 
      cross_entropy_error.calculate_multiple_output_delta(batch, forward_propagation, back_propagation);

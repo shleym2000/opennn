@@ -86,6 +86,17 @@ void Embedding::set(const Index& new_vocabulary_size,
                 : cos(i / pow(10000, (j - Index(half_depth)) / half_depth));
 }
 
+void Embedding::set_scale_embedding(const bool &new_scale_embedding)
+{
+    scale_embedding = new_scale_embedding;
+}
+
+
+void Embedding::set_add_positional_encoding(const bool &new_add_positional_encoding)
+{
+    add_positional_encoding = new_add_positional_encoding;
+}
+
 
 void Embedding::set_dropout_rate(const type& new_dropout_rate)
 {
@@ -101,9 +112,20 @@ void Embedding::set_parameters_random()
 }
 
 
-void Embedding::embedding_lookup(const Tensor<type, 2>& inputs, Tensor<type, 3>& outputs)
+void Embedding::forward_propagate(const vector<TensorView>& input_views,
+                                  unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
+                                  const bool& is_training)
 {
-    const Index batch_size = inputs.dimension(0);
+    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
+
+    EmbeddingForwardPropagation* embedding_forward_propagation =
+        static_cast<EmbeddingForwardPropagation*>(layer_forward_propagation.get());
+
+    Tensor<type, 3>& outputs = embedding_forward_propagation->outputs;
+
+    const Index batch_size = outputs.dimension(0);
+    const Index embedding_dimension = outputs.dimension(2);
+
     const type coefficient = sqrt(type(get_embedding_dimension()));
 
     if (outputs.dimension(0) != batch_size)
@@ -124,44 +146,20 @@ void Embedding::embedding_lookup(const Tensor<type, 2>& inputs, Tensor<type, 3>&
 
             const auto embedding = weights.chip(token_id, 0);
 
-            if(scale_embedding)
-                sample_output.chip(word_index, 0) = embedding*coefficient;
-            else
-                sample_output.chip(word_index, 0) = embedding;
+            scale_embedding
+                ? sample_output.chip(word_index, 0) = embedding*coefficient
+                : sample_output.chip(word_index, 0) = embedding;
         }
     }
-}
+
+    if(add_positional_encoding)
+        outputs.device(*device) += positional_encoding
+                                  .reshape(array_3(1, sequence_length, embedding_dimension))
+                                  .broadcast(array_3(batch_size, 1, 1));
 
 
-void Embedding::add_positional_encodings(Tensor<type, 3>& embeddings) const
-{
-    const Index batch_size = embeddings.dimension(0);
-    const Index embedding_dimension = embeddings.dimension(2);
-
-    embeddings.device(*device) += positional_encoding
-      .reshape(array_3(1, sequence_length, embedding_dimension))
-      .broadcast(array_3(batch_size, 1, 1));
-}
-
-
-void Embedding::forward_propagate(const vector<TensorView>& input_views,
-                                  unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                  const bool&)
-{
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
-
-    EmbeddingForwardPropagation* embedding_forward_propagation =
-        static_cast<EmbeddingForwardPropagation*>(layer_forward_propagation.get());
-
-    Tensor<type, 3>& outputs = embedding_forward_propagation->outputs;
-
-    embedding_lookup(inputs, outputs);
-
-    // if(positional_encoding_xxx)
-    //     add_positional_encodings(outputs);
-
-    // if(is_training && dropout_rate > 0)
-    //     dropout(outputs, dropout_rate);
+    if(is_training && dropout_rate > 0)
+        dropout(outputs, dropout_rate);
 }
 
 
@@ -262,7 +260,7 @@ EmbeddingForwardPropagation::EmbeddingForwardPropagation(const Index& new_batch_
 }
 
 
-TensorView EmbeddingForwardPropagation::get_output_pair() const
+TensorView EmbeddingForwardPropagation::get_output_view() const
 {
     const Embedding* embedding_layer = static_cast<Embedding*>(layer);
 

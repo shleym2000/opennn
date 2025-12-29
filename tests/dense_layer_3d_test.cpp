@@ -2,7 +2,7 @@
 
 #include "../opennn/tensors.h"
 #include "../opennn/dense_layer_3d.h"
-#include "../opennn/neural_network.h"
+//#include "../opennn/neural_network.h"
 
 using namespace opennn;
 
@@ -51,7 +51,7 @@ TEST(Dense3dTest, ForwardPropagate)
     dense_3d.forward_propagate(input_views, forward_propagation, false);
 
     const TensorMap<Tensor<type, 3>> outputs =
-        tensor_map<3>(forward_propagation->get_output_pair());
+        tensor_map<3>(forward_propagation->get_output_view());
 
     EXPECT_EQ(outputs.dimension(0), batch_size);
     EXPECT_EQ(outputs.dimension(1), sequence_length);

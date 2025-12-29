@@ -6,8 +6,8 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef PERCEPTRONLAYER3D_H
-#define PERCEPTRONLAYER3D_H
+#ifndef DENSELAYER3D_H
+#define DENSELAYER3D_H
 
 #include "layer.h"
 
@@ -82,7 +82,7 @@ struct Dense3dForwardPropagation final : LayerForwardPropagation
 {
     Dense3dForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_pair() const override;
+    TensorView get_output_view() const override;
 
     void initialize() override;
 
