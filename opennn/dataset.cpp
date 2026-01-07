@@ -893,7 +893,7 @@ void Dataset::set_raw_variable_roles(const vector<string>& new_raw_variables_rol
 
     if (new_raw_variables_roles_size != raw_variables.size())
         throw runtime_error("Size of raw_variables uses (" + to_string(new_raw_variables_roles_size) + ") "
-                                                                                                      "must be equal to raw_variables size (" + to_string(raw_variables.size()) + "). \n");
+                                                                                                      "must be equal to raw_variables size (" + to_string(raw_variables.size()) + ").\n");
 
     for (size_t i = 0; i < new_raw_variables_roles.size(); i++)
         raw_variables[i].set_role(new_raw_variables_roles[i]);
@@ -2815,12 +2815,12 @@ void Dataset::missing_values_from_XML(const XMLElement *missing_values_element)
 void Dataset::preview_data_from_XML(const XMLElement *preview_data_element)
 {
     if (!preview_data_element)
-        throw runtime_error("Preview data element is nullptr. \n ");
+        throw runtime_error("Preview data element is nullptr.\n ");
 
     const XMLElement* preview_size_element = preview_data_element->FirstChildElement("PreviewSize");
 
     if (!preview_size_element)
-        throw runtime_error("Preview size element is nullptr. \n ");
+        throw runtime_error("Preview size element is nullptr.\n ");
 
     Index preview_size = 0;
     if (preview_size_element->GetText())

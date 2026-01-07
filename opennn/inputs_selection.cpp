@@ -219,7 +219,7 @@ void InputsSelectionResults::resize_history(const Index& new_size)
 void InputsSelectionResults::print() const
 {
     cout << endl
-         << "Inputs Selection Results" << endl
+         << "Input Selection Results" << endl
          << "Optimal inputs number: " << optimal_input_raw_variable_names.size() << endl
          << "Inputs: " << endl;
 

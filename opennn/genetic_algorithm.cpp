@@ -640,7 +640,7 @@ InputsSelectionResults GeneticAlgorithm::perform_input_selection()
 
     InputsSelectionResults input_selection_results(maximum_epochs_number);
 
-    if(display) cout << "Performing genetic inputs selection...\n" << endl;
+    if(display) cout << "Performing genetic input selection...\n" << endl;
 
     initialize_population();
 
