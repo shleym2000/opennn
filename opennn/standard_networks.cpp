@@ -83,7 +83,7 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Dense2d>(get_output_dimensions(),
                                    output_dimensions,
-                                   "Softmax",
+                                   output_dimensions[0] == 1 ? "Logistic" : "Softmax",
                                    false,
                                    "classification_layer"));
 
