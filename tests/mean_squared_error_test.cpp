@@ -10,6 +10,10 @@
 #include "../opennn/neural_network.h"
 #include "../opennn/mean_squared_error.h"
 #include "../opennn/standard_networks.h"
+#include "../opennn/recurrent_layer.h"
+#include "../opennn/flatten_layer.h"
+#include "../opennn/embedding_layer.h"
+#include "../opennn/multihead_attention_layer.h"
 
 using namespace opennn;
 
@@ -232,7 +236,7 @@ TEST(MeanSquaredErrorTest, BackPropagateLm)
     ApproximationNetwork neural_network({ inputs_number }, { neurons_number }, { dataset.get_target_dimensions()});
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_pairs(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 

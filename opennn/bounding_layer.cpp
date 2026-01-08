@@ -163,7 +163,7 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
 
     if(bounding_method == BoundingMethod::NoBounding)
     {
-        outputs.device(*thread_pool_device) = inputs;
+        outputs.device(*device) = inputs;
         return;
     }
 
@@ -292,7 +292,7 @@ BoundingForwardPropagation::BoundingForwardPropagation(const Index& new_batch_si
 }
 
 
-TensorView BoundingForwardPropagation::get_output_pair() const
+TensorView BoundingForwardPropagation::get_output_view() const
 {
     const dimensions output_dimensions = layer->get_output_dimensions();
 

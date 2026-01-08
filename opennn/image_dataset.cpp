@@ -281,33 +281,11 @@ void ImageDataset::to_XML(XMLPrinter& printer) const
 
     printer.CloseElement();
 
-    printer.OpenElement("RawVariables");
+    raw_variables_to_XML(printer);
 
-    add_xml_element(printer, "RawVariablesNumber", to_string(get_raw_variables_number()));
+    samples_to_XML(printer);
 
-    // Raw variables items
-
-    const Index raw_variables_number = get_raw_variables_number();
-
-    for(Index i = 0; i < raw_variables_number; i++)
-    {
-        printer.OpenElement("RawVariable");
-        printer.PushAttribute("Item", to_string(i+1).c_str());
-        raw_variables[i].to_XML(printer);
-        printer.CloseElement();
-    }
-
-    printer.CloseElement();
-
-    if(has_sample_ids)
-        add_xml_element(printer, "Ids", vector_to_string(sample_ids));
-
-    printer.OpenElement("Samples");
-
-    add_xml_element(printer, "SamplesNumber", to_string(get_samples_number()));
-    add_xml_element(printer, "SampleUses", vector_to_string(get_sample_uses_vector()));
-
-    printer.CloseElement();
+    add_xml_element(printer, "Display", to_string(display));
 
     printer.CloseElement();
 }
@@ -344,27 +322,27 @@ Tensor<type, 2> ImageDataset::perform_augmentation(const Tensor<type, 2>& input_
         Tensor<type, 3> image = inputs.chip(batch_index, 0);
 
         if(random_reflection_axis_x)
-            reflect_image_x(thread_pool_device.get(),
+            reflect_image_x(device.get(),
                             image);
 
         if(random_reflection_axis_y)
-            reflect_image_y(thread_pool_device.get(),
+            reflect_image_y(device.get(),
                             image);
 
         if(random_rotation_minimum != 0 && random_rotation_maximum != 0)
-            rotate_image(thread_pool_device.get(),
+            rotate_image(device.get(),
                          image,
                          image,
                          get_random_type(random_rotation_minimum, random_rotation_maximum));
 
         if(random_horizontal_translation_minimum != 0 && random_horizontal_translation_maximum != 0)
-            translate_image_x(thread_pool_device.get(),
+            translate_image_x(device.get(),
                               image,
                               image,
                               get_random_type(random_horizontal_translation_minimum, random_horizontal_translation_maximum));
 
         if(random_vertical_translation_minimum != 0 && random_vertical_translation_maximum != 0)
-            translate_image_y(thread_pool_device.get(),
+            translate_image_y(device.get(),
                               image,
                               image,
                               get_random_type(random_vertical_translation_minimum, random_vertical_translation_maximum));
@@ -442,53 +420,13 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
 
     const XMLElement* raw_variables_element = image_dataset_element->FirstChildElement("RawVariables");
 
-    if (!raw_variables_element)
-        throw runtime_error("RawVariables element is nullptr.\n");
-
-    const Index raw_variables_number = read_xml_index(raw_variables_element, "RawVariablesNumber");
-
-    set_raw_variables_number(raw_variables_number);
-
-    const XMLElement* start_element = raw_variables_element->FirstChildElement("RawVariablesNumber");
-
-    Index target_count = 0;
-
-    for (auto& raw_variable : raw_variables)
-    {
-        const XMLElement* raw_variable_element = start_element->NextSiblingElement("RawVariable");
-        start_element = raw_variable_element;
-
-        raw_variable.name = read_xml_string(start_element, "Name");
-        raw_variable.set_scaler(read_xml_string(start_element, "Scaler"));
-        raw_variable.set_role(read_xml_string(start_element, "Role"));
-        raw_variable.set_type(read_xml_string(start_element, "Type"));
-
-        if (raw_variable.type == RawVariableType::Categorical || raw_variable.type == RawVariableType::Binary)
-        {
-            raw_variable.categories = get_tokens(read_xml_string(start_element, "Categories"), ";");
-            target_count++;
-        }
-    }
-
-    const Index targets_number = (target_count == 2) ? 1 : target_count;
-
-    target_dimensions = { targets_number };
+    raw_variables_from_XML(raw_variables_element);
 
     // Samples
 
-    if (has_sample_ids)
-        sample_ids = get_tokens(read_xml_string(image_dataset_element, "Ids"), ",");
-
     const XMLElement* samples_element = image_dataset_element->FirstChildElement("Samples");
 
-    if (!samples_element)
-        throw runtime_error("Samples element is nullptr.\n");
-
-    const Index samples_number = read_xml_index(samples_element, "SamplesNumber");
-
-    sample_uses.resize(samples_number);
-    data.resize(samples_number, (Index)raw_variables.size());
-    set_sample_uses(get_tokens(read_xml_string(samples_element, "SampleUses"), " "));
+    samples_from_XML(samples_element);
 }
 
 
@@ -500,7 +438,7 @@ vector<Descriptives> ImageDataset::scale_variables(const string&)
                                            input_dimensions[1],
                                            input_dimensions[2]);
 
-    inputs_data.device(*thread_pool_device) = inputs_data / type(255);
+    inputs_data.device(*device) = inputs_data / type(255);
 
     return vector<Descriptives>();
 }
@@ -514,7 +452,7 @@ void ImageDataset::unscale_variables(const string&)
                                            input_dimensions[1],
                                            input_dimensions[2]);
 
-    inputs_data.device(*thread_pool_device) = inputs_data * type(255);
+    inputs_data.device(*device) = inputs_data * type(255);
 }
 
 

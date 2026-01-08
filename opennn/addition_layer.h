@@ -29,7 +29,7 @@ class Addition final : public Layer
 
 public:
 
-    Addition(const dimensions& new_input_dimensions = dimensions({}), const string& new_name = "")
+    Addition(const dimensions& new_input_dimensions = {}, const string& new_name = "")
     {
         set(new_input_dimensions, new_name);
     }
@@ -76,7 +76,7 @@ public:
             static_cast<AdditionForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
         Tensor<type, Rank>& outputs = this_forward_propagation->outputs;
-        outputs.device(*thread_pool_device) = input_1 + input_2;
+        outputs.device(*device) = input_1 + input_2;
 
     }
 
@@ -93,8 +93,8 @@ public:
         AdditionBackPropagation<Rank>* this_back_propagation =
             static_cast<AdditionBackPropagation<Rank>*>(back_propagation.get());
 
-        this_back_propagation->input_1_derivatives.device(*thread_pool_device) = deltas;
-        this_back_propagation->input_2_derivatives.device(*thread_pool_device) = deltas;
+        this_back_propagation->input_1_derivatives.device(*device) = deltas;
+        this_back_propagation->input_2_derivatives.device(*device) = deltas;
     }
 
     void from_XML(const XMLDocument& document) override
@@ -177,7 +177,7 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
     }
 
 
-    TensorView get_output_pair() const override
+    TensorView get_output_view() const override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
 
@@ -192,7 +192,7 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
 
-        DSizes<Index, Rank+1> full_dimensions;   // <-- Rank+1 to include batch
+        DSizes<Index, Rank+1> full_dimensions;   // Rank+1 to include batch
         full_dimensions[0] = batch_size;
 
         for (int i = 0; i < Rank; ++i)

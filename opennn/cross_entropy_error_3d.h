@@ -42,6 +42,10 @@ public:
 
     void to_XML(XMLPrinter&) const override;
 
+private:
+
+    const type epsilon = numeric_limits<type>::epsilon();
+
 #ifdef OPENNN_CUDA
 
     // Error

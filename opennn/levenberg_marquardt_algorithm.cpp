@@ -249,7 +249,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
 
         // Neural network
 
-        neural_network->forward_propagate(training_batch.get_input_pairs(),
+        neural_network->forward_propagate(training_batch.get_input_views(),
                                           training_forward_propagation,
                                           is_training);
 
@@ -266,7 +266,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
 
         if(has_selection)
         {
-            neural_network->forward_propagate(selection_batch.get_input_pairs(),
+            neural_network->forward_propagate(selection_batch.get_input_views(),
                                               selection_forward_propagation,
                                               is_training);
 
@@ -382,9 +382,9 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
 
         parameters_increment = perform_Householder_QR_decomposition(hessian, type(-1)*gradient);
 
-        potential_parameters.device(*thread_pool_device) = parameters + parameters_increment;
+        potential_parameters.device(*device) = parameters + parameters_increment;
 
-        neural_network->forward_propagate(batch.get_input_pairs(),
+        neural_network->forward_propagate(batch.get_input_views(),
                                           potential_parameters,
                                           forward_propagation);
 

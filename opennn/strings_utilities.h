@@ -16,6 +16,10 @@ using namespace Eigen;
 
 namespace opennn
 {
+
+    void prepare_line(string&);
+    Index count_non_empty_lines(const filesystem::path&);
+
     Index count_tokens(const string&, const string&);
 
     vector<string> get_tokens(const string&, const string&);
@@ -64,7 +68,12 @@ namespace opennn
 
     void set_language(const string&);
 
-    void print_tokens(const vector<vector<string>>&);
+    void tokenize_whitespace(const vector<string>&, Tensor<type, 2>&);
+    void tokenize_wordpiece(const vector<string>&, Tensor<type, 2>&);
+    void detokenize_whitespace(Tensor<type, 2>&, ostringstream&);
+    void detokenize_wordpiece(Tensor<type, 2>&, ostringstream&);
+
+    vector<string> preprocess_language_document(const string&, const bool&);
 }
 
 #endif // OPENNNSTRINGS_H

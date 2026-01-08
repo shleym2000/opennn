@@ -160,13 +160,9 @@ public:
 
     void print() const override
     {
-        cout << "Flatten layer" << endl;
-
-        cout << "Input dimensions: ";
-        print_vector(input_dimensions);
-
-        cout << "Output dimensions: ";
-        print_vector(get_output_dimensions());
+        cout << "Flatten layer" << endl
+             << "Input dimensions: " << input_dimensions << endl
+             << "Output dimensions: " << get_output_dimensions() << endl;
     }
 
 #ifdef OPENNN_CUDA
@@ -234,7 +230,7 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     }
 
 
-    TensorView get_output_pair() const override
+    TensorView get_output_view() const override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
 

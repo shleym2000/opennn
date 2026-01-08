@@ -171,6 +171,30 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
         lines.push_back(line);
     }
 
+    for(size_t i = 0; i < lines.size(); i++)
+    {
+        size_t equal_pos = lines[i].find('=');
+        if(equal_pos != string::npos)
+        {
+            string var_def = lines[i].substr(0, equal_pos);
+            size_t first = var_def.find_first_not_of(" \t");
+            if(first == string::npos)
+                continue;
+
+            size_t last = var_def.find_last_not_of(" \t");
+            string clean_var = var_def.substr(first, (last - first + 1));
+
+            if(clean_var.find(' ') != string::npos)
+            {
+                string fixed_var = clean_var;
+                replace(fixed_var.begin(), fixed_var.end(), ' ', '_');
+
+                for(size_t j = 0; j < lines.size(); j++)
+                    replace_all_appearances(lines[j], clean_var, fixed_var);
+            }
+        }
+    }
+
     if(expression.find("Logistic") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) relu = true;
     if(expression.find("ExponentialLinear") != string::npos) exp_linear = true;
@@ -399,6 +423,7 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
         if(output_names[i] != fixed_output_names[i])
             replace_all_word_appearances(expression, output_names[i], "$" + fixed_output_names[i]);
 
+    vector<string> lines;
     stringstream ss(expression);
     string line;
     while(getline(ss, line, '\n'))
@@ -415,8 +440,36 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
         if(line.back() != ';')
             line += ';';
 
-        buffer << line << "\n";
+        lines.push_back(line);
     }
+
+    for(size_t i = 0; i < lines.size(); i++)
+    {
+        size_t equal_pos = lines[i].find('=');
+        if(equal_pos != string::npos)
+        {
+            string var_def = lines[i].substr(0, equal_pos);
+
+            size_t first = var_def.find_first_not_of(" \t");
+            if(first == string::npos)
+                continue;
+
+            size_t last = var_def.find_last_not_of(" \t");
+            string clean_var = var_def.substr(first, (last - first + 1));
+
+            if(clean_var.find(' ') != string::npos)
+            {
+                string fixed_var = clean_var;
+                replace(fixed_var.begin(), fixed_var.end(), ' ', '_');
+
+                for(size_t j = 0; j < lines.size(); j++)
+                    replace_all_appearances(lines[j], clean_var, fixed_var);
+            }
+        }
+    }
+
+    for(const string& l : lines)
+        buffer << l << "\n";
 
     if(softmax)
     {
@@ -731,6 +784,31 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
             token += ';';
 
         lines.push_back(token);
+    }
+
+    for(size_t i = 0; i < lines.size(); i++)
+    {
+        size_t equal_pos = lines[i].find('=');
+        if(equal_pos != string::npos)
+        {
+            string var_def = lines[i].substr(0, equal_pos);
+
+            size_t first = var_def.find_first_not_of(" \t");
+            if(first == string::npos)
+                continue;
+
+            size_t last = var_def.find_last_not_of(" \t");
+            string clean_var = var_def.substr(first, (last - first + 1));
+
+            if(clean_var.find(' ') != string::npos)
+            {
+                string fixed_var = clean_var;
+                replace(fixed_var.begin(), fixed_var.end(), ' ', '_');
+
+                for(size_t j = 0; j < lines.size(); j++)
+                    replace_all_appearances(lines[j], clean_var, fixed_var);
+            }
+        }
     }
 
     const int maximum_output_variable_numbers = 5;
@@ -1115,6 +1193,31 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
         lines.push_back(line);
     }
 
+    for(size_t i = 0; i < lines.size(); i++)
+    {
+        size_t equal_pos = lines[i].find('=');
+        if(equal_pos != string::npos)
+        {
+            string var_def = lines[i].substr(0, equal_pos);
+
+            size_t first = var_def.find_first_not_of(" \t");
+            if(first == string::npos)
+                continue;
+
+            size_t last = var_def.find_last_not_of(" \t");
+            string clean_var = var_def.substr(first, (last - first + 1));
+
+            if(clean_var.find(' ') != string::npos)
+            {
+                string fixed_var = clean_var;
+                replace(fixed_var.begin(), fixed_var.end(), ' ', '_');
+
+                for(size_t j = 0; j < lines.size(); j++)
+                    replace_all_appearances(lines[j], clean_var, fixed_var);
+            }
+        }
+    }
+
     if(expression.find("Logistic") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) relu = true;
     if(expression.find("ExponentialLinear") != string::npos) exp_linear = true;
@@ -1268,10 +1371,10 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
 string ModelExpression::replace_reserved_keywords(const string& s) const
 {
-    string out = "";
+    string out;
 
     if(s[0] == '$')
-        out=s;
+        out = s;
 
     for (char c : s)
     {
@@ -1296,14 +1399,14 @@ string ModelExpression::replace_reserved_keywords(const string& s) const
     if(!out.empty() && isdigit(out[0]))
         out = '_' + out;
 
-    unordered_map<string, string> sprcialWords = {
+    unordered_map<string, string> special_words = {
         {"min", "mi_n"},
         {"max", "ma_x"},
         {"exp", "ex_p"},
         {"tanh", "ta_nh"}
     };
 
-    for (const auto& pair : sprcialWords)
+    for (const auto& pair : special_words)
     {
         size_t position = 0;
 

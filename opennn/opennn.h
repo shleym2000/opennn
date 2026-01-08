@@ -40,7 +40,6 @@
 #include "embedding_layer.h"
 #include "multihead_attention_layer.h"
 #include "normalization_layer_3d.h"
-#include "probabilistic_layer_3d.h"
 #include "addition_layer.h"
 #include "flatten_layer.h"
 
@@ -54,8 +53,6 @@
 // Neural network
 #include "neural_network.h"
 #include "standard_networks.h"
-#include "transformer.h"
-#include "vgg16.h"
 
 // Loss functions
 #include "loss_index.h"

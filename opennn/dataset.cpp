@@ -8,8 +8,8 @@
 
 #include "dataset.h"
 #include "time_series_dataset.h"
-#include "image_dataset.h"
 #include "statistics.h"
+#include "scaling.h"
 #include "correlations.h"
 #include "tensors.h"
 #include "strings_utilities.h"
@@ -154,8 +154,8 @@ void Dataset::RawVariable::print() const
 
     if (categories.size() != 0)
     {
-        cout << "Categories: " << endl;
-        print_vector(categories);
+        cout << "Categories: " << endl
+             << categories;
     }
 
     cout << endl;
@@ -1589,7 +1589,7 @@ void Dataset::set_default()
 {
     const unsigned int threads_number = thread::hardware_concurrency();
     thread_pool = make_unique<ThreadPool>(threads_number);
-    thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
+    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 
     has_header = false;
 
@@ -1716,10 +1716,10 @@ void Dataset::set_missing_values_method(const string& new_missing_values_method)
 void Dataset::set_threads_number(const int& new_threads_number)
 {
     thread_pool.reset();
-    thread_pool_device.reset();
+    device.reset();
 
     thread_pool = make_unique<ThreadPool>(new_threads_number);
-    thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
+    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
 }
 
 
@@ -2052,24 +2052,6 @@ vector<Descriptives> Dataset::calculate_variable_descriptives() const
 }
 
 
-//vector<Descriptives> Dataset::calculate_used_variable_descriptives() const
-//{
-//    const vector<Index> used_sample_indices = get_used_sample_indices();
-//    const vector<Index> used_variable_indices = get_used_variable_indices();
-
-//    return descriptives(data, used_sample_indices, used_variable_indices);
-//}
-/*
-vector<Descriptives> Dataset::calculate_raw_variable_descriptives() const
-{
-    ffgf
-    raw_variables
-            get_raw_variable_data
-
-    return minmax_raw_variables;
-}
-*/
-
 vector<Descriptives> Dataset::calculate_raw_variable_descriptives_positive_samples() const
 {
     const Index target_index = get_variable_indices("Target")[0];
@@ -2234,7 +2216,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_raw_variable_pearson_corr
         {
             const Index target_raw_variable_index = target_raw_variable_indices[j];
             const Tensor<type, 2> target_raw_variable_data = get_raw_variable_data(target_raw_variable_index, used_sample_indices);
-            correlations(i, j) = correlation(thread_pool_device.get(), input_raw_variable_data, target_raw_variable_data);
+            correlations(i, j) = correlation(device.get(), input_raw_variable_data, target_raw_variable_data);
         }
     }
 
@@ -2266,7 +2248,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_raw_variable_spearman_cor
         {
             const Index target_index = target_raw_variable_indices[j];
             const Tensor<type, 2> target_raw_variable_data = get_raw_variable_data(target_index, used_sample_indices);
-            correlations(i, j) = correlation_spearman(thread_pool_device.get(), input_raw_variable_data, target_raw_variable_data);
+            correlations(i, j) = correlation_spearman(device.get(), input_raw_variable_data, target_raw_variable_data);
         }
     }
 
@@ -2383,7 +2365,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_raw_variable_pearson_correlation
             const Index current_input_index_j = input_raw_variable_indices[j];
 
             const Tensor<type, 2> input_j = get_raw_variable_data(current_input_index_j);
-            correlations_pearson(i, j) = correlation(thread_pool_device.get(), input_i, input_j);
+            correlations_pearson(i, j) = correlation(device.get(), input_i, input_j);
 
             if (correlations_pearson(i, j).r > type(1) - NUMERIC_LIMITS_MIN)
                 correlations_pearson(i, j).r = type(1);
@@ -2425,7 +2407,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_raw_variable_spearman_correlatio
 
             const Tensor<type, 2> input_j = get_raw_variable_data(input_raw_variable_index_j);
 
-            correlations_spearman(i, j) = correlation_spearman(thread_pool_device.get(), input_i, input_j);
+            correlations_spearman(i, j) = correlation_spearman(device.get(), input_i, input_j);
 
             if (correlations_spearman(i, j).r > type(1) - NUMERIC_LIMITS_MIN)
                 correlations_spearman(i, j).r = type(1);
@@ -2652,6 +2634,22 @@ void Dataset::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "Codification", get_codification_string());
     printer.CloseElement();
 
+    raw_variables_to_XML(printer);
+
+    samples_to_XML(printer);
+
+    missing_values_to_XML(printer);
+
+    preview_data_to_XML(printer);
+
+    add_xml_element(printer, "Display", to_string(display));
+
+    printer.CloseElement();
+}
+
+
+void Dataset::raw_variables_to_XML(XMLPrinter &printer) const
+{
     printer.OpenElement("RawVariables");
     add_xml_element(printer, "RawVariablesNumber", to_string(get_raw_variables_number()));
 
@@ -2664,7 +2662,11 @@ void Dataset::to_XML(XMLPrinter& printer) const
     }
 
     printer.CloseElement();
+}
 
+
+void Dataset::samples_to_XML(XMLPrinter &printer) const
+{
     printer.OpenElement("Samples");
 
     add_xml_element(printer, "SamplesNumber", to_string(get_samples_number()));
@@ -2676,7 +2678,11 @@ void Dataset::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "SampleUses", vector_to_string(get_sample_uses_vector()));
     printer.CloseElement();
+}
 
+
+void Dataset::missing_values_to_XML(XMLPrinter &printer) const
+{
     printer.OpenElement("MissingValues");
     add_xml_element(printer, "MissingValuesNumber", to_string(missing_values_number));
 
@@ -2688,12 +2694,17 @@ void Dataset::to_XML(XMLPrinter& printer) const
     }
 
     printer.CloseElement();
+}
 
+
+void Dataset::preview_data_to_XML(XMLPrinter &printer) const
+{
     printer.OpenElement("PreviewData");
 
     add_xml_element(printer, "PreviewSize", to_string(data_file_preview.size()));
 
     vector<string> vector_data_file_preview = convert_string_vector(data_file_preview,",");
+
     for(size_t i = 0; i < data_file_preview.size(); i++){
         printer.OpenElement("Row");
         printer.PushAttribute("Item", to_string(i + 1).c_str());
@@ -2702,35 +2713,12 @@ void Dataset::to_XML(XMLPrinter& printer) const
     }
 
     printer.CloseElement();
-
-    add_xml_element(printer, "Display", to_string(display));
-
-    printer.CloseElement();
 }
 
 
-void Dataset::from_XML(const XMLDocument& data_set_document)
+
+void Dataset::raw_variables_from_XML(const XMLElement *raw_variables_element)
 {
-    const XMLElement* data_set_element = data_set_document.FirstChildElement("Dataset");
-    if (!data_set_element)
-        throw runtime_error("Dataset element is nullptr.\n");
-
-    // Data Source
-    const XMLElement* data_source_element = data_set_element->FirstChildElement("DataSource");
-
-    if (!data_source_element)
-        throw runtime_error("Data source element is nullptr.\n");
-
-    set_data_path(read_xml_string(data_source_element, "Path"));
-    set_separator_name(read_xml_string(data_source_element, "Separator"));
-    set_has_header(read_xml_bool(data_source_element, "HasHeader"));
-    set_has_ids(read_xml_bool(data_source_element, "HasSamplesId"));
-    set_missing_values_label(read_xml_string(data_source_element, "MissingValuesLabel"));
-    set_codification(read_xml_string(data_source_element, "Codification"));
-
-    // Raw Variables
-    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("RawVariables");
-
     if (!raw_variables_element)
         throw runtime_error("RawVariables element is nullptr.\n");
 
@@ -2764,10 +2752,11 @@ void Dataset::from_XML(const XMLDocument& data_set_document)
                 throw runtime_error("Categorical RawVariable Element is nullptr: Categories");
         }
     }
+}
 
-    // Samples
-    const XMLElement* samples_element = data_set_element->FirstChildElement("Samples");
 
+void Dataset::samples_from_XML(const XMLElement *samples_element)
+{
     if (!samples_element)
         throw runtime_error("Samples element is nullptr.\n");
 
@@ -2791,10 +2780,11 @@ void Dataset::from_XML(const XMLDocument& data_set_document)
     }
     else
         data.resize(0, 0);
+}
 
-    // Missing values
-    const XMLElement* missing_values_element = data_set_element->FirstChildElement("MissingValues");
 
+void Dataset::missing_values_from_XML(const XMLElement *missing_values_element)
+{
     if (!missing_values_element)
         throw runtime_error("Missing values element is nullptr.\n");
 
@@ -2820,10 +2810,10 @@ void Dataset::from_XML(const XMLDocument& data_set_document)
 
         rows_missing_values_number = read_xml_index(missing_values_element, "RowsMissingValuesNumber");
     }
+}
 
-    //preview data
-    const XMLElement* preview_data_element = data_set_element->FirstChildElement("PreviewData");
-
+void Dataset::preview_data_from_XML(const XMLElement *preview_data_element)
+{
     if (!preview_data_element)
         throw runtime_error("Preview data element is nullptr. \n ");
 
@@ -2836,7 +2826,8 @@ void Dataset::from_XML(const XMLDocument& data_set_document)
     if (preview_size_element->GetText())
         preview_size = static_cast<Index>(atoi(preview_size_element->GetText()));
 
-    start_element = preview_size_element;
+    const XMLElement* start_element = preview_size_element;
+
     if(preview_size > 0){
         data_file_preview.resize(preview_size);
 
@@ -2851,7 +2842,45 @@ void Dataset::from_XML(const XMLDocument& data_set_document)
                 data_file_preview[i] = get_tokens(row_data->GetText(), ",");
         }
     }
+}
 
+void Dataset::from_XML(const XMLDocument& data_set_document)
+{
+    const XMLElement* data_set_element = data_set_document.FirstChildElement("Dataset");
+    if (!data_set_element)
+        throw runtime_error("Dataset element is nullptr.\n");
+
+    // Data Source
+    const XMLElement* data_source_element = data_set_element->FirstChildElement("DataSource");
+
+    if (!data_source_element)
+        throw runtime_error("Data source element is nullptr.\n");
+
+    set_data_path(read_xml_string(data_source_element, "Path"));
+    set_separator_name(read_xml_string(data_source_element, "Separator"));
+    set_has_header(read_xml_bool(data_source_element, "HasHeader"));
+    set_has_ids(read_xml_bool(data_source_element, "HasSamplesId"));
+    set_missing_values_label(read_xml_string(data_source_element, "MissingValuesLabel"));
+    set_codification(read_xml_string(data_source_element, "Codification"));
+
+    // Raw Variables
+    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("RawVariables");
+
+    raw_variables_from_XML(raw_variables_element);
+
+    // Samples
+    const XMLElement* samples_element = data_set_element->FirstChildElement("Samples");
+
+    samples_from_XML(samples_element);
+
+
+    const XMLElement* missing_values_element = data_set_element->FirstChildElement("MissingValues");
+
+    missing_values_from_XML(missing_values_element);
+
+    const XMLElement* preview_data_element = data_set_element->FirstChildElement("PreviewData");
+
+    preview_data_from_XML(preview_data_element);
 
     set_display(read_xml_bool(data_set_element, "Display"));
 
@@ -2878,13 +2907,8 @@ void Dataset::print() const
          << "Number of variables: " << variables_number << "\n"
          << "Number of input variables: " << input_variables_number << "\n"
          << "Number of target variables: " << target_variables_bumber << "\n"
-         << "Input dimensions: ";
-
-    print_vector(get_dimensions("Input"));
-
-    cout << "Target dimensions: ";
-
-    print_vector(get_dimensions("Target"));
+         << "Input dimensions: " << get_dimensions("Input") << "\n"
+         << "Target dimensions: " << get_dimensions("Target");
 
     cout << "Number of training samples: " << training_samples_number << endl
          << "Number of selection samples: " << selection_samples_number << endl
@@ -3656,14 +3680,6 @@ void Dataset::calculate_missing_values_statistics()
 }
 
 
-void Dataset::prepare_line(string& line) const
-{
-    decode(line);
-    trim(line);
-    erase(line, '"');
-}
-
-
 void Dataset::infer_column_types(const vector<vector<string>>& sample_rows)
 {
     const Index raw_variables_number = raw_variables.size();
@@ -4236,7 +4252,6 @@ Index Dataset::count_nan() const
     return count_NAN(data);
 }
 
-
 void Dataset::fix_repeated_names()
 {
     map<string, Index> raw_variables_count_map;
@@ -4244,7 +4259,6 @@ void Dataset::fix_repeated_names()
     for (const Dataset::RawVariable& raw_variable : raw_variables)
     {
         auto result = raw_variables_count_map.insert(pair<string, Index>(raw_variable.name, 1));
-
         if (!result.second)
             result.first->second++;
     }
@@ -4254,7 +4268,6 @@ void Dataset::fix_repeated_names()
         if (element.second > 1)
         {
             const string repeated_name = element.first;
-
             Index repeated_index = 1;
 
             for (Dataset::RawVariable& raw_variable : raw_variables)
@@ -4263,45 +4276,51 @@ void Dataset::fix_repeated_names()
         }
     }
 
-    // Fix variables names
-
     if (has_categorical_raw_variables() || has_binary_raw_variables())
     {
-        vector<string> variable_names = get_variable_names();
+        const vector<string> all_variable_names = get_variable_names();
 
-        const Index variables_number = variable_names.size();
+        map<string, Index> global_names_count;
 
-        map<string, Index> variables_count_map;
+        for (const string& name : all_variable_names)
+            global_names_count[name]++;
 
-        for (Index i = 0; i < variables_number; i++)
+        for (Dataset::RawVariable& raw_variable : raw_variables)
         {
-            auto result = variables_count_map.insert(pair<string, Index>(variable_names[i], 1));
+            bool needs_disambiguation = false;
 
-            if (!result.second) result.first->second++;
-        }
-
-        for (const auto& element : variables_count_map)
-        {
-            if (element.second > 1)
+            if (raw_variable.type == RawVariableType::Categorical)
             {
-                const string repeated_name = element.first;
-
-                for (Index i = 0; i < variables_number; i++)
+                for (const string& category : raw_variable.categories)
                 {
-                    if (variable_names[i] == repeated_name)
+                    if (global_names_count[category] > 1)
                     {
-                        const Index raw_variable_index = get_raw_variable_index(i);
-
-                        if (raw_variables[raw_variable_index].type != RawVariableType::Categorical)
-                            continue;
-
-                        variable_names[i] += "_" + raw_variables[raw_variable_index].name;
+                        needs_disambiguation = true;
+                        break;
                     }
                 }
+
+                if (needs_disambiguation)
+                    for (string& category : raw_variable.categories)
+                        category += "_" + raw_variable.name;
+
+            }
+            else if (raw_variable.type == RawVariableType::Binary)
+            {
+                for (const string& category : raw_variable.categories)
+                {
+                    if (global_names_count[category] > 1)
+                    {
+                        needs_disambiguation = true;
+                        break;
+                    }
+                }
+
+                if (needs_disambiguation)
+                    for (string& category : raw_variable.categories)
+                        category += "_" + raw_variable.name;
             }
         }
-
-        set_variable_names(variable_names);
     }
 }
 
@@ -4342,17 +4361,17 @@ bool Dataset::get_has_rows_labels() const
 }
 
 
-void Dataset::decode(string&) const
-{
-    switch (codification)
-    {
-    case Dataset::Codification::SHIFT_JIS:
-        //        input_string = sj2utf8(input_string);
-        break;
-    default:
-        break;
-    }
-}
+// void Dataset::decode(string&) const
+// {
+//     switch (codification)
+//     {
+//     case Dataset::Codification::SHIFT_JIS:
+//         //        input_string = sj2utf8(input_string);
+//         break;
+//     default:
+//         break;
+//     }
+// }
 
 
 void Batch::fill(const vector<Index>& sample_indices,
@@ -4380,7 +4399,7 @@ Batch::Batch(const Index& new_samples_number, const Dataset* new_dataset)
 {
     const unsigned int threads_number = thread::hardware_concurrency();
     thread_pool = make_unique<ThreadPool>(threads_number);
-    thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
+    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 
     set(new_samples_number, new_dataset);
 }
@@ -4436,9 +4455,7 @@ void Batch::print() const
 {
     cout << "Batch" << endl
          << "Inputs:" << endl
-         << "Input dimensions:" << endl;
-
-    print_vector(input_dimensions);
+         << "Input dimensions:" << input_dimensions << endl;
 
     if (input_dimensions.size() == 4)
         cout << TensorMap<Tensor<type, 4>>((type*)input_tensor.data(),
@@ -4459,14 +4476,10 @@ void Batch::print() const
     cout << endl;
 
     // cout << "Decoder:" << endl
-    //      << "Decoder dimensions:" << endl;
-
-    // print_vector(decoder_dimensions);
+    //      << "Decoder dimensions:" << decoder_dimensions << endl;
 
     cout << "Targets:" << endl
-         << "Target dimensions:" << endl;
-
-    print_vector(target_dimensions);
+         << "Target dimensions:" << target_dimensions << endl;
 
     cout << TensorMap<Tensor<type, 2>>((type*)target_tensor.data(),
                                        target_dimensions[0],
@@ -4481,7 +4494,7 @@ bool Batch::is_empty() const
 
 
 
-vector<TensorView> Batch::get_input_pairs() const
+vector<TensorView> Batch::get_input_views() const
 {
     vector<TensorView> input_views = {{(type*)input_tensor.data(), input_dimensions}};
 
@@ -4493,9 +4506,9 @@ vector<TensorView> Batch::get_input_pairs() const
 }
 
 
-TensorView Batch::get_target_pair() const
+TensorView Batch::get_target_view() const
 {
-    return { (type*)target_tensor.data() , target_dimensions};
+    return {(type*)target_tensor.data() , target_dimensions};
 }
 
 

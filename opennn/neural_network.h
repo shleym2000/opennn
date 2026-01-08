@@ -89,6 +89,10 @@ public:
 
     const bool& get_display() const;
 
+    const vector<string>& get_input_vocabulary() const;
+
+    const vector<string>& get_output_vocabulary() const;
+
     // Set
 
     void set(const filesystem::path&);
@@ -96,11 +100,11 @@ public:
     void set_layers_number(const Index&);
 
     void set_layer_input_indices(const vector<vector<Index>>&);
-    void set_layer_inputs_indices(const Index&, const vector<Index>&);
+    void set_layer_input_indices(const Index&, const vector<Index>&);
 
-    void set_layer_inputs_indices(const string&, const vector<string>&);
-    void set_layer_inputs_indices(const string&, const initializer_list<string>&);
-    void set_layer_inputs_indices(const string&, const string&);
+    void set_layer_input_indices(const string&, const vector<string>&);
+    void set_layer_input_indices(const string&, const initializer_list<string>&);
+    void set_layer_input_indices(const string&, const string&);
 
     void set_feature_names(const vector<string>&);
     void set_output_names(const vector<string>&);
@@ -112,6 +116,9 @@ public:
     void set_threads_number(const int&);
 
     void set_display(const bool&);
+
+    void set_input_vocabulary(const vector<string>&);
+    void set_output_vocabulary(const vector<string>&);
 
     // Layers
 
@@ -167,7 +174,7 @@ public:
 
         forward_propagate({input_view}, forward_propagation, false);
 
-        const TensorView& output_view = forward_propagation.layers.back()->get_output_pair();
+        const TensorView& output_view = forward_propagation.layers.back()->get_output_view();
 
         if constexpr (output_rank == 2)
            return tensor_map<2>(output_view);
@@ -181,34 +188,7 @@ public:
         return Tensor<type, output_rank>();
     }
 
-
-    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs_1, const Tensor<type, 3>& inputs_2)
-    {
-        const Index layers_number = get_layers_number();
-
-        if (layers_number == 0)
-           return Tensor<type, 3>();
-
-        const Index batch_size = inputs_1.dimension(0);
-
-        ForwardPropagation forward_propagation(batch_size, this);
-
-        const TensorView input_pair_1((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}});
-        const TensorView input_pair_2((type*)inputs_2.data(), {{inputs_2.dimension(0), inputs_2.dimension(1), inputs_2.dimension(2)}});
-
-        vector<TensorView> input_views(2);
-        input_views[0] = input_pair_1;
-        input_views[1] = input_pair_2;
-
-        forward_propagate(input_views, forward_propagation, false);
-
-        const vector<string> layer_labels = get_layer_labels();
-
-        const TensorView outputs_view
-           = forward_propagation.layers[layers_number - 1]->get_output_pair();
-
-        return tensor_map<3>(outputs_view);
-    }
+    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs_1, const Tensor<type, 3>& inputs_2);
 
     Tensor<type, 2> calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
@@ -216,10 +196,12 @@ public:
 
     Index calculate_image_output(const filesystem::path&);
 
+    Tensor<type, 2> calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
+
+
     // Serialization
 
     Tensor<string, 2> get_dense2d_layers_information() const;
-    Tensor<string, 2> get_probabilistic_layer_information() const;
 
     void from_XML(const XMLDocument&);
     void features_from_XML(const XMLElement*);
@@ -283,6 +265,9 @@ protected:
     vector<string> feature_names;
 
     vector<string> output_names;
+
+    vector<string> input_vocabulary;
+    vector<string> output_vocabulary;
 
     vector<unique_ptr<Layer>> layers;
 
