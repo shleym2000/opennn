@@ -104,7 +104,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
     if(dataset->has_nan())
         dataset->scrub_missing_values();
 
-    if(display) cout << "Performing growing inputs selection..." << endl;
+    if(display) cout << "Performing growing input selection..." << endl;
 
     InputsSelectionResults input_selection_results(original_input_raw_variables_number);
 

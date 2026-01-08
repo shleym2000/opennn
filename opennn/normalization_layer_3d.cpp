@@ -299,9 +299,8 @@ vector<TensorView> Normalization3dBackPropagation::get_input_derivative_views() 
 
 vector<ParameterView> Normalization3dBackPropagation::get_parameter_delta_views() const
 {
-    return {
-        {(type*)gamma_derivatives.data(), gamma_derivatives.size()},
-        {(type*)beta_derivatives.data(), beta_derivatives.size()}
+    return {{(type*)gamma_derivatives.data(), gamma_derivatives.size()},
+            {(type*)beta_derivatives.data(), beta_derivatives.size()}
     };
 }
 

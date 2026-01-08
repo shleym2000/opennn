@@ -840,8 +840,7 @@ string Transformer::calculate_outputs(const string& source_sentence)
 
     for(Index i = 1; i < decoder_sequence_length; i++)
     {
-        const vector<TensorView> input_views = {
-                                                TensorView(target_ids.data(), {samples_number, decoder_sequence_length}),
+        const vector<TensorView> input_views = {TensorView(target_ids.data(), {samples_number, decoder_sequence_length}),
                                                 TensorView(source_ids.data(), {samples_number, input_sequence_length})};
 
         forward_propagate(input_views, forward_propagation, false);
