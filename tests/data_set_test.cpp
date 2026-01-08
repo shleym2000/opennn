@@ -126,8 +126,8 @@ TEST(Dataset, FilterData_MixedFiltering) {
         Tensor<Index, 1> filtered_data = dataset.filter_data(minimums, maximums);
 
         EXPECT_EQ(filtered_data.size(), 2);
-        EXPECT_EQ(dataset.get_sample_use(0), "None");
-        EXPECT_EQ(dataset.get_sample_use(1), "None");
+        EXPECT_EQ(dataset.get_sample_role(0), "None");
+        EXPECT_EQ(dataset.get_sample_role(1), "None");
     }
 
     // Test
@@ -146,8 +146,8 @@ TEST(Dataset, FilterData_MixedFiltering) {
         Tensor<Index, 1> filtered_data = dataset.filter_data(minimums, maximums);
 
         EXPECT_EQ(filtered_data.size(), 1);
-        EXPECT_EQ(dataset.get_sample_use(0), "Training");
-        EXPECT_EQ(dataset.get_sample_use(1), "None");
+        EXPECT_EQ(dataset.get_sample_role(0), "Training");
+        EXPECT_EQ(dataset.get_sample_role(1), "None");
     }
 }
 
@@ -1222,30 +1222,30 @@ TEST(Dataset,CalculateNegatives)
 
     // Training negatives
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     training_negatives = dataset.calculate_negatives(target_index, "Training");
     EXPECT_EQ(training_negatives, 1);
 
     // Selection Negatives
 
-    dataset.set_sample_uses("Selection");
+    dataset.set_sample_roles("Selection");
 
     training_negatives = dataset.calculate_negatives(target_index, "Selection");
     EXPECT_EQ(training_negatives, 1);
 
     // Testing Negatives
 
-    dataset.set_sample_uses("Testing");
+    dataset.set_sample_roles("Testing");
 
     training_negatives = dataset.calculate_negatives(target_index, "Testing");
     EXPECT_EQ(training_negatives, 1);
 
     // Mix
 
-    dataset.set_sample_use(0,"Testing");
-    dataset.set_sample_use(1,"Training");
-    dataset.set_sample_use(2,"Selection");
+    dataset.set_sample_role(0,"Testing");
+    dataset.set_sample_role(1,"Training");
+    dataset.set_sample_role(2,"Selection");
 
     training_negatives = dataset.calculate_negatives(target_index, "Testing");
     EXPECT_EQ(training_negatives, 0);
@@ -1268,7 +1268,7 @@ TEST(Dataset, BatchFill)
                     {-3,6,1}});
     dataset.set_data(data);
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     const Index samples_number = dataset.get_samples_number("Training");
 

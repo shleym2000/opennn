@@ -46,7 +46,7 @@ TEST(MeanSquaredErrorTest, BackPropagateDense2d)
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random(); 
-    dataset.set_sample_uses("Training"); 
+    dataset.set_sample_roles("Training"); 
 
     NeuralNetwork neural_network; 
     neural_network.add_layer(make_unique<Dense2d>(dimensions{ inputs_number }, dimensions{ dataset.get_target_dimensions()}));
@@ -72,7 +72,7 @@ TEST(MeanSquaredErrorTest, BackPropagateRecurrent)
 
     Dataset dataset(samples_number, { time_steps, inputs_number }, { targets_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
     neural_network.add_layer(make_unique<Recurrent>( dimensions{ time_steps, inputs_number }, dimensions{ targets_number }));
@@ -99,7 +99,7 @@ TEST(MeanSquaredErrorTest, BackPropagateConvolutional)
 
     ImageDataset dataset(samples_number, { input_dimensions }, { targets_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
     neural_network.add_layer(make_unique<Convolutional>(dimensions{ input_dimensions }, dimensions{ kernel_dimensions }));
@@ -130,7 +130,7 @@ TEST(MeanSquaredErrorTest, BackPropagatePooling)
 
     ImageDataset dataset(samples_number, { input_dimensions }, { targets_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
 
@@ -166,7 +166,7 @@ TEST(MeanSquaredErrorTest, BackPropagateEmbedding)
 
     Dataset dataset(samples_number, { sequence_length }, { targets_number });
     dataset.set_data_integer(inputs_number);
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
 
@@ -226,7 +226,7 @@ TEST(MeanSquaredErrorTest, BackPropagateLm)
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     Batch batch(samples_number, &dataset);
     batch.fill(dataset.get_sample_indices("Training"),
