@@ -924,6 +924,43 @@ vector<string> preprocess_language_document(const string& document, const bool& 
     return tokens;
 }
 
+
+string formatNumber(type value, int precision)
+{
+    ostringstream oss;
+    oss << fixed << setprecision(precision) << value;
+
+    string str = oss.str();
+
+    auto pos = str.find('.');
+
+    if (pos != string::npos)
+    {
+        str.erase(str.find_last_not_of('0') + 1);
+
+        if (str.back() == '.')
+            str.pop_back();
+    }
+
+    return str;
+
+    // ostringstream oss;
+    // oss << fixed << setprecision(precision) << value;
+
+    // string str = oss.str();
+
+    // if (str.find('.') != string::npos)
+    // {
+    //     while (!str.empty() && str.back() == '0')
+    //         str.pop_back();
+
+    //     if (!str.empty() && str.back() == '.')
+    //         str.pop_back();
+    // }
+
+    // return str;
+}
+
 }
 
 // OpenNN: Open Neural Networks Library.
