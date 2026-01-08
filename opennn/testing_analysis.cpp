@@ -162,13 +162,13 @@ void TestingAnalysis::print_goodness_of_fit_analysis() const
 }
 
 
-pair<Tensor<type,2>, Tensor<type,2>> TestingAnalysis::get_targets_and_outputs(const string& sample_use) const
+pair<Tensor<type,2>, Tensor<type,2>> TestingAnalysis::get_targets_and_outputs(const string& sample_role) const
 {
     check();
 
     // Dataset
 
-    const Index samples_number = dataset->get_samples_number(sample_use);
+    const Index samples_number = dataset->get_samples_number(sample_role);
 
     if(samples_number == Index(0))
         throw runtime_error("Number of samples is zero.\n");
@@ -178,18 +178,18 @@ pair<Tensor<type,2>, Tensor<type,2>> TestingAnalysis::get_targets_and_outputs(co
 
     if (TimeSeriesDataset* time_series_dataset = dynamic_cast<TimeSeriesDataset*>(dataset))
     {
-        const Tensor<type, 3> input_data = time_series_dataset->get_data(sample_use, "Input");
+        const Tensor<type, 3> input_data = time_series_dataset->get_data(sample_role, "Input");
         output_data = neural_network->calculate_outputs<3, 2>(input_data);
 
-        const vector<Index> sample_indices = time_series_dataset->get_sample_indices(sample_use);
+        const vector<Index> sample_indices = time_series_dataset->get_sample_indices(sample_role);
         const vector<Index> variable_indices = time_series_dataset->get_variable_indices("Target");
         target_data.resize(static_cast<Index>(sample_indices.size()), static_cast<Index>(variable_indices.size()));
         time_series_dataset->fill_target_tensor(sample_indices, variable_indices, target_data.data());
     }
     else
     {
-        target_data = dataset->get_data(sample_use, "Target");
-        const Tensor<type, 2> input_data = dataset->get_data(sample_use, "Input");
+        target_data = dataset->get_data(sample_role, "Target");
+        const Tensor<type, 2> input_data = dataset->get_data(sample_role, "Input");
         output_data = neural_network->calculate_outputs<2, 2>(input_data);
     }
 
@@ -495,19 +495,19 @@ Tensor<type, 1> TestingAnalysis::calculate_errors(const Tensor<type, 2>& targets
 }
 
 
-Tensor<type, 1> TestingAnalysis::calculate_errors(const string& sample_use) const
+Tensor<type, 1> TestingAnalysis::calculate_errors(const string& sample_role) const
 {
-    const auto [targets, outputs] = get_targets_and_outputs(sample_use);
+    const auto [targets, outputs] = get_targets_and_outputs(sample_role);
 
     return calculate_errors(targets, outputs);
 }
 
 
-Tensor<type, 1> TestingAnalysis::calculate_binary_classification_errors(const string& sample_use) const
+Tensor<type, 1> TestingAnalysis::calculate_binary_classification_errors(const string& sample_role) const
 {
     // Dataset
 
-    const Index training_samples_number = dataset->get_samples_number(sample_use);
+    const Index training_samples_number = dataset->get_samples_number(sample_role);
 
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
@@ -529,10 +529,10 @@ Tensor<type, 1> TestingAnalysis::calculate_binary_classification_errors(const st
 }
 
 
-Tensor<type, 1> TestingAnalysis::calculate_multiple_classification_errors(const string& sample_use) const
+Tensor<type, 1> TestingAnalysis::calculate_multiple_classification_errors(const string& sample_role) const
 {
 
-    const Index training_samples_number = dataset->get_samples_number(sample_use);
+    const Index training_samples_number = dataset->get_samples_number(sample_role);
 
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 

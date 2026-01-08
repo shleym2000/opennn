@@ -67,9 +67,9 @@ const Index& TimeSeriesDataset::get_future_time_steps() const
 }
 
 
-Tensor<type, 3> TimeSeriesDataset::get_data(const string& sample_use, const string& variable_use) const
+Tensor<type, 3> TimeSeriesDataset::get_data(const string& sample_role, const string& variable_use) const
 {
-    const vector<Index> sample_indices = get_sample_indices(sample_use);
+    const vector<Index> sample_indices = get_sample_indices(sample_role);
     const vector<Index> variable_indices = get_variable_indices(variable_use);
 
     if (sample_indices.empty() || variable_indices.empty()) {
@@ -280,7 +280,7 @@ void TimeSeriesDataset::read_csv()
 
     if(samples_number > past_time_steps)
         for(Index i = samples_number - past_time_steps; i < samples_number; i++)
-            set_sample_use(i, "None");
+            set_sample_role(i, "None");
 
     split_samples_sequential(type(0.6), type(0.2), type(0.2));
 }
@@ -315,11 +315,11 @@ void TimeSeriesDataset::impute_missing_values_unuse()
         }
 
         if (sequence_is_invalid)
-            set_sample_use(i, "None");
+            set_sample_role(i, "None");
     }
 
     for (Index i = num_sequences; i < samples_number; ++i)
-        set_sample_use(i, "None");
+        set_sample_role(i, "None");
 }
 
 
