@@ -63,7 +63,7 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 {
     NeuronsSelectionResults neuron_selection_results(maximum_epochs_number);
 
-    if(display) cout << "Performing growing neurons selection..." << endl;
+    if(display) cout << "Performing growing neuron selection..." << endl;
 
     // Neural network    
 

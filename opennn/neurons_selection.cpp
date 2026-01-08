@@ -290,7 +290,7 @@ string NeuronsSelectionResults::write_stopping_condition() const
 void NeuronsSelectionResults::print() const
 {
     cout << endl
-         << "Neurons Selection Results" << endl
+         << "Neuron Selection Results" << endl
          << "Optimal neurons number: " << optimal_neurons_number << endl
          << "Optimum training error: " << optimum_training_error << endl
          << "Optimum selection error: " << optimum_selection_error << endl;
