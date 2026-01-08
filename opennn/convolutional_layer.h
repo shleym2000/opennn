@@ -95,8 +95,6 @@ public:
     void calculate_convolutions(const Tensor<type, 4>&,
                                 Tensor<type, 4>&) const;
 
-    void apply_batch_normalization(unique_ptr<LayerForwardPropagation>&, const bool&);
-
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;

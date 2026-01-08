@@ -253,54 +253,6 @@ void Dense2d::calculate_combinations(const Tensor<type, 2>& inputs,
 }
 
 
-void Dense2d::apply_batch_normalization(unique_ptr<LayerForwardPropagation>& layer_forward_propagation, const bool& is_training)
-{
-    Dense2dForwardPropagation* dense2d_forward_propagation =
-        static_cast<Dense2dForwardPropagation*>(layer_forward_propagation.get());
-
-    const Index batch_size = dense2d_forward_propagation->batch_size;
-    const Index outputs_number = get_outputs_number();
-
-    Tensor<type, 2>& outputs = dense2d_forward_propagation->outputs;
-    Tensor<type, 2>& normalized_outputs = dense2d_forward_propagation->normalized_outputs;
-    Tensor<type, 1>& means = dense2d_forward_propagation->means;
-    Tensor<type, 1>& standard_deviations = dense2d_forward_propagation->standard_deviations;
-
-    const array<int, 1> reduction_axes = { 0 };
-    const array<Index, 2> reshape_dims = { 1, outputs_number };
-    const array<Index, 2> broadcast_dims = { batch_size, 1 };
-
-    constexpr type epsilon = numeric_limits<type>::epsilon();
-
-    if (is_training)
-    {
-        means.device(*device) = outputs.mean(reduction_axes);
-
-        standard_deviations.device(*device) = ((outputs - means.reshape(reshape_dims).broadcast(broadcast_dims))
-                                                .square()
-                                                .mean(reduction_axes) + epsilon
-                                                ).sqrt();
-
-        normalized_outputs.device(*device) =
-            (outputs - means.reshape(reshape_dims).broadcast(broadcast_dims)) /
-            standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims);
-
-        moving_means.device(*device) = moving_means * momentum + means * (type(1) - momentum);
-        moving_standard_deviations.device(*device) = moving_standard_deviations * momentum + standard_deviations * (type(1) - momentum);
-    }
-    else
-    {
-        normalized_outputs.device(*device) =
-            (outputs - moving_means.reshape(reshape_dims).broadcast(broadcast_dims)) /
-            (moving_standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
-    }
-
-    outputs.device(*device) =
-        normalized_outputs * scales.reshape(reshape_dims).broadcast(broadcast_dims) +
-        offsets.reshape(reshape_dims).broadcast(broadcast_dims);
-}
-
-
 void Dense2d::apply_batch_normalization_backward(TensorMap<Tensor<type, 2>>& deltas,
                                                  unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                  unique_ptr<LayerBackPropagation>& back_propagation) const
@@ -352,8 +304,17 @@ void Dense2d::forward_propagate(const vector<TensorView>& input_views,
 
     calculate_combinations(inputs, outputs);
 
-    if (batch_normalization)
-        apply_batch_normalization(layer_forward_propagation, is_training);
+    if(batch_normalization)
+        normalize_batch_forward<2>(
+            dense2d_forward_propagation->outputs,
+            dense2d_forward_propagation->normalized_outputs,
+            dense2d_forward_propagation->means,
+            dense2d_forward_propagation->standard_deviations,
+            moving_means,
+            moving_standard_deviations,
+            scales,
+            offsets,
+            is_training);
 
     is_training
         ? calculate_activations(activation_function, outputs, dense2d_forward_propagation->activation_derivatives)

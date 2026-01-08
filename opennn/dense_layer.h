@@ -56,7 +56,6 @@ public:
     void normalization(Tensor<type, 1>&, Tensor<type, 1>&, const Tensor<type, 2>&, Tensor<type, 2>&) const;
 
     void set_batch_normalization(const bool&);
-    void apply_batch_normalization(unique_ptr<LayerForwardPropagation>&, const bool&);
     void apply_batch_normalization_backward(TensorMap<Tensor<type, 2>>&, unique_ptr<LayerForwardPropagation>&, unique_ptr<LayerBackPropagation>&) const;
 
     void forward_propagate(const vector<TensorView>&,

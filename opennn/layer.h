@@ -293,6 +293,54 @@ protected:
 
 
     template <int Rank>
+    void normalize_batch_forward(
+        Tensor<type, Rank>& outputs,
+        Tensor<type, Rank>& normalized_outputs,
+        Tensor<type, 1>& batch_means,
+        Tensor<type, 1>& batch_stds,
+        Tensor<type, 1>& moving_means,
+        Tensor<type, 1>& moving_stds,
+        const Tensor<type, 1>& scales,
+        const Tensor<type, 1>& offsets,
+        const bool& is_training,
+        const type momentum = type(0.9),
+        const type epsilon = type(1e-5)) const
+    {
+        const Index neurons = moving_means.size();
+
+        array<int, Rank - 1> reduction_axes;
+        for(int i = 0; i < Rank - 1; ++i)
+            reduction_axes[i] = i;
+
+        array<Index, Rank> reshape_dims;
+        reshape_dims.fill(1);
+        reshape_dims[Rank - 1] = neurons;
+
+        array<Index, Rank> broadcast_dims = outputs.dimensions();
+        broadcast_dims[Rank - 1] = 1;
+
+        if(is_training)
+        {
+            batch_means.device(*device) = outputs.mean(reduction_axes);
+
+            normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dims).broadcast(broadcast_dims));
+
+            batch_stds.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
+
+            normalized_outputs.device(*device) = normalized_outputs / batch_stds.reshape(reshape_dims).broadcast(broadcast_dims);
+
+            moving_means.device(*device) = moving_means * momentum + batch_means * (type(1) - momentum);
+            moving_stds.device(*device) = moving_stds * momentum + batch_stds * (type(1) - momentum);
+        }
+        else
+            normalized_outputs.device(*device) = (outputs - moving_means.reshape(reshape_dims).broadcast(broadcast_dims)) /
+                                                 (moving_stds.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
+
+        outputs.device(*device) = normalized_outputs * scales.reshape(reshape_dims).broadcast(broadcast_dims) +
+                                  offsets.reshape(reshape_dims).broadcast(broadcast_dims);
+    }
+
+    template <int Rank>
     void dropout(Tensor<type, Rank>& tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);

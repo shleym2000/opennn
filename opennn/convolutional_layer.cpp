@@ -76,47 +76,6 @@ void Convolutional::calculate_convolutions(const Tensor<type, 4>& inputs,
 }
 
 
-void Convolutional::apply_batch_normalization(unique_ptr<LayerForwardPropagation>& layer_forward_propagation, const bool& is_training)
-{
-    ConvolutionalForwardPropagation* this_forward_propagation =
-        static_cast<ConvolutionalForwardPropagation*>(layer_forward_propagation.get());
-
-    Tensor<type, 4>& outputs = this_forward_propagation->outputs;
-    const Index kernels_number = get_kernels_number();
-
-    const array<Index, 4> reshape_dims = { 1, 1, 1, kernels_number };
-    const array<Index, 4> broadcast_dims = { outputs.dimension(0), outputs.dimension(1), outputs.dimension(2), 1 };
-
-    constexpr type epsilon = numeric_limits<type>::epsilon();
-
-    if (is_training)
-    {
-        Tensor<type, 1>& means = this_forward_propagation->means;
-        Tensor<type, 1>& standard_deviations = this_forward_propagation->standard_deviations;
-
-        const array<Index, 3> reduction_axes = { 0, 1, 2 };
-        means.device(*device) = outputs.mean(reduction_axes);
-
-        const Tensor<type, 4> centered_outputs = outputs - means.reshape(reshape_dims).broadcast(broadcast_dims);
-        const Tensor<type, 1> variances = centered_outputs.square().mean(reduction_axes);
-        standard_deviations.device(*device) = variances.sqrt();
-
-        outputs.device(*device) = centered_outputs / (standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
-
-        moving_means.device(*device) = moving_means * momentum + means * (type(1) - momentum);
-        moving_standard_deviations.device(*device) = moving_standard_deviations * momentum + standard_deviations * (type(1) - momentum);
-    }
-    else
-    {
-        outputs.device(*device) = (outputs - moving_means.reshape(reshape_dims).broadcast(broadcast_dims)) /
-                                              (moving_standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
-    }
-
-    outputs.device(*device) = outputs * scales.reshape(reshape_dims).broadcast(broadcast_dims) +
-                                          offsets.reshape(reshape_dims).broadcast(broadcast_dims);
-}
-
-
 void Convolutional::forward_propagate(const vector<TensorView>& input_views,
                                       unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                       const bool& is_training)
@@ -135,7 +94,16 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
     calculate_convolutions(preprocessed_inputs, outputs);
 
     if(batch_normalization)
-        apply_batch_normalization(layer_forward_propagation, is_training);
+        normalize_batch_forward<4>(
+            this_forward_propagation->outputs,
+            this_forward_propagation->outputs,
+            this_forward_propagation->means,
+            this_forward_propagation->standard_deviations,
+            moving_means,
+            moving_standard_deviations,
+            scales,
+            offsets,
+            is_training);
 
     is_training
         ? calculate_activations(activation_function, outputs, activation_derivatives)
