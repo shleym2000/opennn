@@ -270,6 +270,8 @@ void Dense2d::apply_batch_normalization(unique_ptr<LayerForwardPropagation>& lay
     const array<Index, 2> reshape_dims = { 1, outputs_number };
     const array<Index, 2> broadcast_dims = { batch_size, 1 };
 
+    constexpr type epsilon = numeric_limits<type>::epsilon();
+
     if (is_training)
     {
         means.device(*device) = outputs.mean(reduction_axes);

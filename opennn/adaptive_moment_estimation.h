@@ -89,8 +89,6 @@ private:
 
    type beta_2 = type(0.999);
 
-   const type epsilon = numeric_limits<type>::epsilon();
-
     // Stopping criteria
 
    type training_loss_goal = type(-10);

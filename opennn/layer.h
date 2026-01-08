@@ -236,23 +236,73 @@ protected:
     void softmax(Tensor<type, 3>&) const;
     void softmax(Tensor<type, 4>&) const;
 
-    //void softmax_derivatives_times_tensor(const Tensor<type, 3>&, const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
     void softmax_derivatives_times_tensor(const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
 
     void add_deltas(const vector<TensorView>& delta_views) const;
+
+
+    template <int Rank>
+    static void normalize_batch(
+        Tensor<type, Rank>& outputs,
+        Tensor<type, 1>& means,
+        Tensor<type, 1>& standard_deviations,
+        Tensor<type, 1>& moving_means,
+        Tensor<type, 1>& moving_standard_deviations,
+        Tensor<type, 1>& scales,
+        Tensor<type, 1>& offsets,
+        const array<Index, Rank>& reshape_dims,
+        const array<Index, Rank>& broadcast_dims,
+        const array<int, Rank - 1>& reduction_axes,
+        const type& momentum,
+        const type& epsilon,
+        decltype(device) device,
+        const bool& is_training)
+    {
+        if (is_training)
+        {
+            means.device(*device) = outputs.mean(reduction_axes);
+
+            const Tensor<type, Rank> centered_outputs =
+                outputs - means.reshape(reshape_dims).broadcast(broadcast_dims);
+
+            standard_deviations.device(*device) =
+                (centered_outputs.square().mean(reduction_axes) + epsilon).sqrt();
+
+            outputs.device(*device) =
+                centered_outputs /
+                standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims);
+
+            moving_means.device(*device) =
+                moving_means * momentum + means * (type(1) - momentum);
+
+            moving_standard_deviations.device(*device) =
+                moving_standard_deviations * momentum +
+                standard_deviations * (type(1) - momentum);
+        }
+        else
+        {
+            outputs.device(*device) =
+                (outputs - moving_means.reshape(reshape_dims).broadcast(broadcast_dims)) /
+                (moving_standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
+        }
+
+        outputs.device(*device) =
+            outputs * scales.reshape(reshape_dims).broadcast(broadcast_dims) +
+            offsets.reshape(reshape_dims).broadcast(broadcast_dims);
+    }
+
 
     template <int Rank>
     void dropout(Tensor<type, Rank>& tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
-#pragma omp parallel
+        #pragma omp parallel
         {
             mt19937 gen(random_device{}() + omp_get_thread_num());  // thread-local RNG
             uniform_real_distribution<float> dis(0.0f, 1.0f);
 
- #pragma omp for
-
+            #pragma omp for
             for (Index i = 0; i < tensor.size(); i++)
                 tensor(i) = (dis(gen) < dropout_rate)
                                 ? 0

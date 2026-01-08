@@ -101,8 +101,6 @@ private:
 
     Index maximum_selection_failures;
 
-    const type epsilon = numeric_limits<type>::epsilon();
-
     type learning_rate_tolerance;
 
     type loss_tolerance;

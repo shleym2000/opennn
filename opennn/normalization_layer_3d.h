@@ -55,8 +55,6 @@ private:
     Tensor<type, 1> gammas;
 
     Tensor<type, 1> betas;
-
-    const type epsilon = numeric_limits<type>::epsilon();
 };
 
 

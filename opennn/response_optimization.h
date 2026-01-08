@@ -58,19 +58,18 @@ public:
 
    Tensor<type, 2> calculate_envelope(const Tensor<type, 2>&, const Tensor<type, 2>&) const;
 
-
-   struct ParetoResult
+   struct Pareto
    {
-       Tensor<Index, 1> pareto_indices;
-       Tensor<type, 2>  pareto_objectives;
-       Tensor<type, 2>  pareto_variables;
-       Tensor<type, 2>  pareto_inputs;
-       Tensor<type, 2>  envelope;
+       Tensor<Index, 1> indices;
+       Tensor<type, 2> objectives;
+       Tensor<type, 2> variables;
+       Tensor<type, 2> inputs;
+       Tensor<type, 2> envelope;
    };
 
-   ParetoResult perform_pareto() const;
+   Pareto perform_pareto() const;
 
-   Tensor<type, 1> get_nearest_point_to_utopian(const ParetoResult& pareto_result) const;
+   Tensor<type, 1> get_nearest_point_to_utopian(const Pareto&) const;
 
    Tensor<type, 1> input_minimums;
 
@@ -80,19 +79,19 @@ public:
 
    Tensor<type, 1> output_maximums;
 
-   using SingleOrPareto = std::variant<Tensor<type,1>, ParetoResult>;
+   using SingleOrPareto = std::variant<Tensor<type,1>, Pareto>;
 
    SingleOrPareto iterative_optimization(int objective_count);
 
-   void set_iterative_max_iterations(Index max_it)          { iterative_max_iterations = max_it; }
-   void set_iterative_zoom_factor(type z)                   { iterative_zoom_factor = z; }
-   void set_iterative_min_span_eps(type eps)                { iterative_min_span_eps = eps; }
-   void set_iterative_improvement_tolerance(type tol)       { iterative_improvement_tolerance = tol; }
+   void set_iterative_max_iterations(Index);
+   void set_iterative_zoom_factor(type);
+   void set_iterative_min_span_eps(type);
+   void set_iterative_improvement_tolerance(type);
 
-   Index get_iterative_max_iterations() const               { return iterative_max_iterations; }
-   type  get_iterative_zoom_factor() const                  { return iterative_zoom_factor; }
-   type  get_iterative_min_span_eps() const                 { return iterative_min_span_eps; }
-   type  get_iterative_improvement_tolerance() const        { return iterative_improvement_tolerance; }
+   Index get_iterative_max_iterations() const;
+   type  get_iterative_zoom_factor() const;
+   type  get_iterative_min_span_eps() const;
+   type  get_iterative_improvement_tolerance() const;
 
 private:
 
@@ -111,7 +110,7 @@ private:
                               const Tensor<type,1>& b,
                               const Tensor<type,1>& sense);
 
-    ParetoResult perform_pareto_analysis(const Tensor<type, 2>& objectives,
+    Pareto perform_pareto_analysis(const Tensor<type, 2>& objectives,
                                          const Tensor<type, 1>& sense,
                                          const Tensor<type, 2>& inputs,
                                          const Tensor<type, 2>& envelope) const;

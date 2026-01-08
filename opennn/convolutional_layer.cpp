@@ -87,6 +87,8 @@ void Convolutional::apply_batch_normalization(unique_ptr<LayerForwardPropagation
     const array<Index, 4> reshape_dims = { 1, 1, 1, kernels_number };
     const array<Index, 4> broadcast_dims = { outputs.dimension(0), outputs.dimension(1), outputs.dimension(2), 1 };
 
+    constexpr type epsilon = numeric_limits<type>::epsilon();
+
     if (is_training)
     {
         Tensor<type, 1>& means = this_forward_propagation->means;
@@ -95,8 +97,8 @@ void Convolutional::apply_batch_normalization(unique_ptr<LayerForwardPropagation
         const array<Index, 3> reduction_axes = { 0, 1, 2 };
         means.device(*device) = outputs.mean(reduction_axes);
 
-        Tensor<type, 4> centered_outputs = outputs - means.reshape(reshape_dims).broadcast(broadcast_dims);
-        Tensor<type, 1> variances = centered_outputs.square().mean(reduction_axes);
+        const Tensor<type, 4> centered_outputs = outputs - means.reshape(reshape_dims).broadcast(broadcast_dims);
+        const Tensor<type, 1> variances = centered_outputs.square().mean(reduction_axes);
         standard_deviations.device(*device) = variances.sqrt();
 
         outputs.device(*device) = centered_outputs / (standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);

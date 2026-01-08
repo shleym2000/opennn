@@ -223,7 +223,9 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
     {
         const Index parameters_number = parameters.size();
 
-#pragma omp parallel for
+        constexpr type epsilon = numeric_limits<type>::epsilon();
+
+        #pragma omp parallel for
 
         for(Index i = 0; i < parameters_number; i++)
         {

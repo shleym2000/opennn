@@ -105,17 +105,14 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
 
     outputs.device(*device)
         = (inputs - means.reshape(reshape_dims).broadcast(broadcast_dims))
-          / (standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
+          / (standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + numeric_limits<type>::epsilon());
 
     // Affine transformation
 
     multiply_matrices(device.get(), outputs, gammas);
 
-    outputs.device(*device) = outputs
-                                          + betas.reshape(array<Index, 3>{1, 1, betas.dimension(0)})
-                                                .broadcast(array<Index, 3>{outputs.dimension(0), outputs.dimension(1), 1});
-
-    //sum_matrices(device.get(), betas, outputs);
+    outputs.device(*device) = outputs + betas.reshape(array<Index, 3>{1, 1, betas.dimension(0)})
+                                             .broadcast(array<Index, 3>{outputs.dimension(0), outputs.dimension(1), 1});
 }
 
 
@@ -150,6 +147,8 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     Tensor<type, 3>& input_deltas = this_back_propagation->input_deltas;
 
     Tensor<type, 2>& aux_2d = this_back_propagation->aux_2d;
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     // Parameters derivatives
 
