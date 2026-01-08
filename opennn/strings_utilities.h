@@ -74,6 +74,8 @@ namespace opennn
     void detokenize_wordpiece(Tensor<type, 2>&, ostringstream&);
 
     vector<string> preprocess_language_document(const string&, const bool&);
+
+    string formatNumber(type, int);
 }
 
 #endif // OPENNNSTRINGS_H
