@@ -121,12 +121,12 @@ public:
 
     vector<Index> get_used_sample_indices() const;
 
-    string get_sample_use(const Index&) const;
-    const vector<string>& get_sample_uses() const;
+    string get_sample_role(const Index&) const;
+    const vector<string>& get_sample_roles() const;
 
-    vector<Index> get_sample_uses_vector() const;
+    vector<Index> get_sample_roles_vector() const;
 
-    Tensor<Index, 1> get_sample_use_numbers() const;
+    Tensor<Index, 1> get_sample_role_numbers() const;
 
     inline Index get_raw_variables_number() const { return raw_variables.size(); }
     Index get_raw_variables_number(const string&) const;
@@ -241,12 +241,12 @@ public:
 
     // Samples set
 
-    void set_sample_uses(const string&);
+    void set_sample_roles(const string&);
 
-    void set_sample_use(const Index&, const string&);
+    void set_sample_role(const Index&, const string&);
 
-    void set_sample_uses(const vector<string>&);
-    void set_sample_uses(const vector<Index>&, const string&);
+    void set_sample_roles(const vector<string>&);
+    void set_sample_roles(const vector<Index>&, const string&);
 
     // Raw variables set
 
@@ -542,7 +542,7 @@ protected:
 
     // Samples
 
-    vector<string> sample_uses;
+    vector<string> sample_roles;
 
     vector<string> sample_ids;
 
