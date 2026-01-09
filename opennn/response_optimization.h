@@ -10,6 +10,7 @@
 #define RESPONSEOPTIMIZATION_H
 
 #include <variant>
+
 namespace opennn
 {
 

@@ -6,17 +6,12 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-
-
 #include "tensors.h"
 #include "response_optimization.h"
-#include "statistics.h"
-#include "scaling.h"
 #include "scaling_layer_2d.h"
 #include "bounding_layer.h"
 #include "dataset.h"
 #include "neural_network.h"
-#include <variant>
 
 namespace opennn
 {
@@ -52,7 +47,6 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
         Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"));
 
         input_minimums = scaling_layer_2d->get_minimums();
-
         input_maximums = scaling_layer_2d->get_maximums();
     }
 
@@ -63,7 +57,6 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
         Bounding* bounding_layer = static_cast<Bounding*>(neural_network->get_first("Bounding"));
 
         output_minimums = bounding_layer->get_lower_bounds();
-
         output_maximums = bounding_layer->get_upper_bounds();
     }
     else
@@ -184,14 +177,12 @@ void ResponseOptimization::set_input_condition(const string& name,
 
     const vector<Index> input_indices = dataset->get_raw_variable_indices("Input");
 
-    Index relative_index = -1;
-
     auto it = find(input_indices.begin(), input_indices.end(), raw_index);
 
     if (it == input_indices.end())
         throw runtime_error("Variable " + name + " is not set as Input.");
 
-    relative_index = static_cast<Index>(std::distance(input_indices.begin(), it));
+    const Index relative_index = static_cast<Index>(distance(input_indices.begin(), it));
 
     input_conditions(relative_index) = condition;
 
@@ -214,7 +205,7 @@ void ResponseOptimization::set_input_condition(const string& name,
     for(Index current_variable = 0; current_variable < raw_inputs_number; ++current_variable)
     {
         if(category_position < raw_input_categoricals.size()
-            && raw_input_categoricals[category_position] == current_variable)
+        && raw_input_categoricals[category_position] == current_variable)
         {
             const Index one_hot_size = raw_input_categories_sizes[category_position];
 
@@ -781,26 +772,19 @@ Tensor<type,2> ResponseOptimization::calculate_envelope(const Tensor<type,2>& in
     {
         bool fits_the_constraint = true;
 
-        for(const auto &current_constraint : constraints)
+        for(const auto &constraint : constraints)
         {
-            const type value = envelope(i, current_constraint.col);
+            const type value = envelope(i, constraint.col);
 
-            if(!current_constraint.is_categorical)
+            if(!constraint.is_categorical && (value < constraint.min || value > constraint.max))
             {
-                if(value < current_constraint.min || value > current_constraint.max)
-                {
-                    fits_the_constraint = false;
-
-                    break;
-                }
+                fits_the_constraint = false;
+                break;
             }
-            else
-            {
-                if(fabs(static_cast<double>(value - current_constraint.min)) > static_cast<double>(equality_tol))
-                {
-                    fits_the_constraint = false;
-                    break;
-                }
+            else if(fabs(static_cast<double>(value - constraint.min)) > static_cast<double>(equality_tol))
+            {               
+                fits_the_constraint = false;
+                break;
             }
         }
 
@@ -1320,11 +1304,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                         current_input_maximums(abs_idx) = keep_category[cat] ? type(1) : type(0);
                     }
 
-                    Index allowed_count = 0;
-
-                    for(bool k : keep_category)
-                        if(k)
-                            allowed_count++;
+                    const Index allowed_count = count(keep_category.begin(), keep_category.end(), true);
 
                     if(allowed_count > 1)
                         collapsed = false;
@@ -1372,12 +1352,13 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
     Pareto pareto = perform_pareto();
 
     if(pareto.variables.size() == 0)
+    {
         pareto = perform_pareto();
 
-    if(pareto.variables.size() == 0)
         return pareto;
+    }
 
-    Tensor<type,2> all_envelope = pareto.variables;
+    const Tensor<type,2> all_envelope = pareto.variables;
 
     const Index pareto_points_number = pareto.variables.dimension(0);
 
@@ -1390,13 +1371,9 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
         vector<vector<bool>> allowed_categories_mask(raw_inputs_number);
 
-        for(Index j=0; j<raw_inputs_number; ++j)
-        {
-            const Index size = raw_input_feature_size[j];
-
-            if(size > 1)
-                allowed_categories_mask[j].resize(size, true);
-        }
+        for(Index j = 0; j<raw_inputs_number; ++j)
+            if(raw_input_feature_size[j] > 1)
+                allowed_categories_mask[j].resize(raw_input_feature_size[j], true);
 
         for(Index current_iteration = 0; current_iteration < iterative_max_iterations; ++current_iteration)
         {
@@ -1424,8 +1401,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                     Index count = 0;
 
                     for(Index cat = 0; cat < size; ++cat)
-                        if(current_input_maximums(start+cat) > 0.5)
-                            count++;
+                        count += (current_input_maximums(start + cat) > type(0.5));
 
                     if(count > 1)
                         collapsed = false;
@@ -1451,7 +1427,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                 current_input_minimums(start) = new_min;
                 current_input_maximums(start) = new_max;
 
-                if((new_max - new_min) > iterative_min_span_eps)
+                if(new_max - new_min > iterative_min_span_eps)
                     collapsed = false;
             }
 
@@ -1459,6 +1435,8 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
             input_maximums = current_input_maximums;
 
             const Pareto local_pareto = perform_pareto();
+
+            // @todo append_rows is not returning anything
 
             if(local_pareto.variables.size() != 0)
                 append_rows(all_envelope, local_pareto.variables);
