@@ -84,21 +84,45 @@ void ResponseOptimization::set_evaluations_number(const Index& new_evaluations_n
     evaluations_number = new_evaluations_number;
 }
 
-void ResponseOptimization::set_iterative_max_iterations(Index max_it)          { iterative_max_iterations = max_it; }
+void ResponseOptimization::set_iterative_max_iterations(Index max_it)
+{
+    iterative_max_iterations = max_it;
+}
 
-void ResponseOptimization::set_iterative_zoom_factor(type z)                   { iterative_zoom_factor = z; }
+void ResponseOptimization::set_iterative_zoom_factor(type z)
+{
+    iterative_zoom_factor = z;
+}
 
-void ResponseOptimization::set_iterative_min_span_eps(type eps)                { iterative_min_span_eps = eps; }
+void ResponseOptimization::set_iterative_min_span_eps(type eps)
+{
+    iterative_min_span_eps = eps;
+}
 
-void ResponseOptimization::set_iterative_improvement_tolerance(type tol)       { iterative_improvement_tolerance = tol; }
+void ResponseOptimization::set_iterative_improvement_tolerance(type tol)
+{
+    iterative_improvement_tolerance = tol;
+}
 
-Index ResponseOptimization::get_iterative_max_iterations() const               { return iterative_max_iterations; }
+Index ResponseOptimization::get_iterative_max_iterations() const
+{
+    return iterative_max_iterations;
+}
 
-type ResponseOptimization::get_iterative_zoom_factor() const                  { return iterative_zoom_factor; }
+type ResponseOptimization::get_iterative_zoom_factor() const
+{
+    return iterative_zoom_factor;
+}
 
-type ResponseOptimization::get_iterative_min_span_eps() const                 { return iterative_min_span_eps; }
+type ResponseOptimization::get_iterative_min_span_eps() const
+{
+    return iterative_min_span_eps;
+}
 
-type ResponseOptimization::get_iterative_improvement_tolerance() const        { return iterative_improvement_tolerance; }
+type ResponseOptimization::get_iterative_improvement_tolerance() const
+{
+    return iterative_improvement_tolerance;
+}
 
 
 Tensor<ResponseOptimization::Condition, 1> ResponseOptimization::get_input_conditions() const
@@ -156,20 +180,12 @@ void ResponseOptimization::set_input_condition(const string& name,
 
     Index relative_index = -1;
 
-    for(size_t i = 0; i < input_indices.size(); ++i)
-    {
-        if(input_indices[i] == raw_index)
-        {
-            relative_index = static_cast<Index>(i);
-            break;
-        }
-    }
+    auto it = find(input_indices.begin(), input_indices.end(), raw_index);
 
-    if(relative_index == -1)
-    {
+    if (it == input_indices.end())
         throw runtime_error("Variable " + name + " is not set as Input.");
-    }
 
+    relative_index = static_cast<Index>(std::distance(input_indices.begin(), it));
 
     input_conditions(relative_index) = condition;
 
@@ -237,13 +253,27 @@ void ResponseOptimization::set_input_condition(const string& name,
         if(category_index < 0 || category_index >= size)
             throw runtime_error("Category index out of range for input " + name);
 
-        for(Index j = 0; j < size; ++j)
         {
-            Tensor<type,1> value(1);
-            value(0) = (j == category_index) ? type(1) : type(0);
+            Index feature_index = 0;
+            size_t category_position = 0;
 
-            set_input_condition(start + j, Condition::EqualTo, value);
+            for(Index current_variable = 0; current_variable < raw_inputs_number; ++current_variable)
+            {
+                const bool is_categorical =
+                    category_position < raw_input_categoricals.size() &&
+                    raw_input_categoricals[category_position] == current_variable;
+
+                const Index one_hot_size = is_categorical
+                                       ? raw_input_categories_sizes[category_position++]
+                                       : 1;
+
+                raw_input_feature_start[current_variable] = feature_index;
+                raw_input_feature_size[current_variable]  = one_hot_size;
+
+                feature_index += one_hot_size;
+            }
         }
+
         return;
     }
 
@@ -304,27 +334,20 @@ void ResponseOptimization::set_output_condition(const string& variable_name,
 
         for(Index current_variable = 0; current_variable < raw_outputs_number; ++current_variable)
         {
-            if(category_position < raw_output_categoricals.size()
-                && raw_output_categoricals[category_position] == current_variable)
-            {
-                const Index one_hot_size = raw_output_categories_sizes[category_position];
+            const bool is_categorical =
+                category_position < raw_output_categoricals.size() &&
+                raw_output_categoricals[category_position] == current_variable;
 
-                raw_output_feature_start[current_variable] = feature_index;
-                raw_output_feature_size[current_variable]  = one_hot_size;
+            const Index size = is_categorical
+                                   ? raw_output_categories_sizes[category_position++]
+                                   : 1;
 
-                feature_index += one_hot_size;
-                ++category_position;
-            }
-            else
-            {
-                raw_output_feature_start[current_variable] = feature_index;
-                raw_output_feature_size[current_variable]  = 1;
+            raw_output_feature_start[current_variable] = feature_index;
+            raw_output_feature_size[current_variable]  = size;
 
-                ++feature_index;
-            }
+            feature_index += size;
         }
     }
-
     const Index start = raw_output_feature_start[relative_index];
 
     const Index size  = raw_output_feature_size[relative_index];
@@ -940,12 +963,10 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
     Index objectives_number = 0;
 
     for (Index i = 0; i < raw_inputs_number; ++i)
-        if (input_conditions(i) == Condition::Minimum || input_conditions(i) == Condition::Maximum)
-            ++objectives_number;
+        objectives_number += (input_conditions(i) == Condition::Minimum || input_conditions(i) == Condition::Maximum);
 
     for(Index j = 0; j < raw_outputs_number; ++j)
-        if(output_conditions(j) == Condition::Minimum || output_conditions(j) == Condition::Maximum)
-            ++objectives_number;
+        objectives_number += (output_conditions(j) == Condition::Minimum || output_conditions(j) == Condition::Maximum);
 
     objectives.resize(envelope.dimension(0), objectives_number);
 
@@ -1001,7 +1022,7 @@ ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const
 
     const Index objectives_number = objectives.dimension(1);
 
-    Tensor<char,1> is_dominated(rows_number);
+    Tensor<bool,1> is_dominated(rows_number);
 
     is_dominated.setZero();
 
@@ -1015,23 +1036,12 @@ ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const
             if(i == k || is_dominated(k))
                 continue;
 
-            Tensor<type,1> row_i(objectives_number);
-
-            Tensor<type,1> row_k(objectives_number);
-
-            for(Index j=0; j < objectives_number; ++j)
-            {
-                row_i(j)=objectives(i,j);
-
-                row_k(j)=objectives(k,j);
-            }
-
-            if(dominates_row(row_k, row_i, sense))
+            if(dominates_row(objectives.chip(k, 0), objectives.chip(i, 0), sense))
             {
                 is_dominated(i)=1;
                 break;
             }
-            if(dominates_row(row_i, row_k, sense))
+            if(dominates_row(objectives.chip(i, 0), objectives.chip(k, 0), sense))
                 is_dominated(k)=1;
         }
     }
@@ -1063,27 +1073,22 @@ ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const
     {
         const Index i = indices(current_pareto_index);
 
-        for(Index j = 0; j < objectives_number; ++j)
-            pareto_objective_values(current_pareto_index,j)  = objectives(i,j);
-
-        for(Index j = 0; j < envelope_variables_number; ++j)
-            pareto_candidate_variables(current_pareto_index,j) = envelope(i,j);
-
-        for(Index j = 0; j < inputs.dimension(1); ++j)
-            pareto_input_vectors(current_pareto_index,j) = inputs(i,j);
+        pareto_objective_values.chip(current_pareto_index, 0) = objectives.chip(i, 0);
+        pareto_candidate_variables.chip(current_pareto_index, 0) = envelope.chip(i, 0);
+        pareto_input_vectors.chip(current_pareto_index, 0) = inputs.chip(i, 0);
     }
 
     Pareto res;
 
-    res.indices   = std::move(indices);
+    res.indices   = move(indices);
 
-    res.objectives= std::move(pareto_objective_values);
+    res.objectives= move(pareto_objective_values);
 
-    res.variables = std::move(pareto_candidate_variables);
+    res.variables = move(pareto_candidate_variables);
 
-    res.inputs    = std::move(pareto_input_vectors);
+    res.inputs    = move(pareto_input_vectors);
 
-    res.envelope = std::move(envelope);
+    res.envelope = move(envelope);
 
     return res;
 }
