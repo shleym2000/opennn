@@ -160,7 +160,7 @@ void ModelSelection::from_XML(const XMLDocument& document)
     // Neuron selection
 
     const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronsSelection");
-    if (!neurons_selection_element) throw runtime_error("Neurons selection element is nullptr.\n");
+    if (!neurons_selection_element) throw runtime_error("Neuron selection element is nullptr.\n");
 
     const string selection_method = read_xml_string(neurons_selection_element, "NeuronsSelectionMethod");
     

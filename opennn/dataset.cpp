@@ -173,6 +173,7 @@ Index Dataset::RawVariable::get_categories_number() const
     return categories.size();
 }
 
+
 void Dataset::get_categorical_info(const string& variable_role, vector<Index>& raw_indices, vector<Index>& number_categories) const
 {
     raw_indices.clear();

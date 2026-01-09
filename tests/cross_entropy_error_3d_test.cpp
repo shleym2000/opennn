@@ -57,10 +57,10 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
 
     language_dataset.set_raw_variables(raw_variables);
     language_dataset.set_data(data);
-    language_dataset.set_sample_use(0, opennn::"Training");
+    language_dataset.set_sample_role(0, opennn::"Training");
 
     for(Index i = 0; i < samples_number; ++i)
-        language_dataset.set_sample_use(i, opennn::"Training");
+        language_dataset.set_sample_role(i, opennn::"Training");
 
     Batch batch(samples_number, &language_dataset);
     batch.fill({0}, {0}, {}, {0});
@@ -125,7 +125,7 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
     for (Index i = 0; i < inputs_number; i++)
         dataset.set_raw_variable_role(i + inputs_number, "Target");
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     training_samples_indices = dataset.get_sample_indices("Training");
 
@@ -198,7 +198,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         
         dataset.set_data_random_language_model(batch_size, inputs_number, context_length, input_dimensions, context_dimension);
 
-        dataset.set_sample_uses("Training");
+        dataset.set_sample_roles("Training");
 
         training_samples_indices = dataset.get_sample_indices("Training");
         decoder_variables_indices = dataset.get_variable_indices("Decoder");

@@ -84,6 +84,22 @@ void ResponseOptimization::set_evaluations_number(const Index& new_evaluations_n
     evaluations_number = new_evaluations_number;
 }
 
+void ResponseOptimization::set_iterative_max_iterations(Index max_it)          { iterative_max_iterations = max_it; }
+
+void ResponseOptimization::set_iterative_zoom_factor(type z)                   { iterative_zoom_factor = z; }
+
+void ResponseOptimization::set_iterative_min_span_eps(type eps)                { iterative_min_span_eps = eps; }
+
+void ResponseOptimization::set_iterative_improvement_tolerance(type tol)       { iterative_improvement_tolerance = tol; }
+
+Index ResponseOptimization::get_iterative_max_iterations() const               { return iterative_max_iterations; }
+
+type ResponseOptimization::get_iterative_zoom_factor() const                  { return iterative_zoom_factor; }
+
+type ResponseOptimization::get_iterative_min_span_eps() const                 { return iterative_min_span_eps; }
+
+type ResponseOptimization::get_iterative_improvement_tolerance() const        { return iterative_improvement_tolerance; }
+
 
 Tensor<ResponseOptimization::Condition, 1> ResponseOptimization::get_input_conditions() const
 {
@@ -139,6 +155,7 @@ void ResponseOptimization::set_input_condition(const string& name,
     const vector<Index> input_indices = dataset->get_raw_variable_indices("Input");
 
     Index relative_index = -1;
+
     for(size_t i = 0; i < input_indices.size(); ++i)
     {
         if(input_indices[i] == raw_index)
@@ -237,7 +254,6 @@ void ResponseOptimization::set_input_condition(const string& name,
         throw runtime_error("Inequality conditions are not supported for categorical input " + name);
     }
 }
-
 
 
 void ResponseOptimization::set_output_condition(const string& variable_name,
@@ -976,7 +992,7 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
 
 
 
-ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto_analysis(const Tensor<type, 2>& objectives,
+ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const Tensor<type, 2>& objectives,
                                                                                  const Tensor<type, 1>& sense,
                                                                                  const Tensor<type, 2>& inputs,
                                                                                  const Tensor<type, 2>& envelope) const
@@ -1028,12 +1044,12 @@ ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto_analysis
         if(!is_dominated(i))
             idexes_non_dominate_rows.push_back(i);
 
-    Tensor<Index,1> pareto_indices(idexes_non_dominate_rows.size());
+    Tensor<Index,1> indices(idexes_non_dominate_rows.size());
 
-    for(Index i = 0; i < pareto_indices.size(); ++i)
-        pareto_indices(i)=idexes_non_dominate_rows[i];
+    for(Index i = 0; i < indices.size(); ++i)
+        indices(i)=idexes_non_dominate_rows[i];
 
-    const Index pareto_points_number = pareto_indices.size();
+    const Index pareto_points_number = indices.size();
 
     const Index envelope_variables_number = envelope.dimension(1);
 
@@ -1045,7 +1061,7 @@ ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto_analysis
 
     for(Index current_pareto_index = 0; current_pareto_index < pareto_points_number; ++current_pareto_index)
     {
-        const Index i = pareto_indices(current_pareto_index);
+        const Index i = indices(current_pareto_index);
 
         for(Index j = 0; j < objectives_number; ++j)
             pareto_objective_values(current_pareto_index,j)  = objectives(i,j);
@@ -1057,22 +1073,23 @@ ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto_analysis
             pareto_input_vectors(current_pareto_index,j) = inputs(i,j);
     }
 
-    ParetoResult res;
+    Pareto res;
 
-    res.pareto_indices   = std::move(pareto_indices);
+    res.indices   = std::move(indices);
 
-    res.pareto_objectives= std::move(pareto_objective_values);
+    res.objectives= std::move(pareto_objective_values);
 
-    res.pareto_variables = std::move(pareto_candidate_variables);
+    res.variables = std::move(pareto_candidate_variables);
 
-    res.pareto_inputs    = std::move(pareto_input_vectors);
+    res.inputs    = std::move(pareto_input_vectors);
 
     res.envelope = std::move(envelope);
 
     return res;
 }
 
-ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto() const
+
+ResponseOptimization::Pareto ResponseOptimization::perform_pareto() const
 {
     const Tensor<type, 2> inputs  = calculate_inputs();
 
@@ -1081,7 +1098,7 @@ ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto() const
     const Tensor<type, 2> envelope = calculate_envelope(inputs, outputs);
 
     if(envelope.size() == 0)
-        return ParetoResult{};
+        return Pareto{};
 
     Tensor<type,2> objectives;
 
@@ -1092,7 +1109,7 @@ ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto() const
     build_objectives_from_envelope(envelope, objectives, sense, objectives_indices);
 
     if(objectives_indices.dimension(1) < 1)
-        return ParetoResult{};
+        return Pareto{};
 
     const Index Pareto_rows_dimension = envelope.dimension(0);
 
@@ -1107,24 +1124,20 @@ ResponseOptimization::ParetoResult ResponseOptimization::perform_pareto() const
     return perform_pareto_analysis(objectives, sense, inputs_filtered, envelope);
 }
 
+
 ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimization(int objective_count)
 {
-
-    const Index max_iterations      = iterative_max_iterations;
-
-    const type  zoom_factor         = iterative_zoom_factor;
-
-    const type  min_span_eps        = iterative_min_span_eps;
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     const vector<string> feature_names  = dataset->get_raw_variable_names("Input");
 
     const vector<string> output_names = dataset->get_raw_variable_names("Target");
 
-    const Index raw_inputs_number  = feature_names.size();
+    const Index raw_inputs_number = feature_names.size();
 
     const Index raw_outputs_number = output_names.size();
 
-    const Index inputs_number  = neural_network->get_features_number();
+    const Index inputs_number = neural_network->get_features_number();
 
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -1140,39 +1153,34 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
     dataset->get_categorical_info("Target", raw_output_categoricals, raw_output_categories_sizes);
 
-
     vector<Index> raw_input_feature_start(raw_inputs_number);
     vector<Index> raw_input_feature_size(raw_inputs_number);
 
     vector<Index> raw_output_feature_start(raw_outputs_number);
     vector<Index> raw_output_feature_size(raw_outputs_number);
 
-
-
-    vector<bool> is_categorical_input(inputs_number,  false);
+    vector<bool> is_categorical_input(inputs_number, false);
     vector<bool> is_categorical_output(outputs_number, false);
 
-
     {
-        Index feature_index      = 0;
+        Index feature_index = 0;
         size_t category_position = 0;
 
         for(Index raw = 0; raw < raw_inputs_number; ++raw)
         {
-            if(category_position < raw_input_categoricals.size()
-                && raw_input_categoricals[category_position] == raw)
+            if(category_position < raw_input_categoricals.size() && raw_input_categoricals[category_position] == raw)
             {
                 const Index one_hot_size = raw_input_categories_sizes[category_position];
 
                 raw_input_feature_start[raw] = feature_index;
                 raw_input_feature_size[raw]  = one_hot_size;
 
-                for(Index k = 0; k < one_hot_size; ++k)
-                {
-                    if(feature_index < inputs_number)
-                        is_categorical_input[feature_index] = true;
-                    ++feature_index;
-                }
+                const Index end = min(feature_index + one_hot_size, inputs_number);
+
+                for (Index i = feature_index; i < end; ++i)
+                    is_categorical_input[i] = true;
+
+                feature_index += one_hot_size;
 
                 ++category_position;
             }
@@ -1188,32 +1196,32 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
             }
         }
     }
+
     {
-        Index feature_index      = 0;
+        Index feature_index = 0;
         size_t category_position = 0;
 
         for(Index raw = 0; raw < raw_outputs_number; ++raw)
         {
-            if(category_position < raw_output_categoricals.size()
-                && raw_output_categoricals[category_position] == raw)
+            raw_output_feature_start[raw] = feature_index;
+
+            if(category_position < raw_output_categoricals.size() && raw_output_categoricals[category_position] == raw)
             {
                 const Index one_hot_size = raw_output_categories_sizes[category_position];
 
-                raw_output_feature_start[raw] = feature_index;
                 raw_output_feature_size[raw]  = one_hot_size;
 
-                for(Index k = 0; k < one_hot_size; ++k)
-                {
-                    if(feature_index < outputs_number)
-                        is_categorical_output[feature_index] = true;
-                    ++feature_index;
-                }
+                const Index end = min(feature_index + one_hot_size, outputs_number);
+
+                for (Index i = feature_index; i < end; ++i)
+                    is_categorical_output[i] = true;
+
+                feature_index += one_hot_size;
 
                 ++category_position;
             }
             else
             {
-                raw_output_feature_start[raw] = feature_index;
                 raw_output_feature_size[raw]  = 1;
 
                 if(feature_index < outputs_number)
@@ -1224,10 +1232,12 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
         }
     }
 
-    Tensor<type,1> original_input_minimums  = input_minimums;
-    Tensor<type,1>  original_input_maximums  = input_maximums;
+    Tensor<type,1> original_input_minimums = input_minimums;
+    Tensor<type,1> original_input_maximums = input_maximums;
     Tensor<type,1> original_output_minimums = output_minimums;
     Tensor<type,1> original_output_maximums = output_maximums;
+
+    // @todo Try to put outside the function
 
     struct BoundsGuard
     {
@@ -1241,54 +1251,26 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
         Tensor<type,1> saved_output_maximums;
 
-        ~BoundsGuard(){
+        ~BoundsGuard()
+        {
             self->input_minimums  = saved_input_minimums;
             self->input_maximums  = saved_input_maximums;
             self->output_minimums = saved_output_minimums;
             self->output_maximums = saved_output_maximums;
         }
-    } guard{ this, original_input_minimums,  original_input_maximums, original_output_minimums, original_output_maximums };
+    }
 
-    auto clampv = [&](const type& current_limit, const type& low_limit, const type& high_limit)
-    {
-        return current_limit < low_limit ? low_limit : (current_limit > high_limit ? high_limit : current_limit);
-    };
+    guard{ this, original_input_minimums,  original_input_maximums, original_output_minimums, original_output_maximums };
 
-    auto append_rows = [](Tensor<type,2>& acc, const Tensor<type,2>& block)
-    {
-        if(block.size() == 0) return;
-
-        if(acc.size() == 0)
-        {
-            acc = block;
-            return;
-        }
-
-        const Index old_rows = acc.dimension(0);
-        const Index cols     = acc.dimension(1);
-        const Index new_rows = block.dimension(0);
-
-        Tensor<type,2> tmp(old_rows + new_rows, cols);
-
-        for(Index i = 0; i < old_rows; ++i)
-            for(Index j = 0; j < cols; ++j)
-                tmp(i,j) = acc(i,j);
-
-        for(Index i = 0; i < new_rows; ++i)
-            for(Index j = 0; j < cols; ++j)
-                tmp(old_rows + i, j) = block(i,j);
-
-        acc = std::move(tmp);
-    };
-
-    int  objective_column = -1;
-    type sign             = type(1);
-    int  numeric_count    = 0;
+    int objective_column = -1;
+    type sign = type(1);
+    int numeric_count = 0;
 
     for (Index raw = 0; raw < raw_inputs_number; ++raw)
     {
-        const auto cond = input_conditions(raw);
-        if (cond != Condition::Minimum && cond != Condition::Maximum)
+        const auto input_condition = input_conditions(raw);
+
+        if (input_condition != Condition::Minimum && input_condition != Condition::Maximum)
             continue;
 
         const Index start = raw_input_feature_start[raw];
@@ -1298,14 +1280,15 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
             continue;
 
         objective_column = static_cast<int>(start);
-        sign             = (cond == Condition::Minimum) ? type(1) : -type(1);
+        sign = (input_condition == Condition::Minimum) ? type(1) : -type(1);
         ++numeric_count;
     }
 
     for (Index raw = 0; raw < raw_outputs_number; ++raw)
     {
-        const auto cond = output_conditions(raw);
-        if (cond != Condition::Minimum && cond != Condition::Maximum)
+        const auto output_condition = output_conditions(raw);
+
+        if (output_condition != Condition::Minimum && output_condition != Condition::Maximum)
             continue;
 
         const Index start = raw_output_feature_start[raw];
@@ -1315,21 +1298,22 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
             continue;
 
         objective_column = static_cast<int>(inputs_number + start);
-        sign             = (cond == Condition::Minimum) ? type(1) : -type(1);
+        sign = (output_condition == Condition::Minimum) ? type(1) : -type(1);
         ++numeric_count;
     }
 
     if (objective_count <= 1 && numeric_count == 1)
     {
         Tensor<type,1> global_best_row;
+
         type global_best_value = (sign > 0) ? numeric_limits<double>::infinity() : -numeric_limits<double>::infinity();
+
         bool first_run = true;
 
-        for (Index iteration = 0; iteration < max_iterations; ++iteration)
+        for (Index iteration = 0; iteration < iterative_max_iterations; ++iteration)
         {
-
-            const Tensor<type,2> inputs   = calculate_inputs();
-            const Tensor<type,2> outputs  = neural_network->calculate_outputs<2,2>(inputs);
+            const Tensor<type,2> inputs = calculate_inputs();
+            const Tensor<type,2> outputs = neural_network->calculate_outputs<2,2>(inputs);
             const Tensor<type,2> envelope = calculate_envelope(inputs, outputs);
 
             if (envelope.size() == 0)
@@ -1344,7 +1328,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
             iota(sorted_indices.begin(), sorted_indices.end(), 0);
 
             sort(sorted_indices.begin(), sorted_indices.end(), [&](Index a, Index b)
-                 {
+            {
                 return (obj_col(a) * sign) < (obj_col(b) * sign);
             });
 
@@ -1360,8 +1344,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
             Tensor<type,1> current_input_minimums = input_minimums;
             Tensor<type,1> current_input_maximums = input_maximums;
 
-            Index top_k = static_cast<Index>(current_rows * zoom_factor);
-            if(top_k < 1) top_k = 1;
+            const Index top_k = max(Index(1), static_cast<Index>(current_rows * iterative_zoom_factor));
 
             bool collapsed = true;
 
@@ -1374,18 +1357,15 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                 {
                     vector<bool> keep_category(size, false);
 
-                    bool any_kept = false;
-
                     for(Index k = 0; k < top_k; ++k)
                     {
-                        Index row_idx = sorted_indices[k];
+                        const Index row_index = sorted_indices[k];
 
                         for(Index cat = 0; cat < size; ++cat)
                         {
-                            if(envelope(row_idx, start + cat) > 0.5)
+                            if(envelope(row_index, start + cat) > 0.5)
                             {
                                 keep_category[cat] = true;
-                                any_kept = true;
                                 break;
                             }
                         }
@@ -1394,6 +1374,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                     for(Index cat = 0; cat < size; ++cat)
                     {
                         const Index abs_idx = start + cat;
+
                         if(keep_category[cat])
                         {
                             current_input_minimums(abs_idx) = type(0);
@@ -1419,28 +1400,28 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                 {
                     const type span = current_input_maximums(start) - current_input_minimums(start);
 
-                    const type new_span = span * zoom_factor;
+                    const type new_span = span * iterative_zoom_factor;
 
                     const type center = global_best_row(start);
 
-                    type new_min = center - new_span * type(0.5);
-                    type new_max = center + new_span * type(0.5);
+                    type new_min = clamp(center - new_span * type(0.5),
+                                         original_input_minimums(start),
+                                         original_input_maximums(start));
 
-                    new_min = clampv(new_min, original_input_minimums(start), original_input_maximums(start));
-                    new_max = clampv(new_max, original_input_minimums(start), original_input_maximums(start));
+                    type new_max = clamp(center + new_span * type(0.5),
+                                         original_input_minimums(start),
+                                         original_input_maximums(start));
 
                     if (new_max <= new_min)
                     {
-                        const type epsilon = max(type(1e-12), span * type(1e-6));
-
-                        new_min = clampv(center - epsilon, original_input_minimums(start), original_input_maximums(start));
-                        new_max = clampv(center + epsilon, original_input_minimums(start), original_input_maximums(start));
+                        new_min = clamp(center - epsilon, original_input_minimums(start), original_input_maximums(start));
+                        new_max = clamp(center + epsilon, original_input_minimums(start), original_input_maximums(start));
                     }
 
                     current_input_minimums(start) = new_min;
                     current_input_maximums(start) = new_max;
 
-                    if ((new_max - new_min) > min_span_eps)
+                    if (new_max - new_min > iterative_min_span_eps)
                         collapsed = false;
                 }
             }
@@ -1455,22 +1436,21 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
         return global_best_row;
     }
 
+    Pareto first = perform_pareto();
 
-    ParetoResult first = perform_pareto();
-
-    if(first.pareto_variables.size() == 0)
+    if(first.variables.size() == 0)
         first = perform_pareto();
 
-    if(first.pareto_variables.size() == 0)
+    if(first.variables.size() == 0)
         return first;
 
-    Tensor<type,2> all_envelope = first.pareto_variables;
+    Tensor<type,2> all_envelope = first.variables;
 
-    const Index pareto_points_number = first.pareto_variables.dimension(0);
+    const Index pareto_points_number = first.variables.dimension(0);
 
     for(Index current_pareto_point = 0; current_pareto_point < pareto_points_number; ++current_pareto_point)
     {
-        Tensor<type,1> center_row = first.pareto_variables.chip(current_pareto_point, 0);
+        const Tensor<type,1> center_row = first.variables.chip(current_pareto_point, 0);
 
         Tensor<type,1> current_input_minimums = original_input_minimums;
         Tensor<type,1> current_input_maximums = original_input_maximums;
@@ -1479,12 +1459,13 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
         for(Index j=0; j<raw_inputs_number; ++j)
         {
-            Index size = raw_input_feature_size[j];
+            const Index size = raw_input_feature_size[j];
 
             if(size > 1)
                 allowed_categories_mask[j].resize(size, true);
         }
-        for(Index current_iteration = 0; current_iteration < max_iterations; ++current_iteration)
+
+        for(Index current_iteration = 0; current_iteration < iterative_max_iterations; ++current_iteration)
         {
             bool collapsed = true;
 
@@ -1495,33 +1476,21 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
                 if(size > 1)
                 {
-                    bool any_allowed = false;
-
                     for(Index cat = 0; cat < size; ++cat)
                     {
                         const Index abs_idx = start + cat;
 
-                        bool original_allow = (original_input_maximums(abs_idx) > 0.5);
+                        const bool original_allow = (original_input_maximums(abs_idx) > 0.5);
 
-                        bool population_allow = allowed_categories_mask[raw][cat];
+                        const bool population_allow = allowed_categories_mask[raw][cat];
 
-                        if(original_allow && population_allow)
-                        {
-                            current_input_minimums(abs_idx) = type(0);
-                            current_input_maximums(abs_idx) = type(1);
-
-                            any_allowed = true;
-                        }
-                        else
-                        {
-                            current_input_minimums(abs_idx) = type(0); // Forced Off
-                            current_input_maximums(abs_idx) = type(0);
-                        }
+                        current_input_minimums(abs_idx) = type(0);
+                        current_input_maximums(abs_idx) = (original_allow && population_allow) ? type(1) : type(0);
                     }
 
                     Index count = 0;
 
-                    for(Index cat=0; cat<size; ++cat)
+                    for(Index cat = 0; cat < size; ++cat)
                         if(current_input_maximums(start+cat) > 0.5)
                             count++;
 
@@ -1531,49 +1500,46 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                     continue;
                 }
 
-                const type span     = current_input_maximums(start) - current_input_minimums(start);
+                const type span = current_input_maximums(start) - current_input_minimums(start);
 
-                const type new_span = span * zoom_factor;
+                const type new_span = span * iterative_zoom_factor;
 
-                const type center   = center_row(start);
+                const type center = center_row(start);
 
-                type new_min = center - new_span * type(0.5);
-                type new_max = center + new_span * type(0.5);
-
-                new_min = clampv(new_min, original_input_minimums(start), original_input_maximums(start));
-                new_max = clampv(new_max, original_input_minimums(start), original_input_maximums(start));
+                type new_min = clamp(center - new_span * type(0.5), original_input_minimums(start), original_input_maximums(start));
+                type new_max = clamp(center + new_span * type(0.5), original_input_minimums(start), original_input_maximums(start));
 
                 if(new_max <= new_min)
                 {
-                    const type epsilon = max(type(1e-12), span * type(1e-6));
-
-                    new_min = clampv(center - epsilon, original_input_minimums(start), original_input_maximums(start));
-                    new_max = clampv(center + epsilon, original_input_minimums(start), original_input_maximums(start));
+                    new_min = clamp(center - epsilon, original_input_minimums(start), original_input_maximums(start));
+                    new_max = clamp(center + epsilon, original_input_minimums(start), original_input_maximums(start));
                 }
 
                 current_input_minimums(start) = new_min;
                 current_input_maximums(start) = new_max;
 
-                if((new_max - new_min) > min_span_eps)
+                if((new_max - new_min) > iterative_min_span_eps)
                     collapsed = false;
             }
 
             input_minimums = current_input_minimums;
             input_maximums = current_input_maximums;
 
-            ParetoResult local_pareto = perform_pareto();
+            const Pareto local_pareto = perform_pareto();
 
-            if(local_pareto.pareto_variables.size() != 0)
-                append_rows(all_envelope, local_pareto.pareto_variables);
+            if(local_pareto.variables.size() != 0)
+                append_rows(all_envelope, local_pareto.variables);
 
-            if(collapsed || local_pareto.pareto_variables.size() == 0)
+            if(collapsed || local_pareto.variables.size() == 0)
                 break;
 
             for(Index j=0; j<raw_inputs_number; ++j)
                 if(!allowed_categories_mask[j].empty())
                     fill(allowed_categories_mask[j].begin(), allowed_categories_mask[j].end(), false);
 
-            const Index result_count = local_pareto.pareto_variables.dimension(0);
+            // @todo change the name to be more descriptive
+
+            const Index result_count = local_pareto.variables.dimension(0);
 
             for(Index r = 0; r < result_count; ++r)
             {
@@ -1586,9 +1552,9 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
                     const Index start = raw_input_feature_start[raw];
 
-                    for(Index cat = 0; cat < size; ++cat)
-                        if(local_pareto.pareto_variables(r, start + cat) > 0.5)
-                            allowed_categories_mask[raw][cat] = true;
+                    for(Index category = 0; category < size; ++category)
+                        if(local_pareto.variables(r, start + category) > 0.5)
+                            allowed_categories_mask[raw][category] = true;
                 }
             }
         }
@@ -1601,25 +1567,22 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
     build_objectives_from_envelope(all_envelope, all_objectives, sense, objective_indices);
 
     if(objective_indices.size() < 1)
-        return ParetoResult{};
+        return Pareto{};
 
     const Index all_rows = all_envelope.dimension(0);
 
     Tensor<type,2> inputs_filtered(all_rows, inputs_number);
 
+    // @todo try to remove these loops
+
     for(Index i = 0; i < all_rows; ++i)
         for(Index j = 0; j < inputs_number; ++j)
             inputs_filtered(i,j) = all_envelope(i,j);
 
-    ParetoResult final_res = perform_pareto_analysis(all_objectives, sense, inputs_filtered, all_envelope);
+    const Pareto final_pareto = perform_pareto_analysis(all_objectives, sense, inputs_filtered, all_envelope);
 
-    return final_res;
-
+    return final_pareto;
 }
-
-
-
-
 
 }
 // OpenNN: Open Neural Networks Library.

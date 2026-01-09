@@ -35,10 +35,6 @@ public:
 
     void set_activation_function(const string&);
 
-    void calculate_combinations(const Tensor<type, 2>&,
-                                const Tensor<type, 2>&,
-                                Tensor<type, 2>&) const;
-
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;

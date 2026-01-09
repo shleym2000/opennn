@@ -37,7 +37,7 @@ TEST(NormalizedSquaredErrorTest, BackPropagate)
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     ApproximationNetwork neural_network({inputs_number}, {neurons_number}, {targets_number});
 
@@ -64,7 +64,7 @@ TEST(NormalizedSquaredErrorTest, BackPropagateLM)
 
     Dataset dataset(samples_number, {inputs_number}, {outputs_number});
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     Batch batch(samples_number, &dataset);
     batch.fill(dataset.get_sample_indices("Training"),

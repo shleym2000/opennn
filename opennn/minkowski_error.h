@@ -43,8 +43,6 @@ private:
 
     type minkowski_parameter;
 
-    const type epsilon = numeric_limits<type>::epsilon();
-
 #ifdef OPENNN_CUDA
 
     // Error

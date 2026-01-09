@@ -34,6 +34,8 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     const Index batch_size = outputs.dimension(0);
     const Index sequence_length = outputs.dimension(1);
 
+    constexpr type epsilon = numeric_limits<type>::epsilon();
+
     // 3. Prepare Masking
     // In sequence tasks, we ignore padding. We assume target 0 is padding if built_mask is used.
     // If you want to include all tokens, you can skip the mask multiplication.
@@ -96,6 +98,8 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     // 4. Calculate Cross Entropy Sum
     // We need to find the probability the model assigned to the *correct* index.
     // In C++, a nested loop with OpenMP is the most efficient way to handle this 3D indexing.
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     #pragma omp parallel for reduction(+:total_log_loss, active_tokens_count)
     for (Index i = 0; i < batch_size; ++i)
