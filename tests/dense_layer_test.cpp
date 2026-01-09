@@ -27,27 +27,6 @@ TEST(Dense2dTest, GeneralConstructor)
 }
 
 
-TEST(Dense2dTest, Combinations)
-{
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index outputs_number = get_random_index(1, 10);
-
-    Dense2d dense_layer({inputs_number}, {outputs_number});
-    dense_layer.set_parameters_random();
-
-    Tensor<type, 2> inputs(samples_number, inputs_number);
-    inputs.setRandom();
-
-    Tensor<type, 2> combinations(samples_number, outputs_number);
-
-    dense_layer.calculate_combinations(inputs, combinations);
-
-    EXPECT_EQ(combinations.dimension(0), samples_number);
-    EXPECT_EQ(combinations.dimension(1), outputs_number);
-}
-
-
 TEST(Dense2dTest, ForwardPropagate)
 {
     const Index batch_size = 2;

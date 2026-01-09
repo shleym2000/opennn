@@ -260,32 +260,32 @@ protected:
         for(int i = 0; i < Rank - 1; ++i)
             reduction_axes[i] = i;
 
-        array<Index, Rank> reshape_dims;
-        reshape_dims.fill(1);
-        reshape_dims[Rank - 1] = neurons;
+        array<Index, Rank> reshape_dimensions;
+        reshape_dimensions.fill(1);
+        reshape_dimensions[Rank - 1] = neurons;
 
-        array<Index, Rank> broadcast_dims = outputs.dimensions();
-        broadcast_dims[Rank - 1] = 1;
+        array<Index, Rank> broadcast_dimensions = outputs.dimensions();
+        broadcast_dimensions[Rank - 1] = 1;
 
         if(is_training)
         {
             batch_means.device(*device) = outputs.mean(reduction_axes);
 
-            normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dims).broadcast(broadcast_dims));
+            normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions));
 
             batch_stds.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
 
-            normalized_outputs.device(*device) = normalized_outputs / batch_stds.reshape(reshape_dims).broadcast(broadcast_dims);
+            normalized_outputs.device(*device) = normalized_outputs / batch_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
 
             moving_means.device(*device) = moving_means * momentum + batch_means * (type(1) - momentum);
             moving_stds.device(*device) = moving_stds * momentum + batch_stds * (type(1) - momentum);
         }
         else
-            normalized_outputs.device(*device) = (outputs - moving_means.reshape(reshape_dims).broadcast(broadcast_dims)) /
-                                                 (moving_stds.reshape(reshape_dims).broadcast(broadcast_dims) + epsilon);
+            normalized_outputs.device(*device) = (outputs - moving_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
+                                                 (moving_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions) + epsilon);
 
-        outputs.device(*device) = normalized_outputs * scales.reshape(reshape_dims).broadcast(broadcast_dims) +
-                                  offsets.reshape(reshape_dims).broadcast(broadcast_dims);
+        outputs.device(*device) = normalized_outputs * scales.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
+                                  offsets.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
     }
 
     template <int Rank>
@@ -304,6 +304,26 @@ protected:
                                 ? 0
                                 : tensor(i) * scaling_factor;
         }
+    }
+
+    template <int Rank>
+    void calculate_combinations(
+        const Tensor<type, Rank>& inputs,
+        const Tensor<type, 2>& weights,
+        const Tensor<type, 1>& biases,
+        Tensor<type, Rank>& combinations) const
+    {
+        const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
+
+        array<Index, Rank> reshape_dimensions;
+        reshape_dimensions.fill(1);
+        reshape_dimensions[Rank - 1] = biases.size();
+
+        array<Index, Rank> broadcast_dims = combinations.dimensions();
+        broadcast_dims[Rank - 1] = 1;
+
+        combinations.device(*device) = inputs.contract(weights, contraction_axes) +
+                                       biases.reshape(reshape_dimensions).broadcast(broadcast_dims);
     }
 
 #ifdef OPENNN_CUDA

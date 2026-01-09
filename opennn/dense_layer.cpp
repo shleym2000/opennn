@@ -240,19 +240,6 @@ void Dense2d::set_activation_function(const string& new_activation_function)
 }
 
 
-void Dense2d::calculate_combinations(const Tensor<type, 2>& inputs,
-                                     Tensor<type, 2>& combinations) const
-{
-    const Index batch_size = combinations.dimension(0);
-    const Index outputs_number = biases.size();
-
-    combinations.device(*device)
-        = inputs.contract(weights, axes(1,0))
-          + biases.reshape(array_2(1, outputs_number))
-                .broadcast(array_2(batch_size, 1));
-}
-
-
 void Dense2d::apply_batch_normalization_backward(TensorMap<Tensor<type, 2>>& deltas,
                                                  unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                  unique_ptr<LayerBackPropagation>& back_propagation) const
@@ -302,7 +289,7 @@ void Dense2d::forward_propagate(const vector<TensorView>& input_views,
 
     Tensor<type, 2>& outputs = dense2d_forward_propagation->outputs;
 
-    calculate_combinations(inputs, outputs);
+    calculate_combinations<2>(inputs, weights, biases, outputs);
 
     if(batch_normalization)
         normalize_batch<2>(

@@ -107,15 +107,6 @@ void Dense3d::set_activation_function(const string& new_activation_function)
 }
 
 
-void Dense3d::calculate_combinations(const Tensor<type, 3>& inputs,
-                                     Tensor<type, 3>& combinations) const
-{
-    combinations.device(*device) = inputs.contract(weights, axes(2,0))
-                                   + biases.reshape(array_3(1, 1, combinations.dimension(2)))
-                                           .broadcast(array_3(combinations.dimension(0), combinations.dimension(1), 1));
-}
-
-
 void Dense3d::forward_propagate(const vector<TensorView>& input_views,
                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                 const bool& is_training)
@@ -127,8 +118,7 @@ void Dense3d::forward_propagate(const vector<TensorView>& input_views,
 
     Tensor<type, 3>& outputs = this_forward_propagation->outputs;
 
-    calculate_combinations(inputs,
-                           outputs);
+    calculate_combinations<3>(inputs, weights, biases, outputs);
 
     if(is_training && dropout_rate > type(0))
         dropout(outputs, dropout_rate);
