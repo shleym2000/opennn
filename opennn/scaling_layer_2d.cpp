@@ -15,7 +15,7 @@
 
 namespace opennn
 {
-
+/*
 template<int Rank>
 Scaling<Rank>::Scaling(const dimensions& new_input_dimensions) : Layer()
 {
@@ -288,7 +288,7 @@ void Scaling<Rank>::calculate_outputs(type* inputs_data, const Tensor<Index, 1>&
     else
         throw runtime_error("Input dimension must be 2 or 4.\n");
 }
-
+*/
 
 template<int Rank>
 string Scaling<Rank>::write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
@@ -484,7 +484,7 @@ void Scaling<Rank>::from_XML(const XMLDocument& document)
     }
 }
 
-
+/*
 template<int Rank>
 ScalingForwardPropagation<Rank>::ScalingForwardPropagation(const Index& new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
@@ -500,7 +500,7 @@ TensorView ScalingForwardPropagation<Rank>::get_output_view() const
 
     return {(type*)outputs.data(), {batch_size, output_dimensions[0]}};
 }
-
+*/
 
 template<int Rank>
 void ScalingForwardPropagation<Rank>::initialize()

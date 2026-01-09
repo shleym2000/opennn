@@ -67,11 +67,11 @@ public:
     void to_XML(XMLPrinter&) const override;
     void from_XML(const XMLDocument&) override;
 
+    void apply_key_padding_mask(const Tensor<bool, 2>&,Tensor<type, 4>&) const;
+
 #ifdef OPENNN_CUDA
         // @todo
 #endif
-
-    void apply_key_padding_mask(const Tensor<bool, 2>&,Tensor<type, 4>&) const;
 
 private:
 
@@ -122,11 +122,7 @@ struct MultiHeadAttentionForwardPropagation final : LayerForwardPropagation
 
     Tensor<type, 3> concatenated_attention_outputs;
 
-    Tensor<type, 4> projection_outputs;
-
     Tensor<type, 3> outputs;
-
-//    Tensor<type, 2> sample_matrix;
 };
 
 
@@ -167,10 +163,6 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
     Tensor<type, 3> input_source_deltas;
 
     Tensor<type, 4> softmax_deltas;
-
-    Tensor<type, 3> query_deltas_reshaped;
-    Tensor<type, 3> key_deltas_reshaped;
-    Tensor<type, 3> value_deltas_reshaped;
 };
 
 #ifdef OPENNN_CUDA
