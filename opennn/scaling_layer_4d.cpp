@@ -5,7 +5,7 @@
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
-
+/*
 #include "registry.h"
 #include "tensors.h"
 #include "scaling_layer_4d.h"
@@ -199,7 +199,7 @@ REGISTER(Layer, Scaling4d, "Scaling4d")
 REGISTER(LayerForwardPropagation, Scaling4dForwardPropagation, "Scaling4d")
 
 }
-
+*/
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //

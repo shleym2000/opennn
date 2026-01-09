@@ -241,12 +241,12 @@ void NeuralNetwork::set_input_dimensions(const dimensions& new_input_dimensions)
 
     if(has("Scaling2d"))
     {
-        Scaling2d* scaling_layer = static_cast<Scaling2d*>(get_first("Scaling2d"));
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(get_first("Scaling2d"));
         scaling_layer->set_input_dimensions(new_input_dimensions);
     }
     else if(has("Scaling3d"))
     {
-        Scaling3d* scaling_layer = static_cast<Scaling3d*>(get_first("Scaling3d"));
+        Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(get_first("Scaling3d"));
         scaling_layer->set_input_dimensions(new_input_dimensions);
     }
 

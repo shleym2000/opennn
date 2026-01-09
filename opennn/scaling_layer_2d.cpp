@@ -11,41 +11,48 @@
 #include "tensors.h"
 #include "statistics.h"
 #include "scaling_layer_2d.h"
+#include "scaling.h"
 
 namespace opennn
 {
 
-Scaling2d::Scaling2d(const dimensions& new_input_dimensions) : Layer()
+template<int Rank>
+Scaling<Rank>::Scaling(const dimensions& new_input_dimensions) : Layer()
 {
     set(new_input_dimensions);
 }
 
 
-dimensions Scaling2d::get_input_dimensions() const
+template<int Rank>
+dimensions Scaling<Rank>::get_input_dimensions() const
 {
     return dimensions{Index(scalers.size())};
 }
 
 
-dimensions Scaling2d::get_output_dimensions() const
+template<int Rank>
+dimensions Scaling<Rank>::get_output_dimensions() const
 {
     return dimensions{Index(scalers.size())};
 }
 
 
-vector<Descriptives> Scaling2d::get_descriptives() const
+template<int Rank>
+vector<Descriptives> Scaling<Rank>::get_descriptives() const
 {
     return descriptives;
 }
 
 
-Descriptives Scaling2d::get_descriptives(const Index& index) const
+template<int Rank>
+Descriptives Scaling<Rank>::get_descriptives(const Index& index) const
 {
     return descriptives[index];
 }
 
 
-Tensor<type, 1> Scaling2d::get_minimums() const
+template<int Rank>
+Tensor<type, 1> Scaling<Rank>::get_minimums() const
 {
     const Index outputs_number = get_outputs_number();
 
@@ -59,7 +66,8 @@ Tensor<type, 1> Scaling2d::get_minimums() const
 }
 
 
-Tensor<type, 1> Scaling2d::get_maximums() const
+template<int Rank>
+Tensor<type, 1> Scaling<Rank>::get_maximums() const
 {
     const Index outputs_number = get_outputs_number();
 
@@ -73,7 +81,8 @@ Tensor<type, 1> Scaling2d::get_maximums() const
 }
 
 
-Tensor<type, 1> Scaling2d::get_means() const
+template<int Rank>
+Tensor<type, 1> Scaling<Rank>::get_means() const
 {
     const Index outputs_number = get_outputs_number();
 
@@ -87,7 +96,8 @@ Tensor<type, 1> Scaling2d::get_means() const
 }
 
 
-Tensor<type, 1> Scaling2d::get_standard_deviations() const
+template<int Rank>
+Tensor<type, 1> Scaling<Rank>::get_standard_deviations() const
 {
     const Index outputs_number = get_outputs_number();
 
@@ -101,13 +111,15 @@ Tensor<type, 1> Scaling2d::get_standard_deviations() const
 }
 
 
-vector<string> Scaling2d::get_scalers() const
+template<int Rank>
+vector<string> Scaling<Rank>::get_scalers() const
 {
     return scalers;
 }
 
 
-void Scaling2d::set(const dimensions& new_input_dimensions)
+template<int Rank>
+void Scaling<Rank>::set(const dimensions& new_input_dimensions)
 {
     if (new_input_dimensions.size() != 1)
         throw runtime_error("Input dimensions rank is not 1");
@@ -127,13 +139,14 @@ void Scaling2d::set(const dimensions& new_input_dimensions)
 
     set_min_max_range(type(-1), type(1));
 
-    name = "Scaling2d";
+    name = "Scaling";
 
     is_trainable = false;
 }
 
 
-void Scaling2d::set_input_dimensions(const dimensions& new_input_dimensions)
+template<int Rank>
+void Scaling<Rank>::set_input_dimensions(const dimensions& new_input_dimensions)
 {
     descriptives.resize(new_input_dimensions[0]);
 
@@ -141,47 +154,52 @@ void Scaling2d::set_input_dimensions(const dimensions& new_input_dimensions)
 }
 
 
-void Scaling2d::set_output_dimensions(const dimensions& new_output_dimensions)
+template<int Rank>
+void Scaling<Rank>::set_output_dimensions(const dimensions& new_output_dimensions)
 {
     set_input_dimensions(new_output_dimensions);
 }
 
 
-void Scaling2d::set_min_max_range(const type& min, const type& max)
+template<int Rank>
+void Scaling<Rank>::set_min_max_range(const type& min, const type& max)
 {
     min_range = min;
     max_range = max;
 }
 
 
-void Scaling2d::set_descriptives(const vector<Descriptives>& new_descriptives)
+template<int Rank>
+void Scaling<Rank>::set_descriptives(const vector<Descriptives>& new_descriptives)
 {
     descriptives = new_descriptives;
 }
 
 
-void Scaling2d::set_scalers(const vector<string>& new_scalers)
+template<int Rank>
+void Scaling<Rank>::set_scalers(const vector<string>& new_scalers)
 {
     scalers = new_scalers;
 }
 
 
-void Scaling2d::set_scalers(const string& new_scaler)
+template<int Rank>
+void Scaling<Rank>::set_scalers(const string& new_scaler)
 {
     for (string& scaler : scalers)
         scaler = new_scaler;
 }
 
 
-
-void Scaling2d::forward_propagate(const vector<TensorView>& input_views,
+template<int Rank>
+void Scaling<Rank>::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
                                   const bool&)
 {
     const Index outputs_number = get_outputs_number();
 
-    Scaling2dForwardPropagation* scaling_layer_forward_propagation =
-        static_cast<Scaling2dForwardPropagation*>(forward_propagation.get());
+    ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
+        static_cast<ScalingForwardPropagation<Rank>*>(forward_propagation.get());
 
     const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
 
@@ -210,7 +228,8 @@ void Scaling2d::forward_propagate(const vector<TensorView>& input_views,
 }
 
 
-void Scaling2d::calculate_outputs(type* inputs_data, const Tensor<Index, 1>& inputs_dimensions,
+template<int Rank>
+void Scaling<Rank>::calculate_outputs(type* inputs_data, const Tensor<Index, 1>& inputs_dimensions,
                                   type* outputs_data, const Tensor<Index, 1>& outputs_dimensions)
 {
     const Index input_rank = inputs_dimensions.size();
@@ -226,9 +245,7 @@ void Scaling2d::calculate_outputs(type* inputs_data, const Tensor<Index, 1>& inp
         TensorMap<Tensor<type, 2>> outputs(outputs_data, outputs_dimensions[0], outputs_dimensions(1));
 
         if(outputs_dimensions[0] != points_number || outputs_dimensions(1) != neurons_number)
-        {
             throw runtime_error("Outputs dimensions must be equal");
-        }
 
         for(Index i = 0; i < neurons_number; i++)
         {
@@ -266,15 +283,15 @@ void Scaling2d::calculate_outputs(type* inputs_data, const Tensor<Index, 1>& inp
         TensorMap<Tensor<type, 4>> output(outputs_data, inputs_dimensions(0), inputs_dimensions(1), inputs_dimensions(2), inputs_dimensions(3));
 
         for(Index i = 0; i < input.size(); i++)
-        {
             output(i) = -static_cast<type>(1) + static_cast<type>(2*input(i)/255);
-        }
     }
     else
         throw runtime_error("Input dimension must be 2 or 4.\n");
 }
 
-string Scaling2d::write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+
+template<int Rank>
+string Scaling<Rank>::write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
 {
     const Index inputs_number = get_output_dimensions()[0];
 
@@ -289,7 +306,8 @@ string Scaling2d::write_no_scaling_expression(const vector<string>& feature_name
 }
 
 
-string Scaling2d::write_minimum_maximum_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+template<int Rank>
+string Scaling<Rank>::write_minimum_maximum_expression(const vector<string>& feature_names, const vector<string>& output_names) const
 {
     const Index inputs_number = get_output_dimensions()[0];
 
@@ -304,7 +322,8 @@ string Scaling2d::write_minimum_maximum_expression(const vector<string>& feature
 }
 
 
-string Scaling2d::write_mean_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+template<int Rank>
+string Scaling<Rank>::write_mean_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
 {
     const Index inputs_number = get_inputs_number();
 
@@ -319,7 +338,8 @@ string Scaling2d::write_mean_standard_deviation_expression(const vector<string>&
 }
 
 
-string Scaling2d::write_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+template<int Rank>
+string Scaling<Rank>::write_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
 {
     const Index inputs_number = get_output_dimensions()[0];
 
@@ -334,7 +354,8 @@ string Scaling2d::write_standard_deviation_expression(const vector<string>& feat
 }
 
 
-string Scaling2d::get_expression(const vector<string>& new_feature_names, const vector<string>&) const
+template<int Rank>
+string Scaling<Rank>::get_expression(const vector<string>& new_feature_names, const vector<string>&) const
 {
     const vector<string> feature_names = new_feature_names.empty()
                                            ? get_default_feature_names()
@@ -377,7 +398,8 @@ string Scaling2d::get_expression(const vector<string>& new_feature_names, const 
 }
 
 
-void Scaling2d::print() const
+template<int Rank>
+void Scaling<Rank>::print() const
 {
     cout << "Scaling layer" << endl;
 
@@ -393,9 +415,10 @@ void Scaling2d::print() const
 }
 
 
-void Scaling2d::to_XML(XMLPrinter& printer) const
+template<int Rank>
+void Scaling<Rank>::to_XML(XMLPrinter& printer) const
 {
-    printer.OpenElement("Scaling2d");
+    printer.OpenElement("Scaling");
 
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
 
@@ -415,12 +438,13 @@ void Scaling2d::to_XML(XMLPrinter& printer) const
 }
 
 
-void Scaling2d::from_XML(const XMLDocument& document)
+template<int Rank>
+void Scaling<Rank>::from_XML(const XMLDocument& document)
 {
-    const XMLElement* scaling_layer_element = document.FirstChildElement("Scaling2d");
+    const XMLElement* scaling_layer_element = document.FirstChildElement("Scaling");
 
     if(!scaling_layer_element)
-        throw runtime_error("Scaling2d element is nullptr.\n");
+        throw runtime_error("Scaling element is nullptr.\n");
 
     const Index neurons_number = read_xml_index(scaling_layer_element, "NeuronsNumber");
     set({ neurons_number });
@@ -461,14 +485,16 @@ void Scaling2d::from_XML(const XMLDocument& document)
 }
 
 
-Scaling2dForwardPropagation::Scaling2dForwardPropagation(const Index& new_batch_size, Layer* new_layer)
+template<int Rank>
+ScalingForwardPropagation<Rank>::ScalingForwardPropagation(const Index& new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
 }
 
 
-TensorView Scaling2dForwardPropagation::get_output_view() const
+template<int Rank>
+TensorView ScalingForwardPropagation<Rank>::get_output_view() const
 {
     const dimensions output_dimensions = layer->get_output_dimensions();
 
@@ -476,7 +502,8 @@ TensorView Scaling2dForwardPropagation::get_output_view() const
 }
 
 
-void Scaling2dForwardPropagation::initialize()
+template<int Rank>
+void ScalingForwardPropagation<Rank>::initialize()
 {
     const Index outputs_number = layer->get_outputs_number();
 
@@ -484,7 +511,8 @@ void Scaling2dForwardPropagation::initialize()
 }
 
 
-void Scaling2dForwardPropagation::print() const
+template<int Rank>
+void ScalingForwardPropagation<Rank>::print() const
 {
     cout << "Outputs:" << endl
          << outputs << endl;
@@ -493,12 +521,12 @@ void Scaling2dForwardPropagation::print() const
 
 #ifdef  OPENNN_CUDA
 
-void Scaling2d::forward_propagate_cuda(const vector<float*>& inputs_device,
+void Scaling::forward_propagate_cuda(const vector<float*>& inputs_device,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                        const bool&)
 {
-    Scaling2dForwardPropagationCuda* scaling_2d_forward_propagation =
-        static_cast<Scaling2dForwardPropagationCuda*>(forward_propagation_cuda.get());
+    ScalingForwardPropagationCuda* scaling_2d_forward_propagation =
+        static_cast<ScalingForwardPropagationCuda*>(forward_propagation_cuda.get());
 
     const Index outputs_number = get_outputs_number();
     const size_t size = outputs_number * scaling_2d_forward_propagation->batch_size;
@@ -516,21 +544,21 @@ void Scaling2d::forward_propagate_cuda(const vector<float*>& inputs_device,
 
 // CUDA structs
 
-Scaling2dForwardPropagationCuda::Scaling2dForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+ScalingForwardPropagationCuda::ScalingForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
     : LayerForwardPropagationCuda()
 {
     set(new_batch_size, new_layer);
 }
 
 
-void Scaling2dForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void ScalingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
 {
     if (!new_layer) return;
 
     layer = new_layer;
     batch_size = new_batch_size;
 
-    const Scaling2d* scaling_layer = static_cast<Scaling2d*>(layer);
+    const Scaling* scaling_layer = static_cast<Scaling*>(layer);
     const Index outputs_number = scaling_layer->get_outputs_number();
     const size_t size = batch_size * outputs_number;
 
@@ -583,16 +611,16 @@ void Scaling2dForwardPropagationCuda::set(const Index& new_batch_size, Layer* ne
 }
 
 
-void Scaling2dForwardPropagationCuda::print() const
+void ScalingForwardPropagationCuda::print() const
 {
     const Index outputs_number = layer->get_outputs_number();
 
-    cout << "Scaling2d CUDA Outputs:" << endl
+    cout << "Scaling CUDA Outputs:" << endl
         << matrix_from_device(outputs, batch_size, outputs_number) << endl;
 }
 
 
-void Scaling2dForwardPropagationCuda::free()
+void ScalingForwardPropagationCuda::free()
 {
     cudaFree(outputs);
     cudaFree(scalers_device);
@@ -609,12 +637,28 @@ void Scaling2dForwardPropagationCuda::free()
     standard_deviations_device = nullptr;
 }
 
-REGISTER(LayerForwardPropagationCuda, Scaling2dForwardPropagationCuda, "Scaling2d")
+REGISTER(LayerForwardPropagationCuda, ScalingForwardPropagationCuda, "Scaling")
 
 #endif
 
+using Scaling2d = Scaling<2>;
+using Scaling3d = Scaling<3>;
+using Scaling4d = Scaling<4>;
+
+using ScalingForwardPropagation2d = ScalingForwardPropagation<2>;
+using ScalingForwardPropagation3d = ScalingForwardPropagation<3>;
+using ScalingForwardPropagation4d = ScalingForwardPropagation<4>;
+
 REGISTER(Layer, Scaling2d, "Scaling2d")
-REGISTER(LayerForwardPropagation, Scaling2dForwardPropagation, "Scaling2d")
+REGISTER(Layer, Scaling3d, "Scaling3d")
+REGISTER(Layer, Scaling4d, "Scaling4d")
+
+REGISTER(LayerForwardPropagation, ScalingForwardPropagation2d, "Scaling2d")
+REGISTER(LayerForwardPropagation, ScalingForwardPropagation3d, "Scaling3d")
+REGISTER(LayerForwardPropagation, ScalingForwardPropagation4d, "Scaling4d")
+
+//REGISTER(Layer, Scaling, "Scaling")
+//REGISTER(LayerForwardPropagation, ScalingForwardPropagation, "Scaling")
 
 }
 

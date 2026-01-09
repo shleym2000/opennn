@@ -5,7 +5,7 @@
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
-
+/*
 #ifndef Scaling4d_H
 #define Scaling4d_H
 
@@ -86,7 +86,7 @@ struct Scaling4dForwardPropagationCuda : public LayerForwardPropagationCuda
 }
 
 #endif
-
+*/
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.

@@ -833,13 +833,13 @@ InputsSelectionResults GeneticAlgorithm::perform_input_selection()
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"));
+        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
         scaling_layer_2d->set_descriptives(input_variable_descriptives);
         scaling_layer_2d->set_scalers(input_variable_scalers);
     }
     else if(neural_network->has("Scaling3d"))
     {
-        Scaling3d* scaling_layer_3d = static_cast<Scaling3d*>(neural_network->get_first("Scaling3d"));
+        Scaling<3>* scaling_layer_3d = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
         scaling_layer_3d->set_descriptives(input_variable_descriptives);
         scaling_layer_3d->set_scalers(input_variable_scalers);
     }

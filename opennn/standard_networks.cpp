@@ -39,7 +39,7 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
 {
     const Index complexity_size = complexity_dimensions.size();
 
-    add_layer(make_unique<Scaling2d>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_dimensions));
 
     for (Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense2d>(get_output_dimensions(),
@@ -72,7 +72,7 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 {
     const Index complexity_size = complexity_dimensions.size();
 
-    add_layer(make_unique<Scaling2d>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_dimensions));
 
     for (Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense2d>(get_output_dimensions(),
@@ -99,7 +99,7 @@ ForecastingNetwork::ForecastingNetwork(const dimensions& input_dimensions,
                                        const dimensions& complexity_dimensions,
                                        const dimensions& output_dimensions) : NeuralNetwork()
 {
-    add_layer(make_unique<Scaling3d>(input_dimensions));
+    add_layer(make_unique<Scaling<3>>(input_dimensions));
 
     add_layer(make_unique<Recurrent>(input_dimensions,
                                      complexity_dimensions));
@@ -125,7 +125,7 @@ AutoAssociationNetwork::AutoAssociationNetwork(const dimensions& input_dimension
                                                const dimensions& complexity_dimensions,
                                                const dimensions& output_dimensions) : NeuralNetwork()
 {
-    add_layer(make_unique<Scaling2d>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_dimensions));
 
     const Index mapping_neurons_number = 10;
     const Index bottle_neck_neurons_number = complexity_dimensions[0];
@@ -167,7 +167,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling4d>(input_dimensions));
+    add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     const Index complexity_size = complexity_dimensions.size();
 
@@ -224,7 +224,7 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling4d>(input_dimensions));
+    add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     Index last_layer_index = 0;
 
@@ -369,7 +369,7 @@ void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_ta
     reference_all_layers();
 
     // Scaling 4D
-    add_layer(make_unique<Scaling4d>(new_input_dimensions));
+    add_layer(make_unique<Scaling<4>>(new_input_dimensions));
 
     // --- Conv 3×3, 64 kernels, ReLU x2 -> Pooling 2×2 stride 2 ---
     {

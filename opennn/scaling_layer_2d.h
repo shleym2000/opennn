@@ -11,17 +11,19 @@
 
 #include "layer.h"
 #include "statistics.h"
-#include "scaling.h"
 
 namespace opennn
 {
 
-class Scaling2d final : public Layer
+template<int Rank> struct ScalingForwardPropagation;
+
+template<int Rank>
+class Scaling final : public Layer
 {
 
 public:
 
-    Scaling2d(const dimensions& = {0});
+    Scaling(const dimensions& = {0});
 
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
@@ -79,6 +81,8 @@ public:
 
 private:
 
+    dimensions input_dimensions;
+
     vector<Descriptives> descriptives;
 
     vector<string> scalers;
@@ -88,10 +92,11 @@ private:
 };
 
 
-struct Scaling2dForwardPropagation final : LayerForwardPropagation
+template<int Rank>
+struct ScalingForwardPropagation final : LayerForwardPropagation
 {
-    Scaling2dForwardPropagation(const Index& = 0, Layer* = nullptr);
-    virtual ~Scaling2dForwardPropagation() = default;
+    ScalingForwardPropagation(const Index& = 0, Layer* = nullptr);
+    virtual ~ScalingForwardPropagation() = default;
 
     TensorView get_output_view() const override;
 

@@ -44,7 +44,7 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"));
+        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
 
         input_minimums = scaling_layer_2d->get_minimums();
         input_maximums = scaling_layer_2d->get_maximums();

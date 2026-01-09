@@ -5,7 +5,7 @@
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
-
+/*
 #ifndef SCALINGLAYER3D_H
 #define SCALINGLAYER3D_H
 
@@ -90,7 +90,7 @@ struct Scaling3dForwardPropagation final : LayerForwardPropagation
 }
 
 #endif
-
+*/
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
