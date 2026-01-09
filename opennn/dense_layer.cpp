@@ -305,7 +305,7 @@ void Dense2d::forward_propagate(const vector<TensorView>& input_views,
     calculate_combinations(inputs, outputs);
 
     if(batch_normalization)
-        normalize_batch_forward<2>(
+        normalize_batch<2>(
             dense2d_forward_propagation->outputs,
             dense2d_forward_propagation->normalized_outputs,
             dense2d_forward_propagation->means,

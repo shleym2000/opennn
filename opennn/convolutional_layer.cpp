@@ -94,7 +94,7 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
     calculate_convolutions(preprocessed_inputs, outputs);
 
     if(batch_normalization)
-        normalize_batch_forward<4>(
+        normalize_batch<4>(
             this_forward_propagation->outputs,
             this_forward_propagation->outputs,
             this_forward_propagation->means,
