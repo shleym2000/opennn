@@ -1542,11 +1542,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
                 if(!allowed_categories_mask[j].empty())
                     fill(allowed_categories_mask[j].begin(), allowed_categories_mask[j].end(), false);
 
-            // @todo change the name to be more descriptive
-
-            const Index result_count = local_pareto.variables.dimension(0);
-
-            for(Index r = 0; r < result_count; ++r)
+            for(Index r = 0; r < local_pareto.variables.dimension(0); ++r)
             {
                 for(Index raw = 0; raw < raw_inputs_number; ++raw)
                 {
@@ -1578,11 +1574,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
     Tensor<type,2> inputs_filtered(all_rows, inputs_number);
 
-    // @todo try to remove these loops
-
-    for(Index i = 0; i < all_rows; ++i)
-        for(Index j = 0; j < inputs_number; ++j)
-            inputs_filtered(i,j) = all_envelope(i,j);
+    inputs_filtered = all_envelope.chip(0, 1).slice(array_2(0, 0),array_2(all_rows, inputs_number));
 
     const Pareto final_pareto = perform_pareto_analysis(all_objectives, sense, inputs_filtered, all_envelope);
 
