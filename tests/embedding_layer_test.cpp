@@ -64,12 +64,12 @@ TEST(Embedding, ForwardPropagate)
  TEST(EmbeddingForwardPropagationTest, GetOutputPairReturnsCorrectDataAndShape)
  {
      const Index batch_size = 2;
-     const Index vocab_size = 15;
+     const Index vocabulary_size = 15;
      const Index sequence_length = 5;
      const Index embedding_dimension = 6;
 
      Embedding layer({sequence_length}, embedding_dimension, "test_embedding");
-     layer.set(vocab_size, sequence_length, embedding_dimension, "test_embedding");
+     layer.set(vocabulary_size, sequence_length, embedding_dimension, "test_embedding");
 
      EmbeddingForwardPropagation forward(batch_size, &layer);
 

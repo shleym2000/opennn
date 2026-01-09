@@ -14,6 +14,7 @@
 namespace opennn
 {
 
+
 class Dense2d final : public Layer
 {
 

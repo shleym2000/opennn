@@ -762,7 +762,8 @@ void Transformer::set(const Index& input_sequence_length,
     add_layer(make_unique<Dense3d>(decoder_sequence_length,
                                    embedding_dimension,
                                    output_vocabulary_size,
-                                   "output"));
+                                   "Softmax", // Change from "Linear" to "Softmax"
+                                   "output_projection"));
 }
 
 
@@ -810,76 +811,86 @@ Index Transformer::get_heads_number() const
 }
 
 
-string Transformer::calculate_outputs(const string& source_sentence)
+string Transformer::calculate_outputs(const string& source)
 {
-    const vector<string> source_tokens = tokenize(source_sentence);
+    if (input_vocabulary_map.empty() || output_inverse_vocabulary_map.empty())
+        throw runtime_error("Transformer::calculate_outputs Error: Vocabularies not initialized.");
+
+    constexpr type PAD   = 0.0f;
+    constexpr type UNK   = 1.0f;
+    constexpr type START = 2.0f;
+    constexpr type END   = 3.0f;
 
     const Index input_sequence_length = get_input_sequence_length();
     const Index decoder_sequence_length = get_decoder_sequence_length();
+    const Index batch_size = 1;
 
-    const Index samples_number = 1;
+    const vector<string> source_tokens = tokenize(source);
 
-    // source_ids: [Batch=1, Seq=input_seq_len]
-    Tensor<type, 2> source_ids(samples_number, input_sequence_length);
-    source_ids.setZero();
+    Tensor<type, 2> source_ids(batch_size, input_sequence_length);
+    source_ids.setConstant(PAD);
 
-    for(Index i = 0; i < (Index)source_tokens.size() && i < input_sequence_length; i++)
+    for(size_t i = 0; i < source_tokens.size() && i < static_cast<size_t>(input_sequence_length); i++)
     {
-        auto it = input_vocabulary_map.find(source_tokens[i]);
-        // Map to ID from map, or 1 ([UNK]) if not found
-        source_ids(0, i) = (it != input_vocabulary_map.end()) ? (type)it->second : 1.0f;
+        const auto it = input_vocabulary_map.find(source_tokens[i]);
+
+        source_ids(0, i) = (it != input_vocabulary_map.end())
+                               ? static_cast<type>(it->second)
+                               : UNK;
     }
 
-    // --- 3. AUTOREGRESSIVE DECODING ---
-    // Initialize target sequence with [START] (ID 2)
-    Tensor<type, 2> target_ids(samples_number, decoder_sequence_length);
-    target_ids.setZero();
-    target_ids(0, 0) = 2.0f;
+    Tensor<type, 2> target_ids(batch_size, decoder_sequence_length);
+    target_ids.setConstant(PAD);
+    target_ids(0, 0) = START;
 
-    ForwardPropagation forward_propagation(samples_number, this);
+    ForwardPropagation forward_propagation(batch_size, this);
 
     for(Index i = 1; i < decoder_sequence_length; i++)
     {
-        const vector<TensorView> input_views = {TensorView(target_ids.data(), {samples_number, decoder_sequence_length}),
-                                                TensorView(source_ids.data(), {samples_number, input_sequence_length})};
+        const vector<TensorView> inputs = {TensorView(target_ids.data(), {batch_size, decoder_sequence_length}),
+                                           TensorView(source_ids.data(), {batch_size, input_sequence_length})};
 
-        forward_propagate(input_views, forward_propagation, false);
+        forward_propagate(inputs, forward_propagation, false);
 
-        const TensorView output_view = forward_propagation.layers.back()->get_output_view();
+        const TensorView output_view = forward_propagation.get_output_view();
 
-        const TensorMap<Tensor<type, 3>> probabilities(output_view.data, 1, decoder_sequence_length, output_view.dims[2]);
+        const Index vocabulary_size = output_view.dims[2];
 
-        const Index best_id = maximal_index(probabilities.chip(0, 0).chip(i - 1, 0));
+        const TensorMap<Tensor<type, 3>> probabilities(output_view.data, batch_size, decoder_sequence_length, vocabulary_size);
 
-        target_ids(0, i) = (type)best_id;
+        // GREEDY SELECTION:
+        // The prediction for the "next" word is found at the output of the current word's index.
+        // We look at the distribution for position i-1 to pick word for position i.
+        const Tensor<type, 1> current_distribution = probabilities.chip(0, 0).chip(i - 1, 0);
 
-        if(best_id == 3) break; // The model predicts [END] (ID 3)
+        const Index best_id = maximal_index(current_distribution);
+
+        target_ids(0, i) = static_cast<type>(best_id);
+
+        if(best_id == 3) break; // [END]
     }
 
-    // Detokenization
-
-    string result_sentence;
+    string result;
 
     for(Index i = 1; i < decoder_sequence_length; i++)
     {
-        const Index id = (Index)target_ids(0, i);
+        const Index id = static_cast<Index>(target_ids(0, i));
 
-        if(id == 3 || id == 0) break; // Stop at [END] or [PAD]
+        if(id == END || id == PAD) break;
 
-        auto it = output_inverse_vocabulary_map.find(id);
+        const auto it = output_inverse_vocabulary_map.find(id);
 
-        if(it != output_inverse_vocabulary_map.end())
-        {
-            if(!result_sentence.empty())
-                result_sentence += " ";
+        if (it == output_inverse_vocabulary_map.end())
+            continue;
 
-            result_sentence += it->second;
-        }
+        if (!result.empty())
+            result += " ";
+
+        result += it->second;
     }
 
-    return result_sentence;
+    return result;
 }
-
 
 } // namespace opennn
 

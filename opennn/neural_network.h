@@ -34,7 +34,12 @@ struct ForwardPropagation
 
     TensorView get_last_trainable_layer_outputs_pair() const;
 
-    vector<vector<TensorView>> get_layer_input_pairs(const vector<TensorView>&, const bool&) const;
+    vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
+
+    TensorView get_output_view()
+    {
+        return layers.back()->get_output_view();
+    }
 
     void print() const;
 

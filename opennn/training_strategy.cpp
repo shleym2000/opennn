@@ -165,6 +165,18 @@ void TrainingStrategy::set_default()
         return;
     }
 
+    // Transformer
+
+    if(neural_network->has("Dense3d"))
+    {
+        set_loss_index("CrossEntropyError3d");
+        set_optimization_algorithm("AdaptiveMomentEstimation");
+
+        auto* adam = static_cast<AdaptiveMomentEstimation*>(optimization_algorithm.get());
+        adam->set_learning_rate(0.0001);
+        return;
+    }
+
     // Multiple classification
 
     if(output_activation == "Softmax")
