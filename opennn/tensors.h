@@ -110,6 +110,7 @@ void set_random(TensorMap<Tensor<type, rank>>& tensor, const type& minimum = -0.
         tensor(i) = distribution(gen);
 }
 
+
 template<int rank>
 void set_random_integers(Tensor<type, rank>& tensor, const Index& minimum, const Index& maximum)
 {

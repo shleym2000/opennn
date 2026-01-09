@@ -844,10 +844,10 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         bool is_scaling_3d = false;
 
         if(neural_network->has("Scaling2d"))
-            inputs_descriptives = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"))->get_descriptives();
+            inputs_descriptives = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"))->get_descriptives();
         else if (neural_network->has("Scaling3d"))
         {
-            inputs_descriptives = static_cast<Scaling3d*>(neural_network->get_first("Scaling3d"))->get_descriptives();
+            inputs_descriptives = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"))->get_descriptives();
             is_scaling_3d = true;
 
             for(const Dataset::RawVariable& var : raw_variables)

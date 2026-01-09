@@ -200,6 +200,8 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
             weight_deltas.chip(Index(inputs(sample_index, word_index)), 0)
                 += sample_deltas.chip(word_index, 0);
     }
+
+    weight_deltas.chip(0, 0).setZero(); // PAD
 }
 
 

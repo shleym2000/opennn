@@ -17,9 +17,9 @@ Dense2d::Dense2d(const dimensions& new_input_dimensions,
                  const dimensions& new_output_dimensions,
                  const string& new_activation_function,
                  const bool& new_batch_normalization,
-                 const string& new_layer_label) : Layer()
+                 const string& new_label) : Layer()
 {
-    set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_layer_label);
+    set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_label);
 }
 
 

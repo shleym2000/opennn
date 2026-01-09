@@ -241,12 +241,12 @@ void NeuralNetwork::set_input_dimensions(const dimensions& new_input_dimensions)
 
     if(has("Scaling2d"))
     {
-        Scaling2d* scaling_layer = static_cast<Scaling2d*>(get_first("Scaling2d"));
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(get_first("Scaling2d"));
         scaling_layer->set_input_dimensions(new_input_dimensions);
     }
     else if(has("Scaling3d"))
     {
-        Scaling3d* scaling_layer = static_cast<Scaling3d*>(get_first("Scaling3d"));
+        Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(get_first("Scaling3d"));
         scaling_layer->set_input_dimensions(new_input_dimensions);
     }
 
@@ -531,8 +531,7 @@ Tensor<type, 3> NeuralNetwork::calculate_outputs(const Tensor<type, 3> &inputs_1
 
     const vector<string> layer_labels = get_layer_labels();
 
-    const TensorView outputs_view
-        = forward_propagation.layers[layers_number - 1]->get_output_view();
+    const TensorView outputs_view = forward_propagation.get_output_view();
 
     return tensor_map<3>(outputs_view);
 }
@@ -554,7 +553,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
     }
 
     const vector<vector<TensorView>> layer_input_pairs
-        = forward_propagation.get_layer_input_pairs(input_view, is_training);
+        = forward_propagation.get_layer_input_views(input_view, is_training);
 
     for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate(layer_input_pairs[i],
@@ -1378,7 +1377,7 @@ TensorView ForwardPropagation::get_last_trainable_layer_outputs_pair() const
 }
 
 
-vector<vector<TensorView>> ForwardPropagation::get_layer_input_pairs(const vector<TensorView>& batch_input_pairs,
+vector<vector<TensorView>> ForwardPropagation::get_layer_input_views(const vector<TensorView>& batch_input_pairs,
                                                                                   const bool& is_training) const
 {
     const Index layers_number = neural_network->get_layers_number();

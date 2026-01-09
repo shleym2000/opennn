@@ -553,7 +553,7 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
     NeuralNetwork neural_network;
     dimensions dim1 = { 1 };
     dimensions dim2 = { 1 };
-    neural_network.add_layer(make_unique<Scaling2d>(dim1));
+    neural_network.add_layer(make_unique<Scaling<2>>(dim1));
     neural_network.add_layer(make_unique<Dense2d>(dim1, dim2, "Logistic"));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
@@ -632,7 +632,7 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
     NeuralNetwork neural_network;
     dimensions dim1 = { 1 };
     dimensions dim2 = { 1 };
-    neural_network.add_layer(make_unique<Scaling2d>(dim1));
+    neural_network.add_layer(make_unique<Scaling<2>>(dim1));
     neural_network.add_layer(make_unique<Dense2d>(dim1, dim2, "Logistic"));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
@@ -736,7 +736,7 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
 
     ClassificationNetwork neural_network({ input_variables_number }, {1}, {target_variables_number});
 
-    Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network.get_first("Scaling2d"));
+    Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
     Dense2d* dense_2d = static_cast<Dense2d*>(neural_network.get_first("Dense2d"));
 
@@ -848,7 +848,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     ClassificationNetwork neural_network({input_variables_number }, {}, {target_variables_number});
 
-    Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network.get_first("Scaling2d"));
+    Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
     Dense2d* dense_2d = static_cast<Dense2d*>(neural_network.get_first("Dense2d"));
 

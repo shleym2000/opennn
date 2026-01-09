@@ -299,7 +299,7 @@ void OptimizationAlgorithm::set_scaling()
         input_variable_scalers = dataset->get_variable_scalers("Input");
         input_variable_descriptives = dataset->scale_variables("Input");
 
-        Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"));
+        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
         scaling_layer_2d->set_descriptives(input_variable_descriptives);
         scaling_layer_2d->set_scalers(input_variable_scalers);
     }
@@ -309,7 +309,7 @@ void OptimizationAlgorithm::set_scaling()
         input_variable_scalers = time_series_dataset->get_variable_scalers("Input");
         input_variable_descriptives = time_series_dataset->scale_variables("Input");
 
-        Scaling3d* scaling_layer_3d = static_cast<Scaling3d*>(neural_network->get_first("Scaling3d"));
+        Scaling<3>* scaling_layer_3d = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
         scaling_layer_3d->set_descriptives(input_variable_descriptives);
         scaling_layer_3d->set_scalers(input_variable_scalers);
     }
@@ -397,12 +397,12 @@ void OptimizationAlgorithm::set_unscaling()
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling2d* layer = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"));
+        Scaling<2>* layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
         dataset->unscale_variables("Input", layer->get_descriptives());
     }
     else if(neural_network->has("Scaling3d"))
     {
-        Scaling3d* layer = static_cast<Scaling3d*>(neural_network->get_first("Scaling3d"));
+        Scaling<3>* layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
         dataset->unscale_variables("Input", layer->get_descriptives());
     }
     else if(neural_network->has("Scaling4d"))

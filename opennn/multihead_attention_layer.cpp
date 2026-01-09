@@ -208,6 +208,13 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
          * key.reshape(array_5(batch_size, heads_number, 1, source_sequence_length, head_dimension)).broadcast(array_5(1, 1, query_sequence_length, 1, 1)))
          .sum(array_1(4)) * scaling_factor;
 
+    if (use_causal_mask)
+        attention_weights.device(*device) += causal_mask.reshape(array_4(1, 1, query_sequence_length, source_sequence_length))
+                                                        .broadcast(array_4(batch_size, heads_number, 1, 1));
+
+    // @todo Optimization: Call the padding mask here if your LanguageDataset provides it
+    // apply_key_padding_mask(padding_mask, attention_weights);
+
     softmax(attention_weights);
 
     attention_outputs.device(*device) =
@@ -384,7 +391,7 @@ void MultiHeadAttention::apply_causal_mask(Tensor<type, 4>& attention_scores) co
 
              sample_attention_scores.device(*device) += causal_mask;
          }
-     }
+    }
 }
 
 
