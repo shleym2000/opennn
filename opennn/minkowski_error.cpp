@@ -69,7 +69,7 @@ void MinkowskiError::calculate_error(const Batch& batch,
 
     Tensor<type, 0>& error = back_propagation.error;
 
-    errors.device(*device) = outputs - targets + epsilon;
+    errors.device(*device) = outputs - targets + numeric_limits<type>::epsilon();
 
     error.device(*device) = errors.abs().pow(minkowski_parameter).sum() / type(samples_number);
 
@@ -91,7 +91,8 @@ void MinkowskiError::calculate_output_delta(const Batch& batch,
 
     const type coefficient = type(1.0 / samples_number);
 
-    deltas.device(*device) = errors*((errors.abs() + epsilon).pow(minkowski_parameter - type(2)))*minkowski_parameter*coefficient;
+    deltas.device(*device) = errors*((errors.abs() + numeric_limits<type>::epsilon())
+                                           .pow(minkowski_parameter - type(2)))*minkowski_parameter*coefficient;
 }
 
 
@@ -141,7 +142,7 @@ REGISTER(LossIndex, MinkowskiError, "MinkowskiError");
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

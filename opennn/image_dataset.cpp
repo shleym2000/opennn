@@ -285,6 +285,8 @@ void ImageDataset::to_XML(XMLPrinter& printer) const
 
     samples_to_XML(printer);
 
+    add_xml_element(printer, "Display", to_string(display));
+
     printer.CloseElement();
 }
 
@@ -588,7 +590,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

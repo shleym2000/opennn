@@ -45,9 +45,6 @@ public:
     void set_activation_function(const string&);
     void set_dropout_rate(const type&);
 
-    void calculate_combinations(const Tensor<type, 3>&,
-                                Tensor<type, 3>&) const;
-
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;
@@ -121,7 +118,7 @@ struct Dense3dBackPropagation final : LayerBackPropagation
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

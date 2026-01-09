@@ -547,7 +547,7 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
 
     Dataset dataset(x_filtered.size(), {1}, {1});
     dataset.set_data(data);
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
     dataset.set_raw_variable_scalers("MinimumMaximum");
 
     NeuralNetwork neural_network;
@@ -626,7 +626,7 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
 
     Dataset dataset(x_filtered.size(), {1}, {1});
     dataset.set_data(data);
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
     dataset.set_raw_variable_scalers("MinimumMaximum");
 
     NeuralNetwork neural_network;
@@ -727,7 +727,7 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
 
     // Dataset.print();
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
     dataset.set_dimensions("Input", {dataset.get_variables_number("Input")});
     dataset.set_dimensions("Target", {dataset.get_variables_number("Target")});
 
@@ -841,7 +841,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     Dataset.set_raw_variable_indices(input_columns_indices, target_columns_indices);
 
-    Dataset.set_sample_uses("Training");
+    Dataset.set_sample_roles("Training");
 
     const Index input_variables_number = Dataset.get_variables_number("Input");
     const Index target_variables_number = Dataset.get_variables_number("Target");
@@ -983,7 +983,7 @@ void register_optimization_algorithms()
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

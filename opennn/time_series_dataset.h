@@ -42,7 +42,7 @@ public:
     const Index& get_time_raw_variable_index() const;
 
     TimeSeriesData get_data() const;
-    Tensor<type, 3> get_data(const string& sample_use, const string& variable_use) const;
+    Tensor<type, 3> get_data(const string& sample_role, const string& variable_use) const;
 
     void set_past_time_steps(const Index&);
     void set_future_time_steps(const Index&);
@@ -88,7 +88,7 @@ private:
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

@@ -106,10 +106,11 @@ void scale_mean_standard_deviation_3d(Tensor<type, 3>& tensor,
 {
     const type mean = feature_descriptives.mean;
     const type standard_deviation = feature_descriptives.standard_deviation;
-    const type epsilon = type(1e-7);
 
     const Index batch_size = tensor.dimension(0);
     const Index time_steps = tensor.dimension(1);
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     #pragma omp parallel for
     for(Index b = 0; b < batch_size; b++)
@@ -273,7 +274,7 @@ void unscale_image_minimum_maximum(Tensor<type, 2>& matrix, const Index& column_
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

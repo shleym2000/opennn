@@ -88,7 +88,7 @@ TEST(Embedding, ForwardPropagate)
 TEST(Embedding, BackPropagate)
 {
     LanguageDataset language_dataset("../examples/amazon_reviews/data/amazon_cells_labelled.txt");
-    language_dataset.set_sample_uses("Training");
+    language_dataset.set_sample_roles("Training");
 
     const Index embedding_dimension = get_random_index(1,10);
     const Index vocabulary_size = language_dataset.get_input_vocabulary_size();

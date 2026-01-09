@@ -124,7 +124,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
                     dimensions{inputs_number},
                     dimensions{outputs_number});
     dataset.set_data(data);
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     Batch batch(samples_number, &dataset);
     batch.fill(dataset.get_sample_indices("Training"),

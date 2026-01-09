@@ -219,7 +219,7 @@ void InputsSelectionResults::resize_history(const Index& new_size)
 void InputsSelectionResults::print() const
 {
     cout << endl
-         << "Inputs Selection Results" << endl
+         << "Input Selection Results" << endl
          << "Optimal inputs number: " << optimal_input_raw_variable_names.size() << endl
          << "Inputs: " << endl;
 
@@ -252,7 +252,7 @@ string InputsSelection::write_time(const type& time) const
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

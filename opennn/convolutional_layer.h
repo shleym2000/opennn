@@ -95,8 +95,6 @@ public:
     void calculate_convolutions(const Tensor<type, 4>&,
                                 Tensor<type, 4>&) const;
 
-    void apply_batch_normalization(unique_ptr<LayerForwardPropagation>&, const bool&);
-
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;
@@ -184,8 +182,6 @@ private:
     Tensor<type, 1> moving_standard_deviations;
 
     type momentum = type(0.9);
-
-    const type epsilon = type(1e-5);
 
     Tensor<type, 1> scales;
     Tensor<type, 1> offsets;
@@ -314,7 +310,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

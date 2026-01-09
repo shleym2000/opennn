@@ -277,7 +277,7 @@ TEST(Transformer, ForwardPropagate)
         
     dataset.set(data);
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     for(Index i = 0; i < context_length; i++)
         dataset.set_raw_variable_role(i, string::Context);
@@ -346,7 +346,7 @@ TEST(Transformer, ForwardPropagate)
 
         dataset.set(data);
 
-        dataset.set_sample_uses("Training");
+        dataset.set_sample_roles("Training");
 
         for(Index i = 0; i < context_length; i++)
             dataset.set_raw_variable_role(i, string::Context);

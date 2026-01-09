@@ -66,7 +66,7 @@ int32_t read_s32_le(ifstream& f, const string& file_path_str_for_error)
 }
 
 
-Tensor<type, 3> read_bmp_image(const filesystem::path& image_path_fs)
+Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
 {
     const string image_path_str = image_path_fs.string();
 
@@ -112,15 +112,8 @@ Tensor<type, 3> read_bmp_image(const filesystem::path& image_path_fs)
     if (biBitCount != 8 && biBitCount != 24 && biBitCount != 32)
         throw runtime_error("Unsupported BMP bit count: " + to_string(biBitCount) + " in file: " + image_path_str + ". Supported: 8, 24, 32.");
 
-    const Index tensor_height = (biHeight_signed < 0) ? -biHeight_signed : biHeight_signed;
-
-    const Index tensor_width = biWidth;
-    const bool top_down = (biHeight_signed < 0);
-
-    const Index tensor_channels = 3;
-    Tensor<float, 3> image_tensor(tensor_height, tensor_width, tensor_channels);
-
     vector<RGBQuad> palette;
+    bool is_grayscale = false;
 
     if (biBitCount <= 8)
     {
@@ -133,6 +126,7 @@ Tensor<type, 3> read_bmp_image(const filesystem::path& image_path_fs)
             throw runtime_error("Invalid palette size for 8-bit BMP: " + to_string(num_palette_colors) + " in file: " + image_path_str);
 
         palette.resize(num_palette_colors);
+        is_grayscale = true;
 
         for (uint32_t i = 0; i < num_palette_colors; ++i)
         {
@@ -140,8 +134,21 @@ Tensor<type, 3> read_bmp_image(const filesystem::path& image_path_fs)
             palette[i].green = read_u8(file, image_path_str);
             palette[i].red = read_u8(file, image_path_str);
             palette[i].reserved = read_u8(file, image_path_str);
+
+            if (palette[i].red != palette[i].green || palette[i].red != palette[i].blue)
+            {
+                is_grayscale = false;
+            }
         }
     }
+
+    const Index tensor_height = (biHeight_signed < 0) ? -biHeight_signed : biHeight_signed;
+    const Index tensor_width = biWidth;
+    const bool top_down = (biHeight_signed < 0);
+
+    const Index tensor_channels = (biBitCount == 8 && is_grayscale) ? 1 : 3;
+
+    Tensor<float, 3> image_tensor(tensor_height, tensor_width, tensor_channels);
 
     file.seekg(bfOffBits, ios::beg);
 
@@ -216,9 +223,16 @@ Tensor<type, 3> read_bmp_image(const filesystem::path& image_path_fs)
                 b_val = static_cast<float>(color.blue);
             }
 
-            image_tensor(tensor_y_coord, x_col, 0) = r_val;
-            image_tensor(tensor_y_coord, x_col, 1) = g_val;
-            image_tensor(tensor_y_coord, x_col, 2) = b_val;
+            if (tensor_channels == 1)
+            {
+                image_tensor(tensor_y_coord, x_col, 0) = r_val;
+            }
+            else
+            {
+                image_tensor(tensor_y_coord, x_col, 0) = r_val;
+                image_tensor(tensor_y_coord, x_col, 1) = g_val;
+                image_tensor(tensor_y_coord, x_col, 2) = b_val;
+            }
         }
     }
 

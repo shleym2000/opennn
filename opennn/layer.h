@@ -236,28 +236,94 @@ protected:
     void softmax(Tensor<type, 3>&) const;
     void softmax(Tensor<type, 4>&) const;
 
-    //void softmax_derivatives_times_tensor(const Tensor<type, 3>&, const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
     void softmax_derivatives_times_tensor(const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
 
     void add_deltas(const vector<TensorView>& delta_views) const;
+
+    template <int Rank>
+    void normalize_batch(
+        Tensor<type, Rank>& outputs,
+        Tensor<type, Rank>& normalized_outputs,
+        Tensor<type, 1>& batch_means,
+        Tensor<type, 1>& batch_stds,
+        Tensor<type, 1>& moving_means,
+        Tensor<type, 1>& moving_stds,
+        const Tensor<type, 1>& scales,
+        const Tensor<type, 1>& offsets,
+        const bool& is_training,
+        const type momentum = type(0.9),
+        const type epsilon = type(1e-5)) const
+    {
+        const Index neurons = moving_means.size();
+
+        array<int, Rank - 1> reduction_axes;
+        for(int i = 0; i < Rank - 1; ++i)
+            reduction_axes[i] = i;
+
+        array<Index, Rank> reshape_dimensions;
+        reshape_dimensions.fill(1);
+        reshape_dimensions[Rank - 1] = neurons;
+
+        array<Index, Rank> broadcast_dimensions = outputs.dimensions();
+        broadcast_dimensions[Rank - 1] = 1;
+
+        if(is_training)
+        {
+            batch_means.device(*device) = outputs.mean(reduction_axes);
+
+            normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions));
+
+            batch_stds.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
+
+            normalized_outputs.device(*device) = normalized_outputs / batch_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+
+            moving_means.device(*device) = moving_means * momentum + batch_means * (type(1) - momentum);
+            moving_stds.device(*device) = moving_stds * momentum + batch_stds * (type(1) - momentum);
+        }
+        else
+            normalized_outputs.device(*device) = (outputs - moving_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
+                                                 (moving_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions) + epsilon);
+
+        outputs.device(*device) = normalized_outputs * scales.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
+                                  offsets.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+    }
 
     template <int Rank>
     void dropout(Tensor<type, Rank>& tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
-#pragma omp parallel
+        #pragma omp parallel
         {
             mt19937 gen(random_device{}() + omp_get_thread_num());  // thread-local RNG
             uniform_real_distribution<float> dis(0.0f, 1.0f);
 
- #pragma omp for
-
+            #pragma omp for
             for (Index i = 0; i < tensor.size(); i++)
                 tensor(i) = (dis(gen) < dropout_rate)
                                 ? 0
                                 : tensor(i) * scaling_factor;
         }
+    }
+
+    template <int Rank>
+    void calculate_combinations(
+        const Tensor<type, Rank>& inputs,
+        const Tensor<type, 2>& weights,
+        const Tensor<type, 1>& biases,
+        Tensor<type, Rank>& combinations) const
+    {
+        const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
+
+        array<Index, Rank> reshape_dimensions;
+        reshape_dimensions.fill(1);
+        reshape_dimensions[Rank - 1] = biases.size();
+
+        array<Index, Rank> broadcast_dims = combinations.dimensions();
+        broadcast_dims[Rank - 1] = 1;
+
+        combinations.device(*device) = inputs.contract(weights, contraction_axes) +
+                                       biases.reshape(reshape_dimensions).broadcast(broadcast_dims);
     }
 
 #ifdef OPENNN_CUDA

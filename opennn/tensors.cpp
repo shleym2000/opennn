@@ -111,8 +111,7 @@ void divide_columns(const ThreadPoolDevice* device, TensorMap<Tensor<type, 2>>& 
 
     for(Index i = 0; i < columns_number; i++)
     {
-        //TensorMap<Tensor<type, 1>> column = tensor_map(matrix, i);
-        auto column = matrix.chip(i, 1);  // chip slices along dimension 1
+        auto column = matrix.chip(i, 1);
 
         for(Index j = 0; j < vector.size(); j++)
             if(vector(j) == 0)
@@ -121,6 +120,30 @@ void divide_columns(const ThreadPoolDevice* device, TensorMap<Tensor<type, 2>>& 
         column.device(*device) = column / corrected_vector;
     }
 }
+
+
+
+Tensor<type, 2> append_rows(const Tensor<type,2>& starting_matrix, const Tensor<type,2>& block)
+{
+    if (starting_matrix.size() == 0)
+        return block;
+
+    if (block.size() == 0)
+        return starting_matrix;
+
+    const Index old_rows = starting_matrix.dimension(0);
+    const Index cols = starting_matrix.dimension(1);
+    const Index new_rows = block.dimension(0);
+
+    Tensor<type, 2> final_matrix(old_rows + new_rows, cols);
+
+    final_matrix.slice(array_2(0, 0), array_2(old_rows, cols)) = starting_matrix;
+
+    final_matrix.slice(array_2(old_rows, 0), array_2(new_rows, cols)) = block;
+
+    return final_matrix;
+}
+
 
 
 void sum_matrices(const ThreadPoolDevice* device, const Tensor<type, 1>& vector, Tensor<type, 3>& tensor)
@@ -688,7 +711,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

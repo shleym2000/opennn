@@ -35,10 +35,6 @@ public:
 
     void set_activation_function(const string&);
 
-    void calculate_combinations(const Tensor<type, 2>&,
-                                const Tensor<type, 2>&,
-                                Tensor<type, 2>&) const;
-
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;
@@ -136,7 +132,7 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

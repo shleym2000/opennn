@@ -52,7 +52,7 @@ LanguageDataset::LanguageDataset(const Index& samples_number,
                                : "Target";
     }
 
-    sample_uses.resize(samples_number);
+    sample_roles.resize(samples_number);
     split_samples_random();
 
     default_random_engine generator;
@@ -359,7 +359,7 @@ void LanguageDataset::read_csv()
     encode_input_data(input_document_tokens);
     encode_target_data(target_document_tokens);
 
-    sample_uses.resize(samples_number);
+    sample_roles.resize(samples_number);
 
     input_dimensions = {get_maximum_input_sequence_length()};
     target_dimensions = {get_maximum_target_sequence_length()};
@@ -537,7 +537,7 @@ void LanguageDataset::print() const
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

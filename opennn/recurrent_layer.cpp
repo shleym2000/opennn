@@ -108,20 +108,6 @@ void Recurrent::set_activation_function(const string& new_activation_function)
 }
 
 
-void Recurrent::calculate_combinations(const Tensor<type, 2>& inputs,
-                                       const Tensor<type, 2>& previous_hidden_states,
-                                       Tensor<type, 2>& combinations) const
-{
-    const Index batch_size = inputs.dimension(0);
-
-    // Compute the new hidden state: h_t = tanh(W_x * x_t + W_h * h_t + b)
-    combinations = inputs.contract(input_weights, axes(1,0))
-                   + previous_hidden_states.contract(recurrent_weights, axes(1,0))
-                   + biases.reshape(Eigen::DSizes<Index,2>{1, biases.dimension(0)})
-                         .broadcast(array<Index,2>{batch_size, 1});
-}
-
-
 void Recurrent::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
                                   const bool&)
@@ -146,13 +132,9 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     previous_hidden_states.setZero();
     for(Index time_step = 0; time_step < past_time_steps; time_step++)
     {
-        // Compute the new hidden state: h_t = tanh(W_x * x_t + W_h * h_t + b)
-        outputs.device(*device)
-            = inputs.chip(time_step, 1).contract(input_weights, axes(1,0))
-              + previous_hidden_states.contract(recurrent_weights, axes(1,0))
-              + biases.reshape(Eigen::DSizes<Index,2>{1, output_size}).broadcast(array<Index,2>{batch_size, 1});
+        calculate_combinations<2>(inputs.chip(time_step, 1), input_weights, biases, outputs);
 
-        //calculate_combinations(inputs.chip(t, 1), previous_hidden_state, outputs);
+        outputs.device(*device) += previous_hidden_states.contract(recurrent_weights, axes(1,0));
 
         current_activation_derivatives.device(*device) =
             activation_derivatives.chip(time_step, 1);
@@ -462,7 +444,7 @@ REGISTER(LayerBackPropagation, RecurrentBackPropagation, "Recurrent")
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

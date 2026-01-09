@@ -223,7 +223,9 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
     {
         const Index parameters_number = parameters.size();
 
-#pragma omp parallel for
+        constexpr type epsilon = numeric_limits<type>::epsilon();
+
+        #pragma omp parallel for
 
         for(Index i = 0; i < parameters_number; i++)
         {
@@ -821,7 +823,7 @@ REGISTER(OptimizationAlgorithm, QuasiNewtonMethod, "QuasiNewtonMethod");
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

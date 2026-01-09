@@ -83,7 +83,7 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Dense2d>(get_output_dimensions(),
                                    output_dimensions,
-                                   "Softmax",
+                                   output_dimensions[0] == 1 ? "Logistic" : "Softmax",
                                    false,
                                    "classification_layer"));
 
@@ -840,8 +840,7 @@ string Transformer::calculate_outputs(const string& source_sentence)
 
     for(Index i = 1; i < decoder_sequence_length; i++)
     {
-        const vector<TensorView> input_views = {
-                                                TensorView(target_ids.data(), {samples_number, decoder_sequence_length}),
+        const vector<TensorView> input_views = {TensorView(target_ids.data(), {samples_number, decoder_sequence_length}),
                                                 TensorView(source_ids.data(), {samples_number, input_sequence_length})};
 
         forward_propagate(input_views, forward_propagation, false);
@@ -885,7 +884,7 @@ string Transformer::calculate_outputs(const string& source_sentence)
 } // namespace opennn
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

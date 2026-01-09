@@ -51,12 +51,9 @@ public:
     void set_activation_function(const string&);
     void set_dropout_rate(const type&);
 
-    void calculate_combinations(const Tensor<type, 2>&, Tensor<type, 2>&) const;
-
     void normalization(Tensor<type, 1>&, Tensor<type, 1>&, const Tensor<type, 2>&, Tensor<type, 2>&) const;
 
     void set_batch_normalization(const bool&);
-    void apply_batch_normalization(unique_ptr<LayerForwardPropagation>&, const bool&);
     void apply_batch_normalization_backward(TensorMap<Tensor<type, 2>>&, unique_ptr<LayerForwardPropagation>&, unique_ptr<LayerBackPropagation>&) const;
 
     void forward_propagate(const vector<TensorView>&,
@@ -139,7 +136,6 @@ private:
     Tensor<type, 1> moving_standard_deviations;
 
     type momentum = type(0.9);
-    const type epsilon = type(1e-5);
 
     string activation_function = "HyperbolicTangent";
 
@@ -269,7 +265,7 @@ struct Dense2dBackPropagationCuda : public LayerBackPropagationCuda
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

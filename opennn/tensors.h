@@ -163,6 +163,7 @@ bool is_binary(const Tensor<type, Rank>& tensor)
     return true;
 }
 
+Tensor<type, 2> append_rows(const Tensor<type,2>& , const Tensor<type,2>& );
 
 template <int Rank>
 bool is_constant(const Tensor<type, Rank>& tensor)
