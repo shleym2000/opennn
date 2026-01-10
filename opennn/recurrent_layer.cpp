@@ -116,19 +116,19 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     const Index past_time_steps = input_views[0].dims[1];
     const Index input_size = input_views[0].dims[2];
 
-    TensorMap<Tensor<type, 3>> inputs(input_views[0].data, batch_size, past_time_steps, input_size);
+    TensorMap3 inputs(input_views[0].data, batch_size, past_time_steps, input_size);
 
     RecurrentForwardPropagation* recurrent_forward =
         static_cast<RecurrentForwardPropagation*>(forward_propagation.get());
 
-    Tensor<type, 2>& outputs = recurrent_forward->outputs;
-    Tensor<type, 3>& activation_derivatives = recurrent_forward->activation_derivatives;
-    Tensor<type, 2>& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
-    Tensor<type, 3>& hidden_states = recurrent_forward->hidden_states;
+    Tensor2& outputs = recurrent_forward->outputs;
+    Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
+    Tensor2& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
+    Tensor3& hidden_states = recurrent_forward->hidden_states;
 
     const Index output_size = input_weights.dimension(1);
 
-    Tensor<type, 2> previous_hidden_states(batch_size, output_size);
+    Tensor2 previous_hidden_states(batch_size, output_size);
     previous_hidden_states.setZero();
     for(Index time_step = 0; time_step < past_time_steps; time_step++)
     {
@@ -160,13 +160,13 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
     const Index input_size = input_views[0].dims[2];
     const Index output_size = get_outputs_number();
 
-    Tensor<type, 2> initial_hidden_states(batch_size, output_size);
+    Tensor2 initial_hidden_states(batch_size, output_size);
     initial_hidden_states.setZero();
 
-    Tensor<type, 2> previous_hidden_states(batch_size, output_size);
+    Tensor2 previous_hidden_states(batch_size, output_size);
 
-    TensorMap<Tensor<type, 3>> inputs(input_views[0].data, batch_size, past_time_steps, input_size);
-    TensorMap<Tensor<type, 2>> deltas(delta_views[0].data, batch_size, output_size);
+    TensorMap3 inputs(input_views[0].data, batch_size, past_time_steps, input_size);
+    TensorMap2 deltas(delta_views[0].data, batch_size, output_size);
 
     RecurrentForwardPropagation* recurrent_forward =
         static_cast<RecurrentForwardPropagation*>(forward_propagation.get());
@@ -174,24 +174,24 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
     RecurrentBackPropagation* recurrent_backward =
         static_cast<RecurrentBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 3>& hidden_states = recurrent_forward->hidden_states;
+    Tensor3& hidden_states = recurrent_forward->hidden_states;
 
-    Tensor<type, 3>& input_deltas = recurrent_backward->input_deltas;
-    Tensor<type, 2>& input_weight_deltas = recurrent_backward->input_weight_deltas;
-    Tensor<type, 2>& recurrent_weight_deltas = recurrent_backward->recurrent_weight_deltas;
-    Tensor<type, 1>& bias_deltas = recurrent_backward->bias_deltas;
-    Tensor<type, 2>& current_combination_deltas = recurrent_backward->current_combination_deltas;
+    Tensor3& input_deltas = recurrent_backward->input_deltas;
+    Tensor2& input_weight_deltas = recurrent_backward->input_weight_deltas;
+    Tensor2& recurrent_weight_deltas = recurrent_backward->recurrent_weight_deltas;
+    Tensor1& bias_deltas = recurrent_backward->bias_deltas;
+    Tensor2& current_combination_deltas = recurrent_backward->current_combination_deltas;
 
-    Tensor<type, 3>& activation_derivatives = recurrent_forward->activation_derivatives;
+    Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
 
     input_weight_deltas.setZero();
     recurrent_weight_deltas.setZero();
     bias_deltas.setZero();
     current_combination_deltas.setZero();
 
-    Tensor<type, 2> combination_deltas(batch_size, output_size);
+    Tensor2 combination_deltas(batch_size, output_size);
 
-    Tensor<type, 2>& current_deltas = recurrent_backward->current_deltas;
+    Tensor2& current_deltas = recurrent_backward->current_deltas;
 
     for(Index time_step = past_time_steps - 1; time_step >= 0; --time_step)
     {             

@@ -55,10 +55,10 @@ private:
 
     dimensions input_dimensions;
 
-    Tensor<type, 1> biases;
+    Tensor1 biases;
 
-    Tensor<type, 2> input_weights;
-    Tensor<type, 2> recurrent_weights;
+    Tensor2 input_weights;
+    Tensor2 recurrent_weights;
 
     string activation_function = "HyperbolicTangent";
 
@@ -79,14 +79,14 @@ struct RecurrentForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 
-    Tensor<type, 3> current_inputs;
-    Tensor<type, 2> current_activation_derivatives;
+    Tensor3 current_inputs;
+    Tensor2 current_activation_derivatives;
 
-    Tensor<type, 3> activation_derivatives;
+    Tensor3 activation_derivatives;
 
-    Tensor<type, 3> hidden_states;
+    Tensor3 hidden_states;
 };
 
 
@@ -102,23 +102,23 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 2> current_deltas;
-    Tensor<type, 2> current_targets;
+    Tensor2 current_deltas;
+    Tensor2 current_targets;
 
-    Tensor<type, 2> combination_deltas;
-    Tensor<type, 2> current_combination_deltas;
+    Tensor2 combination_deltas;
+    Tensor2 current_combination_deltas;
 
-    Tensor<type, 2> combinations_bias_deltas;
-    Tensor<type, 3> combinations_input_weight_deltas;
-    Tensor<type, 3> combinations_recurrent_weight_deltas;
+    Tensor2 combinations_bias_deltas;
+    Tensor3 combinations_input_weight_deltas;
+    Tensor3 combinations_recurrent_weight_deltas;
 
-    Tensor<type, 1> bias_deltas;
+    Tensor1 bias_deltas;
 
-    Tensor<type, 2> input_weight_deltas;
+    Tensor2 input_weight_deltas;
 
-    Tensor<type, 2> recurrent_weight_deltas;
+    Tensor2 recurrent_weight_deltas;
 
-    Tensor<type, 3> input_deltas;
+    Tensor3 input_deltas;
 
 };
 

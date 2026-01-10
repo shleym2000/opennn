@@ -39,7 +39,7 @@ TEST(Normalization3dTest, ForwardPropagate)
     NeuralNetwork neural_network;
     neural_network.add_layer(make_unique<Normalization3d>(dimensions({sequence_length, embedding_dimension})));
 
-    Tensor<type, 3> inputs(batch_size, sequence_length, embedding_dimension);
+    Tensor3 inputs(batch_size, sequence_length, embedding_dimension);
     inputs.setRandom();
 
 //    EXPECT_NEAR(outputs(0), type(-1.0), NUMERIC_LIMITS_MIN);

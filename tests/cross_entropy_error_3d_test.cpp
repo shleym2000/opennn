@@ -35,7 +35,7 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
     const Index depth = embedding_dimension;
     const Index neurons_number = inputs_number + 1;
 
-    Tensor<type, 2> data(samples_number, 2);
+    Tensor2 data(samples_number, 2);
     for (Index i = 0; i < samples_number; ++i)
     {
         data(i, 0) = rand() % vocabulary_size;
@@ -258,7 +258,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         {
             cout << endl;
 
-            Tensor<type, 1> difference = back_propagation.gradient - numerical_gradient;
+            Tensor1 difference = back_propagation.gradient - numerical_gradient;
             Tensor<Index, 0> max_difference_index = difference.abs().argmax();
             cout << "Test failed with max difference: " << difference(max_difference_index(0)) << " at index: " << max_difference_index(0) << endl;
             cout << "Gradient = " << back_propagation.gradient(max_difference_index(0)) << endl;
@@ -326,7 +326,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
 
         cout << "Number of 0s in numerical gradient (non-embedding): " << count << " of " << numerical_gradient.size() - embedding_parameters_number << endl;
         
-        Tensor<type, 1> abs_difference = (back_propagation.gradient - numerical_gradient).abs();
+        Tensor1 abs_difference = (back_propagation.gradient - numerical_gradient).abs();
 
         Index count = 0;
 

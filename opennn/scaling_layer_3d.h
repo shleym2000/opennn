@@ -29,10 +29,10 @@ public:
     vector<Descriptives> get_descriptives() const;
     Descriptives get_descriptives(const Index&) const;
 
-    Tensor<type, 1> get_minimums() const;
-    Tensor<type, 1> get_maximums() const;
-    Tensor<type, 1> get_means() const;
-    Tensor<type, 1> get_standard_deviations() const;
+    Tensor1 get_minimums() const;
+    Tensor1 get_maximums() const;
+    Tensor1 get_means() const;
+    Tensor1 get_standard_deviations() const;
 
     vector<string> get_scalers() const;
 
@@ -52,7 +52,7 @@ public:
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;
 
-    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs) const;
+    Tensor3 calculate_outputs(const Tensor3& inputs) const;
 
     string get_expression(const vector<string>& = vector<string>(), const vector<string>& = vector<string>()) const override;
 
@@ -84,7 +84,7 @@ struct Scaling3dForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 3> outputs;
+    Tensor3 outputs;
 };
 
 }

@@ -62,7 +62,7 @@ struct Pooling3dForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 
     Tensor<Index, 2> maximal_indices;
 };
@@ -76,7 +76,7 @@ struct Pooling3dBackPropagation final : LayerBackPropagation
 
     void initialize() override;
 
-    Tensor<type, 3> input_derivatives;
+    Tensor3 input_derivatives;
 };
 
 }

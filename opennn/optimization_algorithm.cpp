@@ -537,7 +537,7 @@ void TrainingResults::resize_training_error_history(const Index& new_size)
         return;
     }
 
-    const Tensor<type, 1> old_training_error_history = training_error_history;
+    const Tensor1 old_training_error_history = training_error_history;
 
     training_error_history.resize(new_size);
 
@@ -556,7 +556,7 @@ void TrainingResults::resize_selection_error_history(const Index& new_size)
         return;
     }
 
-    const Tensor<type, 1> old_selection_error_history = selection_error_history;
+    const Tensor1 old_selection_error_history = selection_error_history;
 
     selection_error_history.resize(new_size);
 

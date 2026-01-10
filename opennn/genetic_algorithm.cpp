@@ -31,19 +31,19 @@ const Tensor<bool, 2>& GeneticAlgorithm::get_population() const
 }
 
 
-const Tensor<type, 1>& GeneticAlgorithm::get_training_errors() const
+const Tensor1& GeneticAlgorithm::get_training_errors() const
 {
     return training_errors;
 }
 
 
-const Tensor<type, 1>& GeneticAlgorithm::get_selection_errors() const
+const Tensor1& GeneticAlgorithm::get_selection_errors() const
 {
     return selection_errors;
 }
 
 
-const Tensor<type, 1>& GeneticAlgorithm::get_fitness() const
+const Tensor1& GeneticAlgorithm::get_fitness() const
 {
     return fitness;
 }
@@ -210,7 +210,7 @@ void GeneticAlgorithm::set_elitism_size(const Index& new_elitism_size)
 }
 
 
-void GeneticAlgorithm::set_fitness(const Tensor<type, 1>& new_fitness)
+void GeneticAlgorithm::set_fitness(const Tensor1& new_fitness)
 {
     fitness = new_fitness;
 }
@@ -273,10 +273,10 @@ void GeneticAlgorithm::initialize_population_correlations()
     population.resize(individuals_number, genes_number);
     population.setConstant(false);
 
-    const Tensor<type, 1> correlations_rank = dataset->calculate_correlations_rank().template cast<type>() + type(1.0);
+    const Tensor1 correlations_rank = dataset->calculate_correlations_rank().template cast<type>() + type(1.0);
 
     const Tensor<type, 0> correlations_sum = correlations_rank.sum();
-    const Tensor<type, 1> correlations_cumsum = correlations_rank.cumsum(0);
+    const Tensor1 correlations_cumsum = correlations_rank.cumsum(0);
 
     const type* begin = correlations_cumsum.data();
     const type* end   = begin + genes_number;
@@ -419,7 +419,7 @@ void GeneticAlgorithm::perform_selection()
         for(Index i = 0; i < individuals_number; i++)
             selection(i) = (fitness(i) - 1 >= 0) && (fitness(i) > (individuals_number - elitism_size));
 
-    const Tensor<type, 1> fitness_cumsum = fitness.cumsum(0);
+    const Tensor1 fitness_cumsum = fitness.cumsum(0);
 
     const type* begin = fitness_cumsum.data();
     const type* end = begin + individuals_number;

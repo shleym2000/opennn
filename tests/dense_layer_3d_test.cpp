@@ -41,7 +41,7 @@ TEST(Dense3dTest, ForwardPropagate)
     unique_ptr<LayerForwardPropagation> forward_propagation =
         make_unique<Dense3dForwardPropagation>(batch_size, &dense_3d);
 
-    Tensor<type, 3> inputs(batch_size, sequence_length, input_embedding);
+    Tensor3 inputs(batch_size, sequence_length, input_embedding);
 
     dimensions dims_vector(inputs.dimensions().begin(), inputs.dimensions().end());
 
@@ -50,7 +50,7 @@ TEST(Dense3dTest, ForwardPropagate)
 
     dense_3d.forward_propagate(input_views, forward_propagation, false);
 
-    const TensorMap<Tensor<type, 3>> outputs =
+    const TensorMap3 outputs =
         tensor_map<3>(forward_propagation->get_output_view());
 
     EXPECT_EQ(outputs.dimension(0), batch_size);

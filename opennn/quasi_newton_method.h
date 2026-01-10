@@ -141,26 +141,26 @@ struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
 
     // Neural network data
 
-    Tensor<type, 1> parameters;
-    Tensor<type, 1> old_parameters;
-    Tensor<type, 1> parameters_difference;
+    Tensor1 parameters;
+    Tensor1 old_parameters;
+    Tensor1 parameters_difference;
 
-    Tensor<type, 1> parameters_increment;
+    Tensor1 parameters_increment;
 
     // Loss index data
 
-    Tensor<type, 1> gradient;
-    Tensor<type, 1> old_gradient;
-    Tensor<type, 1> gradient_difference;
+    Tensor1 gradient;
+    Tensor1 old_gradient;
+    Tensor1 gradient_difference;
 
-    Tensor<type, 2> inverse_hessian;
-    Tensor<type, 2> old_inverse_hessian;
+    Tensor2 inverse_hessian;
+    Tensor2 old_inverse_hessian;
 
-    Tensor<type, 1> old_inverse_hessian_dot_gradient_difference;
+    Tensor1 old_inverse_hessian_dot_gradient_difference;
 
     // Optimization algorithm data
 
-    Tensor<type, 1> BFGS;
+    Tensor1 BFGS;
 
     Index epoch = 0;
 

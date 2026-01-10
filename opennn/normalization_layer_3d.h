@@ -52,9 +52,9 @@ private:
 
     Index sequence_length;
 
-    Tensor<type, 1> gammas;
+    Tensor1 gammas;
 
-    Tensor<type, 1> betas;
+    Tensor1 betas;
 };
 
 
@@ -68,10 +68,10 @@ struct Normalization3dForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 3> outputs;
+    Tensor3 outputs;
 
-    Tensor<type, 2> means;
-    Tensor<type, 2> standard_deviations;
+    Tensor2 means;
+    Tensor2 standard_deviations;
 };
 
 
@@ -88,14 +88,14 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 1> gamma_derivatives;
-    Tensor<type, 1> beta_derivatives;
+    Tensor1 gamma_derivatives;
+    Tensor1 beta_derivatives;
 
-    Tensor<type, 3> input_deltas;
+    Tensor3 input_deltas;
 
-    Tensor<type, 3> scaled_deltas;
-    Tensor<type, 3> standard_deviation_derivatives;
-    Tensor<type, 2> aux_2d;
+    Tensor3 scaled_deltas;
+    Tensor3 standard_deviation_derivatives;
+    Tensor2 aux_2d;
 
 };
 

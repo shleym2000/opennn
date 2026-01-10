@@ -45,11 +45,11 @@ Descriptives Scaling3d::get_descriptives(const Index& index) const
 }
 
 
-Tensor<type, 1> Scaling3d::get_minimums() const
+Tensor1 Scaling3d::get_minimums() const
 {
     const Index inputs_number = get_output_dimensions()[1];
 
-    Tensor<type, 1> minimums(inputs_number);
+    Tensor1 minimums(inputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < inputs_number; i++)
@@ -59,11 +59,11 @@ Tensor<type, 1> Scaling3d::get_minimums() const
 }
 
 
-Tensor<type, 1> Scaling3d::get_maximums() const
+Tensor1 Scaling3d::get_maximums() const
 {
     const Index inputs_number = get_output_dimensions()[1];
 
-    Tensor<type, 1> maximums(inputs_number);
+    Tensor1 maximums(inputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < inputs_number; i++)
@@ -73,11 +73,11 @@ Tensor<type, 1> Scaling3d::get_maximums() const
 }
 
 
-Tensor<type, 1> Scaling3d::get_means() const
+Tensor1 Scaling3d::get_means() const
 {
     const Index inputs_number = get_output_dimensions()[1];
 
-    Tensor<type, 1> means(inputs_number);
+    Tensor1 means(inputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < inputs_number; i++)
@@ -87,11 +87,11 @@ Tensor<type, 1> Scaling3d::get_means() const
 }
 
 
-Tensor<type, 1> Scaling3d::get_standard_deviations() const
+Tensor1 Scaling3d::get_standard_deviations() const
 {
     const Index inputs_number = get_output_dimensions()[1];
 
-    Tensor<type, 1> standard_deviations(inputs_number);
+    Tensor1 standard_deviations(inputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < inputs_number; i++)
@@ -185,9 +185,9 @@ void Scaling3d::forward_propagate(const vector<TensorView>& input_views,
     Scaling3dForwardPropagation* scaling_layer_forward_propagation =
         static_cast<Scaling3dForwardPropagation*>(forward_propagation.get());
 
-    const TensorMap<Tensor<type, 3>> inputs = tensor_map<3>(input_views[0]);
+    const TensorMap3 inputs = tensor_map<3>(input_views[0]);
 
-    Tensor<type, 3>& outputs = scaling_layer_forward_propagation->outputs;
+    Tensor3& outputs = scaling_layer_forward_propagation->outputs;
     outputs = inputs;
 
 #pragma omp parallel for
@@ -211,14 +211,14 @@ void Scaling3d::forward_propagate(const vector<TensorView>& input_views,
 }
 
 
-Tensor<type, 3> Scaling3d::calculate_outputs(const Tensor<type, 3>& inputs) const
+Tensor3 Scaling3d::calculate_outputs(const Tensor3& inputs) const
 {
     const Index inputs_number = inputs.dimension(2);
 
     if (inputs_number != static_cast<Index>(scalers.size()))
         throw runtime_error("Input features in calculate_outputs do not match layer configuration.");
 
-    Tensor<type, 3> outputs = inputs;
+    Tensor3 outputs = inputs;
 
 #pragma omp parallel for
     for(Index i = 0; i < inputs_number; i++)

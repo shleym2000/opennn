@@ -64,7 +64,7 @@ TEST(Dataset, VariableDescriptives)
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
 
-    Tensor<type, 2> data(samples_number, inputs_number + targets_number);
+    Tensor2 data(samples_number, inputs_number + targets_number);
 
     data.setValues({ {type(-1000),type(2),type(0)},
                     {type(1)    ,type(4),type(2)},
@@ -89,7 +89,7 @@ TEST(Dataset, RawVariableDistributions)
 
     Dataset dataset(3, { 2 }, { 1 });
 
-    Tensor<type, 2> data(3, 3);
+    Tensor2 data(3, 3);
 
     data.setValues({ {type(2),type(2),type(1)},
                     {type(1),type(1),type(1)},
@@ -117,10 +117,10 @@ TEST(Dataset, FilterData_MixedFiltering) {
         Dataset dataset(2, { 1 }, { 1 });
         dataset.set_data_constant(type(1));
 
-        Tensor<type, 1> minimums(2);
+        Tensor1 minimums(2);
         minimums.setValues({ type(2), type(0) });
 
-        Tensor<type, 1> maximums(2);
+        Tensor1 maximums(2);
         maximums.setValues({ type(2), type(0.5) });
 
         Tensor<Index, 1> filtered_data = dataset.filter_data(minimums, maximums);
@@ -133,14 +133,14 @@ TEST(Dataset, FilterData_MixedFiltering) {
     // Test
     {
         Dataset dataset(2, { 1 }, { 1 });
-        Eigen::Tensor<type, 2> data(2, 2);
+        Eigen::Tensor2 data(2, 2);
         data.setValues({ { type(1), type(2) }, { type(3), type(4) } });
         dataset.set_data(data);
 
-        Tensor<type, 1> minimums(2);
+        Tensor1 minimums(2);
         minimums.setValues({ type(0), type(0) });
 
-        Tensor<type, 1> maximums(2);
+        Tensor1 maximums(2);
         maximums.setValues({ type(2), type(3) });
 
         Tensor<Index, 1> filtered_data = dataset.filter_data(minimums, maximums);
@@ -156,7 +156,7 @@ TEST(Dataset, ScaleData)
 {
     Dataset dataset(2, { 1 }, { 1 });
 
-    Tensor<type, 2> original_data(2, 2);
+    Tensor2 original_data(2, 2);
     original_data.setValues({ {type(10), type(200)},
                               {type(30), type(400)} });
 
@@ -164,7 +164,7 @@ TEST(Dataset, ScaleData)
 
     dataset.set_raw_variable_scalers("MinimumMaximum");
     vector<Descriptives> data_descriptives_minmax = dataset.scale_data();
-    Tensor<type, 2> scaled_data_minmax = dataset.get_data();
+    Tensor2 scaled_data_minmax = dataset.get_data();
 
     // Expected scaled values for column 0 (original: 10, 30):
     // 10 (min) -> 0.0
@@ -184,7 +184,7 @@ TEST(Dataset, UnuseConstantRawVariables)
 {
     Dataset dataset(3, { 2 }, { 1 });
 
-    Tensor<type, 2> data(3, 3);
+    Tensor2 data(3, 3);
 
     data.setValues({ {type(1),type(2),type(0)},
                     {type(1),type(2),type(1)},
@@ -204,7 +204,7 @@ TEST(Dataset, UnuseConstantRawVariables)
 TEST(Dataset, CalculateTargetDistribution)
 {
     Dataset dataset(5, { 3 }, { 2 });
-    Tensor<type, 2> data(5, 4);
+    Tensor2 data(5, 4);
 
     data.setValues({ {type(2),type(5),type(6),type(0)},
                     {type(2),type(9),type(1),type(0)},
@@ -316,7 +316,7 @@ TEST(Dataset, ReadCSV_Basic)
     EXPECT_EQ(raw_vars[2].role, "Target");
 
     // Data Tensor Content
-    const Tensor<type, 2>& data = dataset.get_data();
+    const Tensor2& data = dataset.get_data();
     ASSERT_EQ(data.dimension(0), 2);
     ASSERT_EQ(data.dimension(1), 3);
 
@@ -422,7 +422,7 @@ TEST(Dataset, ReadCSV_SpaceSeparator)
     EXPECT_EQ(raw_vars[2].name, "target");
     EXPECT_EQ(raw_vars[2].type, Dataset::RawVariableType::Binary);
 
-    const Tensor<type, 2>& data = dataset.get_data();
+    const Tensor2& data = dataset.get_data();
     Index v1_idx = dataset.get_variable_indices(0)[0];
     Index v2_idx = dataset.get_variable_indices(1)[0];
     Index t_idx = dataset.get_variable_indices(2)[0];
@@ -470,7 +470,7 @@ TEST(Dataset, ReadCSV_WithSampleIDs)
     EXPECT_EQ(sample_ids[0], "sampleA");
     EXPECT_EQ(sample_ids[1], "sampleB");
 
-    const Tensor<type, 2>& data = dataset.get_data();
+    const Tensor2& data = dataset.get_data();
     Index f1_idx = dataset.get_variable_indices(0)[0];
     Index f2_idx = dataset.get_variable_indices(1)[0];
 
@@ -504,7 +504,7 @@ TEST(Dataset, ReadCSV_EmptyLinesAndWhitespaceSkipped)
     ASSERT_NO_THROW(dataset.read_csv());
 
     EXPECT_EQ(dataset.get_samples_number(), 2);
-    const Tensor<type, 2>& data = dataset.get_data();
+    const Tensor2& data = dataset.get_data();
     Index h1_idx = dataset.get_variable_indices(0)[0];
     Index h2_idx = dataset.get_variable_indices(1)[0];
     EXPECT_NEAR(data(0, h1_idx), 1.0, 1e-9);
@@ -521,7 +521,7 @@ TEST(Dataset, test_calculate_raw_variable_correlations)
 {
     // Test 1 (numeric and numeric trivial case)
 
-    Tensor<type, 2> data;
+    Tensor2 data;
     Dataset dataset(3, {3}, {1});
 
     data.resize(3, 4);
@@ -780,7 +780,7 @@ TEST(Dataset, test_calculate_raw_variable_correlations)
 TEST(Dataset, test_calculate_input_raw_variable_correlations)
 {
     // Test 1 (numeric and numeric trivial case)
-    Tensor<type, 2> data;
+    Tensor2 data;
     Dataset dataset(3, { 3 }, { 1 });
     data.resize(3, 4);
 
@@ -1165,7 +1165,7 @@ TEST(Dataset, test_calculate_input_raw_variable_correlations)
 
 TEST(Dataset, test_unuse_uncorrelated_raw_variables)
 {
-    Tensor<type, 2> data;
+    Tensor2 data;
     data.resize(4, 4);
 
     data.setValues({
@@ -1208,7 +1208,7 @@ TEST(Dataset,CalculateNegatives)
 
     Dataset dataset(3, { 2 }, { 1 });
 
-    Tensor<type, 2> data;
+    Tensor2 data;
 
     data.resize(3, 3);
 
@@ -1260,7 +1260,7 @@ TEST(Dataset, BatchFill)
 {
     Dataset dataset(3, { 2 }, { 1 });
 
-    Tensor<type, 2> data;
+    Tensor2 data;
 
     data.resize(3, 3);
     data.setValues({{1,4,1},
@@ -1285,16 +1285,16 @@ TEST(Dataset, BatchFill)
     
     batch.fill(training_samples_indices, input_variables_indices, target_variables_indices);
 
-    Tensor<type, 2> input_data(3,2);
+    Tensor2 input_data(3,2);
     input_data.setValues({{1,4},
                           {2,-5},
                           {-3,6}});
 
-    Tensor<type, 2> target_data(3,1);
+    Tensor2 target_data(3,1);
     target_data.setValues({{1},{0},{1}});
 /*
     const vector<TensorView> input_views = batch.get_input_views();
-    const Tensor<type, 2> inputs = input_views[0].to_tensor_map<2>();
+    const Tensor2 inputs = input_views[0].to_tensor_map<2>();
 
     ASSERT_EQ(inputs.dimension(0), input_data.dimension(0));
     ASSERT_EQ(inputs.dimension(1), input_data.dimension(1));
@@ -1307,7 +1307,7 @@ TEST(Dataset, BatchFill)
     }
 
     const TensorView targets_view = batch.get_target_view();
-    const Tensor<type, 2> targets = targets_view.to_tensor_map<2>();
+    const Tensor2 targets = targets_view.to_tensor_map<2>();
 
     ASSERT_EQ(targets.dimension(0), target_data.dimension(0));
     ASSERT_EQ(targets.dimension(1), target_data.dimension(1));

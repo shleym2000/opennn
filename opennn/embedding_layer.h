@@ -93,12 +93,12 @@ private:
 
     Index sequence_length = 0;
 
-    Tensor<type, 2> weights;
+    Tensor2 weights;
 
     bool scale_embedding = false;
     bool add_positional_encoding = false;
 
-    Tensor<type, 2> positional_encoding;
+    Tensor2 positional_encoding;
 
     type dropout_rate = type(0);
 };
@@ -114,7 +114,7 @@ struct EmbeddingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 3> outputs;
+    Tensor3 outputs;
 };
 
 
@@ -130,7 +130,7 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 2> weight_deltas;
+    Tensor2 weight_deltas;
 };
 
 #ifdef OPENNN_CUDA

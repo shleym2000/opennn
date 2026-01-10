@@ -74,13 +74,13 @@ TEST(Transformer, GeneralConstructor)
 TEST(Transformer, Outputs)
 {
     /*
-    Tensor<type, 2> inputs;
-    Tensor<type, 2> context;
-    Tensor<type, 2> outputs;
+    Tensor2 inputs;
+    Tensor2 context;
+    Tensor2 outputs;
 
     Index parameters_number;
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
 
     // Test two dense layers with all zeros
 
@@ -307,7 +307,7 @@ TEST(Transformer, ForwardPropagate)
     Dense3DForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
         
-    Tensor<type, 3> dense_activations = dense_layer_forward_propagation->outputs;
+    Tensor3 dense_activations = dense_layer_forward_propagation->outputs;
         
     EXPECT_EQ(dense_activations.rank() == 3);
     EXPECT_EQ(dense_activations.dimension(0) == batch_size);
@@ -376,7 +376,7 @@ TEST(Transformer, ForwardPropagate)
         Dense3DForwardPropagation* dense_layer_forward_propagation
             = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
 
-        Tensor<type, 3> dense_activations = dense_layer_forward_propagation->outputs;
+        Tensor3 dense_activations = dense_layer_forward_propagation->outputs;
 
         EXPECT_EQ(dense_activations.rank() == 3);
         EXPECT_EQ(dense_activations.dimension(0) == batch_size);

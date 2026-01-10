@@ -70,7 +70,7 @@ int main()
         Tensor<string, 1> documents(1);
         documents[0] = "This is great!";
 
-        Tensor<type, 2> outputs = text_classification_network.calculate_text_outputs(documents);
+        Tensor2 outputs = text_classification_network.calculate_text_outputs(documents);
 
         cout << outputs << endl;
 

@@ -34,13 +34,13 @@ public:
 
     Index get_evaluations_number() const;
 
-    Tensor<type, 1> get_input_minimums() const;
+    Tensor1 get_input_minimums() const;
 
-    Tensor<type, 1> get_input_maximums() const;
+    Tensor1 get_input_maximums() const;
 
-    Tensor<type, 1> get_outputs_minimums() const;
+    Tensor1 get_outputs_minimums() const;
 
-    Tensor<type, 1> get_outputs_maximums() const;
+    Tensor1 get_outputs_maximums() const;
 
     Tensor<Condition, 1> get_conditions(const vector<string>&) const;
 
@@ -48,15 +48,15 @@ public:
 
     void set_evaluations_number(const Index&);
 
-    void set_input_condition(const string&, const Condition&, const Tensor<type, 1>& = Tensor<type, 1>());
-    void set_output_condition(const string&, const Condition&, const Tensor<type, 1>& = Tensor<type, 1>());
+    void set_input_condition(const string&, const Condition&, const Tensor1& = Tensor1());
+    void set_output_condition(const string&, const Condition&, const Tensor1& = Tensor1());
 
-    void set_input_condition(const Index&, const Condition&, const Tensor<type, 1>& = Tensor<type, 1>());
-    void set_output_condition(const Index&, const Condition&, const Tensor<type, 1>& = Tensor<type, 1>());
+    void set_input_condition(const Index&, const Condition&, const Tensor1& = Tensor1());
+    void set_output_condition(const Index&, const Condition&, const Tensor1& = Tensor1());
 
-    Tensor<type, 2> calculate_inputs() const;
+    Tensor2 calculate_inputs() const;
 
-    Tensor<type, 2> calculate_envelope(const Tensor<type, 2>&, const Tensor<type, 2>&) const;
+    Tensor2 calculate_envelope(const Tensor2&, const Tensor2&) const;
 
     // @todo define better, with the sizes
 
@@ -81,10 +81,10 @@ public:
         void print() const;
 
         Tensor<Index, 1> indices;
-        Tensor<type, 2> objectives;
-        Tensor<type, 2> variables;
-        Tensor<type, 2> inputs;
-        Tensor<type, 2> envelope;
+        Tensor2 objectives;
+        Tensor2 variables;
+        Tensor2 inputs;
+        Tensor2 envelope;
     };
 
 
@@ -122,7 +122,7 @@ public:
 
     Pareto perform_pareto() const;
 
-    Tensor<type, 1> get_nearest_point_to_utopian(const Pareto&) const;
+    Tensor1 get_nearest_point_to_utopian(const Pareto&) const;
 
     using SingleOrPareto = std::variant<Tensor<type,1>, Pareto>;
 
@@ -150,13 +150,13 @@ private:
 
     Index evaluations_number = 1000;
 
-    Tensor<type, 1> input_minimums;
+    Tensor1 input_minimums;
 
-    Tensor<type, 1> input_maximums;
+    Tensor1 input_maximums;
 
-    Tensor<type, 1> output_minimums;
+    Tensor1 output_minimums;
 
-    Tensor<type, 1> output_maximums;
+    Tensor1 output_maximums;
 
     Index iterative_max_iterations = 12;
     type  iterative_zoom_factor = type(0.45);
@@ -167,10 +167,10 @@ private:
                               const Tensor<type,1>& b,
                               const Tensor<type,1>& sense);
 
-    Pareto perform_pareto_analysis(const Tensor<type, 2>& objectives,
-                                   const Tensor<type, 1>& sense,
-                                   const Tensor<type, 2>& inputs,
-                                   const Tensor<type, 2>& envelope) const;
+    Pareto perform_pareto_analysis(const Tensor2& objectives,
+                                   const Tensor1& sense,
+                                   const Tensor2& inputs,
+                                   const Tensor2& envelope) const;
 
     void build_objectives_from_envelope(const Tensor<type,2>& envelope,
                                         Tensor<type,2>& objectives,

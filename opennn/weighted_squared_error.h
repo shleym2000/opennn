@@ -65,7 +65,7 @@ private:
 
     type normalization_coefficient;
 
-    Tensor<type, 2> errors_weights;
+    Tensor2 errors_weights;
 
 #ifdef OPENNN_CUDA
 

@@ -112,11 +112,11 @@ void LossIndex::calculate_errors_lm(const Batch& batch,
     const TensorView outputs_view
         = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     back_propagation.errors.device(*device) = outputs - targets;
 }
@@ -126,9 +126,9 @@ void LossIndex::calculate_squared_errors_lm(const Batch&,
                                             const ForwardPropagation&,
                                             BackPropagationLM& back_propagation_lm) const
 {
-    const Tensor<type, 2>& errors = back_propagation_lm.errors;
+    const Tensor2& errors = back_propagation_lm.errors;
 
-    Tensor<type, 1>& squared_errors = back_propagation_lm.squared_errors;
+    Tensor1& squared_errors = back_propagation_lm.squared_errors;
 
     squared_errors.device(*device) = errors.square().sum(array_1(1)).sqrt();
 }
@@ -159,7 +159,7 @@ void LossIndex::add_regularization(BackPropagation& back_propagation) const
     if(regularization_method == "None" || regularization_weight == 0)
         return;
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     back_propagation.loss += calculate_regularization(parameters);
@@ -171,13 +171,13 @@ void LossIndex::add_regularization_lm(BackPropagationLM& back_propagation_lm) co
     if(regularization_method == "None")
         return;
 
-    Tensor<type, 1>& parameters = back_propagation_lm.parameters;
+    Tensor1& parameters = back_propagation_lm.parameters;
 
     type& loss = back_propagation_lm.loss;
 
-    Tensor<type, 1>& gradient = back_propagation_lm.gradient;
+    Tensor1& gradient = back_propagation_lm.gradient;
 
-    Tensor<type, 2>& hessian = back_propagation_lm.hessian;
+    Tensor2& hessian = back_propagation_lm.hessian;
 
     if(regularization_method == "L1")
     {
@@ -277,10 +277,10 @@ void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
 void LossIndex::calculate_error_gradient_lm(const Batch&,
                                             BackPropagationLM& back_propagation_lm) const
 {
-    const Tensor<type, 1>& squared_errors = back_propagation_lm.squared_errors;
-    const Tensor<type, 2>& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    const Tensor1& squared_errors = back_propagation_lm.squared_errors;
+    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
-    Tensor<type, 1>& gradient = back_propagation_lm.gradient;
+    Tensor1& gradient = back_propagation_lm.gradient;
 
     gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(1,0));
 }
@@ -293,7 +293,7 @@ string LossIndex::get_name() const
 
 
 // @todo parallelize
-type LossIndex::calculate_regularization(const Tensor<type, 1>& parameters) const
+type LossIndex::calculate_regularization(const Tensor1& parameters) const
 {
     if(regularization_method == "None")
     {
@@ -345,7 +345,7 @@ void LossIndex::calculate_layers_error_gradient(const Batch& batch,
 }
 
 
-void LossIndex::assemble_layers_error_gradient(const BackPropagation& back_propagation, Tensor<type, 1>& gradient) const
+void LossIndex::assemble_layers_error_gradient(const BackPropagation& back_propagation, Tensor1& gradient) const
 {
     Index index = 0;
 
@@ -368,18 +368,18 @@ void LossIndex::assemble_layers_error_gradient(const BackPropagation& back_propa
 }
 
 
-void LossIndex::add_regularization_gradient(Tensor<type, 1>& gradient) const
+void LossIndex::add_regularization_gradient(Tensor1& gradient) const
 {
     if (regularization_method == "None" || regularization_weight == 0) {
         return;
     }
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     if (regularization_method == "L1")
     {
-        Tensor<type, 1> l1_gradient = parameters.unaryExpr([](type w) {
+        Tensor1 l1_gradient = parameters.unaryExpr([](type w) {
             if (w > 0) return type(1);
             if (w < 0) return type(-1);
             return type(0);
@@ -421,10 +421,10 @@ void LossIndex::add_regularization_to_deltas(BackPropagation& back_propagation) 
         {
             type* parameter_data = parameter_views[parameter_index].data;
             const Index parameter_size = parameter_views[parameter_index].size;
-            TensorMap<Tensor<type, 1>> parameters_map(parameter_data, parameter_size);
+            TensorMap1 parameters_map(parameter_data, parameter_size);
 
             type* delta_data = delta_views[parameter_index].data;
-            TensorMap<Tensor<type, 1>> delta_map(delta_data, parameter_size);
+            TensorMap1 delta_map(delta_data, parameter_size);
 
             if(regularization_method == "L1")
                 delta_map.device(*device) += regularization_weight * parameters_map.sign();
@@ -645,7 +645,7 @@ type LossIndex::calculate_numerical_error() const
 }
 
 
-Tensor<type, 1> LossIndex::calculate_gradient()
+Tensor1 LossIndex::calculate_gradient()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
@@ -662,7 +662,7 @@ Tensor<type, 1> LossIndex::calculate_gradient()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
     ForwardPropagation forward_propagation(samples_number, neural_network);
     BackPropagation back_propagation(samples_number, this);
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     neural_network->forward_propagate(batch.get_input_views(),
@@ -671,7 +671,7 @@ Tensor<type, 1> LossIndex::calculate_gradient()
 
     back_propagate(batch, forward_propagation, back_propagation);
 
-    Tensor<type, 1> gradient(parameters.size());
+    Tensor1 gradient(parameters.size());
 
     assemble_layers_error_gradient(back_propagation, gradient);
 
@@ -679,7 +679,7 @@ Tensor<type, 1> LossIndex::calculate_gradient()
 }
 
 
-Tensor<type, 1> LossIndex::calculate_numerical_gradient()
+Tensor1 LossIndex::calculate_numerical_gradient()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
@@ -694,20 +694,20 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient()
     ForwardPropagation forward_propagation(samples_number, neural_network);
     BackPropagation back_propagation(samples_number, this);
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     const Index parameters_number = parameters.size();
 
     type h = 0;
 
-    Tensor<type, 1> parameters_forward = parameters;
-    Tensor<type, 1> parameters_backward = parameters;
+    Tensor1 parameters_forward = parameters;
+    Tensor1 parameters_backward = parameters;
 
     type error_forward = 0;
     type error_backward = 0;
 
-    Tensor<type, 1> numerical_gradient(parameters_number);
+    Tensor1 numerical_gradient(parameters_number);
     numerical_gradient.setConstant(type(0));
 
     for(Index i = 0; i < parameters_number; i++)
@@ -744,7 +744,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient()
 }
 
 
-Tensor<type, 1> LossIndex::calculate_numerical_gradient_lm()
+Tensor1 LossIndex::calculate_numerical_gradient_lm()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
@@ -758,20 +758,20 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient_lm()
     ForwardPropagation forward_propagation(samples_number, neural_network);
     BackPropagationLM back_propagation_lm(samples_number, this);
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     const Index parameters_number = parameters.size();
 
     type h = 0;
 
-    Tensor<type, 1> parameters_forward = parameters;
-    Tensor<type, 1> parameters_backward = parameters;
+    Tensor1 parameters_forward = parameters;
+    Tensor1 parameters_backward = parameters;
 
     type error_forward = 0;
     type error_backward = 0;
 
-    Tensor<type, 1> numerical_gradient_lm(parameters_number);
+    Tensor1 numerical_gradient_lm(parameters_number);
     numerical_gradient_lm.setConstant(type(0));
 
     for(Index i = 0; i < parameters_number; i++)
@@ -817,7 +817,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_gradient_lm()
 }
 
 
-Tensor<type, 1> LossIndex::calculate_numerical_input_deltas()
+Tensor1 LossIndex::calculate_numerical_input_deltas()
 {
 
     const Index samples_number = dataset->get_samples_number("Training");
@@ -842,12 +842,12 @@ Tensor<type, 1> LossIndex::calculate_numerical_input_deltas()
     type error_forward;
     type error_backward;
 
-    Tensor<type, 1> numerical_inputs_derivatives(values_number);
+    Tensor1 numerical_inputs_derivatives(values_number);
     numerical_inputs_derivatives.setConstant(type(0));
 
     const vector<TensorView>& input_views = batch.get_input_views();
 
-    TensorMap<Tensor<type, 4>> inputs_vector = tensor_map<4>(input_views[0]);
+    TensorMap4 inputs_vector = tensor_map<4>(input_views[0]);
 
     for (Index i = 0; i < values_number; i++)
     {
@@ -876,7 +876,7 @@ Tensor<type, 1> LossIndex::calculate_numerical_input_deltas()
 }
 
 
-Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
+Tensor2 LossIndex::calculate_numerical_jacobian()
 {
     const Index samples_number = dataset->get_samples_number("Training");
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
@@ -894,7 +894,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
 
     BackPropagation back_propagation(samples_number, this);
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     const Index parameters_number = parameters.size();
@@ -909,13 +909,13 @@ Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
 
     type h;
 
-    Tensor<type, 1> parameters_forward(parameters);
-    Tensor<type, 1> parameters_backward(parameters);
+    Tensor1 parameters_forward(parameters);
+    Tensor1 parameters_backward(parameters);
 
-    Tensor<type, 1> error_terms_forward(parameters_number);
-    Tensor<type, 1> error_terms_backward(parameters_number);
+    Tensor1 error_terms_forward(parameters_number);
+    Tensor1 error_terms_backward(parameters_number);
 
-    Tensor<type, 2> jacobian(samples_number,parameters_number);
+    Tensor2 jacobian(samples_number,parameters_number);
 
     for(Index j = 0; j < parameters_number; j++)
     {
@@ -956,7 +956,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_jacobian()
 }
 
 
-Tensor<type, 2> LossIndex::calculate_numerical_hessian()
+Tensor2 LossIndex::calculate_numerical_hessian()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
@@ -972,7 +972,7 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
     BackPropagationLM back_propagation_lm(samples_number, this);
 
-    Tensor<type, 1> parameters;
+    Tensor1 parameters;
     neural_network->get_parameters(parameters);
 
     const Index parameters_number = parameters.size();
@@ -989,23 +989,23 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 
     const type y = back_propagation_lm.error();
 
-    Tensor<type, 2> H(parameters_number, parameters_number);
+    Tensor2 H(parameters_number, parameters_number);
     H.setZero();
 
     type h_i;
     type h_j;
 
-    Tensor<type, 1> x_backward_2i = parameters;
-    Tensor<type, 1> x_backward_i = parameters;
+    Tensor1 x_backward_2i = parameters;
+    Tensor1 x_backward_i = parameters;
 
-    Tensor<type, 1> x_forward_i = parameters;
-    Tensor<type, 1> x_forward_2i = parameters;
+    Tensor1 x_forward_i = parameters;
+    Tensor1 x_forward_2i = parameters;
 
-    Tensor<type, 1> x_backward_ij = parameters;
-    Tensor<type, 1> x_forward_ij = parameters;
+    Tensor1 x_backward_ij = parameters;
+    Tensor1 x_forward_ij = parameters;
 
-    Tensor<type, 1> x_backward_i_forward_j = parameters;
-    Tensor<type, 1> x_forward_i_backward_j = parameters;
+    Tensor1 x_backward_i_forward_j = parameters;
+    Tensor1 x_forward_i_backward_j = parameters;
 
     type y_backward_2i;
     type y_backward_i;
@@ -1180,9 +1180,9 @@ Tensor<type, 2> LossIndex::calculate_numerical_hessian()
 }
 
 
-Tensor<type, 2> LossIndex::calculate_inverse_hessian()
+Tensor2 LossIndex::calculate_inverse_hessian()
 {
-    Tensor<type, 2> H = calculate_numerical_hessian();
+    Tensor2 H = calculate_numerical_hessian();
 
     const Index parameters_number = H.dimension(0);
 
@@ -1194,7 +1194,7 @@ Tensor<type, 2> LossIndex::calculate_inverse_hessian()
     if(abs(determinant) < NUMERIC_LIMITS_MIN)
         throw runtime_error("Hessian is not invertible.");
 
-    Tensor<type, 2> H_inv(parameters_number, parameters_number);
+    Tensor2 H_inv(parameters_number, parameters_number);
     H_inv.setZero();
 
     for(Index i = 0; i < parameters_number; i++)

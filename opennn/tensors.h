@@ -137,20 +137,20 @@ void set_random_integers(TensorMap<Tensor<type, rank>>& tensor, const Index& min
 
 type bound(const type& value, const type& minimum, const type& maximum);
 
-void set_row(Tensor<type, 2>&, const Tensor<type, 1>&, const Index&);
+void set_row(Tensor2&, const Tensor1&, const Index&);
 
-void sum_matrices(const ThreadPoolDevice*, const Tensor<type, 1>&, Tensor<type, 3>&);
+void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
 
-void multiply_matrices(const ThreadPoolDevice*, Tensor<type, 3>&, const Tensor<type, 1>&);
-void multiply_matrices(const ThreadPoolDevice*, Tensor<type, 3>&, const Tensor<type, 2>&);
+void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor1&);
+void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
 
-void set_identity(Tensor<type, 2>&);
+void set_identity(Tensor2&);
 
-void sum_diagonal(Tensor<type, 2>&, const type&);
+void sum_diagonal(Tensor2&, const type&);
 
-Tensor<type, 2> self_kronecker_product(const ThreadPoolDevice*, const Tensor<type, 1>&);
+Tensor2 self_kronecker_product(const ThreadPoolDevice*, const Tensor1&);
 
-void divide_columns(const ThreadPoolDevice*, TensorMap<Tensor<type, 2>>&, const Tensor<type, 1>&);
+void divide_columns(const ThreadPoolDevice*, TensorMap2&, const Tensor1&);
 
 template <int Rank>
 bool is_binary(const Tensor<type, Rank>& tensor)
@@ -164,7 +164,7 @@ bool is_binary(const Tensor<type, Rank>& tensor)
     return true;
 }
 
-Tensor<type, 2> append_rows(const Tensor<type,2>& , const Tensor<type,2>& );
+Tensor2 append_rows(const Tensor<type,2>& , const Tensor<type,2>& );
 
 template <int Rank>
 bool is_constant(const Tensor<type, Rank>& tensor)
@@ -196,12 +196,12 @@ Index count_NAN(const Tensor<type, rank>& x)
     return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
 }
 
-Index count_between(Tensor<type, 1>&, const type&, const type&);
+Index count_between(Tensor1&, const type&, const type&);
 
 Index count_greater_than(const vector<Index>&, const Index&);
 
-Tensor<Index, 1> calculate_rank_greater(const Tensor<type, 1>&);
-Tensor<Index, 1> calculate_rank_less(const Tensor<type, 1>&);
+Tensor<Index, 1> calculate_rank_greater(const Tensor1&);
+Tensor<Index, 1> calculate_rank_less(const Tensor1&);
 
 vector<Index> get_elements_greater_than(const vector<Index>&, const Index&);
 vector<Index> get_elements_greater_than(const vector<vector<Index>>&, const Index&);
@@ -209,15 +209,15 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, const Inde
 Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, const Index&, const type&, const type&);
 
 //type l2_distance(const type&, const TensorMap<Tensor<type, 0> > &);
-type l2_distance(const Tensor<type, 1>&, const Tensor<type, 1>&);
+type l2_distance(const Tensor1&, const Tensor1&);
 
-Tensor<Index, 1> get_n_nearest_points(const Tensor<type, 2>& ,const Tensor<type,1>& , int );
+Tensor<Index, 1> get_n_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
 
-void fill_tensor_data_row_major(const Tensor<type, 2>&, const vector<Index>&, const vector<Index>&, type*);
+void fill_tensor_data_row_major(const Tensor2&, const vector<Index>&, const vector<Index>&, type*);
 
-void fill_tensor_data(const Tensor<type, 2>&, const vector<Index>&, const vector<Index>&, type*);
+void fill_tensor_data(const Tensor2&, const vector<Index>&, const vector<Index>&, type*);
 
-void fill_tensor_sequence(const Tensor<type, 2>&, const vector<Index>&, const vector<Index>&, const Index&, type*);
+void fill_tensor_sequence(const Tensor2&, const vector<Index>&, const vector<Index>&, const Index&, type*);
 
 template <typename Type, int Rank>
 bool contains(const Tensor<Type, Rank>& vector, const Type& value)
@@ -232,13 +232,13 @@ bool contains(const Tensor<Type, Rank>& vector, const Type& value)
 
 bool contains(const vector<string>&, const string&);
 
-Tensor<type, 1> perform_Householder_QR_decomposition(const Tensor<type, 2>&, const Tensor<type, 1>&);
+Tensor1 perform_Householder_QR_decomposition(const Tensor2&, const Tensor1&);
 
 vector<Index> join_vector_vector(const vector<Index>&, const vector<Index>&);
 
-Tensor<type, 2> assemble_vector_vector(const Tensor<type, 1>&, const Tensor<type, 1>&);
-Tensor<type, 2> assemble_vector_matrix(const Tensor<type, 1>&, const Tensor<type, 2>&);
-Tensor<type, 2> assemble_matrix_matrix(const Tensor<type, 2>&, const Tensor<type, 2>&);
+Tensor2 assemble_vector_vector(const Tensor1&, const Tensor1&);
+Tensor2 assemble_vector_matrix(const Tensor1&, const Tensor2&);
+Tensor2 assemble_matrix_matrix(const Tensor2&, const Tensor2&);
 
 template <typename T>
 void push_back(Tensor<T, 1>& tensor, const T& value)
@@ -304,14 +304,14 @@ void string_to_tensor(const string& input, Tensor<T, Rank>& x)
 
 type round_to_precision(type, const int&);
 
-TensorMap<Tensor<type, 1>> tensor_map(const Tensor<type, 2>&, const Index&);
+TensorMap1 tensor_map(const Tensor2&, const Index&);
 
-TensorMap<Tensor<type, 2>> tensor_map(const Tensor<type, 3>&, const Index&);
-TensorMap<Tensor<type, 3>> tensor_map(const Tensor<type, 4>&, const Index&);
-TensorMap<Tensor<type, 2>> tensor_map(const Tensor<type, 4>&, const Index&, const Index&);
+TensorMap2 tensor_map(const Tensor3&, const Index&);
+TensorMap3 tensor_map(const Tensor4&, const Index&);
+TensorMap2 tensor_map(const Tensor4&, const Index&, const Index&);
 
-TensorMap<Tensor<type, 3>> tensor_map_(const TensorMap<Tensor<type, 4>>&, const Index&);
-TensorMap<Tensor<type, 1>> tensor_map_(const TensorMap<Tensor<type, 2>>&, const Index&);
+TensorMap3 tensor_map_(const TensorMap4&, const Index&);
+TensorMap1 tensor_map_(const TensorMap2&, const Index&);
 
 
 template <Index rank>
@@ -324,18 +324,18 @@ TensorMap<Tensor<type, rank>> tensor_map(const TensorView& x_pair)
         throw runtime_error("Dimensions is " + to_string(x_pair.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap<Tensor<type, 1>>(x_pair.data, x_pair.dims[0]);
+        return TensorMap1(x_pair.data, x_pair.dims[0]);
     else if constexpr (rank == 2)
-        return TensorMap<Tensor<type, 2>>(x_pair.data,
+        return TensorMap2(x_pair.data,
                                           x_pair.dims[0],
                                           x_pair.dims[1]);
     else if constexpr (rank == 3)
-        return TensorMap<Tensor<type, 3>>(x_pair.data,
+        return TensorMap3(x_pair.data,
                                           x_pair.dims[0],
                                           x_pair.dims[1],
                                           x_pair.dims[2]);
     else if constexpr (rank == 4)
-        return TensorMap<Tensor<type, 4>>(x_pair.data,
+        return TensorMap4(x_pair.data,
                                           x_pair.dims[0],
                                           x_pair.dims[1],
                                           x_pair.dims[2],

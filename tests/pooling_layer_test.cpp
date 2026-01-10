@@ -5,12 +5,12 @@
 
 using namespace opennn;
 
-Tensor<type, 4> generate_input_tensor_pooling(const Tensor<type, 2>& data,
+Tensor4 generate_input_tensor_pooling(const Tensor2& data,
                                               const vector<Index>& row_indices,
                                               const vector<Index>& column_indices,
                                               const dimensions& input_dimensions)
 { 
-    Tensor<type, 4> input_tensor(row_indices.size(),
+    Tensor4 input_tensor(row_indices.size(),
                                  input_dimensions[0],
                                  input_dimensions[1],
                                  input_dimensions[2]);
@@ -30,8 +30,8 @@ struct PoolingLayerConfig {
     dimensions padding_dimensions;
     string pooling_method;
     string test_name;
-    Tensor<type, 4> input_data;
-    Tensor<type, 4> expected_output;
+    Tensor4 input_data;
+    Tensor4 expected_output;
 };
 
 
@@ -43,7 +43,7 @@ INSTANTIATE_TEST_CASE_P(PoolingLayerTests, PoolingLayerTest, ::testing::Values(
     {
         {4, 4, 1}, {2, 2}, {2, 2}, {0, 0}, "MaxPooling", "MaxPoolingNoPadding1Channel",
         ([] {
-        Tensor<type, 2> data(4, 16);
+        Tensor2 data(4, 16);
         data.setValues({
             {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
             {16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
@@ -57,7 +57,7 @@ INSTANTIATE_TEST_CASE_P(PoolingLayerTests, PoolingLayerTest, ::testing::Values(
         return generate_input_tensor_pooling(data, row_indices, column_indices, {4, 4, 1});
         })(),
         ([] {
-            Tensor<type, 4> expected_output(4, 2, 2, 1);
+            Tensor4 expected_output(4, 2, 2, 1);
             expected_output.setValues({
                                       {{{6}, {14}},
                                        {{8}, {16}}},
@@ -78,7 +78,7 @@ INSTANTIATE_TEST_CASE_P(PoolingLayerTests, PoolingLayerTest, ::testing::Values(
     {
         {4, 4, 1}, {2, 2}, {2, 2}, {0, 0}, "AveragePooling", "AveragePoolingNoPadding1Channel",
         ([] {
-        Tensor<type, 2> data(4, 16);
+        Tensor2 data(4, 16);
         data.setValues({
             {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
             {16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
@@ -92,7 +92,7 @@ INSTANTIATE_TEST_CASE_P(PoolingLayerTests, PoolingLayerTest, ::testing::Values(
         return generate_input_tensor_pooling(data, row_indices, column_indices, {4, 4, 1});
         })(),
         ([] {
-            Tensor<type, 4> expected_output(4, 2, 2, 1);
+            Tensor4 expected_output(4, 2, 2, 1);
             expected_output.setValues({
                                         {{{3.5}, {11.5}},
                                         {{5.5}, {13.5}}},
@@ -171,7 +171,7 @@ TEST_P(PoolingLayerTest, ForwardPropagate)
     EXPECT_EQ(output_pair.dims[2], parameters.expected_output.dimension(2));
     EXPECT_EQ(output_pair.dims[3], parameters.expected_output.dimension(3));
 
-    TensorMap<Tensor<type, 4>> output_tensor(output_pair.data,
+    TensorMap4 output_tensor(output_pair.data,
                                              batch_size,
                                              parameters.expected_output.dimension(1),
                                              parameters.expected_output.dimension(2),

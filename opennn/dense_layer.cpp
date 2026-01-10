@@ -12,7 +12,7 @@
 
 namespace opennn
 {
-
+/*
 Dense2d::Dense2d(const dimensions& new_input_dimensions,
                  const dimensions& new_output_dimensions,
                  const string& new_activation_function,
@@ -71,12 +71,12 @@ bool Dense2d::get_batch_normalization() const
     return batch_normalization;
 }
 
-Tensor<type, 1> Dense2d::get_scales() const
+Tensor1 Dense2d::get_scales() const
 {
     return scales;
 }
 
-Tensor<type, 1> Dense2d::get_offsets() const
+Tensor1 Dense2d::get_offsets() const
 {
     return offsets;
 }
@@ -240,23 +240,23 @@ void Dense2d::set_activation_function(const string& new_activation_function)
 }
 
 
-void Dense2d::apply_batch_normalization_backward(TensorMap<Tensor<type, 2>>& deltas,
+void Dense2d::apply_batch_normalization_backward(TensorMap2& deltas,
                                                  unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                  unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const Dense2dForwardPropagation* dense2d_forward_propagation =
-        static_cast<const Dense2dForwardPropagation*>(layer_forward_propagation.get());
+    const DenseForwardPropagation<2>* dense2d_forward_propagation =
+        static_cast<const DenseForwardPropagation<2>*>(layer_forward_propagation.get());
 
     const Index batch_size = dense2d_forward_propagation->batch_size;
 
-    const Tensor<type, 2>& normalized_outputs = dense2d_forward_propagation->normalized_outputs;
-    const Tensor<type, 1>& standard_deviations = dense2d_forward_propagation->standard_deviations;
+    const Tensor2& normalized_outputs = dense2d_forward_propagation->normalized_outputs;
+    const Tensor1& standard_deviations = dense2d_forward_propagation->standard_deviations;
 
-    Dense2dBackPropagation* dense2d_back_propagation =
-        static_cast<Dense2dBackPropagation*>(back_propagation.get());
+    DenseBackPropagation<2>* dense2d_back_propagation =
+        static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
-    Tensor<type, 1>& bn_scale_deltas = dense2d_back_propagation->bn_scale_deltas;
-    Tensor<type, 1>& bn_offset_deltas = dense2d_back_propagation->bn_offset_deltas;
+    Tensor1& bn_scale_deltas = dense2d_back_propagation->bn_scale_deltas;
+    Tensor1& bn_offset_deltas = dense2d_back_propagation->bn_offset_deltas;
 
     const array<int, 1> reduction_axes = { 0 };
     const array<Index, 2> reshape_dims = { 1, get_outputs_number() };
@@ -282,12 +282,12 @@ void Dense2d::forward_propagate(const vector<TensorView>& input_views,
                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                 const bool& is_training)
 {
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    Dense2dForwardPropagation* dense2d_forward_propagation =
-        static_cast<Dense2dForwardPropagation*>(layer_forward_propagation.get());
+    DenseForwardPropagation<2>* dense2d_forward_propagation =
+        static_cast<DenseForwardPropagation<2>*>(layer_forward_propagation.get());
 
-    Tensor<type, 2>& outputs = dense2d_forward_propagation->outputs;
+    Tensor2& outputs = dense2d_forward_propagation->outputs;
 
     calculate_combinations<2>(inputs, weights, biases, outputs);
 
@@ -317,28 +317,28 @@ void Dense2d::back_propagate(const vector<TensorView>& input_views,
                              unique_ptr<LayerForwardPropagation>& forward_propagation,
                              unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
-    TensorMap<Tensor<type, 2>> deltas = tensor_map<2>(delta_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+    TensorMap2 deltas = tensor_map<2>(delta_views[0]);
 
     // Forward propagation
 
-    const Dense2dForwardPropagation* dense2d_layer_forward_propagation =
-        static_cast<Dense2dForwardPropagation*>(forward_propagation.get());
+    const DenseForwardPropagation<2>* dense2d_layer_forward_propagation =
+        static_cast<DenseForwardPropagation<2>*>(forward_propagation.get());
 
-    const Tensor<type, 2>& activation_derivatives = dense2d_layer_forward_propagation->activation_derivatives;
+    const Tensor2& activation_derivatives = dense2d_layer_forward_propagation->activation_derivatives;
 
     // Back propagation
 
-    Dense2dBackPropagation* dense2d_back_propagation =
-        static_cast<Dense2dBackPropagation*>(back_propagation.get());
+    DenseBackPropagation<2>* dense2d_back_propagation =
+        static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
-    Tensor<type, 2>& weight_deltas = dense2d_back_propagation->weight_deltas;
+    Tensor2& weight_deltas = dense2d_back_propagation->weight_deltas;
 
-    Tensor<type, 1>& bias_deltas = dense2d_back_propagation->bias_deltas;
+    Tensor1& bias_deltas = dense2d_back_propagation->bias_deltas;
 
     const bool& is_first_layer = dense2d_back_propagation->is_first_layer;
 
-    Tensor<type, 2>& input_deltas = dense2d_back_propagation->input_deltas;
+    Tensor2& input_deltas = dense2d_back_propagation->input_deltas;
 
     if(activation_function != "Softmax")
         deltas.device(*device) = deltas * activation_derivatives;
@@ -360,8 +360,8 @@ void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
                                 unique_ptr<LayerForwardPropagation>& forward_propagation,
                                 unique_ptr<LayerBackPropagationLM>& back_propagation) const
 {
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
-    TensorMap<Tensor<type, 2>> deltas = tensor_map<2>(delta_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+    TensorMap2 deltas = tensor_map<2>(delta_views[0]);
 
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
@@ -370,22 +370,22 @@ void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
 
     // Forward propagation
 
-    const Dense2dForwardPropagation* dense2d_layer_forward_propagation =
-        static_cast<Dense2dForwardPropagation*>(forward_propagation.get());
+    const DenseForwardPropagation<2>* dense2d_layer_forward_propagation =
+        static_cast<DenseForwardPropagation<2>*>(forward_propagation.get());
 
-    const Tensor<type, 2>& activation_derivatives
+    const Tensor2& activation_derivatives
         = dense2d_layer_forward_propagation->activation_derivatives;
 
     // Back propagation
 
-    Dense2dLayerBackPropagationLM* dense2d_layer_back_propagation_lm =
-        static_cast<Dense2dLayerBackPropagationLM*>(back_propagation.get());
+    Dense2dBackPropagationLM* dense2d_layer_back_propagation_lm =
+        static_cast<Dense2dBackPropagationLM*>(back_propagation.get());
 
-    Tensor<type, 2>& squared_errors_Jacobian = dense2d_layer_back_propagation_lm->squared_errors_Jacobian;
+    Tensor2& squared_errors_Jacobian = dense2d_layer_back_propagation_lm->squared_errors_Jacobian;
 
     const bool& is_first_layer = dense2d_layer_back_propagation_lm->is_first_layer;
 
-    Tensor<type, 2>& input_deltas = dense2d_layer_back_propagation_lm->input_deltas;
+    Tensor2& input_deltas = dense2d_layer_back_propagation_lm->input_deltas;
 
     deltas.device(*device) = deltas * activation_derivatives;
 
@@ -394,13 +394,13 @@ void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
 
     for (Index j = 0; j < outputs_number; j++)
     {
-        const Tensor<type, 1> delta_j = deltas.chip(j, 1);
+        const Tensor1 delta_j = deltas.chip(j, 1);
 
         for (Index i = 0; i < inputs_number; i++)
         {
-            const Tensor<type, 1> input_i = inputs.chip(i, 1);
+            const Tensor1 input_i = inputs.chip(i, 1);
 
-            const Tensor<type, 1> derivative = delta_j * input_i;
+            const Tensor1 derivative = delta_j * input_i;
 
             const Index weight_column_index = biases_number + (j * inputs_number) + i;
 
@@ -411,7 +411,7 @@ void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
 
     if (!is_first_layer)
     {
-        const Tensor<type, 2> weights_transposed = weights.shuffle(array<int, 2>{1, 0});
+        const Tensor2 weights_transposed = weights.shuffle(array<int, 2>{1, 0});
         input_deltas.device(*device) = deltas.contract(weights_transposed, axes(1, 0));
     }
 }
@@ -419,13 +419,13 @@ void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
 
 void Dense2d::insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
                                                 const Index& index,
-                                                Tensor<type, 2>& squared_errors_Jacobian) const
+                                                Tensor2& squared_errors_Jacobian) const
 {
     const Index parameters_number = get_parameters_number();
     const Index batch_size = back_propagation->batch_size;
 
-    Dense2dLayerBackPropagationLM* dense2d_layer_back_propagation_lm =
-        static_cast<Dense2dLayerBackPropagationLM*>(back_propagation.get());
+    Dense2dBackPropagationLM* dense2d_layer_back_propagation_lm =
+        static_cast<Dense2dBackPropagationLM*>(back_propagation.get());
 
     type* this_squared_errors_Jacobian_data = dense2d_layer_back_propagation_lm->squared_errors_Jacobian.data();
 
@@ -453,7 +453,7 @@ string Dense2d::get_expression(const vector<string>& new_feature_names,
 
     for(Index j = 0; j < outputs_number; j++)
     {
-        const TensorMap<Tensor<type, 1>> weights_column = tensor_map(weights, j);
+        const TensorMap1 weights_column = tensor_map(weights, j);
 
         buffer << output_names[j] << " = " << activation_function << "( " << biases(j) << " + ";
 
@@ -543,7 +543,7 @@ void Dense2d::to_XML(XMLPrinter& printer) const
 }
 
 
-void Dense2dForwardPropagation::initialize()
+void DenseForwardPropagation<2>::initialize()
 {
     const Index outputs_number = layer->get_outputs_number();
 
@@ -564,7 +564,7 @@ void Dense2dForwardPropagation::initialize()
 }
 
 
-TensorView Dense2dForwardPropagation::get_output_view() const
+TensorView DenseForwardPropagation<2>::get_output_view() const
 {
     const dimensions output_dimensions = layer->get_output_dimensions();
 
@@ -572,14 +572,14 @@ TensorView Dense2dForwardPropagation::get_output_view() const
 }
 
 
-Dense2dForwardPropagation::Dense2dForwardPropagation(const Index& new_batch_size, Layer *new_layer)
+DenseForwardPropagation<2>::DenseForwardPropagation<2>(const Index& new_batch_size, Layer *new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
 }
 
 
-void Dense2dForwardPropagation::print() const
+void DenseForwardPropagation<2>::print() const
 {
     cout << "Outputs:" << endl
          << outputs << endl
@@ -588,14 +588,14 @@ void Dense2dForwardPropagation::print() const
 }
 
 
-Dense2dBackPropagation::Dense2dBackPropagation(const Index& new_batch_size, Layer *new_layer)
+DenseBackPropagation<2>::DenseBackPropagation<2>(const Index& new_batch_size, Layer *new_layer)
     : LayerBackPropagation()
 {
     set(new_batch_size, new_layer);
 }
 
 
-void Dense2dBackPropagation::initialize()
+void DenseBackPropagation<2>::initialize()
 {
     const Index outputs_number = layer->get_outputs_number();
     const Index inputs_number = layer->get_input_dimensions()[0];
@@ -621,7 +621,7 @@ void Dense2dBackPropagation::initialize()
 }
 
 
-vector<TensorView> Dense2dBackPropagation::get_input_derivative_views() const
+vector<TensorView> DenseBackPropagation<2>::get_input_derivative_views() const
 {
     const Index inputs_number = layer->get_input_dimensions()[0];
 
@@ -629,7 +629,7 @@ vector<TensorView> Dense2dBackPropagation::get_input_derivative_views() const
 }
 
 
-vector<ParameterView> Dense2dBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> DenseBackPropagation<2>::get_parameter_delta_views() const
 {
     const auto* dense_layer = static_cast<const Dense2d*>(layer);
 
@@ -647,7 +647,7 @@ vector<ParameterView> Dense2dBackPropagation::get_parameter_delta_views() const
 }
 
 
-void Dense2dBackPropagation::print() const
+void DenseBackPropagation<2>::print() const
 {
     cout << "Bias deltas:" << endl
          << bias_deltas << endl
@@ -656,7 +656,7 @@ void Dense2dBackPropagation::print() const
 }
 
 
-Dense2dLayerBackPropagationLM::Dense2dLayerBackPropagationLM(const Index& new_batch_size,
+Dense2dBackPropagationLM::Dense2dBackPropagationLM(const Index& new_batch_size,
                                                              Layer* new_layer)
     : LayerBackPropagationLM()
 {
@@ -664,7 +664,7 @@ Dense2dLayerBackPropagationLM::Dense2dLayerBackPropagationLM(const Index& new_ba
 }
 
 
-void Dense2dLayerBackPropagationLM::set(const Index&new_samples_number, Layer *new_layer)
+void Dense2dBackPropagationLM::set(const Index&new_samples_number, Layer *new_layer)
 {
     layer = new_layer;
 
@@ -679,7 +679,7 @@ void Dense2dLayerBackPropagationLM::set(const Index&new_samples_number, Layer *n
 }
 
 
-vector<TensorView> Dense2dLayerBackPropagationLM::get_input_derivative_views() const
+vector<TensorView> Dense2dBackPropagationLM::get_input_derivative_views() const
 {
     const Index inputs_number = layer->get_input_dimensions()[0];
 
@@ -687,7 +687,7 @@ vector<TensorView> Dense2dLayerBackPropagationLM::get_input_derivative_views() c
 }
 
 
-void Dense2dLayerBackPropagationLM::print() const
+void Dense2dBackPropagationLM::print() const
 {
     cout << "Squared errors Jacobian: " << endl
          << squared_errors_Jacobian << endl;
@@ -696,10 +696,10 @@ void Dense2dLayerBackPropagationLM::print() const
 }
 
 
-void Dense2d::normalization(Tensor<type, 1> &means,
-                            Tensor<type, 1> &standard_deviations,
-                            const Tensor<type, 2> &inputs,
-                            Tensor<type, 2> &outputs) const
+void Dense2d::normalization(Tensor1 &means,
+                            Tensor1 &standard_deviations,
+                            const Tensor2 &inputs,
+                            Tensor2 &outputs) const
 {
     const array<Index, 2> rows({outputs.dimension(0), 1});
 
@@ -729,8 +729,8 @@ void Dense2d::forward_propagate_cuda(const vector<float*>& inputs_device,
 
     // Forward propagation
 
-    Dense2dForwardPropagationCuda* dense2d_layer_forward_propagation_cuda =
-        static_cast<Dense2dForwardPropagationCuda*>(forward_propagation_cuda.get());
+    DenseForwardPropagation<2>Cuda* dense2d_layer_forward_propagation_cuda =
+        static_cast<DenseForwardPropagation<2>Cuda*>(forward_propagation_cuda.get());
 
     const Index batch_size = dense2d_layer_forward_propagation_cuda->batch_size;
 
@@ -876,8 +876,8 @@ void Dense2d::back_propagate_cuda(const vector<float*>& inputs_device,
 
     // Forward propagation
 
-    Dense2dForwardPropagationCuda* dense2d_layer_forward_propagation_cuda =
-        static_cast<Dense2dForwardPropagationCuda*>(forward_propagation_cuda.get());
+    DenseForwardPropagation<2>Cuda* dense2d_layer_forward_propagation_cuda =
+        static_cast<DenseForwardPropagation<2>Cuda*>(forward_propagation_cuda.get());
 
     Dense2d* dense2d_layer = static_cast<Dense2d*>(dense2d_layer_forward_propagation_cuda->layer);
 
@@ -888,8 +888,8 @@ void Dense2d::back_propagate_cuda(const vector<float*>& inputs_device,
 
     // Back propagation
 
-    Dense2dBackPropagationCuda* dense2d_layer_back_propagation =
-        static_cast<Dense2dBackPropagationCuda*>(back_propagation_cuda.get());
+    DenseBackPropagation<2>Cuda* dense2d_layer_back_propagation =
+        static_cast<DenseBackPropagation<2>Cuda*>(back_propagation_cuda.get());
 
     float* ones = dense2d_layer_back_propagation->ones;
 
@@ -1116,7 +1116,7 @@ void Dense2d::copy_parameters_device()
         CHECK_CUDA(cudaMemcpy(bn_scale_device, scales.data(), scales.size() * sizeof(type), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(bn_offset_device, offsets.data(), offsets.size() * sizeof(type), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(bn_running_mean_device, moving_means.data(), moving_means.size() * sizeof(type), cudaMemcpyHostToDevice));
-        Tensor<type, 1> moving_variances = moving_standard_deviations.square();
+        Tensor1 moving_variances = moving_standard_deviations.square();
         CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
 }
@@ -1135,21 +1135,21 @@ void Dense2d::copy_parameters_host()
         CHECK_CUDA(cudaMemcpy(scales.data(), bn_scale_device, scales.size() * sizeof(type), cudaMemcpyDeviceToHost));
         CHECK_CUDA(cudaMemcpy(offsets.data(), bn_offset_device, offsets.size() * sizeof(type), cudaMemcpyDeviceToHost));
         CHECK_CUDA(cudaMemcpy(moving_means.data(), bn_running_mean_device, moving_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
-        Tensor<type, 1> moving_variances(moving_standard_deviations.size());
+        Tensor1 moving_variances(moving_standard_deviations.size());
         CHECK_CUDA(cudaMemcpy(moving_variances.data(), bn_running_variance_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
         moving_standard_deviations = moving_variances.sqrt();
     }
 }
 
 
-Dense2dForwardPropagationCuda::Dense2dForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+DenseForwardPropagation<2>Cuda::DenseForwardPropagation<2>Cuda(const Index& new_batch_size, Layer* new_layer)
     : LayerForwardPropagationCuda()
 {
     set(new_batch_size, new_layer);
 }
 
 
-void Dense2dForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void DenseForwardPropagation<2>Cuda::set(const Index& new_batch_size, Layer* new_layer)
 {
     if (!new_layer) return;
 
@@ -1249,9 +1249,9 @@ void Dense2dForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_
     }
 }
 
-void Dense2dForwardPropagationCuda::print() const
+void DenseForwardPropagation<2>Cuda::print() const
 {
-    cout << "Dense2dForwardPropagationCuda:" << endl;
+    cout << "DenseForwardPropagation<2>Cuda:" << endl;
     cout << "  Layer: " << layer->get_label() << " (" << layer->get_name() << ")" << endl;
     cout << "  Batch Size: " << batch_size << endl;
 
@@ -1270,7 +1270,7 @@ void Dense2dForwardPropagationCuda::print() const
 }
 
 
-void Dense2dForwardPropagationCuda::free()
+void DenseForwardPropagation<2>Cuda::free()
 {
     if (combinations != nullptr)
         cudaFree(combinations);
@@ -1303,14 +1303,14 @@ void Dense2dForwardPropagationCuda::free()
 }
 
 
-Dense2dBackPropagationCuda::Dense2dBackPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+DenseBackPropagation<2>Cuda::DenseBackPropagation<2>Cuda(const Index& new_batch_size, Layer* new_layer)
     : LayerBackPropagationCuda()
 {
     set(new_batch_size, new_layer);
 }
 
 
-void Dense2dBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void DenseBackPropagation<2>Cuda::set(const Index& new_batch_size, Layer* new_layer)
 {
     if (!new_layer) return;
 
@@ -1364,7 +1364,7 @@ void Dense2dBackPropagationCuda::set(const Index& new_batch_size, Layer* new_lay
 }
 
 
-vector<ParameterView> Dense2dBackPropagationCuda::get_parameter_delta_views_device() const
+vector<ParameterView> DenseBackPropagation<2>Cuda::get_parameter_delta_views_device() const
 {
     const auto* dense_layer = static_cast<const Dense2d*>(layer);
     const Index weight_deltas_size = dense_layer->get_input_dimensions()[0] * dense_layer->get_output_dimensions()[0];
@@ -1386,9 +1386,9 @@ vector<ParameterView> Dense2dBackPropagationCuda::get_parameter_delta_views_devi
 }
 
 
-void Dense2dBackPropagationCuda::print() const
+void DenseBackPropagation<2>Cuda::print() const
 {
-    cout << "Dense2dBackPropagationCuda:" << endl;
+    cout << "DenseBackPropagation<2>Cuda:" << endl;
     cout << "  Layer: " << layer->get_label() << " (" << layer->get_name() << ")" << endl;
     cout << "  Batch Size: " << batch_size << endl;
 
@@ -1409,7 +1409,7 @@ void Dense2dBackPropagationCuda::print() const
 }
 
 
-void Dense2dBackPropagationCuda::free()
+void DenseBackPropagation<2>Cuda::free()
 {
     cudaFree(bias_deltas_device);
     cudaFree(weight_deltas_device);
@@ -1430,15 +1430,15 @@ void Dense2dBackPropagationCuda::free()
     cudnnDestroyTensorDescriptor(deltas_tensor_descriptor);
 }
 
-REGISTER(LayerForwardPropagationCuda, Dense2dForwardPropagationCuda, "Dense2d")
-REGISTER(LayerBackPropagationCuda, Dense2dBackPropagationCuda, "Dense2d")
+REGISTER(LayerForwardPropagationCuda, DenseForwardPropagation<2>Cuda, "Dense2d")
+REGISTER(LayerBackPropagationCuda, DenseBackPropagation<2>Cuda, "Dense2d")
 
 #endif
 
 REGISTER(Layer, Dense2d, "Dense2d")
-REGISTER(LayerForwardPropagation, Dense2dForwardPropagation, "Dense2d")
-REGISTER(LayerBackPropagation, Dense2dBackPropagation, "Dense2d")
-
+REGISTER(LayerForwardPropagation, DenseForwardPropagation<2>, "Dense2d")
+REGISTER(LayerBackPropagation, DenseBackPropagation<2>, "Dense2d")
+*/
 } // namespace opennn
 
 

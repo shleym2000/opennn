@@ -28,7 +28,7 @@ namespace opennn
 
     vector<string> convert_string_vector(const vector<vector<string>>&, const string&);
 
-    Tensor<type, 1> to_type_vector(const string&, const string&);
+    Tensor1 to_type_vector(const string&, const string&);
 
     bool is_numeric_string(const string&);
     bool is_date_time_string(const string&);
@@ -68,10 +68,10 @@ namespace opennn
 
     void set_language(const string&);
 
-    void tokenize_whitespace(const vector<string>&, Tensor<type, 2>&);
-    void tokenize_wordpiece(const vector<string>&, Tensor<type, 2>&);
-    void detokenize_whitespace(Tensor<type, 2>&, ostringstream&);
-    void detokenize_wordpiece(Tensor<type, 2>&, ostringstream&);
+    void tokenize_whitespace(const vector<string>&, Tensor2&);
+    void tokenize_wordpiece(const vector<string>&, Tensor2&);
+    void detokenize_whitespace(Tensor2&, ostringstream&);
+    void detokenize_wordpiece(Tensor2&, ostringstream&);
 
     vector<string> preprocess_language_document(const string&, const bool&);
 

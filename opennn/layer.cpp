@@ -58,7 +58,7 @@ void Layer::set_parameters_random()
 
     for (const auto& view : parameter_views)
     {
-        TensorMap<Tensor<type, 1>> this_parameters(view.data, view.size);
+        TensorMap1 this_parameters(view.data, view.size);
 
         set_random(this_parameters);
     }
@@ -76,7 +76,7 @@ void Layer::set_parameters_glorot()
 
     for (const auto& view : parameter_views)
     {
-        TensorMap<Tensor<type, 1>> this_parameters(view.data, view.size);
+        TensorMap1 this_parameters(view.data, view.size);
 
         set_random(this_parameters, -limit, limit);
     }
@@ -152,7 +152,7 @@ bool Layer::get_is_trainable() const
 
 void Layer::add_deltas(const vector<TensorView> &delta_views) const
 {
-    TensorMap<Tensor<type, 3>> deltas = tensor_map<3>(delta_views[0]);
+    TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
     for (Index i = 1; i < Index(delta_views.size()); i++)
         deltas.device(*device) += tensor_map<3>(delta_views[i]);
@@ -195,7 +195,7 @@ void Layer::set_output_dimensions(const dimensions&)
 }
 
 
-void Layer::softmax(Tensor<type, 2>& y) const
+void Layer::softmax(Tensor2& y) const
 {
     const Index rows_number = y.dimension(0);
     const Index columns_number = y.dimension(1);
@@ -214,7 +214,7 @@ void Layer::softmax(Tensor<type, 2>& y) const
 }
 
 
-void Layer::softmax(Tensor<type, 3>& y) const
+void Layer::softmax(Tensor3& y) const
 {
     const Index rows_number = y.dimension(0);
     const Index columns_number = y.dimension(1);
@@ -234,7 +234,7 @@ void Layer::softmax(Tensor<type, 3>& y) const
 }
 
 
-void Layer::softmax(Tensor<type, 4>& y) const
+void Layer::softmax(Tensor4& y) const
 {
     const Index rows_number    = y.dimension(0);
     const Index columns_number = y.dimension(1);
@@ -255,9 +255,9 @@ void Layer::softmax(Tensor<type, 4>& y) const
 }
 
 
-void Layer::softmax_derivatives_times_tensor(const Tensor<type, 3>& softmax,
-                                             TensorMap<Tensor<type, 3>>& result,
-                                             Tensor<type, 1>& aux_rows) const
+void Layer::softmax_derivatives_times_tensor(const Tensor3& softmax,
+                                             TensorMap3& result,
+                                             Tensor1& aux_rows) const
 {
     const Index rows = softmax.dimension(0);
     const Index columns = softmax.dimension(1);
@@ -279,10 +279,10 @@ void Layer::softmax_derivatives_times_tensor(const Tensor<type, 3>& softmax,
             softmax_vector_data = softmax_data + rows * (i * columns + j);
             result_vector_data = result_data + rows * (i * columns + j);
 
-            const TensorMap<Tensor<type, 1>> softmax_vector(softmax_vector_data, rows);
-            const TensorMap<Tensor<type, 1>> tensor_vector(result_vector_data, rows);
+            const TensorMap1 softmax_vector(softmax_vector_data, rows);
+            const TensorMap1 tensor_vector(result_vector_data, rows);
 
-            TensorMap<Tensor<type, 1>> result_vector(result_vector_data, rows);
+            TensorMap1 result_vector(result_vector_data, rows);
 
             aux_rows.device(*device) = softmax_vector * tensor_vector;
 

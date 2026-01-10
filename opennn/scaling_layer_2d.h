@@ -49,11 +49,11 @@ public:
         return descriptives[index];
     }
 
-    Tensor<type, 1> get_minimums() const
+    Tensor1 get_minimums() const
     {
         const Index outputs_number = get_outputs_number();
 
-        Tensor<type, 1> minimums(outputs_number);
+        Tensor1 minimums(outputs_number);
 
 #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
@@ -62,11 +62,11 @@ public:
         return minimums;
     }
 
-    Tensor<type, 1> get_maximums() const
+    Tensor1 get_maximums() const
     {
         const Index outputs_number = get_outputs_number();
 
-        Tensor<type, 1> maximums(outputs_number);
+        Tensor1 maximums(outputs_number);
 
 #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
@@ -75,11 +75,11 @@ public:
         return maximums;
     }
 
-    Tensor<type, 1> get_means() const
+    Tensor1 get_means() const
     {
         const Index outputs_number = get_outputs_number();
 
-        Tensor<type, 1> means(outputs_number);
+        Tensor1 means(outputs_number);
 
 #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
@@ -89,11 +89,11 @@ public:
     }
 
 
-    Tensor<type, 1> get_standard_deviations() const
+    Tensor1 get_standard_deviations() const
     {
         const Index outputs_number = get_outputs_number();
 
-        Tensor<type, 1> standard_deviations(outputs_number);
+        Tensor1 standard_deviations(outputs_number);
 
         #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
@@ -179,9 +179,9 @@ public:
         ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
             static_cast<ScalingForwardPropagation<Rank>*>(forward_propagation.get());
 
-        const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
+        const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-        Tensor<type, 2>& outputs = scaling_layer_forward_propagation->outputs;
+        Tensor2& outputs = scaling_layer_forward_propagation->outputs;
         outputs = inputs;
 
         for(Index i = 0; i < outputs_number; i++)
@@ -265,7 +265,7 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 };
 
 

@@ -166,25 +166,25 @@ public:
 
     virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, const bool&) const;
 
-    const Tensor<type, 2>& get_data() const;
-    Tensor<type, 2>* get_data_p();
-    Tensor<type, 2> get_data_samples(const string&) const;
-    Tensor<type, 2> get_data_variables(const string&) const;
-    Tensor<type, 2> get_data(const string&, const string&) const;
-    Tensor<type, 2> get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
+    const Tensor2& get_data() const;
+    Tensor2* get_data_p();
+    Tensor2 get_data_samples(const string&) const;
+    Tensor2 get_data_variables(const string&) const;
+    Tensor2 get_data(const string&, const string&) const;
+    Tensor2 get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
 
-    Tensor<type, 1> get_sample_data(const Index&) const;
-    Tensor<type, 1> get_sample_data(const Index&, const vector<Index>&) const;
-    Tensor<type, 2> get_sample_input_data(const Index&) const;
-    Tensor<type, 2> get_sample_target_data(const Index&) const;
+    Tensor1 get_sample_data(const Index&) const;
+    Tensor1 get_sample_data(const Index&, const vector<Index>&) const;
+    Tensor2 get_sample_input_data(const Index&) const;
+    Tensor2 get_sample_target_data(const Index&) const;
 
-    Tensor<type, 2> get_raw_variable_data(const Index&) const;
-    Tensor<type, 2> get_raw_variable_data(const Index&, const vector<Index>&) const;
-    //Tensor<type, 2> get_raw_variable_data(const Tensor<Index, 1>&) const;
-    Tensor<type, 2> get_raw_variable_data(const string&) const;
+    Tensor2 get_raw_variable_data(const Index&) const;
+    Tensor2 get_raw_variable_data(const Index&, const vector<Index>&) const;
+    //Tensor2 get_raw_variable_data(const Tensor<Index, 1>&) const;
+    Tensor2 get_raw_variable_data(const string&) const;
 
     string get_sample_category(const Index&, const Index&) const;
-    Tensor<type, 1> get_sample(const Index&) const;
+    Tensor1 get_sample(const Index&) const;
 
     const vector<vector<string>>& get_data_file_preview() const;
 
@@ -291,7 +291,7 @@ public:
 
     // Dataset
 
-    void set_data(const Tensor<type, 2>&);
+    void set_data(const Tensor2&);
 
     // Members set
 
@@ -362,9 +362,9 @@ public:
 
     vector<Descriptives> calculate_testing_target_variable_descriptives() const;
 
-    //Tensor<type, 1> calculate_used_variables_minimums() const;
+    //Tensor1 calculate_used_variables_minimums() const;
 
-    Tensor<type, 1> calculate_means(const string& , const string&) const;
+    Tensor1 calculate_means(const string& , const string&) const;
 
     Index calculate_used_negatives(const Index&);
     Index calculate_negatives(const Index&, const string&) const;
@@ -400,7 +400,7 @@ public:
 
     // Filtering
 
-    Tensor<Index, 1> filter_data(const Tensor<type, 1>&, const Tensor<type, 1>&);
+    Tensor<Index, 1> filter_data(const Tensor1&, const Tensor1&);
 
     // Scaling2d
 
@@ -532,7 +532,7 @@ protected:
 
     // DATA
 
-    Tensor<type, 2> data;
+    Tensor2 data;
 
     // Dimensions
 
@@ -616,7 +616,7 @@ struct Batch
               // const vector<Index>&,
               const vector<Index>& = vector<Index>());
 
-    Tensor<type, 2> perform_augmentation(const Tensor<type, 2>&);
+    Tensor2 perform_augmentation(const Tensor2&);
 
     void print() const;
 
@@ -627,13 +627,13 @@ struct Batch
     Dataset* dataset = nullptr;
 
     dimensions input_dimensions;
-    Tensor<type, 1> input_tensor;
+    Tensor1 input_tensor;
 
     dimensions decoder_dimensions;
-    Tensor<type, 1> decoder_tensor;
+    Tensor1 decoder_tensor;
 
     dimensions target_dimensions;
-    Tensor<type, 1> target_tensor;
+    Tensor1 target_tensor;
 
     unique_ptr<ThreadPool> thread_pool = nullptr;
     unique_ptr<ThreadPoolDevice> device = nullptr;
@@ -655,9 +655,9 @@ struct BatchCuda
 
     Index get_samples_number() const;
 
-    Tensor<type, 2> get_inputs_device() const;
-    Tensor<type, 2> get_decoder_device() const;
-    Tensor<type, 2> get_targets_device() const;
+    Tensor2 get_inputs_device() const;
+    Tensor2 get_decoder_device() const;
+    Tensor2 get_targets_device() const;
 
     void set(const Index&, Dataset*);
 

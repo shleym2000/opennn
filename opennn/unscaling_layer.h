@@ -27,8 +27,8 @@ public:
 
     vector<Descriptives> get_descriptives() const;
 
-    Tensor<type, 1> get_minimums() const;
-    Tensor<type, 1> get_maximums() const;
+    Tensor1 get_minimums() const;
+    Tensor1 get_maximums() const;
 
     vector<string> get_scalers() const;
 
@@ -81,7 +81,7 @@ struct UnscalingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 };
 
 

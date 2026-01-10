@@ -50,10 +50,10 @@ TEST(Embedding, ForwardPropagate)
     Embedding embedding_layer({vocabulary_size, sequence_length}, embedding_dimension);
     embedding_layer.set_parameters_random();
 
-    Tensor<type, 2> inputs(samples_number, sequence_length);
+    Tensor2 inputs(samples_number, sequence_length);
     inputs.setConstant(type(0));
 
-    Tensor<type, 3> outputs = neural_network.calculate_outputs<2,3>(inputs);
+    Tensor3 outputs = neural_network.calculate_outputs<2,3>(inputs);
 
     EXPECT_EQ(outputs.dimension(0), samples_number);
     EXPECT_EQ(outputs.dimension(1), sequence_length);
@@ -75,7 +75,7 @@ TEST(Embedding, ForwardPropagate)
 
      const TensorView output_view = forward.get_output_view();
 
-     const TensorMap<Tensor<type, 3>> out = tensor_map<3>(output_view);
+     const TensorMap3 out = tensor_map<3>(output_view);
 
      EXPECT_EQ(output_view.data, forward.outputs.data());
      ASSERT_EQ(output_view.dims.size(), 3);
@@ -102,7 +102,7 @@ TEST(Embedding, BackPropagate)
     neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_dimensions()));
     neural_network.add_layer(make_unique<Dense2d>(neural_network.get_output_dimensions(), language_dataset.get_target_dimensions(), "Logistic"));
 
-    Tensor<type, 2> inputs  = language_dataset.get_data_variables("Input");
+    Tensor2 inputs  = language_dataset.get_data_variables("Input");
     const Index batch_size = inputs.dimension(0);
 
     Layer* first_layer = neural_network.get_layer(0).get();

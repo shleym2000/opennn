@@ -30,7 +30,7 @@ TEST(BoundingTest, ForwardPropagate)
 
     const Index rows_number = 2;
 
-    Tensor<type, 2> inputs(rows_number, columns_number);
+    Tensor2 inputs(rows_number, columns_number);
 
     inputs(0, 0) = -5.0;
     inputs(0, 1) = 0.5;
@@ -51,7 +51,7 @@ TEST(BoundingTest, ForwardPropagate)
 
     bounding_layer.forward_propagate(input_views, forward_propagation, false);
 
-    const TensorMap<Tensor<type, 2>> outputs =
+    const TensorMap2 outputs =
         tensor_map<2>(forward_propagation->get_output_view());
 
     EXPECT_EQ(outputs.dimension(0), rows_number);

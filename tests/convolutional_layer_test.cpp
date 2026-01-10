@@ -12,7 +12,7 @@ void set_layer_parameters_constant(Layer& layer, const type& value)
 
     for (const auto& view : parameter_views)
     {
-        TensorMap<Tensor<type, 1>> parameters_map(view.data, view.size);
+        TensorMap1 parameters_map(view.data, view.size);
         parameters_map.setConstant(value);
     }
 }
@@ -96,7 +96,7 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
 
     const Index batch_size = 2;
 
-    Tensor<type, 4> input_data(batch_size,
+    Tensor4 input_data(batch_size,
         parameters.input_dimensions[0],
         parameters.input_dimensions[1],
         parameters.input_dimensions[2]);
@@ -161,7 +161,7 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
 
     const Index batch_size = 2;
 
-    Tensor<type, 4> input_data(batch_size,
+    Tensor4 input_data(batch_size,
         parameters.input_dimensions[0],
         parameters.input_dimensions[1],
         parameters.input_dimensions[2]);
@@ -183,17 +183,17 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
 
     ASSERT_EQ(output_view.dims.size(), 4);
 
-    Tensor<type, 4> deltas(output_view.dims[0], output_view.dims[1], output_view.dims[2], output_view.dims[3]);
+    Tensor4 deltas(output_view.dims[0], output_view.dims[1], output_view.dims[2], output_view.dims[3]);
     deltas.setConstant(1.0);
 
     TensorView delta_view(deltas.data(), output_view.dims);
 
     convolutional_layer.back_propagate({ input_view }, { delta_view }, forward_propagation, back_propagation_base);
 
-    const Tensor<type, 1>& bias_deltas = back_propagation->bias_deltas;
+    const Tensor1& bias_deltas = back_propagation->bias_deltas;
     EXPECT_EQ(bias_deltas.size(), convolutional_layer.get_kernels_number());
 
-    const Tensor<type, 4>& input_derivatives = back_propagation->input_deltas;
+    const Tensor4& input_derivatives = back_propagation->input_deltas;
 
     EXPECT_EQ(input_derivatives.dimension(0), batch_size);
     EXPECT_EQ(input_derivatives.dimension(1), input_data.dimension(1));

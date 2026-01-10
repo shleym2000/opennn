@@ -38,9 +38,9 @@ TEST(Dense2dTest, ForwardPropagate)
     dense2d_layer.set_parameters_random();
 
     unique_ptr<LayerForwardPropagation> forward_propagation =
-        make_unique<Dense2dForwardPropagation>(batch_size, &dense2d_layer);
+        make_unique<DenseForwardPropagation<2>>(batch_size, &dense2d_layer);
 
-    Tensor<type, 2> inputs(batch_size, inputs_number);
+    Tensor2 inputs(batch_size, inputs_number);
     inputs.setConstant(1.0f);
 
     TensorView input_view(inputs.data(), dimensions{ batch_size, inputs_number });

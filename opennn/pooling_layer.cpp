@@ -243,7 +243,7 @@ void Pooling::forward_propagate(const vector<TensorView>& input_views,
                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                 const bool& is_training)
 {
-    const TensorMap<Tensor<type, 4>> inputs = tensor_map<4>(input_views[0]);
+    const TensorMap4 inputs = tensor_map<4>(input_views[0]);
 
     if(pooling_method == "MaxPooling")
         forward_propagate_max_pooling(inputs,
@@ -256,7 +256,7 @@ void Pooling::forward_propagate(const vector<TensorView>& input_views,
 }
 
 
-void Pooling::forward_propagate_average_pooling(const Tensor<type, 4>& inputs,
+void Pooling::forward_propagate_average_pooling(const Tensor4& inputs,
                                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                 const bool&) const
 {
@@ -264,7 +264,7 @@ void Pooling::forward_propagate_average_pooling(const Tensor<type, 4>& inputs,
         static_cast<PoolingForwardPropagation*>(layer_forward_propagation.get());
 
     Tensor<type, 5>& image_patches = this_forward_propagation->image_patches;
-    Tensor<type, 4>& outputs = this_forward_propagation->outputs;
+    Tensor4& outputs = this_forward_propagation->outputs;
 
     image_patches.device(*device) = inputs.extract_image_patches(
         pool_height,
@@ -283,7 +283,7 @@ void Pooling::forward_propagate_average_pooling(const Tensor<type, 4>& inputs,
 }
 
 
-void Pooling::forward_propagate_max_pooling(const Tensor<type, 4>& inputs,
+void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             const bool& is_training) const
 {
@@ -291,7 +291,7 @@ void Pooling::forward_propagate_max_pooling(const Tensor<type, 4>& inputs,
         static_cast<PoolingForwardPropagation*>(layer_forward_propagation.get());
 
     Tensor<type, 5>& image_patches = pooling_layer_forward_propagation->image_patches;
-    Tensor<type, 4>& outputs = pooling_layer_forward_propagation->outputs;
+    Tensor4& outputs = pooling_layer_forward_propagation->outputs;
 
     const Index batch_size = outputs.dimension(0);
     const Index output_width = outputs.dimension(1);
@@ -326,7 +326,7 @@ void Pooling::forward_propagate_max_pooling(const Tensor<type, 4>& inputs,
 #pragma omp parallel for
     for (Index batch_index = 0; batch_index < batch_size; batch_index++)
     {
-        const Tensor<type, 2> patches_flat = image_patches.chip(batch_index, 0).reshape(reshape_dimensions);
+        const Tensor2 patches_flat = image_patches.chip(batch_index, 0).reshape(reshape_dimensions);
 
         maximal_indices.chip(batch_index, 0) = patches_flat.argmax(0).reshape(output_dimensions);
     }
@@ -338,8 +338,8 @@ void Pooling::back_propagate(const vector<TensorView>& input_views,
                              unique_ptr<LayerForwardPropagation>& forward_propagation,
                              unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const TensorMap<Tensor<type, 4>> inputs = tensor_map<4>(input_views[0]);
-    const TensorMap<Tensor<type, 4>> deltas = tensor_map<4>(delta_views[0]);
+    const TensorMap4 inputs = tensor_map<4>(input_views[0]);
+    const TensorMap4 deltas = tensor_map<4>(delta_views[0]);
 
     if(pooling_method == "MaxPooling")
         back_propagate_max_pooling(inputs,
@@ -353,8 +353,8 @@ void Pooling::back_propagate(const vector<TensorView>& input_views,
 }
 
 
-void Pooling::back_propagate_max_pooling(const Tensor<type, 4>& inputs,
-                                         const Tensor<type, 4>& deltas,
+void Pooling::back_propagate_max_pooling(const Tensor4& inputs,
+                                         const Tensor4& deltas,
                                          unique_ptr<LayerForwardPropagation>& forward_propagation,
                                          unique_ptr<LayerBackPropagation>& back_propagation) const
 {
@@ -377,7 +377,7 @@ void Pooling::back_propagate_max_pooling(const Tensor<type, 4>& inputs,
     PoolingBackPropagation* pooling_layer_back_propagation =
         static_cast<PoolingBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 4>& input_deltas = pooling_layer_back_propagation->input_deltas;
+    Tensor4& input_deltas = pooling_layer_back_propagation->input_deltas;
 
     // Input derivatives
 
@@ -400,8 +400,8 @@ void Pooling::back_propagate_max_pooling(const Tensor<type, 4>& inputs,
 }
 
 
-void Pooling::back_propagate_average_pooling(const Tensor<type, 4>& inputs,
-                                             const Tensor<type, 4>& deltas,
+void Pooling::back_propagate_average_pooling(const Tensor4& inputs,
+                                             const Tensor4& deltas,
                                              unique_ptr<LayerBackPropagation>& back_propagation) const
 {
     const Index batch_size = inputs.dimension(0);
@@ -422,9 +422,9 @@ void Pooling::back_propagate_average_pooling(const Tensor<type, 4>& inputs,
     PoolingBackPropagation* pooling_layer_back_propagation =
         static_cast<PoolingBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 4>& input_deltas = pooling_layer_back_propagation->input_deltas;
+    Tensor4& input_deltas = pooling_layer_back_propagation->input_deltas;
 
-    Tensor<type, 4>& deltas_by_pool_size = pooling_layer_back_propagation->deltas_by_pool_size;
+    Tensor4& deltas_by_pool_size = pooling_layer_back_propagation->deltas_by_pool_size;
 
     deltas_by_pool_size.device(*device) = deltas / type(pool_size);
 

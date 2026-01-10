@@ -41,8 +41,8 @@ void NormalizedSquaredError::set_normalization_coefficient()
         return;
     }
 
-    const Tensor<type, 1> training_target_means = dataset->calculate_means("Training", "Target");
-    const Tensor<type, 2> training_target_data = dataset->get_data("Training", "Target");
+    const Tensor1 training_target_means = dataset->calculate_means("Training", "Target");
+    const Tensor2 training_target_data = dataset->get_data("Training", "Target");
 
     normalization_coefficient = calculate_normalization_coefficient(training_target_data, training_target_means);
 }
@@ -50,13 +50,13 @@ void NormalizedSquaredError::set_normalization_coefficient()
 
 void NormalizedSquaredError::set_time_series_normalization_coefficient()
 {
-    const Tensor<type, 2> targets = dataset->get_data_variables("Target");
+    const Tensor2 targets = dataset->get_data_variables("Target");
 
     const Index rows = targets.dimension(0)-1;
     const Index columns = targets.dimension(1);
 
-    Tensor<type, 2> targets_t(rows, columns);
-    Tensor<type, 2> targets_t_1(rows, columns);
+    Tensor2 targets_t(rows, columns);
+    Tensor2 targets_t_1(rows, columns);
 
     for(Index i = 0; i < columns; i++)
         memcpy(targets_t_1.data() + targets_t_1.dimension(0) * i,
@@ -72,8 +72,8 @@ void NormalizedSquaredError::set_time_series_normalization_coefficient()
 }
 
 
-type NormalizedSquaredError::calculate_time_series_normalization_coefficient(const Tensor<type, 2>& targets_t_1,
-                                                                             const Tensor<type, 2>& targets_t) const
+type NormalizedSquaredError::calculate_time_series_normalization_coefficient(const Tensor2& targets_t_1,
+                                                                             const Tensor2& targets_t) const
 {
     const Index target_samples_number = targets_t_1.dimension(0);
     const Index target_variables_number = targets_t_1.dimension(1);
@@ -100,8 +100,8 @@ void NormalizedSquaredError::set_default()
 }
 
 
-type NormalizedSquaredError::calculate_normalization_coefficient(const Tensor<type, 2>& targets,
-                                                                 const Tensor<type, 1>& targets_mean) const
+type NormalizedSquaredError::calculate_normalization_coefficient(const Tensor2& targets,
+                                                                 const Tensor1& targets_mean) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -130,17 +130,17 @@ void NormalizedSquaredError::calculate_error(const Batch& batch,
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
 
-    Tensor<type, 2>& errors = back_propagation.errors;
+    Tensor2& errors = back_propagation.errors;
 
     Tensor<type,0>& error = back_propagation.error;
 
@@ -158,7 +158,7 @@ void NormalizedSquaredError::calculate_error_lm(const Batch&,
                                                 const ForwardPropagation&,
                                                 BackPropagationLM& back_propagation) const
 {
-    Tensor<type, 1>& squared_errors = back_propagation.squared_errors;
+    Tensor1& squared_errors = back_propagation.squared_errors;
 
     Tensor<type, 0>& error = back_propagation.error;
 
@@ -182,11 +182,11 @@ void NormalizedSquaredError::calculate_output_delta(const Batch& batch,
 
     // Back propagation
 
-    const Tensor<type, 2>& errors = back_propagation.errors;
+    const Tensor2& errors = back_propagation.errors;
 
     const TensorView delta_views = back_propagation.get_output_deltas_pair();
 
-    TensorMap<Tensor<type, 2>> deltas = tensor_map<2>(delta_views);
+    TensorMap2 deltas = tensor_map<2>(delta_views);
 
     const type coefficient = type(2*total_samples_number) / (type(samples_number)*normalization_coefficient);
 
@@ -198,12 +198,12 @@ void NormalizedSquaredError::calculate_output_delta_lm(const Batch&,
                                                        ForwardPropagation&,
                                                        BackPropagationLM & back_propagation) const
 {
-    const Tensor<type, 2>& errors = back_propagation.errors;
-    const Tensor<type, 1>& squared_errors = back_propagation.squared_errors;
+    const Tensor2& errors = back_propagation.errors;
+    const Tensor1& squared_errors = back_propagation.squared_errors;
 
     const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
 
-    TensorMap<Tensor<type, 2>> output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
     output_deltas.device(*device) = errors;
     divide_columns(device.get(), output_deltas, squared_errors);
@@ -213,11 +213,11 @@ void NormalizedSquaredError::calculate_output_delta_lm(const Batch&,
 void NormalizedSquaredError::calculate_error_gradient_lm(const Batch&,
                                                          BackPropagationLM& back_propagation_lm) const
 {
-    Tensor<type, 1>& gradient = back_propagation_lm.gradient;
+    Tensor1& gradient = back_propagation_lm.gradient;
 
-    const Tensor<type, 1>& squared_errors = back_propagation_lm.squared_errors;
+    const Tensor1& squared_errors = back_propagation_lm.squared_errors;
 
-    const Tensor<type, 2>& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
     gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(0,0));
 }
@@ -226,9 +226,9 @@ void NormalizedSquaredError::calculate_error_gradient_lm(const Batch&,
 void NormalizedSquaredError::calculate_error_hessian_lm(const Batch&,
                                                         BackPropagationLM& back_propagation_lm) const
 {
-    const Tensor<type, 2>& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
-    Tensor<type, 2>& hessian = back_propagation_lm.hessian;
+    Tensor2& hessian = back_propagation_lm.hessian;
 
     hessian.device(*device) = squared_errors_jacobian.contract(squared_errors_jacobian, axes(0,0));
 }

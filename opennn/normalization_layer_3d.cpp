@@ -83,15 +83,15 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
     //    const Index sequence_length = get_sequence_length();
     const Index embedding_dimension = get_embedding_dimension();
 
-    const TensorMap<Tensor<type, 3>> inputs(input_views[0].data, batch_size, sequence_length, embedding_dimension);
+    const TensorMap3 inputs(input_views[0].data, batch_size, sequence_length, embedding_dimension);
 
     Normalization3dForwardPropagation* this_forward_propagation =
         static_cast<Normalization3dForwardPropagation*>(layer_forward_propagation.get());
 
-    Tensor<type, 3>& outputs = this_forward_propagation->outputs;
+    Tensor3& outputs = this_forward_propagation->outputs;
 
-    Tensor<type, 2>& means = this_forward_propagation->means;
-    Tensor<type, 2>& standard_deviations = this_forward_propagation->standard_deviations;
+    Tensor2& means = this_forward_propagation->means;
+    Tensor2& standard_deviations = this_forward_propagation->standard_deviations;
 
     const array<Index, 3> reshape_dims({batch_size, sequence_length, 1});
     const array<Index, 3> broadcast_dims({1, 1, embedding_dimension});
@@ -127,26 +127,26 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     if(delta_views.size() > 1)
         add_deltas(delta_views);
 
-    const TensorMap<Tensor<type, 3>> deltas = tensor_map<3>(delta_views[0]);
+    const TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
     const Normalization3dForwardPropagation* this_forward_propagation
         = static_cast<Normalization3dForwardPropagation*>(forward_propagation.get());
 
-    const Tensor<type, 3>& outputs = this_forward_propagation->outputs;
-    const Tensor<type, 2>& standard_deviations = this_forward_propagation->standard_deviations;
+    const Tensor3& outputs = this_forward_propagation->outputs;
+    const Tensor2& standard_deviations = this_forward_propagation->standard_deviations;
 
     Normalization3dBackPropagation* this_back_propagation =
         static_cast<Normalization3dBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 1>& gamma_derivatives = this_back_propagation->gamma_derivatives;
-    Tensor<type, 1>& beta_derivatives = this_back_propagation->beta_derivatives;
+    Tensor1& gamma_derivatives = this_back_propagation->gamma_derivatives;
+    Tensor1& beta_derivatives = this_back_propagation->beta_derivatives;
 
-    Tensor<type, 3>& scaled_deltas = this_back_propagation->scaled_deltas;
-    Tensor<type, 3>& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
+    Tensor3& scaled_deltas = this_back_propagation->scaled_deltas;
+    Tensor3& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
 
-    Tensor<type, 3>& input_deltas = this_back_propagation->input_deltas;
+    Tensor3& input_deltas = this_back_propagation->input_deltas;
 
-    Tensor<type, 2>& aux_2d = this_back_propagation->aux_2d;
+    Tensor2& aux_2d = this_back_propagation->aux_2d;
 
     constexpr type epsilon = numeric_limits<type>::epsilon();
 

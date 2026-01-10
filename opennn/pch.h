@@ -39,7 +39,6 @@
 #include <set>
 #include <regex>
 #include <sstream>
-
 #include <omp.h>
 
 #define EIGEN_USE_THREADS
@@ -105,8 +104,18 @@ using namespace Eigen;
 //using namespace tinyxml2;
 
 using type = float;
-
 using dimensions = vector<Index>;
+
+using Tensor1 = Tensor<type, 1>;
+using Tensor2 = Tensor<type, 2>;
+using Tensor3 = Tensor<type, 3>;
+using Tensor4 = Tensor<type, 4>;
+
+using TensorMap1 = TensorMap<Tensor<type, 1>>;
+using TensorMap2 = TensorMap<Tensor<type, 2>>;
+using TensorMap3 = TensorMap<Tensor<type, 3>>;
+using TensorMap4 = TensorMap<Tensor<type, 4>>;
+
 
 template<typename Base, typename T>
 inline bool is_instance_of(const T* ptr)

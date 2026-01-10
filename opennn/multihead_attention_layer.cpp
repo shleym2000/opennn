@@ -145,7 +145,7 @@ void MultiHeadAttention::set(const Index& new_query_sequence_length,
     use_causal_mask = new_use_causal_mask;
 
     if (use_causal_mask)
-        causal_mask = Tensor<type, 2>(query_sequence_length, source_sequence_length)
+        causal_mask = Tensor2(query_sequence_length, source_sequence_length)
                           .generate([=](const Eigen::array<Index, 2>& idx) -> type {
                               const Index row = idx[0];
                               const Index column = idx[1];
@@ -164,8 +164,8 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
                                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                            const bool&)
 {
-    const TensorMap<Tensor<type, 3>> query_input = tensor_map<3>(input_views[0]);
-    const TensorMap<Tensor<type, 3>> source_input = (input_views.size() == 1)
+    const TensorMap3 query_input = tensor_map<3>(input_views[0]);
+    const TensorMap3 source_input = (input_views.size() == 1)
                                                         ? query_input
                                                         : tensor_map<3>(input_views[1]);
 
@@ -174,23 +174,23 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
 
     const Index batch_size = this_forward_propagation->batch_size;
 
-    Tensor<type, 4>& query = this_forward_propagation->query;
-    Tensor<type, 4>& key = this_forward_propagation->key;
-    Tensor<type, 4>& value = this_forward_propagation->value;
+    Tensor4& query = this_forward_propagation->query;
+    Tensor4& key = this_forward_propagation->key;
+    Tensor4& value = this_forward_propagation->value;
 
-    Tensor<type, 4>& attention_weights = this_forward_propagation->attention_weights;
-    Tensor<type, 4>& attention_outputs = this_forward_propagation->attention_outputs;
+    Tensor4& attention_weights = this_forward_propagation->attention_weights;
+    Tensor4& attention_outputs = this_forward_propagation->attention_outputs;
 
-    Tensor<type, 3>& concatenated_attention_outputs = this_forward_propagation->concatenated_attention_outputs;
+    Tensor3& concatenated_attention_outputs = this_forward_propagation->concatenated_attention_outputs;
 
-    Tensor<type, 3>& outputs = this_forward_propagation->outputs;
+    Tensor3& outputs = this_forward_propagation->outputs;
 
     const Index embedding_dimension = get_embedding_dimension();
     const Index head_dimension = get_head_dimension();
     const type scaling_factor = get_scaling_factor();
 
-    auto project = [&](const TensorMap<Tensor<type, 3>>& inputs,
-                       const Tensor<type, 2>& weights, const Tensor<type, 1>& biases,
+    auto project = [&](const TensorMap3& inputs,
+                       const Tensor2& weights, const Tensor1& biases,
                        const Index& sequence_length)
     {
         return (inputs.reshape(array_2(batch_size * sequence_length, embedding_dimension)).contract(weights, axes(1,0))
@@ -250,46 +250,46 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
                                         unique_ptr<LayerBackPropagation>& back_propagation) const
 {
 
-    const TensorMap<Tensor<type, 3>> query_input = tensor_map<3>(input_views[0]);
-    const TensorMap<Tensor<type, 3>> source_input = (input_views.size() == 1)
+    const TensorMap3 query_input = tensor_map<3>(input_views[0]);
+    const TensorMap3 source_input = (input_views.size() == 1)
                                                         ? query_input
                                                         : tensor_map<3>(input_views[1]);
 
-    const TensorMap<Tensor<type, 3>> delta_Y = tensor_map<3>(delta_views[0]);
+    const TensorMap3 delta_Y = tensor_map<3>(delta_views[0]);
 
     // Forward propagation
 
     MultiHeadAttentionForwardPropagation* this_forward_propagation =
         static_cast<MultiHeadAttentionForwardPropagation*>(forward_propagation.get());
 
-    const Tensor<type, 4>& query = this_forward_propagation->query;
-    const Tensor<type, 4>& key = this_forward_propagation->key;
-    const Tensor<type, 4>& value = this_forward_propagation->value;
-    const Tensor<type, 4>& attention_weights = this_forward_propagation->attention_weights;
-    const Tensor<type, 3>& concatenated_attention_outputs = this_forward_propagation->concatenated_attention_outputs;
+    const Tensor4& query = this_forward_propagation->query;
+    const Tensor4& key = this_forward_propagation->key;
+    const Tensor4& value = this_forward_propagation->value;
+    const Tensor4& attention_weights = this_forward_propagation->attention_weights;
+    const Tensor3& concatenated_attention_outputs = this_forward_propagation->concatenated_attention_outputs;
 
     // Back propagation
 
     MultiHeadAttentionBackPropagation* this_back_propagation =
         static_cast<MultiHeadAttentionBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 2>& projection_weight_deltas = this_back_propagation->projection_weight_deltas;
-    Tensor<type, 1>& projection_bias_deltas = this_back_propagation->projection_bias_deltas;
-    Tensor<type, 3>& concatenated_attention_output_deltas = this_back_propagation->concatenated_attention_output_deltas;
-    Tensor<type, 4>& attention_output_deltas = this_back_propagation->attention_output_deltas;
-    Tensor<type, 4>& attention_weight_deltas = this_back_propagation->attention_weight_deltas;
-    Tensor<type, 4>& query_deltas = this_back_propagation->query_deltas;
-    Tensor<type, 4>& key_deltas = this_back_propagation->key_deltas;
-    Tensor<type, 4>& value_deltas = this_back_propagation->value_deltas;
-    Tensor<type, 2>& query_weight_deltas = this_back_propagation->query_weight_deltas;
-    Tensor<type, 1>& query_bias_deltas = this_back_propagation->query_bias_deltas;
-    Tensor<type, 2>& key_weight_deltas = this_back_propagation->key_weight_deltas;
-    Tensor<type, 1>& key_bias_deltas = this_back_propagation->key_bias_deltas;
-    Tensor<type, 2>& value_weight_deltas = this_back_propagation->value_weight_deltas;
-    Tensor<type, 1>& value_bias_deltas = this_back_propagation->value_bias_deltas;
-    Tensor<type, 3>& input_query_deltas = this_back_propagation->input_query_deltas;
-    Tensor<type, 3>& input_source_deltas = this_back_propagation->input_source_deltas;
-    Tensor<type, 4>& softmax_deltas = this_back_propagation->softmax_deltas;
+    Tensor2& projection_weight_deltas = this_back_propagation->projection_weight_deltas;
+    Tensor1& projection_bias_deltas = this_back_propagation->projection_bias_deltas;
+    Tensor3& concatenated_attention_output_deltas = this_back_propagation->concatenated_attention_output_deltas;
+    Tensor4& attention_output_deltas = this_back_propagation->attention_output_deltas;
+    Tensor4& attention_weight_deltas = this_back_propagation->attention_weight_deltas;
+    Tensor4& query_deltas = this_back_propagation->query_deltas;
+    Tensor4& key_deltas = this_back_propagation->key_deltas;
+    Tensor4& value_deltas = this_back_propagation->value_deltas;
+    Tensor2& query_weight_deltas = this_back_propagation->query_weight_deltas;
+    Tensor1& query_bias_deltas = this_back_propagation->query_bias_deltas;
+    Tensor2& key_weight_deltas = this_back_propagation->key_weight_deltas;
+    Tensor1& key_bias_deltas = this_back_propagation->key_bias_deltas;
+    Tensor2& value_weight_deltas = this_back_propagation->value_weight_deltas;
+    Tensor1& value_bias_deltas = this_back_propagation->value_bias_deltas;
+    Tensor3& input_query_deltas = this_back_propagation->input_query_deltas;
+    Tensor3& input_source_deltas = this_back_propagation->input_source_deltas;
+    Tensor4& softmax_deltas = this_back_propagation->softmax_deltas;
 
     const Index batch_size = this_forward_propagation->batch_size;
     const Index embedding_dimension = get_embedding_dimension();
@@ -353,11 +353,11 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
         }
     }
 
-    auto project_back = [&](const Tensor<type, 4>& d_head, const TensorMap<Tensor<type, 3>>& input,
-                            const Tensor<type, 2>& weights, Tensor<type, 1>& d_bias,
-                            Tensor<type, 2>& d_weights, Tensor<type, 3>& d_input, bool accumulate)
+    auto project_back = [&](const Tensor4& d_head, const TensorMap3& input,
+                            const Tensor2& weights, Tensor1& d_bias,
+                            Tensor2& d_weights, Tensor3& d_input, bool accumulate)
     {
-        TensorMap<Tensor<type, 3>> d_reshaped(const_cast<type*>(d_head.data()), d_input.dimensions());
+        TensorMap3 d_reshaped(const_cast<type*>(d_head.data()), d_input.dimensions());
 
         const array<Index, 2> flat_dims = {batch_size * d_input.dimension(1), embedding_dimension};
         d_weights.device(*device) = input.reshape(flat_dims).contract(d_reshaped.reshape(flat_dims), axes(0, 0));
@@ -378,7 +378,7 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
 }
 
 
-void MultiHeadAttention::apply_causal_mask(Tensor<type, 4>& attention_scores) const
+void MultiHeadAttention::apply_causal_mask(Tensor4& attention_scores) const
 {
     // @todo
 
@@ -396,7 +396,7 @@ void MultiHeadAttention::apply_causal_mask(Tensor<type, 4>& attention_scores) co
              // + (sample_index + head_index) * context_input_size * batch_size;
              // + (sample_index * heads_number + head_index) * context_input_size * batch_size;
 
-             TensorMap<Tensor<type, 2>> sample_attention_scores(sample_attention_scores_data,
+             TensorMap2 sample_attention_scores(sample_attention_scores_data,
                                                                 source_sequence_length,
                                                                 query_sequence_length);
 
@@ -407,18 +407,18 @@ void MultiHeadAttention::apply_causal_mask(Tensor<type, 4>& attention_scores) co
 
 
 void MultiHeadAttention::apply_key_padding_mask(const Tensor<bool, 2>& key_padding_mask,
-                                                Tensor<type, 4>& attention_weights) const
+                                                Tensor4& attention_weights) const
 {
     // @todo (I don't know if it is building the mask correctly)
     const Index batch_size  = attention_weights.dimension(2);
 
-    Tensor<type, 2> key_padding_mask_type(key_padding_mask.dimension(0),key_padding_mask.dimension(1));
+    Tensor2 key_padding_mask_type(key_padding_mask.dimension(0),key_padding_mask.dimension(1));
 
     for(Index h = 0; h < heads_number; ++h)
     {
         for(Index b = 0; b < batch_size; ++b)
         {
-            TensorMap<Tensor<type, 2>> head_sample_attention_weights = tensor_map(attention_weights,h,b);
+            TensorMap2 head_sample_attention_weights = tensor_map(attention_weights,h,b);
 
             head_sample_attention_weights.device(*device)
                 += key_padding_mask.chip(b, 0)

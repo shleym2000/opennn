@@ -50,9 +50,9 @@ void Scaling4d::forward_propagate(const vector<TensorView>& input_views,
     Scaling4dForwardPropagation* this_forward_propagation =
         static_cast<Scaling4dForwardPropagation*>(forward_propagation.get());
 
-    const TensorMap<Tensor<type, 4>> inputs = tensor_map<4>(input_views[0]);
+    const TensorMap4 inputs = tensor_map<4>(input_views[0]);
 
-    Tensor<type, 4>& outputs = this_forward_propagation->outputs;
+    Tensor4& outputs = this_forward_propagation->outputs;
 
     outputs.device(*device) = inputs/type(255);
 }

@@ -52,11 +52,11 @@ Descriptives Scaling<Rank>::get_descriptives(const Index& index) const
 
 
 template<int Rank>
-Tensor<type, 1> Scaling<Rank>::get_minimums() const
+Tensor1 Scaling<Rank>::get_minimums() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor<type, 1> minimums(outputs_number);
+    Tensor1 minimums(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -67,11 +67,11 @@ Tensor<type, 1> Scaling<Rank>::get_minimums() const
 
 
 template<int Rank>
-Tensor<type, 1> Scaling<Rank>::get_maximums() const
+Tensor1 Scaling<Rank>::get_maximums() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor<type, 1> maximums(outputs_number);
+    Tensor1 maximums(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -82,11 +82,11 @@ Tensor<type, 1> Scaling<Rank>::get_maximums() const
 
 
 template<int Rank>
-Tensor<type, 1> Scaling<Rank>::get_means() const
+Tensor1 Scaling<Rank>::get_means() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor<type, 1> means(outputs_number);
+    Tensor1 means(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -97,11 +97,11 @@ Tensor<type, 1> Scaling<Rank>::get_means() const
 
 
 template<int Rank>
-Tensor<type, 1> Scaling<Rank>::get_standard_deviations() const
+Tensor1 Scaling<Rank>::get_standard_deviations() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor<type, 1> standard_deviations(outputs_number);
+    Tensor1 standard_deviations(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -201,9 +201,9 @@ void Scaling<Rank>::forward_propagate(const vector<TensorView>& input_views,
     ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
         static_cast<ScalingForwardPropagation<Rank>*>(forward_propagation.get());
 
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    Tensor<type, 2>& outputs = scaling_layer_forward_propagation->outputs;
+    Tensor2& outputs = scaling_layer_forward_propagation->outputs;
     outputs = inputs;
 
     for(Index i = 0; i < outputs_number; i++)
@@ -241,8 +241,8 @@ void Scaling<Rank>::calculate_outputs(type* inputs_data, const Tensor<Index, 1>&
 
         const Tensor<Index, 0> input_size = inputs_dimensions.prod();
 
-        const TensorMap<Tensor<type, 2>> inputs(inputs_data, inputs_dimensions(0), inputs_dimensions(1));
-        TensorMap<Tensor<type, 2>> outputs(outputs_data, outputs_dimensions[0], outputs_dimensions(1));
+        const TensorMap2 inputs(inputs_data, inputs_dimensions(0), inputs_dimensions(1));
+        TensorMap2 outputs(outputs_data, outputs_dimensions[0], outputs_dimensions(1));
 
         if(outputs_dimensions[0] != points_number || outputs_dimensions(1) != neurons_number)
             throw runtime_error("Outputs dimensions must be equal");
@@ -251,7 +251,7 @@ void Scaling<Rank>::calculate_outputs(type* inputs_data, const Tensor<Index, 1>&
         {
             const string scaler = scalers[i];
 
-            Tensor<type, 1> column = inputs.chip(i, 1);
+            Tensor1 column = inputs.chip(i, 1);
 
             if(scaler == "None")
                 column = inputs.chip(i,1);
@@ -278,9 +278,9 @@ void Scaling<Rank>::calculate_outputs(type* inputs_data, const Tensor<Index, 1>&
             throw runtime_error("Input and output data must have the same dimensions.\n");
         }
 
-        TensorMap<Tensor<type, 4>> input(inputs_data, inputs_dimensions(0), inputs_dimensions(1), inputs_dimensions(2), inputs_dimensions(3));
+        TensorMap4 input(inputs_data, inputs_dimensions(0), inputs_dimensions(1), inputs_dimensions(2), inputs_dimensions(3));
 
-        TensorMap<Tensor<type, 4>> output(outputs_data, inputs_dimensions(0), inputs_dimensions(1), inputs_dimensions(2), inputs_dimensions(3));
+        TensorMap4 output(outputs_data, inputs_dimensions(0), inputs_dimensions(1), inputs_dimensions(2), inputs_dimensions(3));
 
         for(Index i = 0; i < input.size(); i++)
             output(i) = -static_cast<type>(1) + static_cast<type>(2*input(i)/255);
@@ -565,10 +565,10 @@ void ScalingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_
     //CUDA_MALLOC_AND_REPORT(outputs, size * sizeof(float));
     CHECK_CUDA(cudaMalloc(&outputs, size * sizeof(float)));
     
-    const Tensor<type, 1> minimums_host = scaling_layer->get_minimums();
-    const Tensor<type, 1> maximums_host = scaling_layer->get_maximums();
-    const Tensor<type, 1> means_host = scaling_layer->get_means();
-    const Tensor<type, 1> std_devs_host = scaling_layer->get_standard_deviations();
+    const Tensor1 minimums_host = scaling_layer->get_minimums();
+    const Tensor1 maximums_host = scaling_layer->get_maximums();
+    const Tensor1 means_host = scaling_layer->get_means();
+    const Tensor1 std_devs_host = scaling_layer->get_standard_deviations();
     const vector<string> scalers_host_vec = scaling_layer->get_scalers();
 
     Tensor<int, 1> scalers_host_tensor(outputs_number);

@@ -116,12 +116,12 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                   const bool& is_training)
 {
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
     EmbeddingForwardPropagation* embedding_forward_propagation =
         static_cast<EmbeddingForwardPropagation*>(layer_forward_propagation.get());
 
-    Tensor<type, 3>& outputs = embedding_forward_propagation->outputs;
+    Tensor3& outputs = embedding_forward_propagation->outputs;
 
     const Index batch_size = outputs.dimension(0);
     const Index embedding_dimension = outputs.dimension(2);
@@ -172,19 +172,19 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
     const Index batch_size = input_views[0].dims[0];
     const Index sequence_length = input_views[0].dims[1];
 
-    const TensorMap<Tensor<type, 2>> inputs = tensor_map<2>(input_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
     if (delta_views.size() > 1)
         add_deltas(delta_views);
 
-    TensorMap<Tensor<type, 3>> deltas = tensor_map<3>(delta_views[0]);
+    TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
     // Back propagation
 
     EmbeddingBackPropagation* embedding_back_propagation =
         static_cast<EmbeddingBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 2>& weight_deltas = embedding_back_propagation->weight_deltas;
+    Tensor2& weight_deltas = embedding_back_propagation->weight_deltas;
     weight_deltas.setZero();
 
     if(scale_embedding)

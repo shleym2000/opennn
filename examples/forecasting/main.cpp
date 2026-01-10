@@ -84,8 +84,8 @@ int main()
         /// Calcular gradiente
         // NormalizedSquaredError normalized_squared_error(&forecasting_network, &time_series_dataset);
 
-        // const Tensor<type, 1> gradient = normalized_squared_error.calculate_gradient();
-        // const Tensor<type, 1> numerical_gradient = normalized_squared_error.calculate_numerical_gradient();
+        // const Tensor1 gradient = normalized_squared_error.calculate_gradient();
+        // const Tensor1 numerical_gradient = normalized_squared_error.calculate_numerical_gradient();
 
         // cout << "Gradient" << endl;
         // cout << gradient << endl;
@@ -122,7 +122,7 @@ int main()
         // testing_analysis.print_goodness_of_fit_analysis();
 
         /// Pruebas output
-        Tensor<type, 3> inputs(1,2,2);
+        Tensor3 inputs(1,2,2);
         inputs.setValues({
             {
                 {1.76624, 1.41520},
@@ -131,7 +131,7 @@ int main()
             }
         });
         cout << "Inputs: \n" << inputs << endl;
-        const Tensor<type, 2> outputs = forecasting_network.calculate_outputs<3,2>(inputs);
+        const Tensor2 outputs = forecasting_network.calculate_outputs<3,2>(inputs);
         cout << "outputs: " << outputs << endl;
 
         /// Pruebas output funcion seno
@@ -158,9 +158,9 @@ int main()
         //     cout << "\n--- Prueba " << i + 1 << " ---" << endl;
         //     cout << "Inputs: [ " << input_val_1 << ", " << input_val_2 << " ]" << endl;
 
-        //     Tensor<type, 3> inputs(1, 2, 1); //batch, time, input
+        //     Tensor3 inputs(1, 2, 1); //batch, time, input
         //     inputs.setValues({{{input_val_1}, {input_val_2}}});
-        //     const Tensor<type, 2> outputs = forecasting_network.calculate_outputs<3,2>(inputs);
+        //     const Tensor2 outputs = forecasting_network.calculate_outputs<3,2>(inputs);
 
         //     cout << "Output: " << outputs << endl;
         //     cout << "Target: " << input_views[i+1].second << endl;

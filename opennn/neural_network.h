@@ -144,11 +144,11 @@ public:
     // Parameters
 
     Index get_parameters_number() const;
-    void get_parameters(Tensor<type, 1>&) const;
+    void get_parameters(Tensor1&) const;
 
     vector<Index> get_layer_parameter_numbers() const;
 
-    void set_parameters(const Tensor<type, 1>&);
+    void set_parameters(const Tensor1&);
 
     // Parameters initialization
 
@@ -193,15 +193,15 @@ public:
         return Tensor<type, output_rank>();
     }
 
-    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs_1, const Tensor<type, 3>& inputs_2);
+    Tensor3 calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2);
 
-    Tensor<type, 2> calculate_scaled_outputs(type*, Tensor<Index, 1>& );
+    Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
-    Tensor<type, 2> calculate_directional_inputs(const Index&, const Tensor<type, 1>&, const type&, const type&, const Index& = 101) const;
+    Tensor2 calculate_directional_inputs(const Index&, const Tensor1&, const type&, const type&, const Index& = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
-    Tensor<type, 2> calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
+    Tensor2 calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
 
 
     // Serialization
@@ -225,15 +225,15 @@ public:
     vector<string> get_layer_labels() const;
     vector<string> get_names_string() const;
 
-    void save_outputs(Tensor<type, 2>&, const filesystem::path&);
-    void save_outputs(Tensor<type, 3>&, const filesystem::path&);
+    void save_outputs(Tensor2&, const filesystem::path&);
+    void save_outputs(Tensor3&, const filesystem::path&);
 
     void forward_propagate(const vector<TensorView>&,
                           ForwardPropagation&,
                           const bool& = false) const;
 
     void forward_propagate(const vector<TensorView>&,
-                          const Tensor<type, 1>&,
+                          const Tensor1&,
                           ForwardPropagation&);
 
     string get_expression() const;

@@ -9,7 +9,7 @@ TEST(ScalingTest, ScaleDataMeanStandardDeviation)
 {
     Index samples_number = 10 + rand() % 10;
 
-    Tensor<type, 2> data(samples_number, 1);
+    Tensor2 data(samples_number, 1);
     data.setRandom();
 
     Dataset dataset(samples_number, { 1 }, { 0 });
@@ -30,10 +30,10 @@ TEST(ScalingTest, ScaleDataMinimumMaximum)
 {
     Index samples_number = 10 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, 1);
+    Tensor2 matrix(samples_number, 1);
     matrix.setRandom();
 
-    Tensor<type, 2> scaled_matrix;
+    Tensor2 scaled_matrix;
 
     Dataset dataset(samples_number, { 1 }, { 0 });
 
@@ -53,10 +53,10 @@ TEST(ScalingTest, ScaleDataNoScaling2d)
 {   
     Index samples_number = 1 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, samples_number);
+    Tensor2 matrix(samples_number, samples_number);
     matrix.setRandom();
     
-    Tensor<type, 2> scaled_matrix;
+    Tensor2 scaled_matrix;
 
     Dataset dataset(samples_number, { samples_number }, { 0 });
 
@@ -75,7 +75,7 @@ TEST(ScalingTest, ScaleDataStandardDeviation)
 {
     Index samples_number = 10 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, 1);
+    Tensor2 matrix(samples_number, 1);
     matrix.setRandom();
 
     Dataset dataset(samples_number, { 1 }, { 0 });
@@ -94,9 +94,9 @@ TEST(ScalingTest, ScaleDataLogarithmic)
 {
     Index samples_number = 10 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, 1);
-    Tensor<type, 2> scaled_matrix;
-    Tensor<type, 2> solution_matrix;
+    Tensor2 matrix(samples_number, 1);
+    Tensor2 scaled_matrix;
+    Tensor2 solution_matrix;
 
     matrix.setRandom();
 
@@ -120,8 +120,8 @@ TEST(ScalingTest, UnscaleDataMeanStandardDeviation)
 {
     Index samples_number = 1 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, samples_number);
-    Tensor<type, 2> unscaled_matrix;
+    Tensor2 matrix(samples_number, samples_number);
+    Tensor2 unscaled_matrix;
 
     matrix.setRandom();
 
@@ -146,8 +146,8 @@ TEST(ScalingTest, UnscaleDataMinimumMaximum)
 {
     Index samples_number = 1 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, samples_number);
-    Tensor<type, 2> unscaled_matrix;
+    Tensor2 matrix(samples_number, samples_number);
+    Tensor2 unscaled_matrix;
 
     matrix.setRandom();
     
@@ -171,8 +171,8 @@ TEST(ScalingTest, UnscaleDataNoScaling2d)
 {
     Index samples_number = 1 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, samples_number);
-    Tensor<type, 2> unscaled_matrix;
+    Tensor2 matrix(samples_number, samples_number);
+    Tensor2 unscaled_matrix;
 
     matrix.setRandom();
 
@@ -196,8 +196,8 @@ TEST(ScalingTest, UnscaleDataStandardDeviation)
 {
     Index samples_number = 1 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, samples_number);
-    Tensor<type, 2> unscaled_matrix;
+    Tensor2 matrix(samples_number, samples_number);
+    Tensor2 unscaled_matrix;
 
     matrix.setRandom();
 
@@ -220,8 +220,8 @@ TEST(ScalingTest, UnscaleDataLogarithmic)
 {
     Index samples_number = 1 + rand() % 10;
 
-    Tensor<type, 2> matrix(samples_number, samples_number);
-    Tensor<type, 2> unscaled_matrix;
+    Tensor2 matrix(samples_number, samples_number);
+    Tensor2 unscaled_matrix;
 
     matrix.setRandom();
 

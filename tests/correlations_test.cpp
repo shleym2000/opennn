@@ -34,10 +34,10 @@ protected:
 TEST_F(CorrelationsTest, SpearmanCorrelation)
 {
 
-    Tensor<type, 1> x(10);
+    Tensor1 x(10);
     x.setValues({ type(1), type(2), type(3), type(4), type(5), type(6), type(7), type(8), type(9), type(10) });
 
-    Tensor<type, 1> y(10);
+    Tensor1 y(10);
     y.setValues({ type(1), type(4), type(9), type(16), type(25), type(36), type(49), type(64), type(81), type(100) });
     
     Correlation result = linear_correlation_spearman(device.get(), x, y);
@@ -49,10 +49,10 @@ TEST_F(CorrelationsTest, SpearmanCorrelation)
 
 TEST_F(CorrelationsTest, LinearCorrelation)
 {
-    Tensor<type, 1> x(10);
+    Tensor1 x(10);
     x.setValues({ type(1), type(2), type(3), type(4), type(5), type(6), type(7), type(8), type(9), type(10) });
 
-    Tensor<type, 1> y(10);
+    Tensor1 y(10);
     y.setValues({ type(10), type(20), type(30),type(40),type(50),type(60),type(70),type(80),type(90),type(100) });
 
     EXPECT_NEAR(linear_correlation(device.get(), x, y).r, type(1), NUMERIC_LIMITS_MIN);
@@ -74,10 +74,10 @@ TEST_F(CorrelationsTest, LinearCorrelation)
 
 TEST_F(CorrelationsTest, LogisticCorrelation)
 {
-    Tensor<type, 1> x(20);
+    Tensor1 x(20);
     x.setValues({ -10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9 });
 
-    Tensor<type, 1> y(20);
+    Tensor1 y(20);
     y.setValues({ 0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1 });
 
     Correlation correlation = logistic_correlation_vector_vector(device.get(), x, y);

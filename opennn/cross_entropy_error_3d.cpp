@@ -26,10 +26,10 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
                                                  BackPropagation& back_propagation) const
 {
     const TensorView targets_view = batch.get_target_view();
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
-    const TensorMap<Tensor<type, 3>> outputs = tensor_map<3>(outputs_view);
+    const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
     const Index sequence_length = outputs.dimension(1);
@@ -50,7 +50,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     // Loss = -(target * log(output) + (1 - target) * log(1 - output))
 
     // We reuse the errors member in back_propagation to store element-wise loss
-    Tensor<type, 2>& elementwise_loss = back_propagation.errors;
+    Tensor2& elementwise_loss = back_propagation.errors;
 
     elementwise_loss.device(*device) = -(targets * (outputs_2d + epsilon).log() +
         (targets.constant(1.0f) - targets) * (targets.constant(1.0f) - outputs_2d + epsilon).log());
@@ -77,10 +77,10 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
                                                    BackPropagation& back_propagation) const
 {
     const TensorView targets_view = batch.get_target_view();
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
-    const TensorMap<Tensor<type, 3>> outputs = tensor_map<3>(outputs_view);
+    const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
     const Index sequence_length = outputs.dimension(1);

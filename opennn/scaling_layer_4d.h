@@ -63,7 +63,7 @@ struct Scaling4dForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 4> outputs;
+    Tensor4 outputs;
 };
 
 #ifdef OPENNN_CUDA

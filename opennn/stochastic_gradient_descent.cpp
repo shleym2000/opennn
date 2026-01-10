@@ -155,11 +155,11 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
             const Index parameter_size = layer_parameter_pairs[j].size;
             type* delta_data = layer_parameter_delta_pairs[j].data;
 
-            TensorMap<Tensor<type, 1>> parameters(parameter_data, parameter_size);
-            TensorMap<Tensor<type, 1>> gradient(delta_data, parameter_size);
+            TensorMap1 parameters(parameter_data, parameter_size);
+            TensorMap1 gradient(delta_data, parameter_size);
 
-            Tensor<type, 1>& parameters_increment = optimization_data.parameters_increment[i][j];
-            Tensor<type, 1>& last_parameters_increment = optimization_data.last_parameters_increment[i][j];
+            Tensor1& parameters_increment = optimization_data.parameters_increment[i][j];
+            Tensor1& last_parameters_increment = optimization_data.last_parameters_increment[i][j];
 
             if (momentum <= type(0))
             {

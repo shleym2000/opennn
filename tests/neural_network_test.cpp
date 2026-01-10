@@ -111,7 +111,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     bool is_training = true;
 
-    Tensor<type, 2> data(samples_number, inputs_number + outputs_number);
+    Tensor2 data(samples_number, inputs_number + outputs_number);
     data.setValues({
         {0, 0, 1},
         {1, 1, 0},
@@ -140,8 +140,8 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
-    Dense2dForwardPropagation* dense_layer_forward_propagation
-        = static_cast<Dense2dForwardPropagation*>(forward_propagation.layers[1].get());
+    DenseForwardPropagation<2>* dense_layer_forward_propagation
+        = static_cast<DenseForwardPropagation<2>*>(forward_propagation.layers[1].get());
 
     Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
@@ -158,8 +158,8 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
 /*
-    Dense2dForwardPropagation* dense_layer_forward_propagation
-        = static_cast<Dense2dForwardPropagation*>(forward_propagation_0.layers[2].get());
+    DenseForwardPropagation<2>* dense_layer_forward_propagation
+        = static_cast<DenseForwardPropagation<2>*>(forward_propagation_0.layers[2].get());
 
     Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
@@ -172,9 +172,9 @@ TEST(NeuralNetworkTest, CalculateOutputsEmpty)
 {
     NeuralNetwork neural_network;
 
-    Tensor<type, 2> inputs;
+    Tensor2 inputs;
 
-    const Tensor<type, 2> outputs = neural_network.calculate_outputs<2,2>(inputs);
+    const Tensor2 outputs = neural_network.calculate_outputs<2,2>(inputs);
 
     EXPECT_EQ(outputs.size(), 0);
 
@@ -184,12 +184,12 @@ TEST(NeuralNetworkTest, CalculateOutputsEmpty)
 TEST(NeuralNetworkTest, CalculateDirectionalInputs)
 {
 
-    Tensor<type, 2> inputs;
-    Tensor<type, 2> outputs;
-    Tensor<type, 2> trainable_outputs;
-    Tensor<type, 1> parameters;
-    Tensor<type, 1> point;
-    Tensor<type, 2> directional_inputs;
+    Tensor2 inputs;
+    Tensor2 outputs;
+    Tensor2 trainable_outputs;
+    Tensor1 parameters;
+    Tensor1 point;
+    Tensor2 directional_inputs;
 
     // Test
         

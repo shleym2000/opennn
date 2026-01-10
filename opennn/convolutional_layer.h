@@ -30,8 +30,8 @@ public:
 
     bool get_batch_normalization() const;
 
-    Tensor<type, 1> get_scales() const;
-    Tensor<type, 1> get_offsets() const;
+    Tensor1 get_scales() const;
+    Tensor1 get_offsets() const;
 
     const string& get_activation_function() const;
 
@@ -89,11 +89,11 @@ public:
 
     // Forward propagation
 
-    void preprocess_inputs(const Tensor<type, 4>&,
-                           Tensor<type, 4>&) const;
+    void preprocess_inputs(const Tensor4&,
+                           Tensor4&) const;
 
-    void calculate_convolutions(const Tensor<type, 4>&,
-                                Tensor<type, 4>&) const;
+    void calculate_convolutions(const Tensor4&,
+                                Tensor4&) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -160,9 +160,9 @@ protected:
 
 private:
 
-    Tensor<type, 4> weights;
+    Tensor4 weights;
 
-    Tensor<type, 1> biases;
+    Tensor1 biases;
 
     Index row_stride = 1;
 
@@ -178,13 +178,13 @@ private:
 
     bool batch_normalization = false;
 
-    Tensor<type, 1> moving_means;
-    Tensor<type, 1> moving_standard_deviations;
+    Tensor1 moving_means;
+    Tensor1 moving_standard_deviations;
 
     type momentum = type(0.9);
 
-    Tensor<type, 1> scales;
-    Tensor<type, 1> offsets;
+    Tensor1 scales;
+    Tensor1 offsets;
 };
 
 
@@ -198,14 +198,14 @@ struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 4> outputs;
+    Tensor4 outputs;
 
-    Tensor<type, 4> preprocessed_inputs;
+    Tensor4 preprocessed_inputs;
 
-    Tensor<type, 1> means;
-    Tensor<type, 1> standard_deviations;
+    Tensor1 means;
+    Tensor1 standard_deviations;
 
-    Tensor<type, 4> activation_derivatives;
+    Tensor4 activation_derivatives;
 };
 
 
@@ -221,14 +221,14 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 1> bias_deltas;
-    Tensor<type, 4> weight_deltas;
-    Tensor<type, 4> input_deltas;
+    Tensor1 bias_deltas;
+    Tensor4 weight_deltas;
+    Tensor4 input_deltas;
 
-    Tensor<type, 4> rotated_weights;
+    Tensor4 rotated_weights;
 
-    Tensor<type, 1> bn_scale_deltas;
-    Tensor<type, 1> bn_offset_deltas;
+    Tensor1 bn_scale_deltas;
+    Tensor1 bn_offset_deltas;
 };
 
 
