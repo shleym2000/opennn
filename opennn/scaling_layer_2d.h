@@ -234,6 +234,11 @@ private:
 
     dimensions input_dimensions;
 
+    type* minimums = nullptr;
+    type* maximums = nullptr;
+    type* means = nullptr;
+    type* standard_deviations = nullptr;
+
     vector<Descriptives> descriptives;
 
     vector<string> scalers;

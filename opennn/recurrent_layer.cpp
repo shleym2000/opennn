@@ -28,17 +28,23 @@ dimensions Recurrent::get_input_dimensions() const
 
 dimensions Recurrent::get_output_dimensions() const
 {
+/*
     return { biases.size() };
+*/
+    return dimensions();
 }
 
 
 vector<ParameterView > Recurrent::get_parameter_views() const
 {
+/*
     return {
         {(type*)biases.data(), biases.size()},
         {(type*)input_weights.data(), input_weights.size()},
         {(type*)recurrent_weights.data(), recurrent_weights.size()}
     };
+*/
+    return vector<ParameterView >();
 }
 
 
@@ -55,13 +61,13 @@ void Recurrent::set(const dimensions& new_input_dimensions, const dimensions& ne
 
     const Index inputs_number = new_input_dimensions[1];
     const Index outputs_number = new_output_dimensions[0];
-
+/*
     biases.resize(outputs_number);
 
     input_weights.resize(inputs_number, outputs_number);
 
     recurrent_weights.resize(outputs_number, outputs_number);
-
+*/
     set_parameters_random();
 
     label = "recurrent_layer";
@@ -79,19 +85,22 @@ void Recurrent::set_input_dimensions(const dimensions& new_input_dimensions)
 
     const Index inputs_number = input_dimensions[1];
     const Index outputs_number = get_outputs_number();
-
+/*
     input_weights.resize(inputs_number, outputs_number);
+*/
 }
 
 
 void Recurrent::set_output_dimensions(const dimensions& new_output_dimensions)
 {
+/*
     const Index inputs_number = input_weights.dimension(0);
     const Index outputs_number = new_output_dimensions[0];
 
     biases.resize(outputs_number);
     input_weights.resize(inputs_number, outputs_number);
     recurrent_weights.resize(outputs_number, outputs_number);
+*/
 }
 
 
@@ -125,7 +134,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
     Tensor2& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
     Tensor3& hidden_states = recurrent_forward->hidden_states;
-
+/*
     const Index output_size = input_weights.dimension(1);
 
     Tensor2 previous_hidden_states(batch_size, output_size);
@@ -147,6 +156,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
 
         previous_hidden_states = outputs;
     }
+*/
 }
 
 
@@ -218,7 +228,7 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
 
         bias_deltas.device(*device) +=
             combination_deltas.sum(array<Index, 1>({ 0 }));
-
+/*
         if(time_step == 0)
             current_combination_deltas.setZero();
         else
@@ -227,6 +237,7 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
 
         input_deltas.chip(time_step, 1).device(*device)
             = combination_deltas.contract(input_weights.shuffle(array<Index,2>{{1,0}}), axes(1,0));
+*/
     }
 }
 
@@ -256,7 +267,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
             }
             else
                 current_var_name = "recurrent_hidden_t" + to_string(t) + "_" + to_string(j);
-
+/*
             buffer << current_var_name << " = " << activation_function << "( " << biases(j);
 
             for(Index i = 0; i < inputs_number; i++)
@@ -275,7 +286,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
                     buffer << " + (" << prev_var_name << "*" << recurrent_weights(prev_j, j) << ")";
                 }
             }
-
+*/
             buffer << " );\n";
         }
     }
@@ -286,6 +297,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
 
 void Recurrent::print() const
 {
+/*
     cout << "Recurrent layer" << endl
          << "Time steps: " << get_input_dimensions()[0] << endl
          << "Input dimensions: " << get_input_dimensions()[1] << endl
@@ -302,6 +314,7 @@ void Recurrent::print() const
          << recurrent_weights << endl
          << "Activation function: " << activation_function << endl
          << "Total parameters: " << biases.size() + input_weights.size() + recurrent_weights.size() << endl;
+*/
 }
 
 
@@ -316,9 +329,11 @@ void Recurrent::from_XML(const XMLDocument& document)
     set_input_dimensions(string_to_dimensions(read_xml_string(recurrent_layer_element, "InputDimensions")));
     set_output_dimensions({ read_xml_index(recurrent_layer_element, "NeuronsNumber") });
     set_activation_function(read_xml_string(recurrent_layer_element, "Activation"));
+/*
     string_to_tensor<type, 1>(read_xml_string(recurrent_layer_element, "Biases"), biases);
     string_to_tensor<type, 2>(read_xml_string(recurrent_layer_element, "InputWeights"), input_weights);
     string_to_tensor<type, 2>(read_xml_string(recurrent_layer_element, "RecurrentWeights"), recurrent_weights);
+*/
 }
 
 
@@ -330,10 +345,11 @@ void Recurrent::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
     add_xml_element(printer, "Activation", activation_function);
+/*
     add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
     add_xml_element(printer, "InputWeights", tensor_to_string<type, 2>(input_weights));
     add_xml_element(printer, "RecurrentWeights", tensor_to_string<type, 2>(recurrent_weights));
-
+*/
     printer.CloseElement();
 }
 

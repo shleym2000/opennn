@@ -21,6 +21,22 @@ public:
 
     Recurrent(const dimensions & = {0, 0}, const dimensions& = {0});
 
+    type* link_parameters(type* ptr) override
+    {
+        input_weights = ptr;
+        //ptr += input_weights.size();
+
+        ptr = (type*)(((size_t)ptr + 63) & ~63);
+        recurrent_weights = ptr;
+        //ptr += recurrent_weights.size();
+
+        ptr = (type*)(((size_t)ptr + 63) & ~63);
+        biases = ptr;
+        //ptr += biases.size();
+
+        return ptr;
+    }
+
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
@@ -55,10 +71,9 @@ private:
 
     dimensions input_dimensions;
 
-    Tensor1 biases;
-
-    Tensor2 input_weights;
-    Tensor2 recurrent_weights;
+    type* biases;
+    type* input_weights;
+    type* recurrent_weights;
 
     string activation_function = "HyperbolicTangent";
 

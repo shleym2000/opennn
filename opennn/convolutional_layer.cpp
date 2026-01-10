@@ -38,16 +38,6 @@ bool Convolutional::get_batch_normalization() const
     return batch_normalization;
 }
 
-Tensor1 Convolutional::get_scales() const
-{
-    return scales;
-}
-
-Tensor1 Convolutional::get_offsets() const
-{
-    return offsets;
-}
-
 
 void Convolutional::preprocess_inputs(const Tensor4& inputs,
                                       Tensor4& preprocessed_inputs) const
@@ -61,17 +51,19 @@ void Convolutional::preprocess_inputs(const Tensor4& inputs,
 
 void Convolutional::calculate_convolutions(const Tensor4& inputs,
                                            Tensor4& convolutions) const
-{
+{  
     const Index kernels_number = get_kernels_number();
 
     for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
+/*
         const TensorMap3 kernel_weights = tensor_map(weights, kernel_index);
         TensorMap3 kernel_convolutions = tensor_map(convolutions, kernel_index);
 
         kernel_convolutions.device(*device) =
             (inputs.convolve(kernel_weights, array_3( 1, 2, 3)))
                 .reshape(kernel_convolutions.dimensions()) + biases(kernel_index);
+*/
     }
 }
 
@@ -92,7 +84,7 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
     preprocess_inputs(inputs, preprocessed_inputs);
 
     calculate_convolutions(preprocessed_inputs, outputs);
-
+/*
     if(batch_normalization)
         normalize_batch<4>(
             this_forward_propagation->outputs,
@@ -104,7 +96,7 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
             scales,
             offsets,
             is_training);
-
+*/
     is_training
         ? calculate_activations(activation_function, outputs, activation_derivatives)
         : calculate_activations(activation_function, outputs, empty_4);
@@ -269,9 +261,9 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     }
 
     // Input derivatives
-
+/*
     rotated_weights.device(*device) = weights.reverse(array<Index, 4>({1, 1, 0, 0}));
-
+*/
 #pragma omp parallel for //schedule(static)
     for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
     {
@@ -360,27 +352,39 @@ Index Convolutional::get_row_stride() const
 }
 
 
-Index  Convolutional::get_kernel_height() const
+Index Convolutional::get_kernel_height() const
 {
+/*
     return weights.dimension(0);
+*/
+    return 0;
 }
 
 
 Index Convolutional::get_kernel_width() const
 {
+/*
     return weights.dimension(1);
+*/
+    return 0;
 }
 
 
 Index Convolutional::get_kernel_channels() const
 {
+/*
     return weights.dimension(2);
+*/
+    return 0;
 }
 
 
 Index Convolutional::get_kernels_number() const
 {
+/*
     return weights.dimension(3);
+*/
+    return 0;
 }
 
 
@@ -459,10 +463,10 @@ void Convolutional::set(const dimensions& new_input_dimensions,
     set_activation_function(new_activation_function);
 
     set_convolution_type(new_convolution_type);
-
+/*
     biases.resize(kernels_number);
     weights.resize(kernel_height, kernel_width, kernel_channels, kernels_number);
-
+*/
     set_parameters_random();
 
     set_batch_normalization(new_batch_normalization);
@@ -473,11 +477,12 @@ void Convolutional::set(const dimensions& new_input_dimensions,
         moving_means.setZero();
         moving_standard_deviations.resize(kernels_number);
         moving_standard_deviations.setZero();
-
+/*
         scales.resize(kernels_number);
         scales.setConstant(1.0);
         offsets.resize(kernels_number);
         offsets.setZero();
+*/
     }
 
     set_label(new_label);
@@ -631,6 +636,7 @@ Index Convolutional::get_input_width() const
 
 vector<ParameterView > Convolutional::get_parameter_views() const
 {
+/*
     vector<ParameterView> parameter_views =
         {
             {(type*)(biases.data()), biases.size()},
@@ -644,6 +650,8 @@ vector<ParameterView > Convolutional::get_parameter_views() const
     }
 
     return parameter_views;
+*/
+    return vector<ParameterView>();
 }
 
 
@@ -655,6 +663,7 @@ Index Convolutional::get_input_channels() const
 
 void Convolutional::print() const
 {
+/*
     cout << "Convolutional layer" << endl
          << "Input dimensions: " << input_dimensions << endl
          << "Output dimensions: " << get_output_dimensions() << endl
@@ -664,6 +673,7 @@ void Convolutional::print() const
     //cout << biases << endl;
     cout << "Weights:" << endl;
     //cout << weights << endl;
+*/
 }
 
 
@@ -681,6 +691,7 @@ void Convolutional::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "StrideDimensions", dimensions_to_string({ get_column_stride(), get_row_stride() }));
     add_xml_element(printer, "Convolution", convolution_type);
     add_xml_element(printer, "BatchNormalization", to_string(batch_normalization));
+/*
     if (batch_normalization)
     {
         add_xml_element(printer, "Scales", tensor_to_string<type, 1>(scales));
@@ -690,7 +701,7 @@ void Convolutional::to_XML(XMLPrinter& printer) const
     }
     add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
     add_xml_element(printer, "Weights", tensor_to_string<type, 4>(weights));
-
+*/
     printer.CloseElement();
 }
 
@@ -710,11 +721,10 @@ void Convolutional::from_XML(const XMLDocument& document)
     const Index kernel_width = read_xml_index(convolutional_layer_element, "KernelsWidth");
     const Index kernel_channels = read_xml_index(convolutional_layer_element, "KernelsChannels");
     const Index kernels_number = read_xml_index(convolutional_layer_element, "KernelsNumber");
-
+/*
     biases.resize(kernels_number);
-
     weights.resize(kernel_height, kernel_width, kernel_channels, kernels_number);
-
+*/
     set_activation_function(read_xml_string(convolutional_layer_element, "Activation"));
 
     const dimensions stride_dimensions = string_to_dimensions(read_xml_string(convolutional_layer_element, "StrideDimensions"));
@@ -729,7 +739,7 @@ void Convolutional::from_XML(const XMLDocument& document)
         use_batch_normalization = (string(bn_element->GetText()) == "true");
 
     set_batch_normalization(use_batch_normalization);
-
+/*
     if (batch_normalization)
     {
         scales.resize(kernels_number);
@@ -745,6 +755,7 @@ void Convolutional::from_XML(const XMLDocument& document)
 
     string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "Biases"), biases);
     string_to_tensor<type, 4>(read_xml_string(convolutional_layer_element, "Weights"), weights);
+*/
 }
 
 

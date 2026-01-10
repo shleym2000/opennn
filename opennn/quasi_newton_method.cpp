@@ -157,8 +157,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 {
     NeuralNetwork* neural_network = forward_propagation.neural_network;
 
-    Tensor1& parameters = optimization_data.parameters;
-    neural_network->get_parameters(parameters);
+    Tensor1& parameters = neural_network->get_parameters();
 
     const Tensor1& gradient = optimization_data.gradient;
 
@@ -253,7 +252,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
     // Set parameters
 
-    neural_network->set_parameters(parameters);
+    //neural_network->set_parameters(parameters);
 }
 
 
@@ -529,7 +528,6 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
 
     // Neural network data
 
-    parameters.resize(parameters_number);
     old_parameters.resize(parameters_number);
 
     parameters_difference.resize(parameters_number);
@@ -582,7 +580,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
 
     Tensor1& potential_parameters = optimization_data.potential_parameters;
 
-    const Tensor1& parameters = optimization_data.parameters;
+    const Tensor1& parameters = neural_network->get_parameters();
 
     const Tensor1& training_direction = optimization_data.training_direction;
 
@@ -725,7 +723,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
     const type rho = 0.5;
     const type c = type(1e-4);
 
-    const Tensor1& parameters = optimization_data.parameters;
+    const Tensor1& parameters = neural_network->get_parameters();
     const Tensor1& training_direction = optimization_data.training_direction;
     Tensor1& potential_parameters = optimization_data.potential_parameters;
 

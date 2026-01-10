@@ -18,7 +18,6 @@ class Convolutional final : public Layer
 {
 
 public:
-    //enum class Convolution{Valid, Same};
 
     Convolutional(const dimensions& = {3, 3, 1},                    // Input dimensions {height,width,channels}
                   const dimensions& = {3, 3, 1, 1},                 // Kernel dimensions {kernel_height,kernel_width,channels,kernels_number}
@@ -28,10 +27,35 @@ public:
                   const bool& = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
 
-    bool get_batch_normalization() const;
 
-    Tensor1 get_scales() const;
-    Tensor1 get_offsets() const;
+    type* link_parameters(type* ptr) override
+    {
+        weights = ptr;
+
+        //ptr += weights.size();
+
+        ptr = (type*)(((size_t)ptr + 63) & ~63);
+
+        biases = ptr;
+/*
+        ptr += biases.size();
+
+        if (batch_normalization) {
+            // 3. BN Scales (gamma)
+            ptr = (type*)(((size_t)ptr + 63) & ~63);
+            bn_scales_ptr = ptr;
+            ptr += scales.size();
+
+            // 4. BN Offsets (beta)
+            ptr = (type*)(((size_t)ptr + 63) & ~63);
+            bn_offsets_ptr = ptr;
+            ptr += offsets.size();
+        }
+*/
+        return ptr;
+    }
+
+    bool get_batch_normalization() const;
 
     const string& get_activation_function() const;
 
@@ -160,9 +184,12 @@ protected:
 
 private:
 
-    Tensor4 weights;
+    type* weights;
+    type* biases;
 
-    Tensor1 biases;
+    type* scales;
+    type* offsets;
+
 
     Index row_stride = 1;
 
@@ -183,8 +210,6 @@ private:
 
     type momentum = type(0.9);
 
-    Tensor1 scales;
-    Tensor1 offsets;
 };
 
 

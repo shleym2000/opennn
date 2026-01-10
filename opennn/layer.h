@@ -53,6 +53,11 @@ public:
 
     virtual vector<ParameterView> get_parameter_views() const;
 
+    virtual type* link_parameters(type*)
+    {
+        return nullptr;
+    }
+
     //virtual pair
 
     virtual dimensions get_input_dimensions() const = 0;
@@ -415,6 +420,11 @@ struct LayerBackPropagation
     }
 
     virtual void initialize() = 0;
+
+    virtual type* link_gradient(type* ptr)
+    {
+        return ptr;
+    }
 
     virtual vector<TensorView> get_input_derivative_views() const = 0;
 

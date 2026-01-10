@@ -119,7 +119,6 @@ struct LevenbergMarquardtAlgorithmData final : public OptimizationAlgorithmData
 
     // Neural network data
 
-//    Tensor1 parameters;
     Tensor1 old_parameters;
     Tensor1 parameters_difference;
 

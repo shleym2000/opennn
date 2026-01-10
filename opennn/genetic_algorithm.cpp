@@ -353,10 +353,11 @@ void GeneticAlgorithm::evaluate_population()
             {
                 for(Index j = 0; j < time_steps; j++)
                 {
-                    string name = (base_name.empty() ? "variable" : base_name) + "_lag" + to_string(j);
+                    const string name = (base_name.empty() ? "variable" : base_name) + "_lag" + to_string(j);
                     final_feature_names.push_back(name);
                 }
             }
+
             neural_network->set_feature_names(final_feature_names);
         }
         else
@@ -376,7 +377,7 @@ void GeneticAlgorithm::evaluate_population()
 
         training_results = training_strategy->train();
 
-        neural_network->get_parameters(parameters(i));
+        parameters(i) = neural_network->get_parameters();
 
         training_errors(i) = training_results.get_training_error();
 

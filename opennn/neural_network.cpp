@@ -374,31 +374,7 @@ dimensions NeuralNetwork::get_output_dimensions() const
 
 Index NeuralNetwork::get_parameters_number() const
 {
-    return accumulate(layers.begin(), layers.end(), 0,
-                       [](Index current_sum, const std::unique_ptr<Layer>& layer) {
-                           return current_sum + layer->get_parameters_number();
-                       });
-}
-
-
-void NeuralNetwork::get_parameters(Tensor1& parameters) const
-{
-    const Index parameters_number = get_parameters_number();
-
-    parameters.resize(parameters_number);
-
-    Index position = 0;
-
-    for (const unique_ptr<Layer>& layer : layers)
-    {
-        const vector<ParameterView> layer_parameter_pairs = layer->get_parameter_views();
-
-        for(const ParameterView& parameter_pair : layer_parameter_pairs)
-        {
-            memcpy(parameters.data() + position, parameter_pair.data, parameter_pair.size * sizeof(type));
-            position += parameter_pair.size;
-        }
-    }
+    return parameters.size();
 }
 
 
@@ -419,21 +395,7 @@ vector<Index> NeuralNetwork::get_layer_parameter_numbers() const
 
 void NeuralNetwork::set_parameters(const Tensor1& new_parameters)
 {
-    if (new_parameters.size() != get_parameters_number())
-        throw runtime_error("New parameters size is not equal to parameters size.");
-
-    Index index = 0;
-
-    for (const unique_ptr<Layer>& layer : layers)
-    {
-        const vector<ParameterView> layer_parameter_pairs = layer->get_parameter_views();
-
-        for (const ParameterView& parameter_pair : layer_parameter_pairs)
-        {
-            memcpy(parameter_pair.data, new_parameters.data() + index, parameter_pair.size * sizeof(type));
-            index += parameter_pair.size;
-        }
-    }
+    parameters = new_parameters;
 }
 
 
@@ -566,8 +528,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       const Tensor1& new_parameters,
                                       ForwardPropagation& forward_propagation)
 {
-    Tensor1 original_parameters;
-    get_parameters(original_parameters);
+    const Tensor1& original_parameters = get_parameters();
 
     set_parameters(new_parameters);
 
@@ -1119,9 +1080,6 @@ void NeuralNetwork::save_parameters(const filesystem::path& file_name) const
     if(!file.is_open())
         throw runtime_error("Cannot open parameters data file.\n");
 
-    Tensor1 parameters;
-    get_parameters(parameters);
-
     file << parameters << endl;
 
     file.close();
@@ -1150,14 +1108,14 @@ void NeuralNetwork::load_parameters_binary(const filesystem::path& file_name)
 
     const Index parameters_number = get_parameters_number();
 
-    Tensor1 new_parameters(parameters_number);
+//    Tensor1 new_parameters(parameters_number);
 
-    file.read(reinterpret_cast<char*>(new_parameters.data()), parameters_number * sizeof(type));
+    file.read(reinterpret_cast<char*>(parameters.data()), parameters_number * sizeof(type));
 
     if (!file)
         throw runtime_error("Error reading binary file: " + file_name.string());
 
-    set_parameters(new_parameters);
+//    set_parameters(new_parameters);
 }
 
 

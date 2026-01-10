@@ -36,6 +36,7 @@ struct DenseForwardPropagation final : LayerForwardPropagation
     Tensor2 activation_derivatives;
 };
 
+
 template<int Rank>
 struct DenseBackPropagation final : LayerBackPropagation
 {
@@ -50,6 +51,29 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
+    type* link_gradients(type* ptr)
+    {
+        /*
+        const Index inputs_num = layer->get_input_dimensions()[0];
+        const Index outputs_num = layer->get_outputs_number();
+
+        // 1. Link Weight Gradients
+        this->weight_deltas = ptr;
+        ptr += (inputs_num * outputs_num);
+
+        // 2. Align (Must match the alignment logic in link_parameters!)
+        size_t address = reinterpret_cast<size_t>(ptr);
+        if (address % 64 != 0) {
+            ptr += (16 - ((address / sizeof(type)) % 16));
+        }
+
+        // 3. Link Bias Gradients
+        this->bias_deltas_ptr = ptr;
+        ptr += outputs_num;
+*/
+        return ptr;
+    }
+
     Tensor2 input_deltas;
 
     Tensor1 bias_deltas;
@@ -57,6 +81,7 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     Tensor1 bn_scale_deltas;
     Tensor1 bn_offset_deltas;
+
 };
 
 
@@ -95,16 +120,19 @@ public:
 
     dimensions get_input_dimensions() const override
     {
-        return { weights.dimension(0) };
+        return {};
+        //return { weights.dimension(0) };
     }
 
     dimensions get_output_dimensions() const override
     {
-        return { biases.size() };
+        return {};
+        //return { biases.size() };
     }
 
     vector<ParameterView> get_parameter_views() const override
     {
+/*
         vector<ParameterView> parameter_views = {{(type*)(biases.data()), biases.size()},
                                                  {(type*)(weights.data()), weights.size()}};
 
@@ -115,6 +143,8 @@ public:
         }
 
         return parameter_views;
+*/
+        return vector<ParameterView>();
     }
 
     type get_dropout_rate() const
@@ -125,16 +155,6 @@ public:
     bool get_batch_normalization() const
     {
         return batch_normalization;
-    }
-
-    Tensor1 get_scales() const
-    {
-        return scales;
-    }
-
-    Tensor1 get_offsets() const
-    {
-        return offsets;
     }
 
     const string& get_activation_function() const
@@ -153,10 +173,10 @@ public:
 
         if (new_output_dimensions.size() != 1)
             throw runtime_error("Output dimensions size is not 1");
-
+/*
         biases.resize(new_output_dimensions[0]);
         weights.resize(new_input_dimensions[0], new_output_dimensions[0]);
-
+*/
         set_parameters_random();
 
         set_activation_function(new_activation_function);
@@ -203,20 +223,22 @@ public:
     {
         const Index inputs_number = new_input_dimensions[0];
         const Index outputs_number = get_outputs_number();
-
+/*
         biases.resize(outputs_number);
 
         weights.resize(inputs_number, outputs_number);
+*/
     }
 
     void set_output_dimensions(const dimensions& new_output_dimensions) override
     {
         const Index inputs_number = get_inputs_number();
         const Index neurons_number = new_output_dimensions[0];
-
+/*
         biases.resize(neurons_number);
 
         weights.resize(inputs_number, neurons_number);
+*/
     }
 
 
@@ -336,9 +358,9 @@ public:
             static_cast<DenseForwardPropagation<2>*>(layer_forward_propagation.get());
 
         Tensor2& outputs = dense2d_forward_propagation->outputs;
-
+/*
         calculate_combinations<2>(inputs, weights, biases, outputs);
-
+*/
         if(batch_normalization)
             normalize_batch<2>(
                 dense2d_forward_propagation->outputs,
@@ -397,9 +419,10 @@ public:
         bias_deltas.device(*device) = deltas.sum(array_1(0));
 
         weight_deltas.device(*device) = inputs.contract(deltas, axes(0,0));
-
+/*
         if (!is_first_layer)
             input_deltas.device(*device) = deltas.contract(weights, axes(1,1));
+*/
     }
 
     void back_propagate_lm(const vector<TensorView>& input_views,
@@ -412,7 +435,7 @@ public:
 
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();
-
+/*
         const Index biases_number = biases.size();
 
         // Forward propagation
@@ -461,6 +484,7 @@ public:
             const Tensor2 weights_transposed = weights.shuffle(array<int, 2>{1, 0});
             input_deltas.device(*device) = deltas.contract(weights_transposed, axes(1, 0));
         }
+*/
     }
 
     void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
@@ -494,7 +518,7 @@ public:
         const Index outputs_number = get_outputs_number();
 
         ostringstream buffer;
-
+/*
         for(Index j = 0; j < outputs_number; j++)
         {
             const TensorMap1 weights_column = tensor_map(weights, j);
@@ -506,12 +530,13 @@ public:
 
             buffer << "(" << weights_column(inputs_number - 1) << "*" << feature_names[inputs_number - 1] << ") );\n";
         }
-
+*/
         return buffer.str();
     }
 
     void print() const override
     {
+/*
         cout << "Dense2d layer" << endl
              << "Input dimensions: " << get_input_dimensions()[0] << endl
              << "Output dimensions: " << get_output_dimensions()[0] << endl
@@ -520,6 +545,7 @@ public:
 
         cout << "Activation function:" << endl;
         cout << activation_function << endl;
+*/
     }
 
     void from_XML(const XMLDocument& document) override
@@ -556,9 +582,10 @@ public:
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), moving_means);
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
         }
-
+/*
         string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Biases"), biases);
         string_to_tensor<type, 2>(read_xml_string(dense2d_layer_element, "Weights"), weights);
+*/
     }
 
     void to_XML(XMLPrinter& printer) const override
@@ -578,12 +605,32 @@ public:
             add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
             add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
         }
-
+/*
         add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
         add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
-
+*/
         printer.CloseElement();
     }
+
+
+    type* link_parameters(type* ptr) override
+    {
+        weights = ptr;
+
+        ptr += inputs_number*outputs_number;
+
+        const size_t address = reinterpret_cast<size_t>(ptr);
+
+        if (address % 64 != 0)
+            ptr += (16 - ((address / sizeof(type)) % 16));
+
+        biases = ptr;
+
+        ptr += outputs_number;
+
+        return ptr;
+    }
+
 
 #ifdef OPENNN_CUDA
 
@@ -627,9 +674,11 @@ private:
 
 private:
 
-    Tensor1 biases;
+    Index inputs_number;
+    Index outputs_number;
 
-    Tensor2 weights;
+    type* biases;
+    type* weights;
 
     bool batch_normalization = false;
 

@@ -232,7 +232,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
             {
                 input_selection_results.optimal_input_raw_variables_indices = dataset->get_raw_variable_indices("Input");
                 input_selection_results.optimal_input_raw_variable_names = dataset->get_raw_variable_names("Input");
-                neural_network->get_parameters(input_selection_results.optimal_parameters);
+                //neural_network->get_parameters(input_selection_results.optimal_parameters);
                 input_selection_results.optimum_training_error = training_results.get_training_error();
                 input_selection_results.optimum_selection_error = training_results.get_selection_error();
             }

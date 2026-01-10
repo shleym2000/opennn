@@ -23,7 +23,6 @@ struct Batch;
 struct ForwardPropagation;
 struct BackPropagation;
 struct BackPropagationLM;
-//struct NeuralNetworkBackPropagationLM;
 
 #ifdef OPENNN_CUDA
 struct BatchCuda;
@@ -252,7 +251,6 @@ struct BackPropagationLM
     Tensor1 squared_errors;
     Tensor2 squared_errors_jacobian;
 
-    Tensor1 parameters;
     Tensor1 gradient;
     Tensor2 hessian;
 

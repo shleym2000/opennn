@@ -63,6 +63,41 @@ public:
     void add_layer(unique_ptr<Layer>,
                   const vector<Index>& = vector<Index>());
 
+    void compile()
+    {
+        Index layer_parameters_number = 0;
+
+        Index parameters_number = 0;
+
+        for (auto& layer : layers)
+        {
+            layer_parameters_number = layer->get_parameters_number();
+
+            parameters_number += layer_parameters_number;
+
+            if (layer_parameters_number % 16 != 0)
+                parameters_number += (16 - layer_parameters_number%16);
+        }
+
+        parameters.resize(parameters_number);
+        parameters.setZero();
+
+        type* current_ptr = parameters.data();
+
+        for (auto& layer : layers)
+        {
+            layer_parameters_number = layer->get_parameters_number();
+
+            layer->link_parameters(current_ptr);
+
+            current_ptr += layer_parameters_number;
+
+            if (layer_parameters_number % 16 != 0)
+                current_ptr += 16 - layer_parameters_number%16;
+
+        }
+    }
+
     bool validate_name(const string&) const;
 
     void reference_all_layers();
@@ -72,6 +107,11 @@ public:
     bool has(const string&) const;
 
     bool is_empty() const;
+
+    Tensor1& get_parameters()
+    {
+        return parameters;
+    }
 
     const vector<string>& get_feature_names() const;
     Index get_input_index(const string&) const;
@@ -144,7 +184,6 @@ public:
     // Parameters
 
     Index get_parameters_number() const;
-    void get_parameters(Tensor1&) const;
 
     vector<Index> get_layer_parameter_numbers() const;
 
@@ -280,6 +319,8 @@ protected:
 
     bool display = true;
 
+    Tensor1 parameters;
+
 };
 
 struct NeuralNetworkBackPropagation
@@ -299,6 +340,24 @@ struct NeuralNetworkBackPropagation
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerBackPropagation>> layers;
+
+    Tensor1 gradient;
+
+    void allocate()
+    {
+        const Index total_size = neural_network->get_parameters_number();
+
+        gradient.resize(total_size);
+        gradient.setZero();
+
+        type* current_ptr = gradient.data();
+
+        for (auto& layer : layers)
+            if (layer)
+                current_ptr = layer->link_gradient(current_ptr);
+
+    }
+
 };
 
 

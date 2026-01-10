@@ -159,8 +159,7 @@ void LossIndex::add_regularization(BackPropagation& back_propagation) const
     if(regularization_method == "None" || regularization_weight == 0)
         return;
 
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    const Tensor1& parameters = neural_network->get_parameters();
 
     back_propagation.loss += calculate_regularization(parameters);
 }
@@ -171,7 +170,7 @@ void LossIndex::add_regularization_lm(BackPropagationLM& back_propagation_lm) co
     if(regularization_method == "None")
         return;
 
-    Tensor1& parameters = back_propagation_lm.parameters;
+    const Tensor1& parameters = neural_network->get_parameters();
 
     type& loss = back_propagation_lm.loss;
 
@@ -225,7 +224,6 @@ void LossIndex::back_propagate_lm(const Batch& batch,
     // Regularization
 
     add_regularization_lm(back_propagation_lm);
-
 }
 
 
@@ -374,8 +372,7 @@ void LossIndex::add_regularization_gradient(Tensor1& gradient) const
         return;
     }
 
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    const Tensor1& parameters = neural_network->get_parameters();
 
     if (regularization_method == "L1")
     {
@@ -384,6 +381,7 @@ void LossIndex::add_regularization_gradient(Tensor1& gradient) const
             if (w < 0) return type(-1);
             return type(0);
         });
+
         gradient += l1_gradient * regularization_weight;
     }
     else if (regularization_method == "L2")
@@ -662,8 +660,7 @@ Tensor1 LossIndex::calculate_gradient()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
     ForwardPropagation forward_propagation(samples_number, neural_network);
     BackPropagation back_propagation(samples_number, this);
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    const Tensor1& parameters = neural_network->get_parameters();
 
     neural_network->forward_propagate(batch.get_input_views(),
                                       parameters,
@@ -694,8 +691,7 @@ Tensor1 LossIndex::calculate_numerical_gradient()
     ForwardPropagation forward_propagation(samples_number, neural_network);
     BackPropagation back_propagation(samples_number, this);
 
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    Tensor1& parameters = neural_network->get_parameters();
 
     const Index parameters_number = parameters.size();
 
@@ -758,8 +754,7 @@ Tensor1 LossIndex::calculate_numerical_gradient_lm()
     ForwardPropagation forward_propagation(samples_number, neural_network);
     BackPropagationLM back_propagation_lm(samples_number, this);
 
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    Tensor1& parameters = neural_network->get_parameters();
 
     const Index parameters_number = parameters.size();
 
@@ -894,8 +889,7 @@ Tensor2 LossIndex::calculate_numerical_jacobian()
 
     BackPropagation back_propagation(samples_number, this);
 
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    Tensor1 parameters = neural_network->get_parameters();
 
     const Index parameters_number = parameters.size();
 
@@ -972,8 +966,7 @@ Tensor2 LossIndex::calculate_numerical_hessian()
 
     BackPropagationLM back_propagation_lm(samples_number, this);
 
-    Tensor1 parameters;
-    neural_network->get_parameters(parameters);
+    Tensor1& parameters = neural_network->get_parameters();
 
     const Index parameters_number = parameters.size();
 
@@ -1310,10 +1303,6 @@ void BackPropagationLM::set(const Index& new_samples_number,
     const dimensions output_dimensions = neural_network_ptr->get_output_dimensions();
 
     neural_network.set(samples_number, neural_network_ptr);
-
-    parameters.resize(parameters_number);
-
-    neural_network_ptr->get_parameters(parameters);
 
     loss = type(0);
 
