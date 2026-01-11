@@ -30,6 +30,7 @@ public:
 
     type* link_parameters(type* ptr) override
     {
+/*
         weights = ptr;
 
         //ptr += weights.size();
@@ -37,7 +38,7 @@ public:
         ptr = (type*)(((size_t)ptr + 63) & ~63);
 
         biases = ptr;
-/*
+
         ptr += biases.size();
 
         if (batch_normalization) {
@@ -87,7 +88,7 @@ public:
     Index get_input_height() const;
     Index get_input_width() const;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView> get_parameter_views() const override;
 
     // Set
 
@@ -184,12 +185,11 @@ protected:
 
 private:
 
-    type* weights;
-    type* biases;
+    TensorView weights;
+    TensorView biases;
 
-    type* scales;
-    type* offsets;
-
+    TensorView scales;
+    TensorView offsets;
 
     Index row_stride = 1;
 

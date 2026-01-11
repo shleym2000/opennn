@@ -402,7 +402,6 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
                                                  AdaptiveMomentEstimationData& optimization_data) const
 {
     NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
 
     optimization_data.iteration++;
     Index& iteration = optimization_data.iteration;
@@ -410,45 +409,25 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
     const type bias_correction_1 = type(1) - pow(beta_1, type(iteration));
     const type bias_correction_2 = type(1) - pow(beta_2, type(iteration));
 
-    for(Index layer_index = 0; layer_index < layers_number; layer_index++)
-    {
-        Layer* layer = neural_network->get_layer(layer_index).get();
+    Tensor1& parameters = neural_network->get_parameters();
+    Tensor1& gradient = back_propagation.neural_network.gradient;
 
-        if (!layer->get_is_trainable())
-            continue;
+    Tensor1& gradient_exponential_decay = optimization_data.gradient_exponential_decay;
+    Tensor1& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay;
 
-        LayerBackPropagation* layer_back_propagation = back_propagation.neural_network.layers[layer_index].get();
+    gradient_exponential_decay.device(*device)
+        = gradient_exponential_decay * beta_1 + gradient * (type(1) - beta_1);
 
-        const vector<ParameterView>& parameter_views = layer->get_parameter_views();
-        const vector<ParameterView>& delta_views = layer_back_propagation->get_parameter_delta_views();
+    square_gradient_exponential_decay.device(*device)
+        = square_gradient_exponential_decay * beta_2 + gradient.square() * (type(1) - beta_2);
 
-        for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); parameter_index++)
-        {
-            type* parameter_data = parameter_views[parameter_index].data;
-            const Index parameter_size = parameter_views[parameter_index].size;
-            type* delta_data = delta_views[parameter_index].data;
+    // @todo can we avoid these two tensors?
 
-            TensorMap1 parameters(parameter_data, parameter_size);
-            TensorMap1 gradient(delta_data, parameter_size);
+    const Tensor1 corrected_gradient_exponential_decay = gradient_exponential_decay / bias_correction_1;
+    const Tensor1 corrected_square_gradient_exponential_decay = square_gradient_exponential_decay / bias_correction_2;
 
-            Tensor1& gradient_exponential_decay = optimization_data.gradient_exponential_decay[layer_index][parameter_index];
-            Tensor1& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay[layer_index][parameter_index];
-
-            gradient_exponential_decay.device(*device)
-                = gradient_exponential_decay * beta_1 + gradient * (type(1) - beta_1);
-
-            square_gradient_exponential_decay.device(*device)
-                = square_gradient_exponential_decay * beta_2 + gradient.square() * (type(1) - beta_2);
-
-            // @todo can we avoid these two tensors?
-
-            const Tensor1 corrected_gradient_exponential_decay = gradient_exponential_decay / bias_correction_1;
-            const Tensor1 corrected_square_gradient_exponential_decay = square_gradient_exponential_decay / bias_correction_2;
-
-            parameters.device(*device)
-                -= learning_rate * corrected_gradient_exponential_decay / (corrected_square_gradient_exponential_decay.sqrt() + numeric_limits<type>::epsilon());
-        }
-    }
+    parameters.device(*device)
+        -= learning_rate * corrected_gradient_exponential_decay / (corrected_square_gradient_exponential_decay.sqrt() + numeric_limits<type>::epsilon());
 }
 
 
@@ -495,35 +474,13 @@ void AdaptiveMomentEstimationData::set(AdaptiveMomentEstimation* new_adaptive_mo
     LossIndex* loss_index = new_adaptive_moment_estimation->get_loss_index();
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    const Index layers_number = neural_network->get_layers_number();
+    const Index parameters_number = neural_network->get_parameters_number();
 
-    gradient_exponential_decay.resize(layers_number);
-    square_gradient_exponential_decay.resize(layers_number);
+    gradient_exponential_decay.resize(parameters_number);
+    gradient_exponential_decay.setZero();
 
-    for (Index i = 0; i < layers_number; i++)
-    {
-        Layer* layer = neural_network->get_layer(i).get();
-
-        if (!layer->get_is_trainable())
-            continue;
-
-        const auto& parameter_views = layer->get_parameter_views();
-        const Index parameter_sets_number = parameter_views.size();
-
-        gradient_exponential_decay[i].resize(parameter_sets_number);
-        square_gradient_exponential_decay[i].resize(parameter_sets_number);
-
-        for (Index j = 0; j < parameter_sets_number; j++)
-        {
-            const Index parameter_size = parameter_views[j].size;
-
-            gradient_exponential_decay[i][j].resize(parameter_size);
-            gradient_exponential_decay[i][j].setZero();
-
-            square_gradient_exponential_decay[i][j].resize(parameter_size);
-            square_gradient_exponential_decay[i][j].setZero();
-        }
-    }
+    square_gradient_exponential_decay.resize(parameters_number);
+    square_gradient_exponential_decay.setZero();
 }
 
 

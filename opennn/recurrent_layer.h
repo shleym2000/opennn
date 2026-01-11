@@ -23,6 +23,7 @@ public:
 
     type* link_parameters(type* ptr) override
     {
+/*
         input_weights = ptr;
         //ptr += input_weights.size();
 
@@ -33,14 +34,14 @@ public:
         ptr = (type*)(((size_t)ptr + 63) & ~63);
         biases = ptr;
         //ptr += biases.size();
-
+*/
         return ptr;
     }
 
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView> get_parameter_views() const override;
 
     string get_activation_function() const;
 
@@ -71,9 +72,9 @@ private:
 
     dimensions input_dimensions;
 
-    type* biases;
-    type* input_weights;
-    type* recurrent_weights;
+    TensorView biases;
+    TensorView input_weights;
+    TensorView recurrent_weights;
 
     string activation_function = "HyperbolicTangent";
 
@@ -127,14 +128,11 @@ struct RecurrentBackPropagation final : LayerBackPropagation
     Tensor3 combinations_input_weight_deltas;
     Tensor3 combinations_recurrent_weight_deltas;
 
-    Tensor1 bias_deltas;
-
-    Tensor2 input_weight_deltas;
-
-    Tensor2 recurrent_weight_deltas;
+    TensorView bias_deltas;
+    TensorView input_weight_deltas;
+    TensorView recurrent_weight_deltas;
 
     Tensor3 input_deltas;
-
 };
 
 

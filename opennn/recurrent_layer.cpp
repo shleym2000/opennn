@@ -35,7 +35,7 @@ dimensions Recurrent::get_output_dimensions() const
 }
 
 
-vector<ParameterView > Recurrent::get_parameter_views() const
+vector<TensorView> Recurrent::get_parameter_views() const
 {
 /*
     return {
@@ -44,7 +44,7 @@ vector<ParameterView > Recurrent::get_parameter_views() const
         {(type*)recurrent_weights.data(), recurrent_weights.size()}
     };
 */
-    return vector<ParameterView >();
+    return vector<TensorView>();
 }
 
 
@@ -187,9 +187,9 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
     Tensor3& hidden_states = recurrent_forward->hidden_states;
 
     Tensor3& input_deltas = recurrent_backward->input_deltas;
-    Tensor2& input_weight_deltas = recurrent_backward->input_weight_deltas;
-    Tensor2& recurrent_weight_deltas = recurrent_backward->recurrent_weight_deltas;
-    Tensor1& bias_deltas = recurrent_backward->bias_deltas;
+    TensorMap2 input_weight_deltas = tensor_map<2>(recurrent_backward->input_weight_deltas);
+    TensorMap2 recurrent_weight_deltas = tensor_map<2>(recurrent_backward->recurrent_weight_deltas);
+    TensorMap1 bias_deltas = tensor_map<1>(recurrent_backward->bias_deltas);
     Tensor2& current_combination_deltas = recurrent_backward->current_combination_deltas;
 
     Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
@@ -407,14 +407,17 @@ void RecurrentBackPropagation::initialize()
     combinations_recurrent_weight_deltas.resize(outputs_number, outputs_number, outputs_number);
     combination_deltas.resize(batch_size, outputs_number);
     current_combination_deltas.resize(batch_size, outputs_number);
+/*
     bias_deltas.resize(outputs_number);
     input_weight_deltas.resize(inputs_number, outputs_number);
     recurrent_weight_deltas.resize(outputs_number, outputs_number);
+*/
     input_deltas.resize(batch_size, past_time_steps, inputs_number);
-
+/*
     input_weight_deltas.setZero();
     recurrent_weight_deltas.setZero();
     bias_deltas.setZero();
+*/
     input_deltas.setZero();
     current_combination_deltas.setZero();
     current_deltas.setZero();
@@ -446,11 +449,14 @@ vector<TensorView> RecurrentBackPropagation::get_input_derivative_views() const
 
 vector<ParameterView> RecurrentBackPropagation::get_parameter_delta_views() const
 {
-    return {
-        {(type*)bias_deltas.data(), bias_deltas.size()},
+/*
+    return {bias_deltas, input_weight_deltas, recurrent_weight_deltas};
+        {bias_deltas.data(), bias_deltas.size()},
         {(type*)input_weight_deltas.data(), input_weight_deltas.size()},
         {(type*)recurrent_weight_deltas.data(), recurrent_weight_deltas.size()}
     };
+*/
+    return vector<ParameterView>();
 }
 
 REGISTER(Layer, Recurrent, "Recurrent")

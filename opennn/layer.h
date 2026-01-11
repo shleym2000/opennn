@@ -51,7 +51,7 @@ public:
 
     Index get_parameters_number() const;
 
-    virtual vector<ParameterView> get_parameter_views() const;
+    virtual vector<TensorView> get_parameter_views() const;
 
     virtual type* link_parameters(type*)
     {
@@ -384,7 +384,13 @@ protected:
 struct LayerForwardPropagation
 {
     LayerForwardPropagation() {}
+
     virtual ~LayerForwardPropagation() = default;
+
+    virtual Index get_workspace_size() const
+    {
+        return 0;
+    }
 
     void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
     {

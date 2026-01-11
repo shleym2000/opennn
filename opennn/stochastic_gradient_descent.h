@@ -101,8 +101,8 @@ struct StochasticGradientDescentData final : public OptimizationAlgorithmData
 
     Index iteration = 0;
 
-    vector<vector<Tensor1>> parameters_increment;
-    vector<vector<Tensor1>> last_parameters_increment;
+    Tensor1 parameters_increment;
+    Tensor1 last_parameters_increment;
 };
 
 

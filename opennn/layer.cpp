@@ -54,7 +54,8 @@ void Layer::set_display(const bool& new_display)
 
 void Layer::set_parameters_random()
 {
-    const vector<ParameterView> parameter_views = get_parameter_views();
+/*
+    const vector<TensorView> parameter_views = get_parameter_views();
 
     for (const auto& view : parameter_views)
     {
@@ -62,6 +63,7 @@ void Layer::set_parameters_random()
 
         set_random(this_parameters);
     }
+*/
 }
 
 
@@ -72,33 +74,35 @@ void Layer::set_parameters_glorot()
 
     const type limit = sqrt(6.0 / (inputs_number + outputs_number));
 
-    const vector<ParameterView> parameter_views = get_parameter_views();
+    const vector<TensorView> parameter_views = get_parameter_views();
 
     for (const auto& view : parameter_views)
     {
+/*
         TensorMap1 this_parameters(view.data, view.size);
 
         set_random(this_parameters, -limit, limit);
+*/
     }
 }
 
 
 Index Layer::get_parameters_number() const
 {
-    const vector<ParameterView> parameter_views = get_parameter_views();
+    const vector<TensorView> parameter_views = get_parameter_views();
 
     Index parameters_number = 0;
 
     for(Index i = 0; i < Index(parameter_views.size()); i++)
-        parameters_number += parameter_views[i].size;
+        parameters_number += parameter_views[i].size();
 
     return parameters_number;
 }
 
 
-vector<ParameterView > Layer::get_parameter_views() const
+vector<TensorView> Layer::get_parameter_views() const
 {
-    return vector<ParameterView>();
+    return vector<TensorView>();
 }
 
 

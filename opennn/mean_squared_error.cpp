@@ -89,7 +89,7 @@ void MeanSquaredError::calculate_output_delta(const Batch& batch,
 
     const Tensor2& errors = back_propagation.errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
@@ -104,7 +104,7 @@ void MeanSquaredError::calculate_output_delta_lm(const Batch&,
     const Tensor2& errors = back_propagation.errors;
     const Tensor1& squared_errors = back_propagation.squared_errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 

@@ -122,8 +122,8 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
 
     AdaptiveMomentEstimation* adaptive_moment_estimation = nullptr;
 
-    vector<vector<Tensor1>> gradient_exponential_decay;
-    vector<vector<Tensor1>> square_gradient_exponential_decay;
+    Tensor1 gradient_exponential_decay;
+    Tensor1 square_gradient_exponential_decay;
 
     Index iteration = 0;
 

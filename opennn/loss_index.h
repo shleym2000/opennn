@@ -94,8 +94,6 @@ public:
                                          ForwardPropagation&,
                                          BackPropagation&) const;
 
-    void assemble_layers_error_gradient(const BackPropagation&, Tensor1&) const;
-
     void add_regularization_gradient(Tensor1&) const;
 
     void add_regularization_to_deltas(BackPropagation&) const;
@@ -230,7 +228,7 @@ struct BackPropagationLM
 
     void print() const;
 
-    TensorView get_output_deltas_pair() const;
+    TensorView get_output_deltas_tensor_view() const;
 
     vector<vector<TensorView>> get_layer_delta_pairs() const;
 
@@ -268,7 +266,7 @@ struct BackPropagation
 
     vector<vector<TensorView>> get_layer_delta_pairs() const;
 
-    TensorView get_output_deltas_pair() const;
+    TensorView get_output_deltas_tensor_view() const;
 
     void print() const;
 

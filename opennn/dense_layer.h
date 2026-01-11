@@ -27,13 +27,13 @@ struct DenseForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor1 means;
-    Tensor1 standard_deviations;
-    Tensor2 normalized_outputs;
+    TensorView means;
+    TensorView standard_deviations;
+    TensorView normalized_outputs;
 
-    Tensor2 outputs;
+    TensorView outputs;
 
-    Tensor2 activation_derivatives;
+    TensorView activation_derivatives;
 };
 
 
@@ -52,35 +52,28 @@ struct DenseBackPropagation final : LayerBackPropagation
     void print() const override;
 
     type* link_gradients(type* ptr)
-    {
-        /*
-        const Index inputs_num = layer->get_input_dimensions()[0];
-        const Index outputs_num = layer->get_outputs_number();
+    {        
+        weight_deltas.data = ptr;
+        ptr += weight_deltas.size();
 
-        // 1. Link Weight Gradients
-        this->weight_deltas = ptr;
-        ptr += (inputs_num * outputs_num);
+//        size_t address = reinterpret_cast<size_t>(ptr);
+//        if (address % 64 != 0) {
+//            ptr += (16 - ((address / sizeof(type)) % 16));
+//        }
 
-        // 2. Align (Must match the alignment logic in link_parameters!)
-        size_t address = reinterpret_cast<size_t>(ptr);
-        if (address % 64 != 0) {
-            ptr += (16 - ((address / sizeof(type)) % 16));
-        }
+        bias_deltas.data = ptr;
+        ptr += bias_deltas.size();
 
-        // 3. Link Bias Gradients
-        this->bias_deltas_ptr = ptr;
-        ptr += outputs_num;
-*/
         return ptr;
     }
 
-    Tensor2 input_deltas;
+    TensorView input_deltas;
 
-    Tensor1 bias_deltas;
-    Tensor2 weight_deltas;
+    TensorView bias_deltas;
+    TensorView weight_deltas;
 
-    Tensor1 bn_scale_deltas;
-    Tensor1 bn_offset_deltas;
+    TensorView bn_scale_deltas;
+    TensorView bn_offset_deltas;
 
 };
 
@@ -130,22 +123,19 @@ public:
         //return { biases.size() };
     }
 
-    vector<ParameterView> get_parameter_views() const override
+    vector<TensorView> get_parameter_views() const override
     {
-/*
-        vector<ParameterView> parameter_views = {{(type*)(biases.data()), biases.size()},
-                                                 {(type*)(weights.data()), weights.size()}};
+        vector<TensorView> parameter_views = {biases, weights};
 
         if (batch_normalization)
         {
-            parameter_views.push_back({ const_cast<type*>(scales.data()), scales.size() });
-            parameter_views.push_back({ const_cast<type*>(offsets.data()), offsets.size() });
+            parameter_views.push_back(scales);
+            parameter_views.push_back(offsets);
         }
 
         return parameter_views;
-*/
-        return vector<ParameterView>();
     }
+
 
     type get_dropout_rate() const
     {
@@ -187,6 +177,7 @@ public:
 
         if (batch_normalization)
         {
+/*
             scales.resize(outputs_number);
             scales.setConstant(1.0);
 
@@ -198,6 +189,7 @@ public:
 
             moving_standard_deviations.resize(outputs_number);
             moving_standard_deviations.setZero();
+*/
         }
 
         set_label(new_label);
@@ -320,14 +312,14 @@ public:
 
         const Index batch_size = dense2d_forward_propagation->batch_size;
 
-        const Tensor2& normalized_outputs = dense2d_forward_propagation->normalized_outputs;
-        const Tensor1& standard_deviations = dense2d_forward_propagation->standard_deviations;
+        const TensorMap2 normalized_outputs = tensor_map<2>(dense2d_forward_propagation->normalized_outputs);
+        const TensorMap1 standard_deviations = tensor_map<1>(dense2d_forward_propagation->standard_deviations);
 
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(layer_back_propagation.get());
 
-        Tensor1& bn_scale_deltas = dense2d_back_propagation->bn_scale_deltas;
-        Tensor1& bn_offset_deltas = dense2d_back_propagation->bn_offset_deltas;
+        TensorMap1 bn_scale_deltas = tensor_map<1>(dense2d_back_propagation->bn_scale_deltas);
+        TensorMap1 bn_offset_deltas = tensor_map<1>(dense2d_back_propagation->bn_offset_deltas);
 
         const array<int, 1> reduction_axes = { 0 };
         const array<Index, 2> reshape_dims = { 1, get_outputs_number() };
@@ -337,7 +329,7 @@ public:
         bn_scale_deltas.device(*device) = (deltas * normalized_outputs).sum(reduction_axes);
 
         const auto inv_m = type(1) / batch_size;
-
+/*
         deltas.device(*device) =
             ((deltas * type(batch_size))
              - bn_offset_deltas.reshape(reshape_dims).broadcast(broadcast_dims)
@@ -346,6 +338,7 @@ public:
              ) * inv_m
             / standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims)
             * scales.reshape(reshape_dims).broadcast(broadcast_dims);
+*/
     }
 
     void forward_propagate(const vector<TensorView>& input_views,
@@ -357,10 +350,10 @@ public:
         DenseForwardPropagation<2>* dense2d_forward_propagation =
             static_cast<DenseForwardPropagation<2>*>(layer_forward_propagation.get());
 
-        Tensor2& outputs = dense2d_forward_propagation->outputs;
+        TensorMap2 outputs = tensor_map<2>(dense2d_forward_propagation->outputs);
 /*
         calculate_combinations<2>(inputs, weights, biases, outputs);
-*/
+
         if(batch_normalization)
             normalize_batch<2>(
                 dense2d_forward_propagation->outputs,
@@ -379,6 +372,7 @@ public:
 
         if(is_training && dropout_rate > type(0))
             dropout(outputs, dropout_rate);
+*/
     }
 
 
@@ -395,20 +389,20 @@ public:
         const DenseForwardPropagation<2>* dense2d_layer_forward_propagation =
             static_cast<DenseForwardPropagation<2>*>(forward_propagation.get());
 
-        const Tensor2& activation_derivatives = dense2d_layer_forward_propagation->activation_derivatives;
+        const TensorMap2 activation_derivatives = tensor_map<2>(dense2d_layer_forward_propagation->activation_derivatives);
 
         // Back propagation
 
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
-        Tensor2& weight_deltas = dense2d_back_propagation->weight_deltas;
+        TensorMap2 weight_deltas = tensor_map<2>(dense2d_back_propagation->weight_deltas);
 
-        Tensor1& bias_deltas = dense2d_back_propagation->bias_deltas;
+        TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
 
         const bool& is_first_layer = dense2d_back_propagation->is_first_layer;
 
-        Tensor2& input_deltas = dense2d_back_propagation->input_deltas;
+        TensorMap2 input_deltas = tensor_map<2>(dense2d_back_propagation->input_deltas);
 
         if(activation_function != "Softmax")
             deltas.device(*device) = deltas * activation_derivatives;
@@ -569,7 +563,8 @@ public:
         const XMLElement* bn_element = dense2d_layer_element->FirstChildElement("BatchNormalization");
         if (bn_element && bn_element->GetText())
             use_batch_normalization = (string(bn_element->GetText()) == "true");
-        set_batch_normalization(use_batch_normalization);
+        set_batch_normalization(use_batch_normalization);      
+/*
         if (batch_normalization)
         {
             scales.resize(neurons_number);
@@ -582,7 +577,7 @@ public:
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), moving_means);
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
         }
-/*
+
         string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Biases"), biases);
         string_to_tensor<type, 2>(read_xml_string(dense2d_layer_element, "Weights"), weights);
 */
@@ -597,7 +592,7 @@ public:
         add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
         add_xml_element(printer, "Activation", activation_function);
         add_xml_element(printer, "BatchNormalization", batch_normalization ? "true" : "false");
-
+/*
         if (batch_normalization)
         {
             add_xml_element(printer, "Scales", tensor_to_string<type, 1>(scales));
@@ -605,7 +600,7 @@ public:
             add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
             add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
         }
-/*
+
         add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
         add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
 */
@@ -615,6 +610,7 @@ public:
 
     type* link_parameters(type* ptr) override
     {
+/*
         weights = ptr;
 
         ptr += inputs_number*outputs_number;
@@ -627,7 +623,7 @@ public:
         biases = ptr;
 
         ptr += outputs_number;
-
+*/
         return ptr;
     }
 
@@ -677,16 +673,16 @@ private:
     Index inputs_number;
     Index outputs_number;
 
-    type* biases;
-    type* weights;
+    TensorView biases;
+    TensorView weights;
+
+    TensorView scales;
+    TensorView offsets;
+
+    TensorView moving_means;
+    TensorView moving_standard_deviations;
 
     bool batch_normalization = false;
-
-    Tensor1 scales;
-    Tensor1 offsets;
-
-    Tensor1 moving_means;
-    Tensor1 moving_standard_deviations;
 
     type momentum = type(0.9);
 

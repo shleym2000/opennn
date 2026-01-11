@@ -148,7 +148,6 @@ struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
 
     // Loss index data
 
-    Tensor1 gradient;
     Tensor1 old_gradient;
     Tensor1 gradient_difference;
 

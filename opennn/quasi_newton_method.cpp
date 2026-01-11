@@ -159,7 +159,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
     Tensor1& parameters = neural_network->get_parameters();
 
-    const Tensor1& gradient = optimization_data.gradient;
+    const Tensor1& gradient = back_propagation.neural_network.gradient;
 
     Tensor1& old_parameters = optimization_data.old_parameters;
     Tensor1& parameters_difference = optimization_data.parameters_difference;
@@ -334,7 +334,6 @@ TrainingResults QuasiNewtonMethod::train()
     QuasiNewtonMethodData optimization_data(this);
 
     const Index parameters_number = neural_network->get_parameters_number();
-    optimization_data.gradient.resize(parameters_number);
 
     // Main loop
 
@@ -356,10 +355,7 @@ TrainingResults QuasiNewtonMethod::train()
                                    training_forward_propagation,
                                    training_back_propagation);
 
-        loss_index->assemble_layers_error_gradient(training_back_propagation,
-                                                   optimization_data.gradient);
-
-        loss_index->add_regularization_gradient(optimization_data.gradient);
+        loss_index->add_regularization_gradient(training_back_propagation.neural_network.gradient);
 
         results.training_error_history(epoch) = training_back_propagation.error();
 
@@ -537,7 +533,6 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
 
     // Loss index data
 
-    gradient.resize(parameters_number);
     old_gradient.resize(parameters_number);
     old_gradient.setZero();
 

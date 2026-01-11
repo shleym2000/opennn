@@ -184,7 +184,7 @@ void NormalizedSquaredError::calculate_output_delta(const Batch& batch,
 
     const Tensor2& errors = back_propagation.errors;
 
-    const TensorView delta_views = back_propagation.get_output_deltas_pair();
+    const TensorView delta_views = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 deltas = tensor_map<2>(delta_views);
 
@@ -201,7 +201,7 @@ void NormalizedSquaredError::calculate_output_delta_lm(const Batch&,
     const Tensor2& errors = back_propagation.errors;
     const Tensor1& squared_errors = back_propagation.squared_errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 

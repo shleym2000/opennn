@@ -28,7 +28,7 @@ public:
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView> get_parameter_views() const override;
 
     void set(const Index& = 0, const Index& = 0, const string& = "normalization_layer_3d");
 
@@ -52,9 +52,9 @@ private:
 
     Index sequence_length;
 
-    Tensor1 gammas;
+    TensorView gammas;
 
-    Tensor1 betas;
+    TensorView betas;
 };
 
 

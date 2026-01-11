@@ -634,24 +634,18 @@ Index Convolutional::get_input_width() const
 }
 
 
-vector<ParameterView > Convolutional::get_parameter_views() const
+vector<TensorView> Convolutional::get_parameter_views() const
 {
-/*
-    vector<ParameterView> parameter_views =
-        {
-            {(type*)(biases.data()), biases.size()},
-            {(type*)(weights.data()), weights.size()}
-        };
+
+    vector<TensorView> parameter_views = {biases, weights};
 
     if (batch_normalization)
     {
-        parameter_views.push_back({ const_cast<type*>(scales.data()), scales.size() });
-        parameter_views.push_back({ const_cast<type*>(offsets.data()), offsets.size() });
+        parameter_views.push_back(scales);
+        parameter_views.push_back(offsets);
     }
 
     return parameter_views;
-*/
-    return vector<ParameterView>();
 }
 
 

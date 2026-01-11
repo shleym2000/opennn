@@ -226,7 +226,7 @@ void WeightedSquaredError::calculate_output_delta(const Batch& batch,
 
     const Tensor2& errors_weights = back_propagation.errors_weights;
 
-    const TensorView delta_views = back_propagation.get_output_deltas_pair();
+    const TensorView delta_views = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 deltas = tensor_map<2>(delta_views);
 

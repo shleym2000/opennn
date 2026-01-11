@@ -27,6 +27,13 @@ struct TensorView
     {}
 
     Index rank() const { return dims.size(); }
+
+    Index size() const
+    {
+        if (dims.empty()) return 0;
+
+        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
+    }
 };
 
 
@@ -313,33 +320,32 @@ TensorMap2 tensor_map(const Tensor4&, const Index&, const Index&);
 TensorMap3 tensor_map_(const TensorMap4&, const Index&);
 TensorMap1 tensor_map_(const TensorMap2&, const Index&);
 
-
 template <Index rank>
-TensorMap<Tensor<type, rank>> tensor_map(const TensorView& x_pair)
+TensorMap<Tensor<type, rank>> tensor_map(const TensorView& tensor_view)
 {
-    if (!x_pair.data)
+    if (!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
 
-    if (x_pair.rank() != rank)
-        throw runtime_error("Dimensions is " + to_string(x_pair.rank()) + " and must be " + to_string(rank));
+    if (tensor_view.rank() != rank)
+        throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap1(x_pair.data, x_pair.dims[0]);
+        return TensorMap1(tensor_view.data, tensor_view.dims[0]);
     else if constexpr (rank == 2)
-        return TensorMap2(x_pair.data,
-                                          x_pair.dims[0],
-                                          x_pair.dims[1]);
+        return TensorMap2(tensor_view.data,
+                          tensor_view.dims[0],
+                          tensor_view.dims[1]);
     else if constexpr (rank == 3)
-        return TensorMap3(x_pair.data,
-                                          x_pair.dims[0],
-                                          x_pair.dims[1],
-                                          x_pair.dims[2]);
+        return TensorMap3(tensor_view.data,
+                          tensor_view.dims[0],
+                          tensor_view.dims[1],
+                          tensor_view.dims[2]);
     else if constexpr (rank == 4)
-        return TensorMap4(x_pair.data,
-                                          x_pair.dims[0],
-                                          x_pair.dims[1],
-                                          x_pair.dims[2],
-                                          x_pair.dims[3]);
+        return TensorMap4(tensor_view.data,
+                          tensor_view.dims[0],
+                          tensor_view.dims[1],
+                          tensor_view.dims[2],
+                          tensor_view.dims[3]);
     else
         static_assert(rank >= 1 && rank <= 4, "Unsupported tensor rank");
 }

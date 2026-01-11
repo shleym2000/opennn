@@ -60,7 +60,7 @@ public:
 
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView> get_parameter_views() const override;
 
     void set(const Index& = 0,
              const Index& = 0,
@@ -99,17 +99,17 @@ private:
     Index query_sequence_length = 0;
     Index source_sequence_length = 0;
 
-    Tensor2 query_weights;
-    Tensor1 query_biases;
+    TensorView query_weights;
+    TensorView query_biases;
 
-    Tensor2 key_weights;
-    Tensor1 key_biases;
+    TensorView key_weights;
+    TensorView key_biases;
 
-    Tensor2 value_weights;
-    Tensor1 value_biases;
+    TensorView value_weights;
+    TensorView value_biases;
 
-    Tensor2 projection_weights;
-    Tensor1 projection_biases;
+    TensorView projection_weights;
+    TensorView projection_biases;
 
     bool use_causal_mask = false;
 

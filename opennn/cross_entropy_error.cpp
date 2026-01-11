@@ -124,7 +124,7 @@ void CrossEntropyError2d::calculate_binary_output_delta(const Batch& batch,
 
     // Back propagation
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
@@ -155,7 +155,7 @@ void CrossEntropyError2d::calculate_multiple_output_delta(const Batch& batch,
 
     // Back propagation
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
     TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 

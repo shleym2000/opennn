@@ -48,12 +48,9 @@ dimensions Normalization3d::get_output_dimensions() const
 }
 
 
-vector<ParameterView > Normalization3d::get_parameter_views() const
+vector<TensorView> Normalization3d::get_parameter_views() const
 {
-    return {
-        {(type*)gammas.data(), gammas.size()},
-        {(type*)betas.data(), betas.size()}
-    };
+    return {gammas, betas};
 }
 
 
@@ -63,12 +60,14 @@ void Normalization3d::set(const Index& new_sequence_length,
 {
     sequence_length = new_sequence_length;
 
-    gammas.resize(new_embedding_dimension);
+    gammas.dims = {new_embedding_dimension};
+/*
     gammas.setConstant(1);
-
-    betas.resize(new_embedding_dimension);
+*/
+    betas.dims = {new_embedding_dimension};
+/*
     betas.setZero();
-
+*/
     label = new_label;
 
     name = "Normalization3d";
@@ -108,11 +107,12 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
           / (standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + numeric_limits<type>::epsilon());
 
     // Affine transformation
-
+/*
     multiply_matrices(device.get(), outputs, gammas);
 
     outputs.device(*device) = outputs + betas.reshape(array<Index, 3>{1, 1, betas.dimension(0)})
                                              .broadcast(array<Index, 3>{outputs.dimension(0), outputs.dimension(1), 1});
+*/
 }
 
 
@@ -156,7 +156,7 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     beta_derivatives.device(*device) = deltas.sum(array<Index, 2>({0, 1}));
 
     // Input derivatives
-
+/*
     scaled_deltas.device(*device) = deltas;
     multiply_matrices(device.get(), scaled_deltas, gammas);
 
@@ -194,9 +194,10 @@ void Normalization3d::from_XML(const XMLDocument& document)
     const Index new_embedding_dimension = read_xml_index(normalization_layer_element, "EmbeddingDimension");
 
     set(new_sequence_length, new_embedding_dimension, new_name);
-
+/*
     string_to_tensor<type, 1>(read_xml_string(normalization_layer_element, "Betas"), betas);
     string_to_tensor<type, 1>(read_xml_string(normalization_layer_element, "Gammas"), gammas);
+*/
 }
 
 
@@ -206,9 +207,10 @@ void Normalization3d::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "Label", label);
     add_xml_element(printer, "SequenceLength", to_string(get_sequence_length()));
     add_xml_element(printer, "EmbeddingDimension", to_string(get_embedding_dimension()));
+/*
     add_xml_element(printer, "Betas", tensor_to_string<type, 1>(betas));
     add_xml_element(printer, "Gammas", tensor_to_string<type, 1>(gammas));
-
+*/
     printer.CloseElement();
 }
 

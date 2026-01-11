@@ -30,7 +30,7 @@ public:
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView> get_parameter_views() const override;
 
     void set(const Index& = 0,
              const Index& = 0,
@@ -93,7 +93,7 @@ private:
 
     Index sequence_length = 0;
 
-    Tensor2 weights;
+    TensorView weights;
 
     bool scale_embedding = false;
     bool add_positional_encoding = false;

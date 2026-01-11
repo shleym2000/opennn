@@ -343,34 +343,10 @@ void LossIndex::calculate_layers_error_gradient(const Batch& batch,
 }
 
 
-void LossIndex::assemble_layers_error_gradient(const BackPropagation& back_propagation, Tensor1& gradient) const
-{
-    Index index = 0;
-
-    const Index first_trainable_layer = neural_network->get_first_trainable_layer_index();
-    const Index last_trainable_layer = neural_network->get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer; i <= last_trainable_layer; i++)
-    {
-        if (!back_propagation.neural_network.layers[i].get()) continue;
-
-        const vector<ParameterView> layer_gradient = back_propagation.neural_network.layers[i]->get_parameter_delta_views();
-
-        for(Index j = 0; j < Index(layer_gradient.size()); j++)
-        {
-            memcpy(gradient.data() + index, layer_gradient[j].data, layer_gradient[j].size * sizeof(type));
-
-            index += layer_gradient[j].size;
-        }
-    }
-}
-
-
 void LossIndex::add_regularization_gradient(Tensor1& gradient) const
 {
-    if (regularization_method == "None" || regularization_weight == 0) {
+    if (regularization_method == "None" || regularization_weight == 0)
         return;
-    }
 
     const Tensor1& parameters = neural_network->get_parameters();
 
@@ -401,37 +377,17 @@ void LossIndex::add_regularization_to_deltas(BackPropagation& back_propagation) 
         return;
 
     NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
 
-    for(Index layer_index = 0; layer_index < layers_number; layer_index++)
-    {
-        Layer* layer = neural_network->get_layer(layer_index).get();
+    const Tensor1& parameters = neural_network->get_parameters();
 
-        if(!layer->get_is_trainable())
-            continue;
+    Tensor1& gradient = back_propagation.neural_network.gradient;
 
-        LayerBackPropagation* layer_back_propagation = back_propagation.neural_network.layers[layer_index].get();
-
-        const vector<ParameterView>& parameter_views = layer->get_parameter_views();
-        const vector<ParameterView>& delta_views = layer_back_propagation->get_parameter_delta_views();
-
-        for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); parameter_index++)
-        {
-            type* parameter_data = parameter_views[parameter_index].data;
-            const Index parameter_size = parameter_views[parameter_index].size;
-            TensorMap1 parameters_map(parameter_data, parameter_size);
-
-            type* delta_data = delta_views[parameter_index].data;
-            TensorMap1 delta_map(delta_data, parameter_size);
-
-            if(regularization_method == "L1")
-                delta_map.device(*device) += regularization_weight * parameters_map.sign();
-            else if(regularization_method == "L2")
-                delta_map.device(*device) += parameters_map * regularization_weight;
-            else
-                throw runtime_error("Unknown regularization method: " + regularization_method);
-        }
-    }
+    if(regularization_method == "L1")
+        gradient.device(*device) += regularization_weight * parameters.sign();
+    else if(regularization_method == "L2")
+        gradient.device(*device) += parameters*regularization_weight;
+    else
+        throw runtime_error("Unknown regularization method: " + regularization_method);
 }
 
 
@@ -575,7 +531,7 @@ vector<vector<TensorView>> BackPropagation::get_layer_delta_pairs() const
     {
         if (i == last_trainable_layer_index)
         {
-            layer_delta_pairs[i].push_back(get_output_deltas_pair());
+            layer_delta_pairs[i].push_back(get_output_deltas_tensor_view());
 
             continue;
         }
@@ -595,7 +551,7 @@ vector<vector<TensorView>> BackPropagation::get_layer_delta_pairs() const
 }
 
 
-TensorView BackPropagation::get_output_deltas_pair() const
+TensorView BackPropagation::get_output_deltas_tensor_view() const
 {
     return {(type*)output_deltas.data(), output_deltas_dimensions};
 }
@@ -668,11 +624,7 @@ Tensor1 LossIndex::calculate_gradient()
 
     back_propagate(batch, forward_propagation, back_propagation);
 
-    Tensor1 gradient(parameters.size());
-
-    assemble_layers_error_gradient(back_propagation, gradient);
-
-    return gradient;
+    return back_propagation.neural_network.gradient;
 }
 
 
@@ -1254,7 +1206,7 @@ vector<vector<TensorView>> BackPropagationLM::get_layer_delta_pairs() const
     {
         if (i == last_trainable_layer_index)
         {
-            layer_delta_pairs[i].push_back(get_output_deltas_pair());
+            layer_delta_pairs[i].push_back(get_output_deltas_tensor_view());
 
             continue;
         }
@@ -1274,7 +1226,7 @@ vector<vector<TensorView>> BackPropagationLM::get_layer_delta_pairs() const
 }
 
 
-TensorView BackPropagationLM::get_output_deltas_pair() const
+TensorView BackPropagationLM::get_output_deltas_tensor_view() const
 {
     return {(type*)output_deltas.data(), output_deltas_dimensions};
 }

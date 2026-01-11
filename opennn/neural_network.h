@@ -17,7 +17,6 @@ namespace opennn
 
 class NeuralNetwork;
 
-//struct ForwardPropagation;
 struct NeuralNetworkBackPropagation;
 struct NeuralNetworkBackPropagationLM;
 
@@ -48,6 +47,8 @@ struct ForwardPropagation
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerForwardPropagation>> layers;
+
+    Tensor1 workspace;
 };
 
 
