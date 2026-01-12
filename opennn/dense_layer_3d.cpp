@@ -107,28 +107,18 @@ void Dense3d::set_activation_function(const string& new_activation_function)
 }
 
 
-void Dense3d::calculate_combinations(const Tensor<type, 3>& inputs,
-                                     Tensor<type, 3>& combinations) const
-{
-    combinations.device(*device) = inputs.contract(weights, axes(2,0))
-                                   + biases.reshape(array_3(1, 1, combinations.dimension(2)))
-                                           .broadcast(array_3(combinations.dimension(0), combinations.dimension(1), 1));
-}
-
-
 void Dense3d::forward_propagate(const vector<TensorView>& input_views,
                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                 const bool& is_training)
 {
-    const TensorMap<Tensor<type, 3>> inputs = tensor_map<3>(input_views[0]);
+    const TensorMap3 inputs = tensor_map<3>(input_views[0]);
 
     Dense3dForwardPropagation* this_forward_propagation =
         static_cast<Dense3dForwardPropagation*>(layer_forward_propagation.get());
 
-    Tensor<type, 3>& outputs = this_forward_propagation->outputs;
+    Tensor3& outputs = this_forward_propagation->outputs;
 
-    calculate_combinations(inputs,
-                           outputs);
+    calculate_combinations<3>(inputs, weights, biases, outputs);
 
     if(is_training && dropout_rate > type(0))
         dropout(outputs, dropout_rate);
@@ -144,29 +134,29 @@ void Dense3d::back_propagate(const vector<TensorView>& input_views,
                              unique_ptr<LayerForwardPropagation>& forward_propagation,
                              unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const TensorMap<Tensor<type, 3>> inputs = tensor_map<3>(input_views[0]);
+    const TensorMap3 inputs = tensor_map<3>(input_views[0]);
 
     if(delta_views.size() > 1)
         add_deltas(delta_views);
 
-    TensorMap<Tensor<type, 3>> deltas = tensor_map<3>(delta_views[0]);
+    TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
     // Forward propagation
 
     const Dense3dForwardPropagation* dense3d_layer_forward_propagation =
         static_cast<Dense3dForwardPropagation*>(forward_propagation.get());
 
-    const Tensor<type, 3>& activation_derivatives = dense3d_layer_forward_propagation->activation_derivatives;
+    const Tensor3& activation_derivatives = dense3d_layer_forward_propagation->activation_derivatives;
 
     // Back propagation
 
     Dense3dBackPropagation* dense3d_back_propagation =
         static_cast<Dense3dBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 1>& bias_deltas = dense3d_back_propagation->bias_deltas;
-    Tensor<type, 2>& weight_deltas = dense3d_back_propagation->weight_deltas;
+    Tensor1& bias_deltas = dense3d_back_propagation->bias_deltas;
+    Tensor2& weight_deltas = dense3d_back_propagation->weight_deltas;
 
-    Tensor<type, 3>& input_deltas = dense3d_back_propagation->input_deltas;
+    Tensor3& input_deltas = dense3d_back_propagation->input_deltas;
 
     deltas.device(*device) = deltas * activation_derivatives;
 
@@ -303,7 +293,7 @@ REGISTER(LayerBackPropagation, Dense3dBackPropagation, "Dense3d")
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

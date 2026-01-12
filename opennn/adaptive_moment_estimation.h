@@ -89,8 +89,6 @@ private:
 
    type beta_2 = type(0.999);
 
-   const type epsilon = numeric_limits<type>::epsilon();
-
     // Stopping criteria
 
    type training_loss_goal = type(-10);
@@ -124,8 +122,8 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
 
     AdaptiveMomentEstimation* adaptive_moment_estimation = nullptr;
 
-    vector<vector<Tensor<type, 1>>> gradient_exponential_decay;
-    vector<vector<Tensor<type, 1>>> square_gradient_exponential_decay;
+    Tensor1 gradient_exponential_decay;
+    Tensor1 square_gradient_exponential_decay;
 
     Index iteration = 0;
 

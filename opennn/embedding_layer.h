@@ -30,7 +30,7 @@ public:
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     void set(const Index& = 0,
              const Index& = 0,
@@ -93,12 +93,12 @@ private:
 
     Index sequence_length = 0;
 
-    Tensor<type, 2> weights;
+    TensorView weights;
 
     bool scale_embedding = false;
     bool add_positional_encoding = false;
 
-    Tensor<type, 2> positional_encoding;
+    Tensor2 positional_encoding;
 
     type dropout_rate = type(0);
 };
@@ -114,7 +114,7 @@ struct EmbeddingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 3> outputs;
+    Tensor3 outputs;
 };
 
 
@@ -124,13 +124,13 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor<type, 2> weight_deltas;
+    Tensor2 weight_deltas;
 };
 
 #ifdef OPENNN_CUDA
@@ -149,7 +149,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 {
     EmbeddingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_parameter_delta_views_device() const override;
+    vector<ParameterView> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 
@@ -166,7 +166,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

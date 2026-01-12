@@ -23,8 +23,8 @@ TEST(NeuralNetworkTest, ApproximationConstructor)
     
     EXPECT_EQ(neural_network.get_layers_number(), 5);
     EXPECT_EQ(neural_network.get_layer(0)->get_name(), "Scaling2d");
-    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense2d");
-    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense2d");
+    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense");
+    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense");
     EXPECT_EQ(neural_network.get_layer(3)->get_name(), "Unscaling");
     EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Bounding");
 }
@@ -36,8 +36,8 @@ TEST(NeuralNetworkTest, ClassificationConstructor)
     
     EXPECT_EQ(neural_network.get_layers_number(), 3);
     EXPECT_EQ(neural_network.get_layer(0)->get_name(), "Scaling2d");
-    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense2d");
-    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense2d");
+    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense");
+    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense");
 }
 
 
@@ -47,8 +47,8 @@ TEST(NeuralNetworkTest, AproximationConstructor)
 
     EXPECT_EQ(neural_network.get_layers_number(), 5);
     EXPECT_EQ(neural_network.get_layer(0)->get_name(), "Scaling2d");
-    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense2d");
-    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense2d");
+    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense");
+    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense");
     EXPECT_EQ(neural_network.get_layer(3)->get_name(), "Unscaling");
     EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Bounding");
 }
@@ -61,7 +61,7 @@ TEST(NeuralNetworkTest, ForecastingConstructor)
     EXPECT_EQ(neural_network.get_layers_number(), 5);
     EXPECT_EQ(neural_network.get_layer(0)->get_name(), "Scaling3d");
     EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Recurrent");
-    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense2d");
+    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense");
     EXPECT_EQ(neural_network.get_layer(3)->get_name(), "Unscaling");
     EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Bounding");
 }
@@ -73,10 +73,10 @@ TEST(NeuralNetworkTest, AutoAssociationConstructor)
 
     EXPECT_EQ(neural_network.get_layers_number(), 6);
     EXPECT_EQ(neural_network.get_layer(0)->get_name(), "Scaling2d");
-    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense2d");
-    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense2d");
-    EXPECT_EQ(neural_network.get_layer(3)->get_name(), "Dense2d");
-    EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Dense2d");
+    EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Dense");
+    EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Dense");
+    EXPECT_EQ(neural_network.get_layer(3)->get_name(), "Dense");
+    EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Dense");
     EXPECT_EQ(neural_network.get_layer(5)->get_name(), "Unscaling");
 }
 
@@ -98,7 +98,7 @@ TEST(NeuralNetworkTest, ImageClassificationConstructor)
     EXPECT_EQ(neural_network.get_layer(1)->get_name(), "Convolutional");
     EXPECT_EQ(neural_network.get_layer(2)->get_name(), "Pooling");
     EXPECT_EQ(neural_network.get_layer(3)->get_name(), "Flatten4d");
-    EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Dense2d");
+    EXPECT_EQ(neural_network.get_layer(4)->get_name(), "Dense");
 }
 
 
@@ -111,7 +111,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     bool is_training = true;
 
-    Tensor<type, 2> data(samples_number, inputs_number + outputs_number);
+    Tensor2 data(samples_number, inputs_number + outputs_number);
     data.setValues({
         {0, 0, 1},
         {1, 1, 0},
@@ -124,7 +124,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
                     dimensions{inputs_number},
                     dimensions{outputs_number});
     dataset.set_data(data);
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     Batch batch(samples_number, &dataset);
     batch.fill(dataset.get_sample_indices("Training"),
@@ -140,8 +140,8 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
-    Dense2dForwardPropagation* dense_layer_forward_propagation
-        = static_cast<Dense2dForwardPropagation*>(forward_propagation.layers[1].get());
+    DenseForwardPropagation<2>* dense_layer_forward_propagation
+        = static_cast<DenseForwardPropagation<2>*>(forward_propagation.layers[1].get());
 
     Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
@@ -151,15 +151,15 @@ TEST(NeuralNetworkTest, ForwardPropagate)
     
     ClassificationNetwork neural_network_classification({inputs_number}, {neurons_number}, {outputs_number});
 
-    Dense2d* dense_layer =static_cast<Dense2d*>(neural_network_classification.get_first("Dense2d"));
+    Dense* dense_layer =static_cast<Dense*>(neural_network_classification.get_first("Dense"));
     dense_layer->set_activation_function("Softmax");
 
     ForwardPropagation forward_propagation_0(dataset.get_samples_number(), &neural_network_classification);
 
     neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
 /*
-    Dense2dForwardPropagation* dense_layer_forward_propagation
-        = static_cast<Dense2dForwardPropagation*>(forward_propagation_0.layers[2].get());
+    DenseForwardPropagation<2>* dense_layer_forward_propagation
+        = static_cast<DenseForwardPropagation<2>*>(forward_propagation_0.layers[2].get());
 
     Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
 
@@ -172,9 +172,9 @@ TEST(NeuralNetworkTest, CalculateOutputsEmpty)
 {
     NeuralNetwork neural_network;
 
-    Tensor<type, 2> inputs;
+    Tensor2 inputs;
 
-    const Tensor<type, 2> outputs = neural_network.calculate_outputs<2,2>(inputs);
+    const Tensor2 outputs = neural_network.calculate_outputs<2,2>(inputs);
 
     EXPECT_EQ(outputs.size(), 0);
 
@@ -184,12 +184,12 @@ TEST(NeuralNetworkTest, CalculateOutputsEmpty)
 TEST(NeuralNetworkTest, CalculateDirectionalInputs)
 {
 
-    Tensor<type, 2> inputs;
-    Tensor<type, 2> outputs;
-    Tensor<type, 2> trainable_outputs;
-    Tensor<type, 1> parameters;
-    Tensor<type, 1> point;
-    Tensor<type, 2> directional_inputs;
+    Tensor2 inputs;
+    Tensor2 outputs;
+    Tensor2 trainable_outputs;
+    Tensor1 parameters;
+    Tensor1 point;
+    Tensor2 directional_inputs;
 
     // Test
         

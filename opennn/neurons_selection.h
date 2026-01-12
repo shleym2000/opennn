@@ -94,9 +94,9 @@ protected:
 
     Tensor<Index, 1> neurons_history;
 
-    Tensor<type, 1> selection_error_history;
+    Tensor1 selection_error_history;
 
-    Tensor<type, 1> training_error_history;
+    Tensor1 training_error_history;
 
     Index minimum_neurons = 0;
 
@@ -132,13 +132,13 @@ struct NeuronsSelectionResults
 
    Index optimal_neurons_number = 1;
 
-   Tensor<type, 1> optimal_parameters;
+   Tensor1 optimal_parameters;
 
    // Loss index
 
-   Tensor<type, 1> training_error_history;
+   Tensor1 training_error_history;
 
-   Tensor<type, 1> selection_error_history;
+   Tensor1 selection_error_history;
 
    type optimum_training_error = type(10);
 
@@ -156,7 +156,7 @@ struct NeuronsSelectionResults
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

@@ -45,13 +45,13 @@ TEST(MultiHeadAttention, ForwardPropagateSelfAttention)
     NeuralNetwork neural_network;
     neural_network.add_layer(make_unique<MultiHeadAttention>(dimensions({sequence_length, embedding_dimension}), heads_number));
 
-    Tensor<type, 3> inputs_1(batch_size, sequence_length, embedding_dimension);
+    Tensor3 inputs_1(batch_size, sequence_length, embedding_dimension);
     inputs_1.setRandom();
 
-    Tensor<type, 3> inputs_2(batch_size, sequence_length, embedding_dimension);
+    Tensor3 inputs_2(batch_size, sequence_length, embedding_dimension);
     inputs_1.setRandom();
 
-    Tensor<type, 3> outputs = neural_network.calculate_outputs(inputs_1, inputs_2);
+    Tensor3 outputs = neural_network.calculate_outputs(inputs_1, inputs_2);
 
     EXPECT_EQ(outputs.dimension(0), batch_size);
     EXPECT_EQ(outputs.dimension(1), sequence_length);

@@ -37,7 +37,7 @@ TEST(NormalizedSquaredErrorTest, BackPropagate)
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     ApproximationNetwork neural_network({inputs_number}, {neurons_number}, {targets_number});
 
@@ -45,8 +45,8 @@ TEST(NormalizedSquaredErrorTest, BackPropagate)
     normalized_squared_error.set_normalization_coefficient();
 
     const type error = normalized_squared_error.calculate_numerical_error();
-    const Tensor<type, 1> numerical_gradient = normalized_squared_error.calculate_numerical_gradient();
-    const Tensor<type, 1> gradient = normalized_squared_error.calculate_gradient();
+    const Tensor1 numerical_gradient = normalized_squared_error.calculate_numerical_gradient();
+    const Tensor1 gradient = normalized_squared_error.calculate_gradient();
 
     EXPECT_GE(error, 0);
     EXPECT_EQ(are_equal(gradient, numerical_gradient, type(1.0e-3)), true);
@@ -64,7 +64,7 @@ TEST(NormalizedSquaredErrorTest, BackPropagateLM)
 
     Dataset dataset(samples_number, {inputs_number}, {outputs_number});
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     Batch batch(samples_number, &dataset);
     batch.fill(dataset.get_sample_indices("Training"),
@@ -85,11 +85,11 @@ TEST(NormalizedSquaredErrorTest, BackPropagateLM)
     BackPropagationLM back_propagation_lm(samples_number, &normalized_squared_error);
     normalized_squared_error.back_propagate_lm(batch, forward_propagation, back_propagation_lm);
 
-    const Tensor<type, 1> numerical_gradient_lm = normalized_squared_error.calculate_numerical_gradient();
-    const Tensor<type, 2> numerical_jacobian_lm = normalized_squared_error.calculate_numerical_jacobian();
-    const Tensor<type, 2> numerical_hessian_lm = normalized_squared_error.calculate_numerical_hessian();
+    const Tensor1 numerical_gradient_lm = normalized_squared_error.calculate_numerical_gradient();
+    const Tensor2 numerical_jacobian_lm = normalized_squared_error.calculate_numerical_jacobian();
+    const Tensor2 numerical_hessian_lm = normalized_squared_error.calculate_numerical_hessian();
 
-    const Tensor<type, 1> gradient_lm = normalized_squared_error.calculate_numerical_gradient();
+    const Tensor1 gradient_lm = normalized_squared_error.calculate_numerical_gradient();
 
     EXPECT_EQ(are_equal(gradient_lm, numerical_gradient_lm, type(1.0e-3)), true);
     EXPECT_NEAR(back_propagation_lm.error(), back_propagation.error(), type(1.0e-3));
@@ -109,8 +109,8 @@ TEST(NormalizedSquaredErrorTest, NormalizationCoefficient)
 
     Tensor<string, 1> uses;
 
-    Tensor<type, 1> targets_mean;
-    Tensor<type, 2> target_data;
+    Tensor1 targets_mean;
+    Tensor2 target_data;
 
     Dataset dataset(samples_number, { inputs_number }, { outputs_number });
     dataset.set_data_random();

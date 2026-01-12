@@ -153,8 +153,8 @@ struct OptimizationAlgorithmData
 
     virtual void print() const;
 
-    Tensor<type, 1> potential_parameters;
-    Tensor<type, 1> training_direction;
+    Tensor1 potential_parameters;
+    Tensor1 training_direction;
     type initial_learning_rate = type(0);
 
 };
@@ -185,9 +185,9 @@ struct TrainingResults
 
     void resize_selection_error_history(const Index&);
 
-    Tensor<type, 1> training_error_history;
+    Tensor1 training_error_history;
 
-    Tensor<type, 1> selection_error_history;
+    Tensor1 selection_error_history;
 
     string elapsed_time;
 
@@ -204,7 +204,7 @@ struct TrainingResults
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

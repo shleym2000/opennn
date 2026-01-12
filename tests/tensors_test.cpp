@@ -5,12 +5,12 @@ using namespace opennn;
 
 TEST(Tensors, Fill)
 {
-    Tensor<type, 2> submatrix;
+    Tensor2 submatrix;
 
     vector<Index> rows_indices;
     vector<Index> columns_indices;
 
-    Tensor<type, 2> matrix(1, 1);
+    Tensor2 matrix(1, 1);
     matrix.setConstant(type(3.1416));
 
     rows_indices.resize(1, 0);

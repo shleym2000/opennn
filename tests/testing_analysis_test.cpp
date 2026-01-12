@@ -24,7 +24,7 @@ TEST(TestingAnalysis, ErrorData)
 
     TestingAnalysis testing_analysis(&neural_network, &dataset);
 
-    Tensor<type, 3> error_data = testing_analysis.calculate_error_data();
+    Tensor3 error_data = testing_analysis.calculate_error_data();
 
     EXPECT_EQ(error_data.size(), 3);
     EXPECT_EQ(error_data.dimension(0), 1);
@@ -34,7 +34,7 @@ TEST(TestingAnalysis, ErrorData)
 
 TEST(TestingAnalysis, PercentageErrorData)
 {
-    Tensor<type, 2> error_data;
+    Tensor2 error_data;
 
     // Test
 
@@ -235,7 +235,7 @@ TEST(TestingAnalysis, LinearRegression)
 
 TEST(TestingAnalysis, Confusion)
 {
-    Tensor<type, 2> actual(4, 3);
+    Tensor2 actual(4, 3);
     actual.setValues({
         {type(1), type(0), type(0)},
         {type(0), type(1), type(0)},
@@ -243,7 +243,7 @@ TEST(TestingAnalysis, Confusion)
         {type(0), type(0), type(1)}
     });
 
-    Tensor<type, 2> predicted(4, 3);
+    Tensor2 predicted(4, 3);
     predicted.setValues({
         {type(1), type(0), type(0)},
         {type(0), type(1), type(0)},
@@ -298,7 +298,7 @@ TEST(TestingAnalysis, BinaryClassificationTests)
 
     TestingAnalysis testing_analysis(&neural_network, &dataset);
 
-    Tensor<type, 1> binary = testing_analysis.calculate_binary_classification_tests();
+    Tensor1 binary = testing_analysis.calculate_binary_classification_tests();
 
     EXPECT_EQ(binary.size(), 15 );
 /*
@@ -324,10 +324,10 @@ TEST(TestingAnalysis, BinaryClassificationTests)
 TEST(TestingAnalysis, RocCurve)
 {
 
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 targets;
+    Tensor2 outputs;
 
-    Tensor<type, 2> roc_curve;
+    Tensor2 roc_curve;
 
     // Test
 
@@ -400,9 +400,9 @@ TEST(TestingAnalysis, RocCurve)
 TEST(TestingAnalysis, AreaUnderCurve)
 {
 
-    Tensor<type, 2> roc_curve;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 roc_curve;
+    Tensor2 targets;
+    Tensor2 outputs;
 
     type area_under_curve;
 
@@ -502,9 +502,9 @@ TEST(TestingAnalysis, OptimalThreshold)
 
     type optimal_threshold;
 
-    Tensor<type, 2> roc_curve;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 roc_curve;
+    Tensor2 targets;
+    Tensor2 outputs;
 
     // Test
 
@@ -582,8 +582,8 @@ TEST(TestingAnalysis, OptimalThreshold)
 TEST(TestingAnalysis, CumulativeGain)
 {
 
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 targets;
+    Tensor2 outputs;
 
     targets.resize(4,1);
 
@@ -601,7 +601,7 @@ TEST(TestingAnalysis, CumulativeGain)
 
     TestingAnalysis testing_analysis;
 
-    Tensor<type, 2> cumulative_gain = testing_analysis.calculate_cumulative_gain(targets, outputs);
+    Tensor2 cumulative_gain = testing_analysis.calculate_cumulative_gain(targets, outputs);
 
     EXPECT_EQ(cumulative_gain.dimension(1), 2);
     EXPECT_EQ(cumulative_gain.dimension(0), 21);
@@ -616,10 +616,10 @@ TEST(TestingAnalysis, CumulativeGain)
 TEST(TestingAnalysis, LiftChart)
 {
 
-    Tensor<type, 2> cumulative_gain;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
-    Tensor<type, 2> lift_chart;
+    Tensor2 cumulative_gain;
+    Tensor2 targets;
+    Tensor2 outputs;
+    Tensor2 lift_chart;
 
     // Test
 
@@ -652,8 +652,8 @@ TEST(TestingAnalysis, TruePositiveSamples)
 {
 
     vector<Index> true_positives_indices;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 targets;
+    Tensor2 outputs;
 
     //Test
 
@@ -733,8 +733,8 @@ TEST(TestingAnalysis, FalsePositiveSamples)
 {
 
     vector<Index> false_positives_indices;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 targets;
+    Tensor2 outputs;
 
     // Test
 
@@ -816,8 +816,8 @@ TEST(TestingAnalysis, FalseNegativeSamples)
 {
 
     vector<Index> false_negatives_indices;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 targets;
+    Tensor2 outputs;
 
 
     targets.resize(4, 1);
@@ -898,8 +898,8 @@ TEST(TestingAnalysis, TrueNegativeSamples)
 {
 
     vector<Index> true_negatives_indices;
-    Tensor<type, 2> targets;
-    Tensor<type, 2> outputs;
+    Tensor2 targets;
+    Tensor2 outputs;
 
     // Test
 
@@ -984,7 +984,7 @@ TEST(TestingAnalysis, MultipleClassificationRates)
 
     // Test
 
-    Tensor<type, 2> targets;
+    Tensor2 targets;
     targets.resize(9, 3);
 
     targets(0,0) = type(1); targets(0,1) = type(0); targets(0,2) = type(0);
@@ -997,7 +997,7 @@ TEST(TestingAnalysis, MultipleClassificationRates)
     targets(7,0) = type(0); targets(7,1) = type(1); targets(7,2) = type(0);
     targets(8,0) = type(0); targets(8,1) = type(0); targets(8,2) = type(1);
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
     outputs.resize(9, 3);
 
     outputs(0,0) = type(1); outputs(0,1) = type(0); outputs(0,2) = type(0);

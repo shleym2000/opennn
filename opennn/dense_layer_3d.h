@@ -45,9 +45,6 @@ public:
     void set_activation_function(const string&);
     void set_dropout_rate(const type&);
 
-    void calculate_combinations(const Tensor<type, 3>&,
-                                Tensor<type, 3>&) const;
-
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;
@@ -68,9 +65,9 @@ private:
 
     Index sequence_length;
 
-    Tensor<type, 1> biases;
+    Tensor1 biases;
 
-    Tensor<type, 2> weights;
+    Tensor2 weights;
 
     string activation_function;
 
@@ -88,9 +85,9 @@ struct Dense3dForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 3> outputs;
+    Tensor3 outputs;
 
-    Tensor<type, 3> activation_derivatives;
+    Tensor3 activation_derivatives;
 };
 
 
@@ -104,10 +101,10 @@ struct Dense3dBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 1> bias_deltas;
-    Tensor<type, 2> weight_deltas;
+    Tensor1 bias_deltas;
+    Tensor2 weight_deltas;
 
-    Tensor<type, 3> input_deltas;
+    Tensor3 input_deltas;
 };
 
 
@@ -121,7 +118,7 @@ struct Dense3dBackPropagation final : LayerBackPropagation
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

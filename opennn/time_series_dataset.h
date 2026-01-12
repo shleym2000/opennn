@@ -30,8 +30,8 @@ public:
                       const Codification& = Codification::UTF8);
 
     struct TimeSeriesData {
-        Tensor<type, 3> inputs;
-        Tensor<type, 2> targets;
+        Tensor3 inputs;
+        Tensor2 targets;
     };
 
     void fill_gaps();
@@ -42,15 +42,15 @@ public:
     const Index& get_time_raw_variable_index() const;
 
     TimeSeriesData get_data() const;
-    Tensor<type, 3> get_data(const string& sample_use, const string& variable_use) const;
+    Tensor3 get_data(const string& sample_role, const string& variable_use) const;
 
     void set_past_time_steps(const Index&);
     void set_future_time_steps(const Index&);
     void set_time_raw_variable_index(const Index&);
 
-    Tensor<type, 2> calculate_autocorrelations(const Index& = 10) const;
-    Tensor<type, 3> calculate_cross_correlations(const Index& = 10) const;
-    Tensor<type, 3> calculate_cross_correlations_spearman(const Index& = 10) const;
+    Tensor2 calculate_autocorrelations(const Index& = 10) const;
+    Tensor3 calculate_cross_correlations(const Index& = 10) const;
+    Tensor3 calculate_cross_correlations_spearman(const Index& = 10) const;
 
     void print() const override;
 
@@ -88,7 +88,7 @@ private:
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

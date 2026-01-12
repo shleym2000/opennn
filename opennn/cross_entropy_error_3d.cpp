@@ -26,13 +26,15 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
                                                  BackPropagation& back_propagation) const
 {
     const TensorView targets_view = batch.get_target_view();
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
-    const TensorMap<Tensor<type, 3>> outputs = tensor_map<3>(outputs_view);
+    const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
     const Index sequence_length = outputs.dimension(1);
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     // 3. Prepare Masking
     // In sequence tasks, we ignore padding. We assume target 0 is padding if built_mask is used.
@@ -48,7 +50,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     // Loss = -(target * log(output) + (1 - target) * log(1 - output))
 
     // We reuse the errors member in back_propagation to store element-wise loss
-    Tensor<type, 2>& elementwise_loss = back_propagation.errors;
+    Tensor2& elementwise_loss = back_propagation.errors;
 
     elementwise_loss.device(*device) = -(targets * (outputs_2d + epsilon).log() +
         (targets.constant(1.0f) - targets) * (targets.constant(1.0f) - outputs_2d + epsilon).log());
@@ -75,10 +77,10 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
                                                    BackPropagation& back_propagation) const
 {
     const TensorView targets_view = batch.get_target_view();
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
-    const TensorMap<Tensor<type, 3>> outputs = tensor_map<3>(outputs_view);
+    const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
     const Index sequence_length = outputs.dimension(1);
@@ -96,6 +98,8 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     // 4. Calculate Cross Entropy Sum
     // We need to find the probability the model assigned to the *correct* index.
     // In C++, a nested loop with OpenMP is the most efficient way to handle this 3D indexing.
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     #pragma omp parallel for reduction(+:total_log_loss, active_tokens_count)
     for (Index i = 0; i < batch_size; ++i)
@@ -200,7 +204,7 @@ REGISTER(LossIndex, CrossEntropyError3d, "CrossEntropyError3d");
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

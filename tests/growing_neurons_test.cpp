@@ -29,7 +29,7 @@ TEST(GrowingNeuronsTest, GeneralConstructor)
 TEST(GrowingNeuronsTest, NeuronsSelection)
 {
 /*
-    Tensor<type, 2> data(21, 2);
+    Tensor2 data(21, 2);
 
     data.setValues({{type(-1),type(0)},
                     {type(-0.9),type(0)},
@@ -90,7 +90,7 @@ void GrowingNeuronsTest::test_perform_neurons_selection()
     Index inputs_number;
     Index targets_number;
 
-    Tensor<type, 2> data;
+    Tensor2 data;
 
 
     // Test

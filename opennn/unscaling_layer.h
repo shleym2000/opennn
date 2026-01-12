@@ -27,8 +27,8 @@ public:
 
     vector<Descriptives> get_descriptives() const;
 
-    Tensor<type, 1> get_minimums() const;
-    Tensor<type, 1> get_maximums() const;
+    Tensor1 get_minimums() const;
+    Tensor1 get_maximums() const;
 
     vector<string> get_scalers() const;
 
@@ -81,7 +81,7 @@ struct UnscalingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 };
 
 
@@ -106,7 +106,7 @@ struct UnscalingForwardPropagationCuda final : public LayerForwardPropagationCud
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

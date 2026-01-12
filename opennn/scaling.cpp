@@ -13,7 +13,7 @@ namespace opennn
 {
 
 
-void scale_mean_standard_deviation(Tensor<type, 2>& matrix,
+void scale_mean_standard_deviation(Tensor2& matrix,
                                    const Index& column_index,
                                    const Descriptives& column_descriptives)
 {
@@ -35,7 +35,7 @@ void scale_mean_standard_deviation(Tensor<type, 2>& matrix,
 }
 
 
-void scale_standard_deviation(Tensor<type, 2>& matrix,
+void scale_standard_deviation(Tensor2& matrix,
                               const Index& column_index,
                               const Descriptives& column_descriptives)
 {
@@ -49,7 +49,7 @@ void scale_standard_deviation(Tensor<type, 2>& matrix,
 }
 
 
-void scale_minimum_maximum(Tensor<type, 2>& matrix,
+void scale_minimum_maximum(Tensor2& matrix,
                            const Index& column_index,
                            const Descriptives& column_descriptives,
                            const type& min_range,
@@ -77,7 +77,7 @@ void scale_minimum_maximum(Tensor<type, 2>& matrix,
 }
 
 
-void scale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
+void scale_logarithmic(Tensor2& matrix, const Index& column_index)
 {
     type min_value = numeric_limits<type>::max();
 
@@ -100,16 +100,17 @@ void scale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
         matrix(i, column_index) = log(matrix(i, column_index));
 }
 
-void scale_mean_standard_deviation_3d(Tensor<type, 3>& tensor,
+void scale_mean_standard_deviation_3d(Tensor3& tensor,
                                       const Index& feature_index,
                                       const Descriptives& feature_descriptives)
 {
     const type mean = feature_descriptives.mean;
     const type standard_deviation = feature_descriptives.standard_deviation;
-    const type epsilon = type(1e-7);
 
     const Index batch_size = tensor.dimension(0);
     const Index time_steps = tensor.dimension(1);
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     #pragma omp parallel for
     for(Index b = 0; b < batch_size; b++)
@@ -118,7 +119,7 @@ void scale_mean_standard_deviation_3d(Tensor<type, 3>& tensor,
 }
 
 
-void scale_standard_deviation_3d(Tensor<type, 3>& tensor,
+void scale_standard_deviation_3d(Tensor3& tensor,
                                  const Index& feature_index,
                                  const Descriptives& feature_descriptives)
 {
@@ -136,7 +137,7 @@ void scale_standard_deviation_3d(Tensor<type, 3>& tensor,
 }
 
 
-void scale_minimum_maximum_3d(Tensor<type, 3>& tensor,
+void scale_minimum_maximum_3d(Tensor3& tensor,
                               const Index& feature_index,
                               const Descriptives& feature_descriptives,
                               const type& min_range,
@@ -174,7 +175,7 @@ void scale_minimum_maximum_3d(Tensor<type, 3>& tensor,
 }
 
 
-void scale_logarithmic_3d(Tensor<type, 3>& tensor, const Index& feature_index)
+void scale_logarithmic_3d(Tensor3& tensor, const Index& feature_index)
 {
     type min_value = numeric_limits<type>::max();
     const Index batch_size = tensor.dimension(0);
@@ -200,7 +201,7 @@ void scale_logarithmic_3d(Tensor<type, 3>& tensor, const Index& feature_index)
 }
 
 
-void unscale_minimum_maximum(Tensor<type, 2>& matrix,
+void unscale_minimum_maximum(Tensor2& matrix,
                              const Index& column_index,
                              const Descriptives& column_descriptives,
                              const type& min_range,
@@ -219,7 +220,7 @@ void unscale_minimum_maximum(Tensor<type, 2>& matrix,
 }
 
 
-void unscale_mean_standard_deviation(Tensor<type, 2>& matrix, const Index& column_index, const Descriptives& column_descriptives)
+void unscale_mean_standard_deviation(Tensor2& matrix, const Index& column_index, const Descriptives& column_descriptives)
 {
     const type mean = column_descriptives.mean;
     type standard_deviation = column_descriptives.standard_deviation;
@@ -239,7 +240,7 @@ void unscale_mean_standard_deviation(Tensor<type, 2>& matrix, const Index& colum
 }
 
 
-void unscale_standard_deviation(Tensor<type, 2>& matrix, const Index& column_index, const Descriptives& column_descriptives)
+void unscale_standard_deviation(Tensor2& matrix, const Index& column_index, const Descriptives& column_descriptives)
 {
     const type slope = abs(column_descriptives.standard_deviation) < NUMERIC_LIMITS_MIN
             ? type(1)
@@ -252,7 +253,7 @@ void unscale_standard_deviation(Tensor<type, 2>& matrix, const Index& column_ind
 }
 
 
-void unscale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
+void unscale_logarithmic(Tensor2& matrix, const Index& column_index)
 {
     #pragma omp parallel for
 
@@ -261,7 +262,7 @@ void unscale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
 }
 
 
-void unscale_image_minimum_maximum(Tensor<type, 2>& matrix, const Index& column_index)
+void unscale_image_minimum_maximum(Tensor2& matrix, const Index& column_index)
 {
     #pragma omp parallel for
 
@@ -273,7 +274,7 @@ void unscale_image_minimum_maximum(Tensor<type, 2>& matrix, const Index& column_
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

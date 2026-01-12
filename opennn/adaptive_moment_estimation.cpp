@@ -388,7 +388,7 @@ Tensor<string, 2> AdaptiveMomentEstimation::to_string_matrix() const
     {"Learning rate", to_string(double(learning_rate))},
     {"Beta 1", to_string(double(beta_1))},
     {"Beta 2", to_string(double(beta_2))},
-    {"Epsilon", to_string(double(epsilon))},
+    {"Epsilon", to_string(numeric_limits<type>::epsilon())},
     {"Training loss goal", to_string(double(training_loss_goal))},
     {"Maximum epochs number", to_string(maximum_epochs_number)},
     {"Maximum time", write_time(maximum_time)},
@@ -402,7 +402,6 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
                                                  AdaptiveMomentEstimationData& optimization_data) const
 {
     NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
 
     optimization_data.iteration++;
     Index& iteration = optimization_data.iteration;
@@ -410,44 +409,25 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
     const type bias_correction_1 = type(1) - pow(beta_1, type(iteration));
     const type bias_correction_2 = type(1) - pow(beta_2, type(iteration));
 
-    for(Index layer_index = 0; layer_index < layers_number; layer_index++)
-    {
-        Layer* layer = neural_network->get_layer(layer_index).get();
+    Tensor1& parameters = neural_network->get_parameters();
+    Tensor1& gradient = back_propagation.neural_network.gradient;
 
-        if (!layer->get_is_trainable())
-            continue;
+    Tensor1& gradient_exponential_decay = optimization_data.gradient_exponential_decay;
+    Tensor1& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay;
 
-        LayerBackPropagation* layer_back_propagation = back_propagation.neural_network.layers[layer_index].get();
+    gradient_exponential_decay.device(*device)
+        = gradient_exponential_decay * beta_1 + gradient * (type(1) - beta_1);
 
-        const vector<ParameterView>& parameter_views = layer->get_parameter_views();
-        const vector<ParameterView>& delta_views = layer_back_propagation->get_parameter_delta_views();
+    square_gradient_exponential_decay.device(*device)
+        = square_gradient_exponential_decay * beta_2 + gradient.square() * (type(1) - beta_2);
 
-        for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); parameter_index++)
-        {
-            type* parameter_data = parameter_views[parameter_index].data;
-            const Index parameter_size = parameter_views[parameter_index].size;
-            type* delta_data = delta_views[parameter_index].data;
+    // @todo can we avoid these two tensors?
 
-            TensorMap<Tensor<type, 1>> parameters(parameter_data, parameter_size);
-            TensorMap<Tensor<type, 1>> gradient(delta_data, parameter_size);
+    const Tensor1 corrected_gradient_exponential_decay = gradient_exponential_decay / bias_correction_1;
+    const Tensor1 corrected_square_gradient_exponential_decay = square_gradient_exponential_decay / bias_correction_2;
 
-            Tensor<type, 1>& gradient_exponential_decay = optimization_data.gradient_exponential_decay[layer_index][parameter_index];
-            Tensor<type, 1>& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay[layer_index][parameter_index];
-
-            gradient_exponential_decay.device(*device)
-                = gradient_exponential_decay * beta_1 + gradient * (type(1) - beta_1);
-
-            square_gradient_exponential_decay.device(*device)
-                = square_gradient_exponential_decay * beta_2 + gradient.square() * (type(1) - beta_2);
-
-            Tensor<type, 1> corrected_gradient_exponential_decay = gradient_exponential_decay / bias_correction_1;
-            Tensor<type, 1> corrected_square_gradient_exponential_decay = square_gradient_exponential_decay / bias_correction_2;
-
-            parameters.device(*device)
-                -= learning_rate * corrected_gradient_exponential_decay / (corrected_square_gradient_exponential_decay.sqrt() + epsilon);
-
-        }
-    }
+    parameters.device(*device)
+        -= learning_rate * corrected_gradient_exponential_decay / (corrected_square_gradient_exponential_decay.sqrt() + numeric_limits<type>::epsilon());
 }
 
 
@@ -494,35 +474,13 @@ void AdaptiveMomentEstimationData::set(AdaptiveMomentEstimation* new_adaptive_mo
     LossIndex* loss_index = new_adaptive_moment_estimation->get_loss_index();
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    const Index layers_number = neural_network->get_layers_number();
+    const Index parameters_number = neural_network->get_parameters_number();
 
-    gradient_exponential_decay.resize(layers_number);
-    square_gradient_exponential_decay.resize(layers_number);
+    gradient_exponential_decay.resize(parameters_number);
+    gradient_exponential_decay.setZero();
 
-    for (Index i = 0; i < layers_number; i++)
-    {
-        Layer* layer = neural_network->get_layer(i).get();
-
-        if (!layer->get_is_trainable())
-            continue;
-
-        const auto& parameter_views = layer->get_parameter_views();
-        const Index parameter_sets_number = parameter_views.size();
-
-        gradient_exponential_decay[i].resize(parameter_sets_number);
-        square_gradient_exponential_decay[i].resize(parameter_sets_number);
-
-        for (Index j = 0; j < parameter_sets_number; j++)
-        {
-            const Index parameter_size = parameter_views[j].size;
-
-            gradient_exponential_decay[i][j].resize(parameter_size);
-            gradient_exponential_decay[i][j].setZero();
-
-            square_gradient_exponential_decay[i][j].resize(parameter_size);
-            square_gradient_exponential_decay[i][j].setZero();
-        }
-    }
+    square_gradient_exponential_decay.resize(parameters_number);
+    square_gradient_exponential_decay.setZero();
 }
 
 
@@ -836,7 +794,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
         const vector<ParameterView> parameter_views = layer->get_parameter_views_device();
 
         LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
-        const vector<ParameterView> delta_views = layer_back_prop->get_parameter_delta_views_device();
+        const vector<ParameterView> delta_views = layer_back_prop->get_gradient_views_device();
 
         assert(parameter_views.size() == delta_views.size());
 
@@ -996,7 +954,7 @@ REGISTER(OptimizationAlgorithm, AdaptiveMomentEstimation, "AdaptiveMomentEstimat
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

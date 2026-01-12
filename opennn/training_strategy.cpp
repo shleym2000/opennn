@@ -139,9 +139,9 @@ void TrainingStrategy::set_default()
     {
         const unique_ptr<Layer>& layer = neural_network->get_layer(i);
 
-        if(layer->get_name() == "Dense2d")
+        if(layer->get_name() == "Dense")
         {
-            const Dense2d* dense_layer = static_cast<const Dense2d*>(layer.get());
+            const Dense<2>* dense_layer = static_cast<const Dense<2>*>(layer.get());
             output_activation = dense_layer->get_activation_function();
             break;
         }
@@ -162,6 +162,18 @@ void TrainingStrategy::set_default()
         adaptive_moment_estimation->set_maximum_epochs_number(100);
         adaptive_moment_estimation->set_display_period(10);
 
+        return;
+    }
+
+    // Transformer
+
+    if(neural_network->has("Dense3d"))
+    {
+        set_loss_index("CrossEntropyError3d");
+        set_optimization_algorithm("AdaptiveMomentEstimation");
+
+        auto* adam = static_cast<AdaptiveMomentEstimation*>(optimization_algorithm.get());
+        adam->set_learning_rate(0.0001);
         return;
     }
 
@@ -406,7 +418,7 @@ TrainingResults TrainingStrategy::train_cuda()
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

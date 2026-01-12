@@ -39,14 +39,14 @@ TEST(MinkowskiErrorTest, BackPropagate)
 
     Dataset dataset(samples_number, { inputs_number }, { outputs_number });
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     ApproximationNetwork neural_network({ inputs_number }, { neurons_number }, { outputs_number });
 
     MinkowskiError minkowski_error(&neural_network, &dataset);
 
-    const Tensor<type, 1> gradient = minkowski_error.calculate_gradient();
-    const Tensor<type, 1> numerical_gradient = minkowski_error.calculate_numerical_gradient();
+    const Tensor1 gradient = minkowski_error.calculate_gradient();
+    const Tensor1 numerical_gradient = minkowski_error.calculate_numerical_gradient();
 
     EXPECT_EQ(are_equal(gradient, numerical_gradient, type(1.0e-3)), true);
 }

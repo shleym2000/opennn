@@ -244,8 +244,8 @@ void NeuronsSelectionResults::resize_history(const Index& new_size)
     const Index old_size = neurons_number_history.size();
 
     const Tensor<Index, 1> old_neurons_number_history(neurons_number_history);
-    const Tensor<type, 1> old_training_error_history(training_error_history);
-    const Tensor<type, 1> old_selection_error_history(selection_error_history);
+    const Tensor1 old_training_error_history(training_error_history);
+    const Tensor1 old_selection_error_history(selection_error_history);
 
     neurons_number_history.resize(new_size);
     training_error_history.resize(new_size);
@@ -290,7 +290,7 @@ string NeuronsSelectionResults::write_stopping_condition() const
 void NeuronsSelectionResults::print() const
 {
     cout << endl
-         << "Neurons Selection Results" << endl
+         << "Neuron Selection Results" << endl
          << "Optimal neurons number: " << optimal_neurons_number << endl
          << "Optimum training error: " << optimum_training_error << endl
          << "Optimum selection error: " << optimum_selection_error << endl;
@@ -299,7 +299,7 @@ void NeuronsSelectionResults::print() const
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

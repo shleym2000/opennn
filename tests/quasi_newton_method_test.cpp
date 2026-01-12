@@ -45,7 +45,7 @@ TEST(QuasiNewtonMethodTest, DFP)
 
     quasi_newton_method.calculate_DFP_inverse_hessian(quasi_newton_method_data);
 
-    const Tensor<type, 2> inverse_hessian = mean_squared_error.calculate_inverse_hessian();
+    const Tensor2 inverse_hessian = mean_squared_error.calculate_inverse_hessian();
 
     EXPECT_EQ(are_equal(quasi_newton_method_data.inverse_hessian, inverse_hessian, type(1e-4)), true);
 */
@@ -74,7 +74,7 @@ TEST(QuasiNewtonMethodTest, BGFS)
 
     quasi_newton_method.calculate_BFGS_inverse_hessian(quasi_newton_method_data);
 
-    const Tensor<type, 2> inverse_hessian = mean_squared_error.calculate_inverse_hessian();
+    const Tensor2 inverse_hessian = mean_squared_error.calculate_inverse_hessian();
 
     EXPECT_EQ(are_equal(quasi_newton_method_data.inverse_hessian, inverse_hessian, type(1e-4)), true);
     */

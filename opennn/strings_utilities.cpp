@@ -197,13 +197,13 @@ vector<string> convert_string_vector(const vector<vector<string>>& input_vector,
 }
 
 
-Tensor<type, 1> to_type_vector(const string& text, const string& separator)
+Tensor1 to_type_vector(const string& text, const string& separator)
 {
     const vector<string> tokens = get_tokens(text, separator);
 
     const Index tokens_size = tokens.size();
 
-    Tensor<type, 1> type_vector(tokens_size);
+    Tensor1 type_vector(tokens_size);
 
     for(Index i = 0; i < tokens_size; i++)
         try
@@ -529,6 +529,7 @@ void replace_substring_within_quotes(string &str, const string &target, const st
         string quoted_content = match[1].str();
 
         size_t position = 0;
+
         while ((position = quoted_content.find(target, position)) != string::npos)
         {
             quoted_content.replace(position, target.length(), replacement);
@@ -711,7 +712,7 @@ void display_progress_bar(const int& completed, const int& total)
 }
 
 
-void tokenize_whitespace(const vector<string>& context_tokens, Tensor<type, 2>& context)
+void tokenize_whitespace(const vector<string>& context_tokens, Tensor2& context)
 {
 /*
     bool line_ended = false;
@@ -743,7 +744,7 @@ void tokenize_whitespace(const vector<string>& context_tokens, Tensor<type, 2>& 
 }
 
 
-void tokenize_wordpiece(const vector<string>& context_tokens, Tensor<type, 2>& context)
+void tokenize_wordpiece(const vector<string>& context_tokens, Tensor2& context)
 {
     /*
     // unordered_map<string, type> context_vocabulary_map;
@@ -825,7 +826,7 @@ void tokenize_wordpiece(const vector<string>& context_tokens, Tensor<type, 2>& c
 */
 }
 
-void detokenize_whitespace(Tensor<type, 2>& predictions, ostringstream& output_string)
+void detokenize_whitespace(Tensor2& predictions, ostringstream& output_string)
 {
     /*
     for(Index i = 1; i < decoder_length; i++)
@@ -845,7 +846,7 @@ void detokenize_whitespace(Tensor<type, 2>& predictions, ostringstream& output_s
 }
 
 
-void detokenize_wordpiece(Tensor<type, 2>& predictions, ostringstream& buffer)
+void detokenize_wordpiece(Tensor2& predictions, ostringstream& buffer)
 {
     /*
     for (const auto& pair : output_vocabulary) {
@@ -924,10 +925,47 @@ vector<string> preprocess_language_document(const string& document, const bool& 
     return tokens;
 }
 
+
+string formatNumber(type value, int precision)
+{
+    ostringstream oss;
+    oss << fixed << setprecision(precision) << value;
+
+    string str = oss.str();
+
+    auto pos = str.find('.');
+
+    if (pos != string::npos)
+    {
+        str.erase(str.find_last_not_of('0') + 1);
+
+        if (str.back() == '.')
+            str.pop_back();
+    }
+
+    return str;
+
+    // ostringstream oss;
+    // oss << fixed << setprecision(precision) << value;
+
+    // string str = oss.str();
+
+    // if (str.find('.') != string::npos)
+    // {
+    //     while (!str.empty() && str.back() == '0')
+    //         str.pop_back();
+
+    //     if (!str.empty() && str.back() == '.')
+    //         str.pop_back();
+    // }
+
+    // return str;
+}
+
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

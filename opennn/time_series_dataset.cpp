@@ -67,19 +67,19 @@ const Index& TimeSeriesDataset::get_future_time_steps() const
 }
 
 
-Tensor<type, 3> TimeSeriesDataset::get_data(const string& sample_use, const string& variable_use) const
+Tensor3 TimeSeriesDataset::get_data(const string& sample_role, const string& variable_use) const
 {
-    const vector<Index> sample_indices = get_sample_indices(sample_use);
+    const vector<Index> sample_indices = get_sample_indices(sample_role);
     const vector<Index> variable_indices = get_variable_indices(variable_use);
 
     if (sample_indices.empty() || variable_indices.empty()) {
-        return Tensor<type, 3>();
+        return Tensor3();
     }
 
     const Index samples_number = sample_indices.size();
     const Index variables_number = variable_indices.size();
 
-    Tensor<type, 3> data_3d(samples_number, past_time_steps, variables_number);
+    Tensor3 data_3d(samples_number, past_time_steps, variables_number);
     data_3d.setZero();
 
     if (variable_use == "Input" || variable_use == "InputTarget")
@@ -280,7 +280,7 @@ void TimeSeriesDataset::read_csv()
 
     if(samples_number > past_time_steps)
         for(Index i = samples_number - past_time_steps; i < samples_number; i++)
-            set_sample_use(i, "None");
+            set_sample_role(i, "None");
 
     split_samples_sequential(type(0.6), type(0.2), type(0.2));
 }
@@ -315,11 +315,11 @@ void TimeSeriesDataset::impute_missing_values_unuse()
         }
 
         if (sequence_is_invalid)
-            set_sample_use(i, "None");
+            set_sample_role(i, "None");
     }
 
     for (Index i = num_sequences; i < samples_number; ++i)
-        set_sample_use(i, "None");
+        set_sample_role(i, "None");
 }
 
 
@@ -330,7 +330,7 @@ void TimeSeriesDataset::impute_missing_values_interpolate()
     const vector<Index> input_variable_indices = get_variable_indices("Input");
     const vector<Index> target_variable_indices = get_variable_indices("Target");
 
-    const Tensor<type, 1> means = mean(data, used_sample_indices, used_variable_indices);
+    const Tensor1 means = mean(data, used_sample_indices, used_variable_indices);
 
     const Index used_samples_number = used_sample_indices.size();
 
@@ -399,7 +399,7 @@ void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
     const Index input_size = input_indices.size();
     const Index total_rows_in_data = data.dimension(0);
 
-    TensorMap<Tensor<type, 3>> batch(input_tensor_data, batch_size, past_time_steps, input_size);
+    TensorMap3 batch(input_tensor_data, batch_size, past_time_steps, input_size);
     const type* matrix_data = data.data();
 
 #pragma omp parallel for
@@ -434,7 +434,7 @@ void TimeSeriesDataset::fill_target_tensor(const vector<Index>& sample_indices,
     const Index target_size = target_indices.size();
     const Index total_rows_in_data = data.dimension(0);
 
-    TensorMap<Tensor<type, 2>> targets(target_tensor_data, batch_size, target_size);
+    TensorMap2 targets(target_tensor_data, batch_size, target_size);
     const type* matrix_data = data.data();
 
 #pragma omp parallel for
@@ -466,7 +466,7 @@ void TimeSeriesDataset::fill_gaps()
     type new_samples_number = (end_time - start_time)/period;
     type new_variables_number = get_variables_number();
 
-    Tensor<type, 2> new_data(new_samples_number,  new_variables_number);
+    Tensor2 new_data(new_samples_number,  new_variables_number);
 
     type timestamp = 0;
 
@@ -490,7 +490,7 @@ void TimeSeriesDataset::fill_gaps()
 }
 
 
-Tensor<type, 2> TimeSeriesDataset::calculate_autocorrelations(const Index& past_time_steps) const
+Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index& past_time_steps) const
 {
     const Index samples_number = get_samples_number();
 
@@ -545,9 +545,9 @@ Tensor<type, 2> TimeSeriesDataset::calculate_autocorrelations(const Index& past_
          (samples_number == past_time_steps + 1 && past_time_steps > 1) ? past_time_steps - 1 :
          past_time_steps;
 
-    Tensor<type, 2> autocorrelations(input_target_numeric_raw_variables_number, new_past_time_steps);
-    Tensor<type, 1> autocorrelations_vector(new_past_time_steps);
-    Tensor<type, 2> input_i;
+    Tensor2 autocorrelations(input_target_numeric_raw_variables_number, new_past_time_steps);
+    Tensor1 autocorrelations_vector(new_past_time_steps);
+    Tensor2 input_i;
     Index counter_i = 0;
 
     for(Index i = 0; i < raw_variables_number; i++)
@@ -558,7 +558,7 @@ Tensor<type, 2> TimeSeriesDataset::calculate_autocorrelations(const Index& past_
         input_i = get_raw_variable_data(i);
         cout << "Calculating " << raw_variables[i].name << " autocorrelations" << endl;
 
-        const TensorMap<Tensor<type, 1>> current_input_i(input_i.data(), input_i.dimension(0));
+        const TensorMap1 current_input_i(input_i.data(), input_i.dimension(0));
         
         autocorrelations_vector = opennn::autocorrelations(device.get(), current_input_i, new_past_time_steps);
 
@@ -572,7 +572,7 @@ Tensor<type, 2> TimeSeriesDataset::calculate_autocorrelations(const Index& past_
 }
 
 
-Tensor<type, 3> TimeSeriesDataset::calculate_cross_correlations(const Index& past_time_steps) const
+Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index& past_time_steps) const
 {
     const Index samples_number = get_samples_number();
 
@@ -620,14 +620,14 @@ Tensor<type, 3> TimeSeriesDataset::calculate_cross_correlations(const Index& pas
                                 : (samples_number == past_time_steps + 1) ? (past_time_steps - 1)
                                 : past_time_steps;
 
-    Tensor<type, 3> cross_correlations(input_target_numeric_raw_variables_number,
+    Tensor3 cross_correlations(input_target_numeric_raw_variables_number,
                                        input_target_numeric_raw_variables_number,
                                        new_past_time_steps);
 
-    Tensor<type, 1> cross_correlations_vector(new_past_time_steps);
+    Tensor1 cross_correlations_vector(new_past_time_steps);
 
-    Tensor<type, 2> input_i;
-    Tensor<type, 2> input_j;
+    Tensor2 input_i;
+    Tensor2 input_j;
 
     Index counter_i = 0;
     Index counter_j = 0;
@@ -653,8 +653,8 @@ Tensor<type, 3> TimeSeriesDataset::calculate_cross_correlations(const Index& pas
 
             if(display) cout << "  vs. " << raw_variables[j].name << endl;
  
-            const TensorMap<Tensor<type, 1>> current_input_i(input_i.data(), input_i.dimension(0));
-            const TensorMap<Tensor<type, 1>> current_input_j(input_j.data(), input_j.dimension(0));
+            const TensorMap1 current_input_i(input_i.data(), input_i.dimension(0));
+            const TensorMap1 current_input_j(input_j.data(), input_j.dimension(0));
 
             cross_correlations_vector = opennn::cross_correlations(device.get(), current_input_i, current_input_j, new_past_time_steps);
 
@@ -671,7 +671,7 @@ Tensor<type, 3> TimeSeriesDataset::calculate_cross_correlations(const Index& pas
 }
 
 
-Tensor<type, 3> TimeSeriesDataset::calculate_cross_correlations_spearman(const Index& past_time_steps) const
+Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index& past_time_steps) const
 {
     const Index samples_number = get_samples_number();
 
@@ -685,28 +685,28 @@ Tensor<type, 3> TimeSeriesDataset::calculate_cross_correlations_spearman(const I
             numeric_vars_indices.push_back(i);
 
     const Index numeric_vars_count = numeric_vars_indices.size();
-    if (numeric_vars_count == 0) return Tensor<type, 3>(0,0,0);
+    if (numeric_vars_count == 0) return Tensor3(0,0,0);
 
-    map<Index, Tensor<type, 1>> ranked_series;
+    map<Index, Tensor1> ranked_series;
 
     for (Index global_idx : numeric_vars_indices)
     {
-        Tensor<type, 2> var_data = get_raw_variable_data(global_idx);
+        Tensor2 var_data = get_raw_variable_data(global_idx);
         ranked_series[global_idx] = calculate_spearman_ranks(var_data.chip(0, 1));
     }
 
-    Tensor<type, 3> cross_correlations(numeric_vars_count, numeric_vars_count, past_time_steps);
+    Tensor3 cross_correlations(numeric_vars_count, numeric_vars_count, past_time_steps);
 
     #pragma omp parallel for
     for (Index i = 0; i < numeric_vars_count; ++i)
     {
-        const Tensor<type, 1>& ranked_series_i = ranked_series.at(numeric_vars_indices[i]);
+        const Tensor1& ranked_series_i = ranked_series.at(numeric_vars_indices[i]);
 
         for (Index j = 0; j < numeric_vars_count; ++j)
         {
-            const Tensor<type, 1>& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
+            const Tensor1& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
 
-            Tensor<type, 1> ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
+            Tensor1 ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
 
             for (Index k = 0; k < past_time_steps; ++k)
                 cross_correlations(i, j, k) = ccf_vector(k);
@@ -756,7 +756,7 @@ vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

@@ -34,7 +34,7 @@ TEST(TimeSeriesDataset, Autocorrelations)
 {
     TimeSeriesDataset dataset;
 
-    Tensor<type, 2> autocorrelations;
+    Tensor2 autocorrelations;
 
     Index samples_number = 1;
     dimensions inputs_number = { 1 };
@@ -68,9 +68,9 @@ TEST(TimeSeriesDataset, CrossCorrelations)
     
     Index lags_number;
 
-    Tensor<type, 3> cross_correlations;
+    Tensor3 cross_correlations;
 
-    Tensor<type, 2> data;
+    Tensor2 data;
 
     // Test
 
@@ -105,7 +105,7 @@ TEST(TimeSeriesDataset, test_transform_time_series)
 
     TimeSeriesDataset dataset(9, input_dimensions, target_dimensions);
 
-    Tensor<type, 2> data;
+    Tensor2 data;
 
     data.resize(9, 2);
 
@@ -156,7 +156,7 @@ TEST(TimeSeriesDataset, test_set_steps_ahead_number)
 
     TimeSeriesDataset dataset(4, input_dimensions, target_dimensions);
 
-    Tensor<type, 2> data;
+    Tensor2 data;
     
     data.resize(4, 2);
     data.setValues({ {type(0),type(0)},
@@ -182,7 +182,7 @@ TEST(TimeSeriesDataset, test_set_lags_number)
 
     TimeSeriesDataset dataset(4, input_dimensions, target_dimensions);
 
-    Tensor<type, 2> data;
+    Tensor2 data;
     // Test
 
     data.resize(4, 2);

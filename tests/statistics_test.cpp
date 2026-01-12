@@ -15,7 +15,7 @@ TEST(StatisticsTest, CountEmptyBins)
 
     // Test
 
-    Tensor<type, 1> centers;
+    Tensor1 centers;
     Tensor<Index, 1> frecuencies;
 
     centers.resize(3);
@@ -61,7 +61,7 @@ TEST(StatisticsTest, CalculateMinimumFrequency)
 
     // Test
 
-    Tensor<type, 1> centers(3);
+    Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
     Tensor<Index, 1> frecuencies(3);
@@ -105,7 +105,7 @@ TEST(StatisticsTest, CalculateMaximumFrequency)
 
     // Test
 
-    Tensor<type, 1> centers(3);
+    Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
     Tensor<Index, 1> frecuencies(3);
@@ -135,7 +135,7 @@ TEST(StatisticsTest, CalculateMostPopulatedBin)
 
     // Test
 
-    Tensor<type, 1> centers(3);
+    Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
     Tensor<Index, 1> frecuencies(3);
@@ -174,7 +174,7 @@ TEST(StatisticsTest, CalculateMinimalCenters)
 
     // Test
     
-    Tensor<type, 1> centers(7);
+    Tensor1 centers(7);
     centers.setValues({ type(1),type(2),type(4),type(6),type(7),type(8), type(12) });
 
     Tensor<Index, 1> frecuencies(7);
@@ -182,7 +182,7 @@ TEST(StatisticsTest, CalculateMinimalCenters)
     
     Histogram histogram(centers, frecuencies);
 
-    Tensor<type, 1> solution(4);
+    Tensor1 solution(4);
     solution.setValues({type(6), type(7), type(8), type(12)});
 
     EXPECT_EQ(Index(histogram.calculate_minimal_centers()[0]), solution[0]);
@@ -217,7 +217,7 @@ TEST(StatisticsTest, CalculateMaximalCenters)
 
     // Test
     
-    Tensor<type, 1> vector(18);
+    Tensor1 vector(18);
     vector.setValues(
                 {type(1), type(1), type(1),
                  type(1), type(7), type(2),
@@ -228,10 +228,10 @@ TEST(StatisticsTest, CalculateMaximalCenters)
 
     histogram = opennn::histogram(vector,6);
 
-    Tensor<type, 1> solution(2);
+    Tensor1 solution(2);
     solution.setValues({ type(1), type(7)});
 
-    Tensor<type, 1> result = histogram.calculate_maximal_centers();
+    Tensor1 result = histogram.calculate_maximal_centers();
 
     //EXPECT_NEAR(histogram.calculate_maximal_centers()(4), solution[1], 1.0e-7);
     
@@ -242,7 +242,7 @@ TEST(StatisticsTest, CalculateMaximalCenters)
 
     // Test
 
-    Tensor<type, 1> centers(3);
+    Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
     Tensor<Index, 1> frecuencies(3);
@@ -264,7 +264,7 @@ TEST(StatisticsTest, CalculateBin)
 
     // Test
 
-    Tensor<type, 1> centers(3);
+    Tensor1 centers(3);
     centers.setValues({ type(2),type(4),type(6)});
 
     Tensor<Index, 1> frecuencies(3);
@@ -275,7 +275,7 @@ TEST(StatisticsTest, CalculateBin)
     
     // Test
 
-    Tensor<type, 1> vector(3);
+    Tensor1 vector(3);
 
     vector.setValues({ type(1), type(1), type(1)});
     histogram = opennn::histogram(vector, 10);
@@ -295,7 +295,7 @@ TEST(StatisticsTest, CalculateFrequency)
 
     // Test
 
-    Tensor<type, 1> centers(3);
+    Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
     Tensor<Index, 1> frecuencies(3);
@@ -317,7 +317,7 @@ TEST(StatisticsTest, CalculateFrequency)
 
     // Test
 
-    Tensor<type, 1> vector(3);
+    Tensor1 vector(3);
     Index frequency_3;
     Histogram histogram_3;
 
@@ -332,7 +332,7 @@ TEST(StatisticsTest, CalculateFrequency)
 
 TEST(StatisticsTest, Minimum)
 {
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
 
@@ -361,7 +361,7 @@ TEST(StatisticsTest, Minimum)
 
 TEST(StatisticsTest, Maximum)
 {
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
 
@@ -390,7 +390,7 @@ TEST(StatisticsTest, Maximum)
 
 TEST(StatisticsTest, Mean)
 {
-    Tensor<type, 2> matrix(3,3);
+    Tensor2 matrix(3,3);
     matrix.setZero();
 
     EXPECT_NEAR(mean(matrix)(0), 0, NUMERIC_LIMITS_MIN);
@@ -403,7 +403,7 @@ TEST(StatisticsTest, Mean)
     EXPECT_NEAR(mean(matrix)(1), type(1), NUMERIC_LIMITS_MIN);
     EXPECT_NEAR(mean(matrix)(2), type(4), NUMERIC_LIMITS_MIN);
 
-    Tensor<type, 1> vector(2);
+    Tensor1 vector(2);
     vector.setValues({ type(1), type(1)});
 
     EXPECT_NEAR(mean(vector), type(1), NUMERIC_LIMITS_MIN);
@@ -439,7 +439,7 @@ TEST(StatisticsTest, Mean)
 
 TEST(StatisticsTest, StandardDeviation)
 {
-    Tensor<type, 1> vector(1);
+    Tensor1 vector(1);
     vector.setZero();
 
     type standard_deviation;
@@ -501,7 +501,7 @@ TEST(StatisticsTest, StandardDeviation)
 TEST(StatisticsTest, Median)
 {
     
-    Tensor<type, 1> vector(2);
+    Tensor1 vector(2);
     vector.setZero();
     
     type median;
@@ -560,7 +560,7 @@ TEST(StatisticsTest, Median)
     EXPECT_NEAR(abs(median), type(2), NUMERIC_LIMITS_MIN);
     
     // Test
-    Tensor<type, 2> matrix(3,2);
+    Tensor2 matrix(3,2);
 
     matrix.setValues({{type(1),type(1)},
                       {type(2),type(3)},
@@ -584,7 +584,7 @@ TEST(StatisticsTest, Median)
 
 TEST(StatisticsTest, Variance)
 {
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
 
@@ -632,8 +632,8 @@ TEST(StatisticsTest, Variance)
 
 TEST(StatisticsTest, Quartiles)
 {
-    Tensor<type, 1> vector;
-    Tensor<type, 1> quartiles;
+    Tensor1 vector;
+    Tensor1 quartiles;
     
     
     // Test
@@ -789,9 +789,9 @@ TEST(StatisticsTest, Quartiles)
 TEST(StatisticsTest, Histogram)
 {
     
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
-    Tensor<type, 1> centers;
+    Tensor1 centers;
     Tensor<Index, 1> frequencies;
     
     // Test
@@ -852,7 +852,7 @@ TEST(StatisticsTest, Histograms)
 {
     
     Tensor<Histogram, 1> histograms;
-    Tensor<type, 2> matrix(3,3);
+    Tensor2 matrix(3,3);
     matrix.setValues({
                          {type(1),type(1),type(1)},
                          {type(2),type(2),type(2)},
@@ -874,13 +874,13 @@ TEST(StatisticsTest, TotalFrequencies)
 
     // Test
 
-    Tensor<type, 1> vector1_1(16);
+    Tensor1 vector1_1(16);
     vector1_1.setValues({type(0),type(1),type(2),type(3),type(4),type(5),type(6),type(0),type(1),type(1),type(1),type(2),type(2),type(2),type(2),type(2)});
 
-    Tensor<type, 1> vector2_1(16);
+    Tensor1 vector2_1(16);
     vector2_1.setValues({type(0),type(1),type(2),type(3),type(4),type(5),type(6),type(0),type(1),type(1),type(1),type(2),type(2),type(2),type(2),type(2)});
 
-    Tensor<type, 1> vector3_1(16);
+    Tensor1 vector3_1(16);
     vector3_1.setValues({type(0),type(1),type(2),type(3),type(4),type(5),type(6),type(0),type(1),type(1),type(1),type(2),type(2),type(2),type(2),type(2)});
 
     histograms(0) = histogram(vector1_1, 7);
@@ -895,7 +895,7 @@ TEST(StatisticsTest, TotalFrequencies)
 
     // Test
 
-    Tensor<type, 2> matrix(3,3);
+    Tensor2 matrix(3,3);
     matrix.setValues({
         {type(1),type(1),type(NAN)},
         {type(2),type(2),type(1)},
@@ -911,7 +911,7 @@ TEST(StatisticsTest, TotalFrequencies)
 
 TEST(StatisticsTest, MinimalIndex)
 {
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
 
@@ -930,7 +930,7 @@ TEST(StatisticsTest, MaximalIndex)
 {
     // Test
 
-    Tensor<type, 1> vector(0);
+    Tensor1 vector(0);
 
     EXPECT_EQ(maximal_index(vector), 0);
 
@@ -946,7 +946,7 @@ TEST(StatisticsTest, MaximalIndex)
 TEST(StatisticsTest, MinimalIndices)
 {
     
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
    
@@ -998,7 +998,7 @@ TEST(StatisticsTest, MinimalIndices)
 TEST(StatisticsTest, MaximalIndices)
 {
     
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
 
@@ -1037,7 +1037,7 @@ TEST(StatisticsTest, BoxPlot)
     
     const Index size = get_random_index(1, 10);
 
-    Tensor<type, 1> vector(size);
+    Tensor1 vector(size);
 
     BoxPlot box_plot;
     BoxPlot solution;
@@ -1091,13 +1091,13 @@ TEST(StatisticsTest, BoxPlot)
 TEST(StatisticsTest, Percentiles)
 {
     
-    Tensor<type, 1> vector;
+    Tensor1 vector;
 
     // Test
 
-    Tensor<type, 1> empty_vector(10);
+    Tensor1 empty_vector(10);
     empty_vector.setConstant(NAN);
-    Tensor<type, 1> percentiles_empty = opennn::percentiles(empty_vector);
+    Tensor1 percentiles_empty = opennn::percentiles(empty_vector);
 
     EXPECT_EQ(isnan(percentiles_empty(0)),true);
 
@@ -1107,9 +1107,9 @@ TEST(StatisticsTest, Percentiles)
     vector.setValues({ type(0), type(1), type(2), type(3), type(4), type(5), type(6), type(7), type(8), type(9) });
 
     
-    Tensor<type, 1> percentiles = opennn::percentiles(vector);
+    Tensor1 percentiles = opennn::percentiles(vector);
     
-    Tensor<type, 1> solution(10);
+    Tensor1 solution(10);
     solution.setValues({ type(0.5), type(1.5), type(2.5), type(3.5), type(4.5), type(5.5), type(6.5), type(7.5), type(8.5), type(9) });
     
     EXPECT_NEAR(abs(percentiles(0)), solution(0), type(1.0e-7));

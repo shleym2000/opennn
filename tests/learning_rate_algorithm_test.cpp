@@ -47,7 +47,7 @@ TEST(LearningRateAlgorithmTest, BracketingTriplet)
     LearningRateAlgorithm learning_rate_algorithm(&mean_squared_error);
 
     type loss = 0.0;
-    Tensor<type, 1> training_direction;
+    Tensor1 training_direction;
     type initial_learning_rate = 0.0;
 
 //    EXPECT_EQ(triplet.A.first <= triplet.U.first);
@@ -146,7 +146,7 @@ void LearningRateAlgorithmTest::test_calculate_golden_section_directional_point(
 
     neural_network.set_parameters_constant(type(1));
 
-    Tensor<type, 1> training_direction = gradient*(-1.0);
+    Tensor1 training_direction = gradient*(-1.0);
     type initial_learning_rate = 0.001;
 
     type loss_tolerance = 1.0e-6;
@@ -180,9 +180,9 @@ void LearningRateAlgorithmTest::test_calculate_Brent_method_directional_point()
 
     //loss_index.calculate_training_loss not available
 
-    Tensor<type, 1> gradient = mean_squared_error.calculate_numerical_gradient();
+    Tensor1 gradient = mean_squared_error.calculate_numerical_gradient();
 
-    Tensor<type, 1> training_direction = gradient*(type(-1.0));
+    Tensor1 training_direction = gradient*(type(-1.0));
 
     type initial_learning_rate = 0.001;
 

@@ -24,7 +24,7 @@ public:
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     string get_activation_function() const;
 
@@ -34,10 +34,6 @@ public:
     void set_output_dimensions(const dimensions&) override;
 
     void set_activation_function(const string&);
-
-    void calculate_combinations(const Tensor<type, 2>&,
-                                const Tensor<type, 2>&,
-                                Tensor<type, 2>&) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -59,10 +55,9 @@ private:
 
     dimensions input_dimensions;
 
-    Tensor<type, 1> biases;
-
-    Tensor<type, 2> input_weights;
-    Tensor<type, 2> recurrent_weights;
+    TensorView biases;
+    TensorView input_weights;
+    TensorView recurrent_weights;
 
     string activation_function = "HyperbolicTangent";
 
@@ -83,14 +78,14 @@ struct RecurrentForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 
-    Tensor<type, 3> current_inputs;
-    Tensor<type, 2> current_activation_derivatives;
+    Tensor3 current_inputs;
+    Tensor2 current_activation_derivatives;
 
-    Tensor<type, 3> activation_derivatives;
+    Tensor3 activation_derivatives;
 
-    Tensor<type, 3> hidden_states;
+    Tensor3 hidden_states;
 };
 
 
@@ -100,30 +95,27 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor<type, 2> current_deltas;
-    Tensor<type, 2> current_targets;
+    Tensor2 current_deltas;
+    Tensor2 current_targets;
 
-    Tensor<type, 2> combination_deltas;
-    Tensor<type, 2> current_combination_deltas;
+    Tensor2 combination_deltas;
+    Tensor2 current_combination_deltas;
 
-    Tensor<type, 2> combinations_bias_deltas;
-    Tensor<type, 3> combinations_input_weight_deltas;
-    Tensor<type, 3> combinations_recurrent_weight_deltas;
+    Tensor2 combinations_bias_deltas;
+    Tensor3 combinations_input_weight_deltas;
+    Tensor3 combinations_recurrent_weight_deltas;
 
-    Tensor<type, 1> bias_deltas;
+    TensorView bias_deltas;
+    TensorView input_weight_deltas;
+    TensorView recurrent_weight_deltas;
 
-    Tensor<type, 2> input_weight_deltas;
-
-    Tensor<type, 2> recurrent_weight_deltas;
-
-    Tensor<type, 3> input_deltas;
-
+    Tensor3 input_deltas;
 };
 
 
@@ -136,7 +128,7 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

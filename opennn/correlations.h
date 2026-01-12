@@ -9,7 +9,7 @@
 #ifndef CORRELATIONS_H
 #define CORRELATIONS_H
 
-#include <string>
+#include "pch.h"
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 
 using type = float;
@@ -45,61 +45,61 @@ struct Correlation
 };
 
 
-Correlation linear_correlation(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation linear_correlation(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Correlation logarithmic_correlation(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation logarithmic_correlation(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Correlation exponential_correlation(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation exponential_correlation(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Correlation power_correlation(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation power_correlation(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Correlation logistic_correlation_vector_vector(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation logistic_correlation_vector_vector(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 2>&);
+Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice*, const Tensor1&, const Tensor2&);
 
-Correlation logistic_correlation_matrix_vector(const ThreadPoolDevice*, const Tensor<type, 2>&, const Tensor<type, 1>&);
+Correlation logistic_correlation_matrix_vector(const ThreadPoolDevice*, const Tensor2&, const Tensor1&);
 
-Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice*, const Tensor<type, 2>&, const Tensor<type, 2>&);
+Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice*, const Tensor2&, const Tensor2&);
 
-Correlation correlation(const ThreadPoolDevice*, const Tensor<type, 2>&, const Tensor<type, 2>&);
+Correlation correlation(const ThreadPoolDevice*, const Tensor2&, const Tensor2&);
 
 // Spearman correlation
 
-Correlation linear_correlation_spearman(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation linear_correlation_spearman(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Tensor<type, 1> calculate_spearman_ranks(const Tensor<type, 1>&);
+Tensor1 calculate_spearman_ranks(const Tensor1&);
 
-Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice*, const Tensor<type, 1>&, const Tensor<type, 1>&);
+Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice*, const Tensor1&, const Tensor1&);
 
-Correlation correlation_spearman(const ThreadPoolDevice*, const Tensor<type, 2>&, const Tensor<type, 2>&);
+Correlation correlation_spearman(const ThreadPoolDevice*, const Tensor2&, const Tensor2&);
 
 // Confidence interval
 
 type r_correlation_to_z_correlation(const type&);
 type z_correlation_to_r_correlation(const type&);
 
-Tensor<type, 1> confidence_interval_z_correlation(const type&, const Index&);
+Tensor1 confidence_interval_z_correlation(const type&, const Index&);
 
 
 // Time series correlation
 
-Tensor<type, 1> autocorrelations(const ThreadPoolDevice*,
-                                 const Tensor<type, 1>&,
+Tensor1 autocorrelations(const ThreadPoolDevice*,
+                                 const Tensor1&,
                                  const Index&  = 10);
 
-Tensor<type, 1> cross_correlations(const ThreadPoolDevice*,
-                                   const Tensor<type, 1>&,
-                                   const Tensor<type, 1>&,
+Tensor1 cross_correlations(const ThreadPoolDevice*,
+                                   const Tensor1&,
+                                   const Tensor1&,
                                    const Index&);
 
-Tensor<type, 2> get_correlation_values(const Tensor<Correlation, 2>&);
+Tensor2 get_correlation_values(const Tensor<Correlation, 2>&);
 
 // Missing values
 
-pair<Tensor<type, 1>, Tensor<type, 1>> filter_missing_values_vector_vector(const Tensor<type, 1>&, const Tensor<type, 1>&);
-pair<Tensor<type, 1>, Tensor<type, 2>> filter_missing_values_vector_matrix(const Tensor<type, 1>&, const Tensor<type, 2>&);
-pair<Tensor<type, 1>, Tensor<type, 2>> filter_missing_values_matrix_vector(const Tensor<type, 2>&, const Tensor<type, 1>&);
-pair<Tensor<type, 2>, Tensor<type, 2>> filter_missing_values_matrix_matrix(const Tensor<type, 2>&, const Tensor<type, 2>&);
+pair<Tensor1, Tensor1> filter_missing_values_vector_vector(const Tensor1&, const Tensor1&);
+pair<Tensor1, Tensor2> filter_missing_values_vector_matrix(const Tensor1&, const Tensor2&);
+pair<Tensor1, Tensor2> filter_missing_values_matrix_vector(const Tensor2&, const Tensor1&);
+pair<Tensor2, Tensor2> filter_missing_values_matrix_matrix(const Tensor2&, const Tensor2&);
 
 void register_optimization_algorithms();
 
@@ -109,7 +109,7 @@ void register_optimization_algorithms();
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

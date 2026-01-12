@@ -23,7 +23,6 @@ struct Batch;
 struct ForwardPropagation;
 struct BackPropagation;
 struct BackPropagationLM;
-//struct NeuralNetworkBackPropagationLM;
 
 #ifdef OPENNN_CUDA
 struct BatchCuda;
@@ -95,9 +94,7 @@ public:
                                          ForwardPropagation&,
                                          BackPropagation&) const;
 
-    void assemble_layers_error_gradient(const BackPropagation&, Tensor<type, 1>&) const;
-
-    void add_regularization_gradient(Tensor<type, 1>&) const;
+    void add_regularization_gradient(Tensor1&) const;
 
     void add_regularization_to_deltas(BackPropagation&) const;
 
@@ -139,7 +136,7 @@ public:
 
     // Regularization
 
-    type calculate_regularization(const Tensor<type, 1>&) const;
+    type calculate_regularization(const Tensor1&) const;
 
     // Serialization
 
@@ -158,14 +155,14 @@ public:
 
     type calculate_numerical_error() const;
 
-    Tensor<type, 1> calculate_gradient();
+    Tensor1 calculate_gradient();
 
-    Tensor<type, 1> calculate_numerical_gradient();
-    Tensor<type, 1> calculate_numerical_gradient_lm();
-    Tensor<type, 2> calculate_numerical_jacobian();
-    Tensor<type, 1> calculate_numerical_input_deltas();
-    Tensor<type, 2> calculate_numerical_hessian();
-    Tensor<type, 2> calculate_inverse_hessian();
+    Tensor1 calculate_numerical_gradient();
+    Tensor1 calculate_numerical_gradient_lm();
+    Tensor2 calculate_numerical_jacobian();
+    Tensor1 calculate_numerical_input_deltas();
+    Tensor2 calculate_numerical_hessian();
+    Tensor2 calculate_inverse_hessian();
 
 #ifdef OPENNN_CUDA
 
@@ -231,13 +228,13 @@ struct BackPropagationLM
 
     void print() const;
 
-    TensorView get_output_deltas_pair() const;
+    TensorView get_output_deltas_tensor_view() const;
 
     vector<vector<TensorView>> get_layer_delta_pairs() const;
 
     Index samples_number = 0;
 
-    Tensor<type, 1> output_deltas;
+    Tensor1 output_deltas;
     dimensions output_deltas_dimensions;
 
     LossIndex* loss_index = nullptr;
@@ -248,16 +245,15 @@ struct BackPropagationLM
 
     NeuralNetworkBackPropagationLM neural_network;
 
-    Tensor<type, 2> errors;
-    Tensor<type, 1> squared_errors;
-    Tensor<type, 2> squared_errors_jacobian;
+    Tensor2 errors;
+    Tensor1 squared_errors;
+    Tensor2 squared_errors_jacobian;
 
-    Tensor<type, 1> parameters;
-    Tensor<type, 1> gradient;
-    Tensor<type, 2> hessian;
+    Tensor1 gradient;
+    Tensor2 hessian;
 
-    Tensor<type, 1> regularization_gradient;
-    Tensor<type, 2> regularization_hessian;
+    Tensor1 regularization_gradient;
+    Tensor2 regularization_hessian;
 };
 
 
@@ -270,7 +266,7 @@ struct BackPropagation
 
     vector<vector<TensorView>> get_layer_delta_pairs() const;
 
-    TensorView get_output_deltas_pair() const;
+    TensorView get_output_deltas_tensor_view() const;
 
     void print() const;
 
@@ -284,14 +280,14 @@ struct BackPropagation
     //    type regularization = type(0);
     type loss = type(0);
 
-    Tensor<type, 2> errors;
-    Tensor<type, 2> errors_weights;
+    Tensor2 errors;
+    Tensor2 errors_weights;
 
-    Tensor<type, 1> output_deltas;
+    Tensor1 output_deltas;
     dimensions output_deltas_dimensions;
 
     Tensor<type, 0> accuracy;
-    Tensor<type, 2> predictions;
+    Tensor2 predictions;
     Tensor<bool, 2> matches;
     Tensor<bool, 2> mask;
     bool built_mask = false;
@@ -356,7 +352,7 @@ struct BackPropagationCuda
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

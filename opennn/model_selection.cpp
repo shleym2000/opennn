@@ -98,7 +98,7 @@ void ModelSelection::check() const
         throw runtime_error("Pointer to neural network is nullptr.\n");
 
     if(neural_network->is_empty())
-        throw runtime_error("Multilayer Dense2d is empty.\n");
+        throw runtime_error("Multilayer Dense is empty.\n");
 
     // Dataset
 
@@ -157,10 +157,10 @@ void ModelSelection::from_XML(const XMLDocument& document)
     if (!root_element) 
         throw runtime_error("Model Selection element is nullptr.\n");
 
-    // Neurons Selection
+    // Neuron selection
 
     const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronsSelection");
-    if (!neurons_selection_element) throw runtime_error("Neurons selection element is nullptr.\n");
+    if (!neurons_selection_element) throw runtime_error("Neuron selection element is nullptr.\n");
 
     const string selection_method = read_xml_string(neurons_selection_element, "NeuronsSelectionMethod");
     
@@ -178,10 +178,10 @@ void ModelSelection::from_XML(const XMLDocument& document)
     }
     else throw runtime_error(selection_method + " element is nullptr.\n");
 
-    // Inputs Selection
+    // Input Selection
 
     const XMLElement* inputs_selection_element = root_element->FirstChildElement("InputsSelection");
-    if (!inputs_selection_element) throw runtime_error("Inputs selection element is nullptr.\n");
+    if (!inputs_selection_element) throw runtime_error("Input selection element is nullptr.\n");
 
     const string inputs_method = read_xml_string(inputs_selection_element, "InputsSelectionMethod");
 
@@ -234,7 +234,7 @@ void ModelSelection::load(const filesystem::path& file_name)
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

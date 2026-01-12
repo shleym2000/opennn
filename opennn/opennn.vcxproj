@@ -314,7 +314,8 @@
     <ClInclude Include="images.h" />
     <ClCompile Include="images.cpp" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="scaling_layer_3d.h" />
+
+    <ClInclude Include="standard_networks.h" />
     <ClInclude Include="strings_utilities.h" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -322,7 +323,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="scaling_layer_3d.cpp" />
+
+    <ClCompile Include="standard_networks.cpp" />
     <ClCompile Include="strings_utilities.cpp" />
     <ClInclude Include="optimization_algorithm.h" />
     <ClCompile Include="optimization_algorithm.cpp" />
@@ -338,10 +340,9 @@
     <ClCompile Include="response_optimization.cpp" />
     <ClInclude Include="scaling.h" />
     <ClCompile Include="scaling.cpp" />
-    <ClInclude Include="scaling_layer_2d.h" />
-    <ClCompile Include="scaling_layer_2d.cpp" />
-    <ClInclude Include="scaling_layer_4d.h" />
-    <ClCompile Include="scaling_layer_4d.cpp" />
+    <ClInclude Include="scaling_layer.h" />
+    <ClCompile Include="scaling_layer.cpp" />
+
     <ClInclude Include="statistics.h" />
     <ClCompile Include="statistics.cpp" />
     <ClInclude Include="stochastic_gradient_descent.h" />

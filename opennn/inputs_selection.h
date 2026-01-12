@@ -119,21 +119,21 @@ struct InputsSelectionResults
 
     // Neural network
 
-    Tensor<type, 1> optimal_parameters;
+    Tensor1 optimal_parameters;
 
     // Loss index
 
-    Tensor<type, 1> training_error_history;
+    Tensor1 training_error_history;
 
-    Tensor<type, 1> selection_error_history;
+    Tensor1 selection_error_history;
 
     // Mean Selection Error of different neural networks
 
-    Tensor<type, 1>  mean_selection_error_history;
+    Tensor1  mean_selection_error_history;
 
     // Mean Training Error of different neural networks
 
-    Tensor<type, 1> mean_training_error_history;
+    Tensor1 mean_training_error_history;
 
     type optimum_training_error = numeric_limits<type>::max();
 
@@ -157,7 +157,7 @@ struct InputsSelectionResults
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

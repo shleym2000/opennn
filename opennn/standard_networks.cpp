@@ -8,11 +8,10 @@
 
 #include <stdexcept>
 
+#include "pch.h"
 #include "standard_networks.h"
 #include "multihead_attention_layer.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
-#include "scaling_layer_4d.h"
+#include "scaling_layer.h"
 #include "unscaling_layer.h"
 #include "dense_layer.h"
 #include "bounding_layer.h"
@@ -39,16 +38,16 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
 {
     const Index complexity_size = complexity_dimensions.size();
 
-    add_layer(make_unique<Scaling2d>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_dimensions));
 
     for (Index i = 0; i < complexity_size; i++)
-        add_layer(make_unique<Dense2d>(get_output_dimensions(),
+        add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{ complexity_dimensions[i] },
                                        "RectifiedLinear",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
 
-    add_layer(make_unique<Dense2d>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,
                                    "Linear",
                                    false,
@@ -72,18 +71,18 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 {
     const Index complexity_size = complexity_dimensions.size();
 
-    add_layer(make_unique<Scaling2d>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_dimensions));
 
     for (Index i = 0; i < complexity_size; i++)
-        add_layer(make_unique<Dense2d>(get_output_dimensions(),
+        add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{complexity_dimensions[i]},
                                        "HyperbolicTangent",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
 
-    add_layer(make_unique<Dense2d>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,
-                                   "Softmax",
+                                   output_dimensions[0] == 1 ? "Logistic" : "Softmax",
                                    false,
                                    "classification_layer"));
 
@@ -99,12 +98,12 @@ ForecastingNetwork::ForecastingNetwork(const dimensions& input_dimensions,
                                        const dimensions& complexity_dimensions,
                                        const dimensions& output_dimensions) : NeuralNetwork()
 {
-    add_layer(make_unique<Scaling3d>(input_dimensions));
+    add_layer(make_unique<Scaling<3>>(input_dimensions));
 
     add_layer(make_unique<Recurrent>(input_dimensions,
                                      complexity_dimensions));
 
-    add_layer(make_unique<Dense2d>(complexity_dimensions,
+    add_layer(make_unique<Dense<2>>(complexity_dimensions,
                                    output_dimensions,
                                    "Linear",
                                    "dense_layer"));
@@ -125,30 +124,30 @@ AutoAssociationNetwork::AutoAssociationNetwork(const dimensions& input_dimension
                                                const dimensions& complexity_dimensions,
                                                const dimensions& output_dimensions) : NeuralNetwork()
 {
-    add_layer(make_unique<Scaling2d>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_dimensions));
 
     const Index mapping_neurons_number = 10;
     const Index bottle_neck_neurons_number = complexity_dimensions[0];
 
-    add_layer(make_unique<Dense2d>(input_dimensions,
+    add_layer(make_unique<Dense<2>>(input_dimensions,
                                    dimensions{mapping_neurons_number},
                                    "HyperbolicTangent",
                                    false,
                                    "mapping_layer"));
 
-    add_layer(make_unique<Dense2d>(dimensions{ mapping_neurons_number },
+    add_layer(make_unique<Dense<2>>(dimensions{ mapping_neurons_number },
                                    dimensions{ bottle_neck_neurons_number },
                                    "Linear",
                                    false,
                                    "bottleneck_layer"));
 
-    add_layer(make_unique<Dense2d>(dimensions{ bottle_neck_neurons_number },
+    add_layer(make_unique<Dense<2>>(dimensions{ bottle_neck_neurons_number },
                                    dimensions{ mapping_neurons_number },
                                    "HyperbolicTangent",
                                    false,
                                    "demapping_layer"));
 
-    add_layer(make_unique<Dense2d>(dimensions{ mapping_neurons_number },
+    add_layer(make_unique<Dense<2>>(dimensions{ mapping_neurons_number },
                                    dimensions{ output_dimensions },
                                    "Linear",
                                    false,
@@ -167,7 +166,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling4d>(input_dimensions));
+    add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     const Index complexity_size = complexity_dimensions.size();
 
@@ -198,7 +197,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
 
     add_layer(make_unique<Flatten<4>>(get_output_dimensions()));
 
-    add_layer(make_unique<Dense2d>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,
                                    "Softmax",
                                    false, // Batch normalization
@@ -224,7 +223,7 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling4d>(input_dimensions));
+    add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     Index last_layer_index = 0;
 
@@ -347,7 +346,7 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
     last_layer_index = get_layers_number() - 1;
 
-    auto dense_layer = make_unique<Dense2d>(get_layer(last_layer_index)->get_output_dimensions(),
+    auto dense_layer = make_unique<Dense<2>>(get_layer(last_layer_index)->get_output_dimensions(),
                                             output_dimensions,
                                             "Softmax",
                                             false,
@@ -369,7 +368,7 @@ void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_ta
     reference_all_layers();
 
     // Scaling 4D
-    add_layer(make_unique<Scaling4d>(new_input_dimensions));
+    add_layer(make_unique<Scaling<4>>(new_input_dimensions));
 
     // --- Conv 3×3, 64 kernels, ReLU x2 -> Pooling 2×2 stride 2 ---
     {
@@ -528,7 +527,7 @@ void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_ta
     add_layer(make_unique<Flatten<2>>(get_output_dimensions()));
 
     //Classifier
-    add_layer(make_unique<Dense2d>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    new_target_dimensions,
                                    "Softmax",
                                    false,
@@ -577,7 +576,7 @@ TextClassificationNetwork::TextClassificationNetwork(const dimensions& input_dim
     //     get_output_dimensions()
     //     ));
 
-    add_layer(make_unique<Dense2d>(
+    add_layer(make_unique<Dense<2>>(
         get_output_dimensions(),
         output_dimensions,
         classification_layer_activation,
@@ -762,7 +761,8 @@ void Transformer::set(const Index& input_sequence_length,
     add_layer(make_unique<Dense3d>(decoder_sequence_length,
                                    embedding_dimension,
                                    output_vocabulary_size,
-                                   "output"));
+                                   "Softmax", // Change from "Linear" to "Softmax"
+                                   "output_projection"));
 }
 
 
@@ -810,82 +810,91 @@ Index Transformer::get_heads_number() const
 }
 
 
-string Transformer::calculate_outputs(const string& source_sentence)
+string Transformer::calculate_outputs(const string& source)
 {
-    const vector<string> source_tokens = tokenize(source_sentence);
+    if (input_vocabulary_map.empty() || output_inverse_vocabulary_map.empty())
+        throw runtime_error("Transformer::calculate_outputs Error: Vocabularies not initialized.");
+
+    constexpr type PAD   = 0.0f;
+    constexpr type UNK   = 1.0f;
+    constexpr type START = 2.0f;
+    constexpr type END   = 3.0f;
 
     const Index input_sequence_length = get_input_sequence_length();
     const Index decoder_sequence_length = get_decoder_sequence_length();
+    const Index batch_size = 1;
 
-    const Index samples_number = 1;
+    const vector<string> source_tokens = tokenize(source);
 
-    // source_ids: [Batch=1, Seq=input_seq_len]
-    Tensor<type, 2> source_ids(samples_number, input_sequence_length);
-    source_ids.setZero();
+    Tensor2 source_ids(batch_size, input_sequence_length);
+    source_ids.setConstant(PAD);
 
-    for(Index i = 0; i < (Index)source_tokens.size() && i < input_sequence_length; i++)
+    for(size_t i = 0; i < source_tokens.size() && i < static_cast<size_t>(input_sequence_length); i++)
     {
-        auto it = input_vocabulary_map.find(source_tokens[i]);
-        // Map to ID from map, or 1 ([UNK]) if not found
-        source_ids(0, i) = (it != input_vocabulary_map.end()) ? (type)it->second : 1.0f;
+        const auto it = input_vocabulary_map.find(source_tokens[i]);
+
+        source_ids(0, i) = (it != input_vocabulary_map.end())
+                               ? static_cast<type>(it->second)
+                               : UNK;
     }
 
-    // --- 3. AUTOREGRESSIVE DECODING ---
-    // Initialize target sequence with [START] (ID 2)
-    Tensor<type, 2> target_ids(samples_number, decoder_sequence_length);
-    target_ids.setZero();
-    target_ids(0, 0) = 2.0f;
+    Tensor2 target_ids(batch_size, decoder_sequence_length);
+    target_ids.setConstant(PAD);
+    target_ids(0, 0) = START;
 
-    ForwardPropagation forward_propagation(samples_number, this);
+    ForwardPropagation forward_propagation(batch_size, this);
 
     for(Index i = 1; i < decoder_sequence_length; i++)
     {
-        const vector<TensorView> input_views = {
-                                                TensorView(target_ids.data(), {samples_number, decoder_sequence_length}),
-                                                TensorView(source_ids.data(), {samples_number, input_sequence_length})};
+        const vector<TensorView> inputs = {TensorView(target_ids.data(), {batch_size, decoder_sequence_length}),
+                                           TensorView(source_ids.data(), {batch_size, input_sequence_length})};
 
-        forward_propagate(input_views, forward_propagation, false);
+        forward_propagate(inputs, forward_propagation, false);
 
-        const TensorView output_view = forward_propagation.layers.back()->get_output_view();
+        const TensorView output_view = forward_propagation.get_output_view();
 
-        const TensorMap<Tensor<type, 3>> probabilities(output_view.data, 1, decoder_sequence_length, output_view.dims[2]);
+        const Index vocabulary_size = output_view.dims[2];
 
-        const Index best_id = maximal_index(probabilities.chip(0, 0).chip(i - 1, 0));
+        const TensorMap3 probabilities(output_view.data, batch_size, decoder_sequence_length, vocabulary_size);
 
-        target_ids(0, i) = (type)best_id;
+        // GREEDY SELECTION:
+        // The prediction for the "next" word is found at the output of the current word's index.
+        // We look at the distribution for position i-1 to pick word for position i.
+        const Tensor1 current_distribution = probabilities.chip(0, 0).chip(i - 1, 0);
 
-        if(best_id == 3) break; // The model predicts [END] (ID 3)
+        const Index best_id = maximal_index(current_distribution);
+
+        target_ids(0, i) = static_cast<type>(best_id);
+
+        if(best_id == 3) break; // [END]
     }
 
-    // Detokenization
-
-    string result_sentence;
+    string result;
 
     for(Index i = 1; i < decoder_sequence_length; i++)
     {
-        const Index id = (Index)target_ids(0, i);
+        const Index id = static_cast<Index>(target_ids(0, i));
 
-        if(id == 3 || id == 0) break; // Stop at [END] or [PAD]
+        if(id == END || id == PAD) break;
 
-        auto it = output_inverse_vocabulary_map.find(id);
+        const auto it = output_inverse_vocabulary_map.find(id);
 
-        if(it != output_inverse_vocabulary_map.end())
-        {
-            if(!result_sentence.empty())
-                result_sentence += " ";
+        if (it == output_inverse_vocabulary_map.end())
+            continue;
 
-            result_sentence += it->second;
-        }
+        if (!result.empty())
+            result += " ";
+
+        result += it->second;
     }
 
-    return result_sentence;
+    return result;
 }
-
 
 } // namespace opennn
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

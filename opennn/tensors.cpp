@@ -59,42 +59,42 @@ Index get_random_element(const vector<Index>& values)
 
 
 void multiply_matrices(const ThreadPoolDevice* device,
-                       Tensor<type, 3>& tensor,
-                       const Tensor<type, 1>& vector)
+                       Tensor3& tensor,
+                       const Tensor1& vector)
 {
     const Index depth = tensor.dimension(2);
 
     for(Index i = 0; i < depth; i++)
     {
-        TensorMap<Tensor<type, 2>> matrix = tensor_map(tensor, i);
+        TensorMap2 matrix = tensor_map(tensor, i);
 
         matrix.device(*device) = matrix * vector(i);
     }
 }
 
 
-void multiply_matrices(const ThreadPoolDevice* device, Tensor<type, 3>& tensor, const Tensor<type, 2>& matrix)
+void multiply_matrices(const ThreadPoolDevice* device, Tensor3& tensor, const Tensor2& matrix)
 {
     const Index depth = tensor.dimension(2);
 
     for(Index i = 0; i < depth; i++)
     {
-        TensorMap<Tensor<type, 2>> slice = tensor_map(tensor, i);
+        TensorMap2 slice = tensor_map(tensor, i);
 
         slice.device(*device) = slice * matrix;
     }
 }
 
 
-Tensor<type, 2> self_kronecker_product(const ThreadPoolDevice* device, const Tensor<type, 1>& vector)
+Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const Tensor1& vector)
 {
     const Index columns_number = vector.size();
 
-    Tensor<type, 2> matrix(columns_number, columns_number);
+    Tensor2 matrix(columns_number, columns_number);
 
     for(Index i = 0; i < columns_number; i++)
     {
-        TensorMap<Tensor<type, 1>> column = tensor_map(matrix, i);
+        TensorMap1 column = tensor_map(matrix, i);
 
         column.device(*device) = vector * vector(i);
     }
@@ -103,16 +103,15 @@ Tensor<type, 2> self_kronecker_product(const ThreadPoolDevice* device, const Ten
 }
 
 
-void divide_columns(const ThreadPoolDevice* device, TensorMap<Tensor<type, 2>>& matrix, const Tensor<type, 1>& vector)
+void divide_columns(const ThreadPoolDevice* device, TensorMap2& matrix, const Tensor1& vector)
 {
     // @ Changes to test (the case in which you can divide by 0)
     const Index columns_number = matrix.dimension(1);
-    Tensor<type, 1> corrected_vector = vector;
+    Tensor1 corrected_vector = vector;
 
     for(Index i = 0; i < columns_number; i++)
     {
-        //TensorMap<Tensor<type, 1>> column = tensor_map(matrix, i);
-        auto column = matrix.chip(i, 1);  // chip slices along dimension 1
+        auto column = matrix.chip(i, 1);
 
         for(Index j = 0; j < vector.size(); j++)
             if(vector(j) == 0)
@@ -123,7 +122,31 @@ void divide_columns(const ThreadPoolDevice* device, TensorMap<Tensor<type, 2>>& 
 }
 
 
-void sum_matrices(const ThreadPoolDevice* device, const Tensor<type, 1>& vector, Tensor<type, 3>& tensor)
+
+Tensor2 append_rows(const Tensor<type,2>& starting_matrix, const Tensor<type,2>& block)
+{
+    if (starting_matrix.size() == 0)
+        return block;
+
+    if (block.size() == 0)
+        return starting_matrix;
+
+    const Index old_rows = starting_matrix.dimension(0);
+    const Index cols = starting_matrix.dimension(1);
+    const Index new_rows = block.dimension(0);
+
+    Tensor2 final_matrix(old_rows + new_rows, cols);
+
+    final_matrix.slice(array_2(0, 0), array_2(old_rows, cols)) = starting_matrix;
+
+    final_matrix.slice(array_2(old_rows, 0), array_2(new_rows, cols)) = block;
+
+    return final_matrix;
+}
+
+
+
+void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3& tensor)
 {
     const Index depth = tensor.dimension(2);
 
@@ -167,7 +190,7 @@ void save_csv(const Tensor<type,2>& data, const filesystem::path& path)
 }
 
 
-Tensor<Index, 1> calculate_rank_greater(const Tensor<type, 1>& vector)
+Tensor<Index, 1> calculate_rank_greater(const Tensor1& vector)
 {
     const Index size = vector.size();
 
@@ -182,7 +205,7 @@ Tensor<Index, 1> calculate_rank_greater(const Tensor<type, 1>& vector)
 }
 
 
-Tensor<Index, 1> calculate_rank_less(const Tensor<type, 1>& vector)
+Tensor<Index, 1> calculate_rank_less(const Tensor1& vector)
 {
     const Index size = vector.size();
 
@@ -238,7 +261,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>& vectors, co
 }
 
 
-Index count_between(const Tensor<type, 1>& vector,const type& minimum, const type& maximum)
+Index count_between(const Tensor1& vector,const type& minimum, const type& maximum)
 {
     const Index size = vector.size();
 
@@ -253,7 +276,7 @@ Index count_between(const Tensor<type, 1>& vector,const type& minimum, const typ
 }
 
 
-void set_row(Tensor<type,2>& matrix, const Tensor<type, 1>& new_row, const Index& row_index)
+void set_row(Tensor<type,2>& matrix, const Tensor1& new_row, const Index& row_index)
 {
     const Index columns_number = new_row.size();
 
@@ -269,7 +292,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
                                               const type& minimum,
                                               const type& maximum)
 {
-    const Tensor<type, 1> column = matrix.chip(column_index,1);
+    const Tensor1 column = matrix.chip(column_index,1);
     const Index new_rows_number = count_between(column, minimum, maximum);
 
     if(new_rows_number == 0) return Tensor<type,2>();
@@ -288,7 +311,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
         if(matrix(i, column_index) >= minimum
             && matrix(i, column_index) <= maximum)
         {
-            const Tensor<type, 1> row = matrix.chip(i, 0);
+            const Tensor1 row = matrix.chip(i, 0);
 
             set_row(new_matrix, row, row_index);
 
@@ -305,7 +328,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
 }
 
 
-type l2_distance(const Tensor<type, 1>&x, const Tensor<type, 1>&y)
+type l2_distance(const Tensor1&x, const Tensor1&y)
 {
     if(x.size() != y.size())
         throw runtime_error("x and y vector must  have the same dimensions.\n");
@@ -317,7 +340,7 @@ type l2_distance(const Tensor<type, 1>&x, const Tensor<type, 1>&y)
     return distance(0);
 }
 
-Tensor<Index, 1> get_n_nearest_points(const Tensor<type, 2>& matrix,const Tensor<type,1>& point, int n = 1)
+Tensor<Index, 1> get_n_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, int n = 1)
 {
     const Index number_points_to_compare = matrix.dimension(0);
 
@@ -337,7 +360,7 @@ Tensor<Index, 1> get_n_nearest_points(const Tensor<type, 2>& matrix,const Tensor
 #pragma omp parallel for
     for(Index i = 0; i < number_points_to_compare; ++i)
     {
-        Tensor<type, 1> row = matrix.chip(i, 0);
+        Tensor1 row = matrix.chip(i, 0);
 
         type dist = l2_distance(row, point);
 
@@ -357,7 +380,7 @@ Tensor<Index, 1> get_n_nearest_points(const Tensor<type, 2>& matrix,const Tensor
     return nearest_indices;
 }
 
-void set_identity(Tensor<type, 2>& matrix)
+void set_identity(Tensor2& matrix)
 {
     const Index rows_number = matrix.dimension(0);
 
@@ -369,7 +392,7 @@ void set_identity(Tensor<type, 2>& matrix)
 }
 
 
-void sum_diagonal(Tensor<type, 2>& matrix, const type& value)
+void sum_diagonal(Tensor2& matrix, const type& value)
 {
     const Index rows_number = matrix.dimension(0);
 
@@ -380,11 +403,11 @@ void sum_diagonal(Tensor<type, 2>& matrix, const type& value)
 }
 
 
-Tensor<type, 1> perform_Householder_QR_decomposition(const Tensor<type, 2>& A, const Tensor<type, 1>& b)
+Tensor1 perform_Householder_QR_decomposition(const Tensor2& A, const Tensor1& b)
 {
     const Index n = A.dimension(0);
 
-    Tensor<type, 1> x(n);
+    Tensor1 x(n);
 
     const Map<Matrix<type, Dynamic, Dynamic>> A_eigen((type*)A.data(), n, n);
 
@@ -398,7 +421,7 @@ Tensor<type, 1> perform_Householder_QR_decomposition(const Tensor<type, 2>& A, c
 }
 
 
-void fill_tensor_data(const Tensor<type, 2>& matrix,
+void fill_tensor_data(const Tensor2& matrix,
                       const vector<Index>& row_indices,
                       const vector<Index>& column_indices,
                       type* tensor_data)
@@ -433,7 +456,7 @@ void fill_tensor_data(const Tensor<type, 2>& matrix,
 }
 
 
-void fill_tensor_data_row_major(const Tensor<type, 2>& matrix,
+void fill_tensor_data_row_major(const Tensor2& matrix,
                                 const vector<Index>& row_indices,
                                 const vector<Index>& column_indices,
                                 type* tensor_data)
@@ -461,7 +484,7 @@ void fill_tensor_data_row_major(const Tensor<type, 2>& matrix,
 }
 
 
-void fill_tensor_sequence(const Tensor<type, 2>& matrix,
+void fill_tensor_sequence(const Tensor2& matrix,
                           const vector<Index>& rows_indices,
                           const vector<Index>& columns_indices,
                           const Index& past_time_steps,
@@ -476,7 +499,7 @@ void fill_tensor_sequence(const Tensor<type, 2>& matrix,
     const Index batch_size = rows_indices.size();
     const Index input_size = columns_number;
 
-    TensorMap<Tensor<type, 3>> batch(tensor_data, batch_size, past_time_steps, input_size);
+    TensorMap3 batch(tensor_data, batch_size, past_time_steps, input_size);
 
     //#pragma omp parallel for collapse(3)
 
@@ -507,12 +530,12 @@ vector<Index> join_vector_vector(const vector<Index>& x, const vector<Index>& y)
 }
 
 
-Tensor<type, 2> assemble_vector_vector(const Tensor<type, 1>& x, const Tensor<type, 1>& y)
+Tensor2 assemble_vector_vector(const Tensor1& x, const Tensor1& y)
 {
     const Index rows_number = x.size();
     const Index columns_number = 2;
 
-    Tensor<type, 2> data(rows_number, columns_number);
+    Tensor2 data(rows_number, columns_number);
 
 #pragma omp parallel for
 
@@ -526,12 +549,12 @@ Tensor<type, 2> assemble_vector_vector(const Tensor<type, 1>& x, const Tensor<ty
 }
 
 
-Tensor<type, 2> assemble_vector_matrix(const Tensor<type, 1>& x, const Tensor<type, 2>& y)
+Tensor2 assemble_vector_matrix(const Tensor1& x, const Tensor2& y)
 {
     const Index rows_number = x.size();
     const Index columns_number = 1 + y.dimension(1);
 
-    Tensor<type, 2> data(rows_number, columns_number);
+    Tensor2 data(rows_number, columns_number);
 
 #pragma omp parallel for
 
@@ -547,12 +570,12 @@ Tensor<type, 2> assemble_vector_matrix(const Tensor<type, 1>& x, const Tensor<ty
 }
 
 
-Tensor<type, 2> assemble_matrix_matrix(const Tensor<type, 2>& x, const Tensor<type, 2>& y)
+Tensor2 assemble_matrix_matrix(const Tensor2& x, const Tensor2& y)
 {
     const Index rows_number = x.dimension(0);
     const Index columns_number = x.dimension(1) + y.dimension(1);
 
-    Tensor<type, 2> data(rows_number, columns_number);
+    Tensor2 data(rows_number, columns_number);
 
 #pragma omp parallel for
 
@@ -630,44 +653,44 @@ type round_to_precision(type x, const int& precision)
 }
 
 
-TensorMap<Tensor<type, 1>> tensor_map(const Tensor<type, 2>& tensor, const Index& index_1)
+TensorMap1 tensor_map(const Tensor2& tensor, const Index& index_1)
 {
-    return TensorMap<Tensor<type, 1>>((type*)tensor.data() + tensor.dimension(0)*index_1,
+    return TensorMap1((type*)tensor.data() + tensor.dimension(0)*index_1,
                                       tensor.dimension(0));
 }
 
 
-TensorMap<Tensor<type, 1>> tensor_map_(const TensorMap<Tensor<type, 2>>& tensor, const Index& index_1)
+TensorMap1 tensor_map_(const TensorMap2& tensor, const Index& index_1)
 {
-    return TensorMap<Tensor<type, 1>>((type*)tensor.data() + tensor.dimension(0) * index_1,
+    return TensorMap1((type*)tensor.data() + tensor.dimension(0) * index_1,
                                       tensor.dimension(0));
 }
 
 
-TensorMap<Tensor<type, 2>> tensor_map(const Tensor<type, 3>& tensor, const Index& index_2)
+TensorMap2 tensor_map(const Tensor3& tensor, const Index& index_2)
 {
-    return TensorMap<Tensor<type, 2>>((type*)tensor.data() +  tensor.dimension(0) * tensor.dimension(1)* index_2,
+    return TensorMap2((type*)tensor.data() +  tensor.dimension(0) * tensor.dimension(1)* index_2,
                                       tensor.dimension(0), tensor.dimension(1));
 }
 
 
-TensorMap<Tensor<type, 3>> tensor_map(const Tensor<type, 4>& tensor, const Index& index_3)
+TensorMap3 tensor_map(const Tensor4& tensor, const Index& index_3)
 {
-    return TensorMap<Tensor<type, 3>>((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1) * tensor.dimension(2) * index_3,
+    return TensorMap3((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1) * tensor.dimension(2) * index_3,
                                       tensor.dimension(0), tensor.dimension(1), tensor.dimension(2));
 }
 
 
-TensorMap<Tensor<type, 3>> tensor_map_(const TensorMap<Tensor<type, 4>>& tensor, const Index& index_3)
+TensorMap3 tensor_map_(const TensorMap4& tensor, const Index& index_3)
 {
-    return TensorMap<Tensor<type, 3>>(tensor.data() + tensor.dimension(0) * tensor.dimension(1) * tensor.dimension(2) * index_3,
+    return TensorMap3(tensor.data() + tensor.dimension(0) * tensor.dimension(1) * tensor.dimension(2) * index_3,
                                       tensor.dimension(0), tensor.dimension(1), tensor.dimension(2));
 }
 
 
-TensorMap<Tensor<type, 2>> tensor_map(const Tensor<type, 4>& tensor, const Index& index_3, const Index& index_2)
+TensorMap2 tensor_map(const Tensor4& tensor, const Index& index_3, const Index& index_2)
 {
-    return TensorMap<Tensor<type, 2>>((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1)*(index_3 * tensor.dimension(2) + index_2),
+    return TensorMap2((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1)*(index_3 * tensor.dimension(2) + index_2),
                                       tensor.dimension(0), tensor.dimension(1));
 }
 
@@ -688,7 +711,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

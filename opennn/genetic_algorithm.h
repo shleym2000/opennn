@@ -25,11 +25,11 @@ public:
 
     const Tensor<bool, 2>& get_population() const;
 
-    const Tensor<type, 1>& get_training_errors() const;
+    const Tensor1& get_training_errors() const;
 
-    const Tensor<type, 1>& get_selection_errors() const;
+    const Tensor1& get_selection_errors() const;
 
-    const Tensor<type, 1>& get_fitness() const;
+    const Tensor1& get_fitness() const;
 
     const Tensor<bool, 1>& get_selection() const;
 
@@ -63,7 +63,7 @@ public:
 
     void set_maximum_epochs_number(const Index&);
 
-    void set_fitness(const Tensor<type, 1>&); // Used in testing
+    void set_fitness(const Tensor1&); // Used in testing
     void set_selection(const Tensor<bool, 1>&); // Used in testing
 
     void initialize_population();
@@ -105,18 +105,18 @@ public:
 
 private:
 
-    Tensor<Tensor<type, 1>, 1> parameters;
+    Tensor<Tensor1, 1> parameters;
 
     vector<Index> original_input_raw_variable_indices;
     vector<Index> original_target_raw_variable_indices;
     
     Tensor<bool, 2> population;
 
-    Tensor<type, 1> training_errors;
+    Tensor1 training_errors;
 
-    Tensor<type, 1> selection_errors;
+    Tensor1 selection_errors;
 
-    Tensor<type, 1> fitness;
+    Tensor1 fitness;
 
     Tensor<bool, 1> selection;
 

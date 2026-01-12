@@ -35,15 +35,15 @@ void MeanSquaredError::calculate_error(const Batch& batch,
     if (outputs_number == 0 || samples_number == 0)
         throw runtime_error("MeanSquaredError: outputs_number or samples_number is zero.");
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(batch.get_target_view());
+    const TensorMap2 targets = tensor_map<2>(batch.get_target_view());
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
 
-    Tensor<type, 2>& errors = back_propagation.errors;
+    Tensor2& errors = back_propagation.errors;
 
     Tensor<type, 0>& error = back_propagation.error;
 
@@ -65,7 +65,7 @@ void MeanSquaredError::calculate_error_lm(const Batch&,
                                           const ForwardPropagation&,
                                           BackPropagationLM& back_propagation) const
 {
-    Tensor<type, 1>& squared_errors = back_propagation.squared_errors;
+    Tensor1& squared_errors = back_propagation.squared_errors;
 
     Tensor<type, 0>& error = back_propagation.error;
 
@@ -87,11 +87,11 @@ void MeanSquaredError::calculate_output_delta(const Batch& batch,
 
     // Back propagation
 
-    const Tensor<type, 2>& errors = back_propagation.errors;
+    const Tensor2& errors = back_propagation.errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
-    TensorMap<Tensor<type, 2>> output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
     output_deltas.device(*device) = errors / type(0.5 * outputs_number * samples_number);
 }
@@ -101,12 +101,12 @@ void MeanSquaredError::calculate_output_delta_lm(const Batch&,
                                                  ForwardPropagation&,
                                                  BackPropagationLM& back_propagation) const
 {
-    const Tensor<type, 2>& errors = back_propagation.errors;
-    const Tensor<type, 1>& squared_errors = back_propagation.squared_errors;
+    const Tensor2& errors = back_propagation.errors;
+    const Tensor1& squared_errors = back_propagation.squared_errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
-    TensorMap<Tensor<type, 2>> output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
     output_deltas.device(*device) = errors;
     divide_columns(device.get(), output_deltas, squared_errors);
@@ -116,11 +116,11 @@ void MeanSquaredError::calculate_output_delta_lm(const Batch&,
 void MeanSquaredError::calculate_error_gradient_lm(const Batch&,
                                                    BackPropagationLM& back_propagation_lm) const
 {
-    const Tensor<type, 1>& squared_errors = back_propagation_lm.squared_errors;
+    const Tensor1& squared_errors = back_propagation_lm.squared_errors;
 
-    const Tensor<type, 2>& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
-    Tensor<type, 1>& gradient = back_propagation_lm.gradient;
+    Tensor1& gradient = back_propagation_lm.gradient;
 
     gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(0,0));
 }
@@ -129,9 +129,9 @@ void MeanSquaredError::calculate_error_gradient_lm(const Batch&,
 void MeanSquaredError::calculate_error_hessian_lm(const Batch&,
                                                   BackPropagationLM& back_propagation_lm) const
 {
-    Tensor<type, 2>& hessian = back_propagation_lm.hessian;
+    Tensor2& hessian = back_propagation_lm.hessian;
 
-    const Tensor<type, 2>& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
     hessian.device(*device) = squared_errors_jacobian.contract(squared_errors_jacobian, axes(0,0));
 }
@@ -240,7 +240,7 @@ REGISTER(LossIndex, MeanSquaredError, "MeanSquaredError");
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

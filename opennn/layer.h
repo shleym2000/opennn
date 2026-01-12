@@ -49,9 +49,30 @@ public:
 
     virtual void set_parameters_glorot();
 
-    Index get_parameters_number() const;
+    Index get_parameters_number();
 
-    virtual vector<ParameterView> get_parameter_views() const;
+    virtual vector<TensorView*> get_parameter_views()
+    {
+        return vector<TensorView*>();
+    }
+
+    type* link_parameters(type* ptr)
+    {        
+        vector<TensorView*> parameter_views = get_parameter_views();
+
+        for(Index i = 0; i < parameter_views.size(); i++)
+        {
+            parameter_views[i]->data = ptr;
+            ptr += parameter_views[i]->size();
+
+//            const size_t address = reinterpret_cast<size_t>(ptr);
+//            if (address % 64 != 0)
+//                ptr += (16 - ((address / sizeof(type)) % 16));
+
+        }
+
+        return ptr;
+    }
 
     //virtual pair
 
@@ -84,7 +105,7 @@ public:
 
     virtual void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>&,
                                                    const Index&,
-                                                   Tensor<type, 2>&) const {}
+                                                   Tensor2&) const {}
 
     virtual void from_XML(const tinyxml2::XMLDocument&) {}
 
@@ -111,9 +132,9 @@ protected:
 
     bool is_trainable = true;
 
-    Tensor<type, 2> empty_2;
-    Tensor<type, 3> empty_3;
-    Tensor<type, 4> empty_4;
+    Tensor2 empty_2;
+    Tensor3 empty_3;
+    Tensor4 empty_4;
 
     bool display = true;
 
@@ -232,32 +253,98 @@ protected:
         dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
-    void softmax(Tensor<type, 2>&) const;
-    void softmax(Tensor<type, 3>&) const;
-    void softmax(Tensor<type, 4>&) const;
+    void softmax(Tensor2&) const;
+    void softmax(Tensor3&) const;
+    void softmax(Tensor4&) const;
 
-    //void softmax_derivatives_times_tensor(const Tensor<type, 3>&, const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
-    void softmax_derivatives_times_tensor(const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
+    void softmax_derivatives_times_tensor(const Tensor3&, TensorMap3&, Tensor1&) const;
 
     void add_deltas(const vector<TensorView>& delta_views) const;
+
+    template <int Rank>
+    void normalize_batch(
+        Tensor<type, Rank>& outputs,
+        Tensor<type, Rank>& normalized_outputs,
+        Tensor1& batch_means,
+        Tensor1& batch_stds,
+        Tensor1& moving_means,
+        Tensor1& moving_stds,
+        const Tensor1& scales,
+        const Tensor1& offsets,
+        const bool& is_training,
+        const type momentum = type(0.9),
+        const type epsilon = type(1e-5)) const
+    {
+        const Index neurons = moving_means.size();
+
+        array<int, Rank - 1> reduction_axes;
+        for(int i = 0; i < Rank - 1; ++i)
+            reduction_axes[i] = i;
+
+        array<Index, Rank> reshape_dimensions;
+        reshape_dimensions.fill(1);
+        reshape_dimensions[Rank - 1] = neurons;
+
+        array<Index, Rank> broadcast_dimensions = outputs.dimensions();
+        broadcast_dimensions[Rank - 1] = 1;
+
+        if(is_training)
+        {
+            batch_means.device(*device) = outputs.mean(reduction_axes);
+
+            normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions));
+
+            batch_stds.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
+
+            normalized_outputs.device(*device) = normalized_outputs / batch_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+
+            moving_means.device(*device) = moving_means * momentum + batch_means * (type(1) - momentum);
+            moving_stds.device(*device) = moving_stds * momentum + batch_stds * (type(1) - momentum);
+        }
+        else
+            normalized_outputs.device(*device) = (outputs - moving_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
+                                                 (moving_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions) + epsilon);
+
+        outputs.device(*device) = normalized_outputs * scales.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
+                                  offsets.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+    }
 
     template <int Rank>
     void dropout(Tensor<type, Rank>& tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
-#pragma omp parallel
+        #pragma omp parallel
         {
             mt19937 gen(random_device{}() + omp_get_thread_num());  // thread-local RNG
             uniform_real_distribution<float> dis(0.0f, 1.0f);
 
- #pragma omp for
-
+            #pragma omp for
             for (Index i = 0; i < tensor.size(); i++)
                 tensor(i) = (dis(gen) < dropout_rate)
                                 ? 0
                                 : tensor(i) * scaling_factor;
         }
+    }
+
+    template <int Rank>
+    void calculate_combinations(
+        const Tensor<type, Rank>& inputs,
+        const Tensor2& weights,
+        const Tensor1& biases,
+        Tensor<type, Rank>& combinations) const
+    {
+        const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
+
+        array<Index, Rank> reshape_dimensions;
+        reshape_dimensions.fill(1);
+        reshape_dimensions[Rank - 1] = biases.size();
+
+        array<Index, Rank> broadcast_dims = combinations.dimensions();
+        broadcast_dims[Rank - 1] = 1;
+
+        combinations.device(*device) = inputs.contract(weights, contraction_axes) +
+                                       biases.reshape(reshape_dimensions).broadcast(broadcast_dims);
     }
 
 #ifdef OPENNN_CUDA
@@ -313,7 +400,13 @@ protected:
 struct LayerForwardPropagation
 {
     LayerForwardPropagation() {}
+
     virtual ~LayerForwardPropagation() = default;
+
+    virtual Index get_workspace_size() const
+    {
+        return 0;
+    }
 
     void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
     {
@@ -350,9 +443,14 @@ struct LayerBackPropagation
 
     virtual void initialize() = 0;
 
+    virtual type* link_gradient(type* ptr)
+    {
+        return ptr;
+    }
+
     virtual vector<TensorView> get_input_derivative_views() const = 0;
 
-    virtual vector<ParameterView> get_parameter_delta_views() const
+    virtual vector<ParameterView> get_gradient_views() const
     {
         return vector<ParameterView>();
     }
@@ -423,7 +521,7 @@ struct LayerBackPropagationCuda
 
     virtual vector<float*> get_input_derivatives_device() { return {input_deltas}; }
 
-    virtual vector<ParameterView> get_parameter_delta_views_device() const
+    virtual vector<ParameterView> get_gradient_views_device() const
     {
         return vector<ParameterView>();
     }

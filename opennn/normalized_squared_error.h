@@ -29,9 +29,9 @@ public:
 
     void set_dataset(const Dataset* new_dataset) override;
 
-    type calculate_normalization_coefficient(const Tensor<type, 2>&, const Tensor<type, 1>&) const;
+    type calculate_normalization_coefficient(const Tensor2&, const Tensor1&) const;
 
-    type calculate_time_series_normalization_coefficient(const Tensor<type, 2>&, const Tensor<type, 2>&) const;
+    type calculate_time_series_normalization_coefficient(const Tensor2&, const Tensor2&) const;
 
     void calculate_error(const Batch&,
                          const ForwardPropagation&,
@@ -88,7 +88,7 @@ protected:
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

@@ -63,7 +63,7 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 {
     NeuronsSelectionResults neuron_selection_results(maximum_epochs_number);
 
-    if(display) cout << "Performing growing neurons selection..." << endl;
+    if(display) cout << "Performing growing neuron selection..." << endl;
 
     // Neural network    
 
@@ -138,7 +138,7 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
             if(minimum_selection_error < neuron_selection_results.optimum_selection_error)
             {
                 neuron_selection_results.optimal_neurons_number = neurons_number;
-                neural_network->get_parameters(neuron_selection_results.optimal_parameters);
+                //neural_network->get_parameters(neuron_selection_results.optimal_parameters);
                 neuron_selection_results.optimum_training_error = minimum_training_error;
                 neuron_selection_results.optimum_selection_error = minimum_selection_error;                                
             }
@@ -298,7 +298,7 @@ REGISTER(NeuronsSelection, GrowingNeurons, "GrowingNeurons");
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

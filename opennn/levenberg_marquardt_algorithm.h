@@ -119,11 +119,10 @@ struct LevenbergMarquardtAlgorithmData final : public OptimizationAlgorithmData
 
     // Neural network data
 
-//    Tensor<type, 1> parameters;
-    Tensor<type, 1> old_parameters;
-    Tensor<type, 1> parameters_difference;
+    Tensor1 old_parameters;
+    Tensor1 parameters_difference;
 
-    Tensor<type, 1> parameters_increment;
+    Tensor1 parameters_increment;
 
     // Loss index data
 
@@ -140,7 +139,7 @@ struct LevenbergMarquardtAlgorithmData final : public OptimizationAlgorithmData
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

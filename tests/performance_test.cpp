@@ -15,7 +15,7 @@ TEST(PerformanceTest, Rosenbrock)
 
     dataset.set_data_rosenbrock();
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network(NeuralNetwork::ModelType::Approximation,
         { inputs_number }, { hidden_neurons_number }, { outputs_number });

@@ -19,17 +19,17 @@ public:
 
     KMeans(Index clusters = 3, string distance_calculation_method = "euclidean", Index iter = 100);
 
-    Tensor<Index, 1> calculate_outputs(const Tensor<type, 2>&);
-    Tensor<type, 1> elbow_method(const Tensor<type, 2>&, Index max_clusters=10);
-    Index find_optimal_clusters(const Tensor<type, 1>&) const;
+    Tensor<Index, 1> calculate_outputs(const Tensor2&);
+    Tensor1 elbow_method(const Tensor2&, Index max_clusters=10);
+    Index find_optimal_clusters(const Tensor1&) const;
 
     Tensor<Index, 1> get_cluster_labels() const;
-    Tensor<type, 2> get_cluster_centers() const;
+    Tensor2 get_cluster_centers() const;
     Index get_clusters_number() const;
 
-    void fit(const Tensor<type, 2>&);
+    void fit(const Tensor2&);
     void set_cluster_number(const Index&);
-    void set_centers_random(const Tensor<type, 2>&);
+    void set_centers_random(const Tensor2&);
 
 private:
 
@@ -37,7 +37,7 @@ private:
     Index maximum_iterations;
     string metric;
 
-    Tensor<type, 2> cluster_centers;
+    Tensor2 cluster_centers;
     Tensor<Index, 1> rows_cluster_labels;
 };
 
@@ -46,7 +46,7 @@ private:
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

@@ -36,7 +36,7 @@ TEST_F(FlattenLayerTest, ForwardPropagate)
     unique_ptr<LayerForwardPropagation> forward_propagation =
         make_unique<FlattenForwardPropagation<4>>(batch_size, flatten_layer.get());
 
-    Tensor<type, 4> inputs(batch_size, height, width, channels);
+    Tensor4 inputs(batch_size, height, width, channels);
     inputs.setConstant(1.23f);
 
     auto eigen_dims = inputs.dimensions();
@@ -63,12 +63,12 @@ TEST_F(FlattenLayerTest, BackPropagate)
     unique_ptr<LayerBackPropagation> back_propagation =
         make_unique<FlattenBackPropagation<4>>(batch_size, flatten_layer.get());
 
-    Tensor<type, 4> inputs(batch_size, height, width, channels);
+    Tensor4 inputs(batch_size, height, width, channels);
     inputs.setConstant(1.0f);
     TensorView input_view(inputs.data(), dimensions{ batch_size, height, width, channels });
 
     const Index flattened_size = height * width * channels;
-    Tensor<type, 2> output_derivatives(batch_size, flattened_size);
+    Tensor2 output_derivatives(batch_size, flattened_size);
     output_derivatives.setConstant(1.0f);
     TensorView output_derivatives_view(output_derivatives.data(), dimensions{ batch_size, flattened_size });
     

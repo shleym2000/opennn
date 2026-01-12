@@ -75,8 +75,8 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
     Pooling3dForwardPropagation* pooling_layer_forward_propagation =
         static_cast<Pooling3dForwardPropagation*>(layer_forward_propagation.get());
 
-    const TensorMap<Tensor<type, 3>> inputs = tensor_map<3>(input_views[0]);
-    Tensor<type, 2>& outputs = pooling_layer_forward_propagation->outputs;
+    const TensorMap3 inputs = tensor_map<3>(input_views[0]);
+    Tensor2& outputs = pooling_layer_forward_propagation->outputs;
 
     const Index batch_size = inputs.dimension(0);
     const Index sequence_length = inputs.dimension(1);
@@ -123,8 +123,8 @@ void Pooling3d::back_propagate(const vector<TensorView>& input_views,
                                unique_ptr<LayerForwardPropagation>& forward_propagation,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const TensorMap<Tensor<type, 3>> input_tensor_map  = tensor_map<3>(input_views[0]);
-    const TensorMap<Tensor<type, 2>> delta_tensor_map  = tensor_map<2>(delta_views[0]);
+    const TensorMap3 input_tensor_map  = tensor_map<3>(input_views[0]);
+    const TensorMap2 delta_tensor_map  = tensor_map<2>(delta_views[0]);
 
     Pooling3dForwardPropagation* forward_layer  =
         static_cast<Pooling3dForwardPropagation*>(forward_propagation.get());
@@ -246,7 +246,7 @@ REGISTER(LayerBackPropagation, Pooling3dBackPropagation, "Pooling3d")
 
 }
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

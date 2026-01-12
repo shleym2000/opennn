@@ -7,8 +7,8 @@
 //   artelnics@artelnics.com
 
 #include "model_expression.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "strings_utilities.h"
 #include "dataset.h"
 #include "neural_network.h"
@@ -844,10 +844,10 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         bool is_scaling_3d = false;
 
         if(neural_network->has("Scaling2d"))
-            inputs_descriptives = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"))->get_descriptives();
+            inputs_descriptives = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"))->get_descriptives();
         else if (neural_network->has("Scaling3d"))
         {
-            inputs_descriptives = static_cast<Scaling3d*>(neural_network->get_first("Scaling3d"))->get_descriptives();
+            inputs_descriptives = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"))->get_descriptives();
             is_scaling_3d = true;
 
             for(const Dataset::RawVariable& var : raw_variables)
@@ -1563,7 +1563,7 @@ void ModelExpression::save_api(const filesystem::path& file_name, const vector<D
 // Namespace
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

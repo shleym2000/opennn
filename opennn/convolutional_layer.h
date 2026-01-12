@@ -18,7 +18,6 @@ class Convolutional final : public Layer
 {
 
 public:
-    //enum class Convolution{Valid, Same};
 
     Convolutional(const dimensions& = {3, 3, 1},                    // Input dimensions {height,width,channels}
                   const dimensions& = {3, 3, 1, 1},                 // Kernel dimensions {kernel_height,kernel_width,channels,kernels_number}
@@ -29,9 +28,6 @@ public:
                   const string& = "convolutional_layer");
 
     bool get_batch_normalization() const;
-
-    Tensor<type, 1> get_scales() const;
-    Tensor<type, 1> get_offsets() const;
 
     const string& get_activation_function() const;
 
@@ -63,7 +59,7 @@ public:
     Index get_input_height() const;
     Index get_input_width() const;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     // Set
 
@@ -89,13 +85,11 @@ public:
 
     // Forward propagation
 
-    void preprocess_inputs(const Tensor<type, 4>&,
-                           Tensor<type, 4>&) const;
+    void preprocess_inputs(const Tensor4&,
+                           Tensor4&) const;
 
-    void calculate_convolutions(const Tensor<type, 4>&,
-                                Tensor<type, 4>&) const;
-
-    void apply_batch_normalization(unique_ptr<LayerForwardPropagation>&, const bool&);
+    void calculate_convolutions(const Tensor4&,
+                                Tensor4&) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -162,9 +156,11 @@ protected:
 
 private:
 
-    Tensor<type, 4> weights;
+    TensorView weights;
+    TensorView biases;
 
-    Tensor<type, 1> biases;
+    TensorView scales;
+    TensorView offsets;
 
     Index row_stride = 1;
 
@@ -180,15 +176,11 @@ private:
 
     bool batch_normalization = false;
 
-    Tensor<type, 1> moving_means;
-    Tensor<type, 1> moving_standard_deviations;
+    Tensor1 moving_means;
+    Tensor1 moving_standard_deviations;
 
     type momentum = type(0.9);
 
-    const type epsilon = type(1e-5);
-
-    Tensor<type, 1> scales;
-    Tensor<type, 1> offsets;
 };
 
 
@@ -202,14 +194,14 @@ struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 4> outputs;
+    Tensor4 outputs;
 
-    Tensor<type, 4> preprocessed_inputs;
+    Tensor4 preprocessed_inputs;
 
-    Tensor<type, 1> means;
-    Tensor<type, 1> standard_deviations;
+    Tensor1 means;
+    Tensor1 standard_deviations;
 
-    Tensor<type, 4> activation_derivatives;
+    Tensor4 activation_derivatives;
 };
 
 
@@ -219,20 +211,20 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor<type, 1> bias_deltas;
-    Tensor<type, 4> weight_deltas;
-    Tensor<type, 4> input_deltas;
+    Tensor1 bias_deltas;
+    Tensor4 weight_deltas;
+    Tensor4 input_deltas;
 
-    Tensor<type, 4> rotated_weights;
+    Tensor4 rotated_weights;
 
-    Tensor<type, 1> bn_scale_deltas;
-    Tensor<type, 1> bn_offset_deltas;
+    Tensor1 bn_scale_deltas;
+    Tensor1 bn_offset_deltas;
 };
 
 
@@ -278,7 +270,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 {
     ConvolutionalBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_parameter_delta_views_device() const override;
+    vector<ParameterView> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 
@@ -314,7 +306,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

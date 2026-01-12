@@ -101,8 +101,6 @@ private:
 
     Index maximum_selection_failures;
 
-    const type epsilon = numeric_limits<type>::epsilon();
-
     type learning_rate_tolerance;
 
     type loss_tolerance;
@@ -143,26 +141,24 @@ struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
 
     // Neural network data
 
-    Tensor<type, 1> parameters;
-    Tensor<type, 1> old_parameters;
-    Tensor<type, 1> parameters_difference;
+    Tensor1 old_parameters;
+    Tensor1 parameters_difference;
 
-    Tensor<type, 1> parameters_increment;
+    Tensor1 parameters_increment;
 
     // Loss index data
 
-    Tensor<type, 1> gradient;
-    Tensor<type, 1> old_gradient;
-    Tensor<type, 1> gradient_difference;
+    Tensor1 old_gradient;
+    Tensor1 gradient_difference;
 
-    Tensor<type, 2> inverse_hessian;
-    Tensor<type, 2> old_inverse_hessian;
+    Tensor2 inverse_hessian;
+    Tensor2 old_inverse_hessian;
 
-    Tensor<type, 1> old_inverse_hessian_dot_gradient_difference;
+    Tensor1 old_inverse_hessian_dot_gradient_difference;
 
     // Optimization algorithm data
 
-    Tensor<type, 1> BFGS;
+    Tensor1 BFGS;
 
     Index epoch = 0;
 
@@ -178,7 +174,7 @@ struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

@@ -43,15 +43,17 @@ void CrossEntropyError2d::calculate_binary_error(const Batch& batch,
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     Tensor<type, 0>& error = back_propagation.error;
 
@@ -72,19 +74,19 @@ void CrossEntropyError2d::calculate_multiple_error(const Batch& batch,
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
 
     Tensor<type, 0>& error = back_propagation.error;
 
-    error.device(*device) = (targets*(outputs + epsilon).log()).sum() / type(-samples_number);
+    error.device(*device) = (targets*(outputs + numeric_limits<type>::epsilon()).log()).sum() / type(-samples_number);
 
     if(isnan(error())) throw runtime_error("\nError is NAN.");
 }
@@ -112,19 +114,21 @@ void CrossEntropyError2d::calculate_binary_output_delta(const Batch& batch,
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
-    TensorMap<Tensor<type, 2>> output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     output_deltas.device(*device)
         = (-targets/(outputs + epsilon) + (type(1) - targets)/(type(1) - outputs + epsilon))/type(samples_number);
@@ -141,19 +145,19 @@ void CrossEntropyError2d::calculate_multiple_output_delta(const Batch& batch,
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_pair();
+    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
 
-    TensorMap<Tensor<type, 2>> output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
     output_deltas.device(*device) = (outputs - targets) / type(samples_number);
 }
@@ -362,7 +366,7 @@ REGISTER(LossIndex, CrossEntropyError2d, "CrossEntropyError2d");
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

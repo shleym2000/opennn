@@ -31,18 +31,18 @@ TEST(CrossEntropyError2d, BackPropagate)
 
     dataset.set_data_random();
 
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ inputs_number }, dimensions{ targets_number }, "Logistic"));
+    neural_network.add_layer(make_unique<Dense>(dimensions{ inputs_number }, dimensions{ targets_number }, "Logistic"));
 
     neural_network.set_parameters_random();
 
     CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 
-    const Tensor<type, 1> gradient = cross_entropy_error.calculate_gradient();
+    const Tensor1 gradient = cross_entropy_error.calculate_gradient();
 
-    const Tensor<type, 1> numerical_gradient = cross_entropy_error.calculate_numerical_gradient();
+    const Tensor1 numerical_gradient = cross_entropy_error.calculate_numerical_gradient();
 
     EXPECT_EQ(are_equal(gradient, numerical_gradient, type(1.0e-3)), true);
 
@@ -59,7 +59,7 @@ TEST(CrossEntropyError2d, BackPropagate)
 
 TEST(CrossEntropyError2d, calculate_binary_error)
 {
-    Tensor<type, 2> data;
+    Tensor2 data;
     Dataset dataset(5, { 3 }, { 1 });
 
     data.resize(5, 4);
@@ -80,10 +80,10 @@ TEST(CrossEntropyError2d, calculate_binary_error)
     target_raw_variable_indices[0] = Index(3);
 
     dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ 3 }, dimensions{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<Dense>(dimensions{ 3 }, dimensions{ 1 }, "Logistic"));
   
 
     Batch batch(5, &dataset);
@@ -115,7 +115,7 @@ TEST(CrossEntropyError2d, calculate_binary_error)
 
 TEST(CrossEntropyError2d, calculate_multiple_error) 
 {
-    Tensor<type, 2> data;
+    Tensor2 data;
     Dataset multipledataset( 5, {3}, {2});
 
     data.resize(5, 4);
@@ -135,10 +135,10 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
   
 
     multipledataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
-    multipledataset.set_sample_uses("Training");
+    multipledataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<Dense>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
 
     Batch batch(5, &multipledataset);
 
@@ -167,7 +167,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
 
  TEST(CrossEntropyError2d, calculate_binary_output_delta)
  {
-     Tensor<type, 2> data;
+     Tensor2 data;
      Dataset dataset(5, { 3 }, { 1 });
 
      data.resize(5, 4);
@@ -188,10 +188,10 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
      target_raw_variable_indices[0] = Index(3);
 
      dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
-     dataset.set_sample_uses("Training");
+     dataset.set_sample_roles("Training");
 
      NeuralNetwork neural_network;
-     neural_network.add_layer(make_unique<Dense2d>(dimensions{ 3 }, dimensions{ 1 }, "Logistic"));
+     neural_network.add_layer(make_unique<Dense>(dimensions{ 3 }, dimensions{ 1 }, "Logistic"));
 
      Batch batch(5, &dataset);
 
@@ -217,7 +217,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
 
  TEST(CrossEntropyError2d, calculate_multiple_output_delta) 
  {
-     Tensor<type, 2> data;
+     Tensor2 data;
      Dataset dataset(5, { 3 }, { 1 });
 
      data.resize(5, 4);
@@ -238,10 +238,10 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
      target_raw_variable_indices = {2,3};
 
      dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
-     dataset.set_sample_uses("Training");
+     dataset.set_sample_roles("Training");
 
      NeuralNetwork neural_network;
-     neural_network.add_layer(make_unique<Dense2d>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
+     neural_network.add_layer(make_unique<Dense>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
 
      Batch batch(5, &dataset);
 
@@ -270,7 +270,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
  
  TEST(CrossEntropyError2d, get_name)
  {
-     Tensor<type, 2> data;
+     Tensor2 data;
      Dataset dataset(5, { 3 }, { 1 });
 
      data.resize(5, 4);
@@ -291,10 +291,10 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
      target_raw_variable_indices = { 2,3 };
 
      dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
-     dataset.set_sample_uses("Training");
+     dataset.set_sample_roles("Training");
 
      NeuralNetwork neural_network;
-     neural_network.add_layer(make_unique<Dense2d>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
+     neural_network.add_layer(make_unique<Dense>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
  
      CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 
@@ -306,7 +306,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
  TEST(CrossEntropyError2d, to_XML)
  {
      Dataset dataset(5, { 2 }, { 1 });
-     Tensor<type, 2> data;
+     Tensor2 data;
      data.resize(5, 3);
      data.setValues({
          {type(0.1), type(0.2), type(1)},
@@ -320,10 +320,10 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
      std::vector<Index> input_indices = { 0, 1 };
      std::vector<Index> target_indices = { 2 };
      dataset.set_raw_variable_indices(input_indices, target_indices);
-     dataset.set_sample_uses("Training");
+     dataset.set_sample_roles("Training");
 
      NeuralNetwork neural_network;
-     neural_network.add_layer(make_unique<Dense2d>(dimensions{ 2 }, dimensions{ 1 }, "Logistic"));
+     neural_network.add_layer(make_unique<Dense>(dimensions{ 2 }, dimensions{ 1 }, "Logistic"));
 
      CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 

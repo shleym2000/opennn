@@ -17,7 +17,6 @@ namespace opennn
 
 class NeuralNetwork;
 
-//struct ForwardPropagation;
 struct NeuralNetworkBackPropagation;
 struct NeuralNetworkBackPropagationLM;
 
@@ -34,7 +33,12 @@ struct ForwardPropagation
 
     TensorView get_last_trainable_layer_outputs_pair() const;
 
-    vector<vector<TensorView>> get_layer_input_pairs(const vector<TensorView>&, const bool&) const;
+    vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
+
+    TensorView get_output_view()
+    {
+        return layers.back()->get_output_view();
+    }
 
     void print() const;
 
@@ -43,6 +47,17 @@ struct ForwardPropagation
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerForwardPropagation>> layers;
+
+    Tensor1 workspace;
+
+    void compile()
+    {
+        Index maximum_layer_size = 0;
+
+        workspace.resize(2*maximum_layer_size);
+    }
+
+
 };
 
 
@@ -58,6 +73,40 @@ public:
     void add_layer(unique_ptr<Layer>,
                   const vector<Index>& = vector<Index>());
 
+    void compile()
+    {
+        Index layer_parameters_number = 0;
+
+        Index parameters_number = 0;
+
+        for (auto& layer : layers)
+        {
+            layer_parameters_number = layer->get_parameters_number();
+
+            parameters_number += layer_parameters_number;
+
+            if (layer_parameters_number % 16 != 0)
+                parameters_number += (16 - layer_parameters_number%16);
+        }
+
+        parameters.resize(parameters_number);
+        parameters.setZero();
+
+        type* current_ptr = parameters.data();
+
+        for (auto& layer : layers)
+        {
+            layer_parameters_number = layer->get_parameters_number();
+
+            layer->link_parameters(current_ptr);
+
+            current_ptr += layer_parameters_number;
+
+            //if (layer_parameters_number % 16 != 0)
+            //    current_ptr += 16 - layer_parameters_number%16;
+        }
+    }
+
     bool validate_name(const string&) const;
 
     void reference_all_layers();
@@ -67,6 +116,11 @@ public:
     bool has(const string&) const;
 
     bool is_empty() const;
+
+    Tensor1& get_parameters()
+    {
+        return parameters;
+    }
 
     const vector<string>& get_feature_names() const;
     Index get_input_index(const string&) const;
@@ -139,11 +193,10 @@ public:
     // Parameters
 
     Index get_parameters_number() const;
-    void get_parameters(Tensor<type, 1>&) const;
 
     vector<Index> get_layer_parameter_numbers() const;
 
-    void set_parameters(const Tensor<type, 1>&);
+    void set_parameters(const Tensor1&);
 
     // Parameters initialization
 
@@ -188,16 +241,15 @@ public:
         return Tensor<type, output_rank>();
     }
 
-    Tensor<type, 3> calculate_outputs(const Tensor<type, 3>& inputs_1, const Tensor<type, 3>& inputs_2);
+    Tensor3 calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2);
 
-    Tensor<type, 2> calculate_scaled_outputs(type*, Tensor<Index, 1>& );
+    Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
-    Tensor<type, 2> calculate_directional_inputs(const Index&, const Tensor<type, 1>&, const type&, const type&, const Index& = 101) const;
+    Tensor2 calculate_directional_inputs(const Index&, const Tensor1&, const type&, const type&, const Index& = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
-    Tensor<type, 2> calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
-
+    Tensor2 calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
 
     // Serialization
 
@@ -220,15 +272,15 @@ public:
     vector<string> get_layer_labels() const;
     vector<string> get_names_string() const;
 
-    void save_outputs(Tensor<type, 2>&, const filesystem::path&);
-    void save_outputs(Tensor<type, 3>&, const filesystem::path&);
+    void save_outputs(Tensor2&, const filesystem::path&);
+    void save_outputs(Tensor3&, const filesystem::path&);
 
     void forward_propagate(const vector<TensorView>&,
                           ForwardPropagation&,
                           const bool& = false) const;
 
     void forward_propagate(const vector<TensorView>&,
-                          const Tensor<type, 1>&,
+                          const Tensor1&,
                           ForwardPropagation&);
 
     string get_expression() const;
@@ -275,7 +327,10 @@ protected:
 
     bool display = true;
 
+    Tensor1 parameters;
+
 };
+
 
 struct NeuralNetworkBackPropagation
 {
@@ -294,6 +349,23 @@ struct NeuralNetworkBackPropagation
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerBackPropagation>> layers;
+
+    Tensor1 gradient;
+
+    void allocate()
+    {
+        const Index total_size = neural_network->get_parameters_number();
+
+        gradient.resize(total_size);
+        gradient.setZero();
+
+        type* current_ptr = gradient.data();
+
+        for (auto& layer : layers)
+            if (layer)
+                current_ptr = layer->link_gradient(current_ptr);
+
+    }
 };
 
 
@@ -396,7 +468,7 @@ struct ForwardPropagationCuda
 #endif
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

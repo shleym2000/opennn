@@ -34,7 +34,7 @@ TEST(LevenbergMarquardtAlgorithmTest, Train)
     Dataset dataset(1, { 1 }, { 1 });
     //dataset.set_data_constant(type(1));
     dataset.set_data_random();
-    dataset.set_sample_uses("Training");
+    dataset.set_sample_roles("Training");
 
     //NeuralNetwork neural_network(NeuralNetwork::ModelType::Approximation, {1}, {1}, {1});
     //neural_network.set_parameters_random();
@@ -42,7 +42,7 @@ TEST(LevenbergMarquardtAlgorithmTest, Train)
 
     NeuralNetwork neural_network;
 
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ 1 },
+    neural_network.add_layer(make_unique<Dense>(dimensions{ 1 },
         dimensions{ 1 },
         "Linear"));
 

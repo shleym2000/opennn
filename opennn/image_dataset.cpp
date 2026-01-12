@@ -285,11 +285,13 @@ void ImageDataset::to_XML(XMLPrinter& printer) const
 
     samples_to_XML(printer);
 
+    add_xml_element(printer, "Display", to_string(display));
+
     printer.CloseElement();
 }
 
 
-Tensor<type, 2> ImageDataset::perform_augmentation(const Tensor<type, 2>& input_tensor)
+Tensor2 ImageDataset::perform_augmentation(const Tensor2& input_tensor)
 {
     throw runtime_error("Image Augmentation is not yet implemented. Please check back in a future version.");
 /*
@@ -300,7 +302,7 @@ Tensor<type, 2> ImageDataset::perform_augmentation(const Tensor<type, 2>& input_
 //    const Index input_width = input_dimensions[1];
 //    const Index channels = input_dimensions[2];
 
-//    TensorMap<Tensor<type, 4>> inputs(input_tensor.data(),
+//    TensorMap4 inputs(input_tensor.data(),
 //                                      samples_number,
 //                                      input_height,
 //                                      input_width,
@@ -317,7 +319,7 @@ Tensor<type, 2> ImageDataset::perform_augmentation(const Tensor<type, 2>& input_
 
     for(Index batch_index = 0; batch_index < samples_number; batch_index++)
     {
-        Tensor<type, 3> image = inputs.chip(batch_index, 0);
+        Tensor3 image = inputs.chip(batch_index, 0);
 
         if(random_reflection_axis_x)
             reflect_image_x(device.get(),
@@ -346,7 +348,7 @@ Tensor<type, 2> ImageDataset::perform_augmentation(const Tensor<type, 2>& input_
                               get_random_type(random_vertical_translation_minimum, random_vertical_translation_maximum));
     }
 */
-    return Tensor<type, 2>();
+    return Tensor2();
 }
 
 
@@ -355,7 +357,7 @@ void ImageDataset::fill_input_tensor(const vector<Index>& sample_indices, const 
     if (get_augmentation())
     {
         // Optional: apply augmentation here
-        // Tensor<type, 2> augmented_data = perform_augmentation(data);
+        // Tensor2 augmented_data = perform_augmentation(data);
         // fill_tensor_data(augmented_data, sample_indices, input_indices, destination_data);
     }
     else
@@ -370,7 +372,7 @@ void ImageDataset::fill_input_tensor_row_major(const vector<Index>& sample_indic
     if (get_augmentation())
     {
         // Optional: apply augmentation here
-        // Tensor<type, 2> augmented_data = perform_augmentation(data);
+        // Tensor2 augmented_data = perform_augmentation(data);
         // fill_tensor_data_row_major(augmented_data, sample_indices, input_indices, destination_data);
     }
     else
@@ -430,7 +432,7 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
 
 vector<Descriptives> ImageDataset::scale_variables(const string&)
 {
-    TensorMap<Tensor<type, 4>> inputs_data(data.data(),
+    TensorMap4 inputs_data(data.data(),
                                            get_samples_number(),
                                            input_dimensions[0],
                                            input_dimensions[1],
@@ -444,7 +446,7 @@ vector<Descriptives> ImageDataset::scale_variables(const string&)
 
 void ImageDataset::unscale_variables(const string&)
 {
-    TensorMap<Tensor<type, 4>> inputs_data(data.data(),
+    TensorMap4 inputs_data(data.data(),
                                            get_samples_number(),
                                            input_dimensions[0],
                                            input_dimensions[1],
@@ -493,7 +495,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
 
     Index height, width, image_channels;
 
-    const Tensor<type, 3> image_data = read_bmp_image(image_path[0]);
+    const Tensor3 image_data = read_bmp_image(image_path[0]);
 
     height = image_data.dimension(0);
     width = image_data.dimension(1);
@@ -531,7 +533,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
     #pragma omp parallel for
     for (Index i = 0; i < samples_number; i++)
     {
-        Tensor<type, 3> image = read_bmp_image(image_path[i]);
+        Tensor3 image = read_bmp_image(image_path[i]);
 
         const Index current_height = image.dimension(0);
         const Index current_width = image.dimension(1);
@@ -588,7 +590,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
 
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public

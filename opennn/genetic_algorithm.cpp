@@ -10,8 +10,8 @@
 #include "correlations.h"
 #include "dataset.h"
 #include "time_series_dataset.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "training_strategy.h"
 #include "genetic_algorithm.h"
 
@@ -31,19 +31,19 @@ const Tensor<bool, 2>& GeneticAlgorithm::get_population() const
 }
 
 
-const Tensor<type, 1>& GeneticAlgorithm::get_training_errors() const
+const Tensor1& GeneticAlgorithm::get_training_errors() const
 {
     return training_errors;
 }
 
 
-const Tensor<type, 1>& GeneticAlgorithm::get_selection_errors() const
+const Tensor1& GeneticAlgorithm::get_selection_errors() const
 {
     return selection_errors;
 }
 
 
-const Tensor<type, 1>& GeneticAlgorithm::get_fitness() const
+const Tensor1& GeneticAlgorithm::get_fitness() const
 {
     return fitness;
 }
@@ -210,7 +210,7 @@ void GeneticAlgorithm::set_elitism_size(const Index& new_elitism_size)
 }
 
 
-void GeneticAlgorithm::set_fitness(const Tensor<type, 1>& new_fitness)
+void GeneticAlgorithm::set_fitness(const Tensor1& new_fitness)
 {
     fitness = new_fitness;
 }
@@ -273,10 +273,10 @@ void GeneticAlgorithm::initialize_population_correlations()
     population.resize(individuals_number, genes_number);
     population.setConstant(false);
 
-    const Tensor<type, 1> correlations_rank = dataset->calculate_correlations_rank().template cast<type>() + type(1.0);
+    const Tensor1 correlations_rank = dataset->calculate_correlations_rank().template cast<type>() + type(1.0);
 
     const Tensor<type, 0> correlations_sum = correlations_rank.sum();
-    const Tensor<type, 1> correlations_cumsum = correlations_rank.cumsum(0);
+    const Tensor1 correlations_cumsum = correlations_rank.cumsum(0);
 
     const type* begin = correlations_cumsum.data();
     const type* end   = begin + genes_number;
@@ -353,10 +353,11 @@ void GeneticAlgorithm::evaluate_population()
             {
                 for(Index j = 0; j < time_steps; j++)
                 {
-                    string name = (base_name.empty() ? "variable" : base_name) + "_lag" + to_string(j);
+                    const string name = (base_name.empty() ? "variable" : base_name) + "_lag" + to_string(j);
                     final_feature_names.push_back(name);
                 }
             }
+
             neural_network->set_feature_names(final_feature_names);
         }
         else
@@ -376,7 +377,7 @@ void GeneticAlgorithm::evaluate_population()
 
         training_results = training_strategy->train();
 
-        neural_network->get_parameters(parameters(i));
+        parameters(i) = neural_network->get_parameters();
 
         training_errors(i) = training_results.get_training_error();
 
@@ -419,7 +420,7 @@ void GeneticAlgorithm::perform_selection()
         for(Index i = 0; i < individuals_number; i++)
             selection(i) = (fitness(i) - 1 >= 0) && (fitness(i) > (individuals_number - elitism_size));
 
-    const Tensor<type, 1> fitness_cumsum = fitness.cumsum(0);
+    const Tensor1 fitness_cumsum = fitness.cumsum(0);
 
     const type* begin = fitness_cumsum.data();
     const type* end = begin + individuals_number;
@@ -640,7 +641,7 @@ InputsSelectionResults GeneticAlgorithm::perform_input_selection()
 
     InputsSelectionResults input_selection_results(maximum_epochs_number);
 
-    if(display) cout << "Performing genetic inputs selection...\n" << endl;
+    if(display) cout << "Performing genetic input selection...\n" << endl;
 
     initialize_population();
 
@@ -833,15 +834,15 @@ InputsSelectionResults GeneticAlgorithm::perform_input_selection()
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling2d* scaling_layer_2d = static_cast<Scaling2d*>(neural_network->get_first("Scaling2d"));
-        scaling_layer_2d->set_descriptives(input_variable_descriptives);
-        scaling_layer_2d->set_scalers(input_variable_scalers);
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
     else if(neural_network->has("Scaling3d"))
     {
-        Scaling3d* scaling_layer_3d = static_cast<Scaling3d*>(neural_network->get_first("Scaling3d"));
-        scaling_layer_3d->set_descriptives(input_variable_descriptives);
-        scaling_layer_3d->set_scalers(input_variable_scalers);
+        Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
 
     neural_network->set_parameters(input_selection_results.optimal_parameters);
@@ -976,7 +977,7 @@ REGISTER(InputsSelection, GeneticAlgorithm, "GeneticAlgorithm");
 }
 
 // OpenNN: Open Neural Networks Library.
-// Copyright(C) 2005-2025 Artificial Intelligence Techniques, SL.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
