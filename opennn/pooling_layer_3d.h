@@ -58,11 +58,7 @@ struct Pooling3dForwardPropagation final : LayerForwardPropagation
 {
     Pooling3dForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
-
-    Tensor2 outputs;
 
     Tensor<Index, 2> maximal_indices;
 };
@@ -71,8 +67,6 @@ struct Pooling3dForwardPropagation final : LayerForwardPropagation
 struct Pooling3dBackPropagation final : LayerBackPropagation
 {
     Pooling3dBackPropagation(const Index& = 0, Layer* = nullptr);
-
-    vector<TensorView> get_input_derivative_views() const override;
 
     void initialize() override;
 

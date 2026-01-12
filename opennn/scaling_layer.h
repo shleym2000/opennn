@@ -138,7 +138,7 @@ public:
 
         set_min_max_range(type(-1), type(1));
 
-        name = "Scaling";
+        name = "Scaling" + to_string(Rank) + "d";
 
         is_trainable = false;
     }
@@ -177,18 +177,20 @@ public:
             scaler = new_scaler;
     }
 
+
     void forward_propagate(const vector<TensorView>& input_views,
-                           unique_ptr<LayerForwardPropagation>& forward_propagation,
+                           unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
     {
         const Index outputs_number = get_outputs_number();
 
-        ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
-            static_cast<ScalingForwardPropagation<Rank>*>(forward_propagation.get());
-
         const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-        Tensor2& outputs = scaling_layer_forward_propagation->outputs;
+        TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
+/*
+        ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
+            static_cast<ScalingForwardPropagation<Rank>*>(layer_forward_propagation.get());
+
         outputs = inputs;
 
         for(Index i = 0; i < outputs_number; i++)
@@ -210,6 +212,7 @@ public:
             else
                 throw runtime_error("Unknown scaling method.\n");
         }
+*/
     }
 
     //void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>& );
@@ -483,43 +486,20 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         set(new_batch_size, new_layer);
     }
 
-
     virtual ~ScalingForwardPropagation() = default;
-
-    TensorView get_output_view() const override
-    {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-
-        // Warning: this assumes output_dimensions[0] is correct for 2D view. 
-        // For Rank > 2, we might want to return full dimensions?
-        // But LayerForwardPropagation base usually expects flat or 2D view if not overridden specifically?
-        // Existing 2D code: {batch_size, output_dimensions[0]}.
-        // If output_dimensions has size > 1, accessing [0] gives first dim. 
-        // But we want flattened feature size.
-        
-        Index features_size = 1; 
-        if(!output_dimensions.empty())
-        {
-             features_size = accumulate(output_dimensions.begin(), output_dimensions.end(), 1, multiplies<Index>());
-        }
-
-        return {(type*)outputs.data(), {batch_size, features_size}};
-    }
 
     void initialize() override
     {
         const Index outputs_number = layer->get_outputs_number();
 
-        outputs.resize(batch_size, outputs_number);
+        outputs.dims = {batch_size, outputs_number};
     }
 
     void print() const override
     {
         cout << "Outputs:" << endl
-             << outputs << endl;
+             << outputs.dims << endl;
     }
-
-    Tensor2 outputs;
 };
 
 
@@ -627,3 +607,20 @@ void reference_scaling_layer();
 }
 
 #endif
+
+// OpenNN: Open Neural Networks Library.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

@@ -5,7 +5,7 @@
 
 namespace opennn
 {
-
+/*
 struct ParameterView
 {
     type* data = nullptr;
@@ -15,7 +15,7 @@ struct ParameterView
     ParameterView(type* new_data, Index new_size) noexcept : data(new_data), size(new_size)
     {}
 };
-
+*/
 
 struct TensorView
 {

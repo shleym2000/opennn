@@ -154,12 +154,9 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
                                  unique_ptr<LayerForwardPropagation>& forward_propagation,
                                  const bool&)
 {
-    const TensorMap<Tensor<type,2>> inputs = tensor_map<2>(input_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    BoundingForwardPropagation* this_forward_propagation =
-        static_cast<BoundingForwardPropagation*>(forward_propagation.get());
-
-    Tensor<type,2>& outputs = this_forward_propagation->outputs;
+    TensorMap2 outputs = tensor_map<2>(forward_propagation->outputs);
 
     if(bounding_method == BoundingMethod::NoBounding)
     {
@@ -292,26 +289,18 @@ BoundingForwardPropagation::BoundingForwardPropagation(const Index& new_batch_si
 }
 
 
-TensorView BoundingForwardPropagation::get_output_view() const
-{
-    const dimensions output_dimensions = layer->get_output_dimensions();
-
-    return { (type*)outputs.data(), { batch_size, output_dimensions[0]}};
-}
-
-
 void BoundingForwardPropagation::initialize()
 {
     const Index neurons_number = static_cast<Bounding*>(layer)->get_output_dimensions()[0];
 
-    outputs.resize(batch_size, neurons_number);
+    outputs.dims = {batch_size, neurons_number};
 }
 
 
 void BoundingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs << endl;
+         << outputs.dims << endl;
 }
 
 REGISTER(Layer, Bounding, "Bounding")

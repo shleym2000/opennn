@@ -72,13 +72,9 @@ struct RecurrentForwardPropagation final : LayerForwardPropagation
 {
     RecurrentForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
 
     void print() const override;
-
-    Tensor2 outputs;
 
     Tensor3 current_inputs;
     Tensor2 current_activation_derivatives;
@@ -93,9 +89,7 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 {
     RecurrentBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
-    vector<ParameterView> get_gradient_views() const override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 
@@ -114,8 +108,6 @@ struct RecurrentBackPropagation final : LayerBackPropagation
     TensorView bias_deltas;
     TensorView input_weight_deltas;
     TensorView recurrent_weight_deltas;
-
-    Tensor3 input_deltas;
 };
 
 
