@@ -589,19 +589,6 @@ MultiHeadAttentionBackPropagation::MultiHeadAttentionBackPropagation(const Index
 }
 
 
-vector<TensorView> MultiHeadAttentionBackPropagation::get_input_derivative_views() const
-{
-    MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);
-
-    const Index query_sequence_length = multihead_attention_layer->get_query_sequence_length();
-    const Index source_sequence_length = multihead_attention_layer->get_source_sequence_length();
-    const Index embedding_dimension = multihead_attention_layer->get_embedding_dimension();
-
-    return {{(type*)(input_query_deltas.data()), {batch_size, query_sequence_length, embedding_dimension}},
-            {(type*)(input_source_deltas.data()), {batch_size, source_sequence_length, embedding_dimension}}};
-}
-
-
 vector<TensorView*> MultiHeadAttentionBackPropagation::get_gradient_views()
 {
     return {&query_weight_deltas, &query_bias_deltas,

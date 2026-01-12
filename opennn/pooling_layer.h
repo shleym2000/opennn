@@ -164,15 +164,11 @@ struct PoolingBackPropagation final : LayerBackPropagation
 {
     PoolingBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
     void initialize() override;
 
     void print() const override;
 
     Tensor4 deltas_by_pool_size;
-
-    Tensor4 input_deltas;
 };
 
 

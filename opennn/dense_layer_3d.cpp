@@ -151,13 +151,13 @@ void Dense3d::back_propagate(const vector<TensorView>& input_views,
 
     // Back propagation
 
+    TensorMap3 input_deltas = tensor_map<3>(back_propagation->input_deltas[0]);
+
     Dense3dBackPropagation* dense3d_back_propagation =
         static_cast<Dense3dBackPropagation*>(back_propagation.get());
 
     Tensor1& bias_deltas = dense3d_back_propagation->bias_deltas;
     Tensor2& weight_deltas = dense3d_back_propagation->weight_deltas;
-
-    Tensor3& input_deltas = dense3d_back_propagation->input_deltas;
 
     deltas.device(*device) = deltas * activation_derivatives;
 
@@ -241,7 +241,9 @@ void Dense3dBackPropagation::initialize()
 
     bias_deltas.resize(output_embedding);
     weight_deltas.resize(input_embedding, output_embedding);
-    input_deltas.resize(batch_size, sequence_length, input_embedding);
+
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, sequence_length, input_embedding};
 }
 
 
@@ -260,16 +262,6 @@ Dense3dBackPropagation::Dense3dBackPropagation(const Index& new_batch_size, Laye
     set(new_batch_size, new_layer);
 }
 
-
-vector<TensorView> Dense3dBackPropagation::get_input_derivative_views() const
-{
-    Dense3d* dense_3d = static_cast<Dense3d*>(layer);
-
-    const Index sequence_length = dense_3d->get_sequence_length();
-    const Index input_embedding = dense_3d->get_input_embedding();
-
-    return {{(type*)(input_deltas.data()), {batch_size, sequence_length, input_embedding}}};
-}
 
 REGISTER(Layer, Dense3d, "Dense3d")
 REGISTER(LayerForwardPropagation, Dense3dForwardPropagation, "Dense3d")

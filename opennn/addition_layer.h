@@ -62,7 +62,6 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
     {
-
         if (input_views.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs.");
 
@@ -208,18 +207,6 @@ struct AdditionBackPropagation final : LayerBackPropagation
     {
         set(new_batch_size, new_layer);
     }
-
-
-    vector<TensorView> get_input_derivative_views() const override
-    {
-        const dimensions input_dimensions = layer->get_input_dimensions();
-        dimensions full_dimensions = {batch_size};
-        full_dimensions.insert(full_dimensions.end(), input_dimensions.begin(), input_dimensions.end());
-
-        return {{(type*)input_1_derivatives.data(), full_dimensions},
-                {(type*)input_2_derivatives.data(), full_dimensions}};
-    }
-
 
     void initialize() override
     {

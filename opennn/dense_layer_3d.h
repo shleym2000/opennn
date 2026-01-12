@@ -91,16 +91,12 @@ struct Dense3dBackPropagation final : LayerBackPropagation
 {
     Dense3dBackPropagation(const Index& = 0, Layer* = 0);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
     void initialize() override;
 
     void print() const override;
 
     Tensor1 bias_deltas;
     Tensor2 weight_deltas;
-
-    Tensor3 input_deltas;
 };
 
 

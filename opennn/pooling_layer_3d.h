@@ -68,8 +68,6 @@ struct Pooling3dBackPropagation final : LayerBackPropagation
 {
     Pooling3dBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
     void initialize() override;
 
     Tensor3 input_derivatives;

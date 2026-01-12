@@ -293,11 +293,6 @@ EmbeddingBackPropagation::EmbeddingBackPropagation(const Index& new_batch_size, 
 }
 
 
-vector<TensorView> EmbeddingBackPropagation::get_input_derivative_views() const
-{
-    return vector<TensorView>();
-}
-
 vector<TensorView*> EmbeddingBackPropagation::get_gradient_views()
 {
     return {&weight_deltas};

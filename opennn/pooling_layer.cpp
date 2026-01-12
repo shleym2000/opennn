@@ -375,16 +375,10 @@ void Pooling::back_propagate_max_pooling(const Tensor4& inputs,
 
     // Back propagation
 
-    PoolingBackPropagation* pooling_layer_back_propagation =
-        static_cast<PoolingBackPropagation*>(back_propagation.get());
-
-    Tensor4& input_deltas = pooling_layer_back_propagation->input_deltas;
-
-    // Input derivatives
-
+    TensorMap4 input_deltas = tensor_map<4>(back_propagation->input_deltas[0]);
     input_deltas.setZero();
 
-#pragma omp parallel for collapse (2)
+    #pragma omp parallel for collapse (2)
     for (Index channel_index = 0; channel_index < channels; channel_index++)
         for (Index batch_index = 0; batch_index < batch_size; batch_index++)
             for (Index output_height_index = 0; output_height_index < output_height; output_height_index++)
@@ -420,10 +414,10 @@ void Pooling::back_propagate_average_pooling(const Tensor4& inputs,
 
     // Back propagation
 
+    TensorMap4 input_deltas = tensor_map<4>(back_propagation->input_deltas[0]);
+
     PoolingBackPropagation* pooling_layer_back_propagation =
         static_cast<PoolingBackPropagation*>(back_propagation.get());
-
-    Tensor4& input_deltas = pooling_layer_back_propagation->input_deltas;
 
     Tensor4& deltas_by_pool_size = pooling_layer_back_propagation->deltas_by_pool_size;
 
@@ -550,26 +544,16 @@ void PoolingBackPropagation::initialize()
 
     deltas_by_pool_size.resize(batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]);
 
-    input_deltas.resize(batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]);
-}
-
-
-vector<TensorView> PoolingBackPropagation::get_input_derivative_views() const
-{
-    const Pooling* pooling_layer = static_cast<Pooling*>(layer);
-
-    const dimensions& input_dimensions = pooling_layer->get_input_dimensions();
-
-    return {{(type*)(input_deltas.data()),
-             {batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]}} };
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]};
 }
 
 
 void PoolingBackPropagation::print() const
 {
     cout << "Pooling layer back propagation" << endl;
-    cout << "Input derivatives:" << endl
-         << input_deltas << endl;
+    cout << "Input deltas:" << endl
+         << input_deltas[0].dims << endl;
 }
 
 
@@ -769,7 +753,7 @@ void PoolingBackPropagationCuda::print() const
     const Index channels = pooling_layer->get_channels_number();
 
     cout << "Pooling layer back propagation CUDA" << endl;
-    cout << "Input derivatives:" << endl
+    cout << "Input deltas:" << endl
          << matrix_4d_from_device(input_deltas, batch_size, input_height, input_width, channels) << endl;
 }
 

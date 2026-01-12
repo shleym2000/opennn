@@ -453,7 +453,10 @@ struct LayerBackPropagation
         return ptr;
     }
 
-    virtual vector<TensorView> get_input_derivative_views() const = 0;
+    vector<TensorView> get_input_deltas() const
+    {
+        return input_deltas;
+    }
 
     virtual vector<TensorView*> get_gradient_views()
     {
@@ -467,6 +470,8 @@ struct LayerBackPropagation
     Layer* layer = nullptr;
 
     bool is_first_layer = false;
+
+    vector<TensorView> input_deltas;
 };
 
 
@@ -475,7 +480,7 @@ struct LayerBackPropagationLM
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 
-    virtual vector<TensorView> get_input_derivative_views() const = 0;
+    virtual vector<TensorView> get_input_deltas() const = 0;
 
     virtual void set(const Index& = 0, Layer* = nullptr) = 0;
 

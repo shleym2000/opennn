@@ -145,7 +145,7 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     Tensor3& scaled_deltas = this_back_propagation->scaled_deltas;
     Tensor3& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
 
-    Tensor3& input_deltas = this_back_propagation->input_deltas;
+    TensorMap3 input_deltas = tensor_map<3>(this_back_propagation->input_deltas[0]);
 
     Tensor2& aux_2d = this_back_propagation->aux_2d;
 
@@ -258,7 +258,8 @@ void Normalization3dBackPropagation::initialize()
     standard_deviation_derivatives.resize(batch_size, sequence_length, embedding_dimension);
     aux_2d.resize(batch_size, sequence_length);
 
-    input_deltas.resize(batch_size, sequence_length, embedding_dimension);
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, sequence_length, embedding_dimension};
 }
 
 
@@ -279,16 +280,6 @@ Normalization3dBackPropagation::Normalization3dBackPropagation(const Index& new_
     set(new_batch_size, new_layer);
 }
 
-
-vector<TensorView> Normalization3dBackPropagation::get_input_derivative_views() const
-{
-    Normalization3d* normalization_layer_3d = static_cast<Normalization3d*>(layer);
-
-    const Index sequence_length = normalization_layer_3d->get_sequence_length();
-    const Index embedding_dimension = normalization_layer_3d->get_embedding_dimension();
-
-    return { {(type*)(input_deltas.data()), {batch_size, sequence_length, embedding_dimension}} };
-}
 
 vector<TensorView*> Normalization3dBackPropagation::get_gradient_views()
 {

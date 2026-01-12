@@ -76,8 +76,6 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
     Normalization3dBackPropagation(const Index& new_batch_size = 0,
                                    Layer* new_layer = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
     vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
@@ -86,8 +84,6 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
 
     TensorView gamma_derivatives;
     TensorView beta_derivatives;
-
-    Tensor3 input_deltas;
 
     Tensor3 scaled_deltas;
     Tensor3 standard_deviation_derivatives;

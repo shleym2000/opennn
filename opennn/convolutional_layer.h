@@ -202,15 +202,11 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 {
     ConvolutionalBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
     vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 
     void print() const override;
-
-    Tensor4 input_deltas;
 
     TensorView bias_deltas;
     TensorView weight_deltas;

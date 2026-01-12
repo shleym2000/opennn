@@ -204,13 +204,6 @@ Pooling3dBackPropagation::Pooling3dBackPropagation(const Index& new_batch_size, 
 }
 
 
-vector<TensorView> Pooling3dBackPropagation::get_input_derivative_views() const
-{
-    const auto input_dims = layer->get_input_dimensions();
-    return {{(type*)input_derivatives.data(), {batch_size, input_dims[0], input_dims[1]}}};
-}
-
-
 void Pooling3d::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Pooling3d");

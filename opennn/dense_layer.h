@@ -45,8 +45,6 @@ struct DenseBackPropagation final : LayerBackPropagation
     DenseBackPropagation(const Index& = 0, Layer* = nullptr);
     virtual ~DenseBackPropagation() = default;
 
-    vector<TensorView> get_input_derivative_views() const override;
-
     vector<TensorView*> get_gradient_views() override
     {
         vector<TensorView*> gradient_views = {&bias_deltas, &weight_deltas};
@@ -66,8 +64,6 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    TensorView input_deltas;
-
     TensorView bias_deltas;
     TensorView weight_deltas;
 
@@ -80,8 +76,6 @@ struct DenseBackPropagation final : LayerBackPropagation
 struct Dense2dBackPropagationLM final : LayerBackPropagationLM
 {
     Dense2dBackPropagationLM(const Index& = 0, Layer* = nullptr);
-
-    vector<TensorView> get_input_derivative_views() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 
@@ -417,6 +411,8 @@ public:
 
         // Back propagation
 
+        TensorMap2 input_deltas = tensor_map<2>(back_propagation->input_deltas[0]);
+
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
@@ -425,8 +421,6 @@ public:
         TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
 
         const bool& is_first_layer = dense2d_back_propagation->is_first_layer;
-
-        TensorMap2 input_deltas = tensor_map<2>(dense2d_back_propagation->input_deltas);
 
         if(activation_function != "Softmax")
             deltas.device(*device) = deltas * activation_derivatives;

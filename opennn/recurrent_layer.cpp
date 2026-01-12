@@ -175,7 +175,7 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
 
     Tensor3& hidden_states = recurrent_forward->hidden_states;
 
-    Tensor3& input_deltas = recurrent_backward->input_deltas;
+    TensorMap3 input_deltas = tensor_map<3>(recurrent_backward->input_deltas[0]);
     TensorMap2 input_weight_deltas = tensor_map<2>(recurrent_backward->input_weight_deltas);
     TensorMap2 recurrent_weight_deltas = tensor_map<2>(recurrent_backward->recurrent_weight_deltas);
     TensorMap1 bias_deltas = tensor_map<1>(recurrent_backward->bias_deltas);
@@ -385,13 +385,15 @@ void RecurrentBackPropagation::initialize()
     input_weight_deltas.dims = {inputs_number, outputs_number};
     recurrent_weight_deltas.dims = {outputs_number, outputs_number};
 
-    input_deltas.resize(batch_size, past_time_steps, inputs_number);
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, past_time_steps, inputs_number};
 /*
     input_weight_deltas.setZero();
     recurrent_weight_deltas.setZero();
     bias_deltas.setZero();
-*/
+
     input_deltas.setZero();
+*/
     current_combination_deltas.setZero();
     current_deltas.setZero();
     combination_deltas.setZero();
@@ -408,15 +410,6 @@ RecurrentBackPropagation::RecurrentBackPropagation(const Index& new_batch_size, 
     : LayerBackPropagation()
 {
     set(new_batch_size, new_layer);
-}
-
-
-vector<TensorView> RecurrentBackPropagation::get_input_derivative_views() const
-{
-    const Index past_time_steps = layer->get_input_dimensions()[0];
-    const Index inputs_number = layer->get_input_dimensions()[1];
-
-    return {{(type*)(input_deltas.data()), {batch_size, past_time_steps, inputs_number}}};
 }
 
 

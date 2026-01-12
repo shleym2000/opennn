@@ -139,6 +139,8 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 
     // Back propagation
 
+    TensorMap4 input_deltas = tensor_map<4>(back_propagation->input_deltas[0]);
+
     ConvolutionalBackPropagation* convolutional_back_propagation =
         static_cast<ConvolutionalBackPropagation*>(back_propagation.get());
 
@@ -151,7 +153,6 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     vector<vector<Tensor2>> precomputed_rotated_slices(kernels_number, vector<Tensor2>(input_channels));
     precomputed_rotated_slices.resize(kernels_number);
 
-    Tensor4& input_deltas = convolutional_back_propagation->input_deltas;
     input_deltas.setZero();
 
     const Index pad_height = (input_height + kernel_height - 1) - get_output_height();
@@ -737,10 +738,8 @@ void ConvolutionalBackPropagation::initialize()
                            kernel_channels,
                            kernels_number);
 
-    input_deltas.resize(batch_size,
-                        input_height,
-                        input_width,
-                        channels);
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, input_height, input_width, channels};
 
     // Batch Normalization
 
@@ -749,20 +748,6 @@ void ConvolutionalBackPropagation::initialize()
         bn_scale_deltas.dims = {kernels_number};
         bn_offset_deltas.dims = {kernels_number};
     }
-}
-
-
-vector<TensorView> ConvolutionalBackPropagation::get_input_derivative_views() const
-{
-    const Convolutional* convolutional_layer = static_cast<Convolutional*>(layer);
-
-    const Index input_height = convolutional_layer->get_input_height();
-    const Index input_width = convolutional_layer->get_input_width();
-    const Index channels = convolutional_layer->get_input_channels();
-
-    convolutional_layer->get_input_dimensions();
-
-    return {{(type*)input_deltas.data(), {batch_size, input_height, input_width, channels}}};
 }
 
 

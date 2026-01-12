@@ -609,7 +609,7 @@ void DenseBackPropagation<2>::initialize()
 }
 
 
-vector<TensorView> DenseBackPropagation<2>::get_input_derivative_views() const
+vector<TensorView> DenseBackPropagation<2>::get_input_deltas() const
 {
     const Index inputs_number = layer->get_input_dimensions()[0];
 
@@ -667,7 +667,7 @@ void Dense2dBackPropagationLM::set(const Index&new_samples_number, Layer *new_la
 }
 
 
-vector<TensorView> Dense2dBackPropagationLM::get_input_derivative_views() const
+vector<TensorView> Dense2dBackPropagationLM::get_input_deltas() const
 {
     const Index inputs_number = layer->get_input_dimensions()[0];
 
