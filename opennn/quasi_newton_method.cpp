@@ -107,15 +107,15 @@ void QuasiNewtonMethod::set_maximum_time(const type& new_maximum_time)
 
 void QuasiNewtonMethod::calculate_inverse_hessian(QuasiNewtonMethodData& optimization_data) const
 {
-    const Tensor<type, 1>& parameters_difference = optimization_data.parameters_difference;
-    const Tensor<type, 1>& gradient_difference = optimization_data.gradient_difference;
+    const Tensor1& parameters_difference = optimization_data.parameters_difference;
+    const Tensor1& gradient_difference = optimization_data.gradient_difference;
 
-    Tensor<type, 1>& old_inverse_hessian_dot_gradient_difference = optimization_data.old_inverse_hessian_dot_gradient_difference;
+    Tensor1& old_inverse_hessian_dot_gradient_difference = optimization_data.old_inverse_hessian_dot_gradient_difference;
 
-    const Tensor<type, 2>& old_inverse_hessian = optimization_data.old_inverse_hessian;
-    Tensor<type, 2>& inverse_hessian = optimization_data.inverse_hessian;
+    const Tensor2& old_inverse_hessian = optimization_data.old_inverse_hessian;
+    Tensor2& inverse_hessian = optimization_data.inverse_hessian;
 
-    Tensor<type, 1>& BFGS = optimization_data.BFGS;
+    Tensor1& BFGS = optimization_data.BFGS;
 
     Tensor<type, 0> parameters_difference_dot_gradient_difference;
     Tensor<type, 0> gradient_dot_hessian_dot_gradient;
@@ -157,21 +157,20 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 {
     NeuralNetwork* neural_network = forward_propagation.neural_network;
 
-    Tensor<type, 1>& parameters = optimization_data.parameters;
-    neural_network->get_parameters(parameters);
+    Tensor1& parameters = neural_network->get_parameters();
 
-    const Tensor<type, 1>& gradient = optimization_data.gradient;
+    const Tensor1& gradient = back_propagation.neural_network.gradient;
 
-    Tensor<type, 1>& old_parameters = optimization_data.old_parameters;
-    Tensor<type, 1>& parameters_difference = optimization_data.parameters_difference;
-    Tensor<type, 1>& parameters_increment = optimization_data.parameters_increment;
+    Tensor1& old_parameters = optimization_data.old_parameters;
+    Tensor1& parameters_difference = optimization_data.parameters_difference;
+    Tensor1& parameters_increment = optimization_data.parameters_increment;
 
-    Tensor<type, 1>& old_gradient = optimization_data.old_gradient;
-    Tensor<type, 1>& gradient_difference = optimization_data.gradient_difference;
+    Tensor1& old_gradient = optimization_data.old_gradient;
+    Tensor1& gradient_difference = optimization_data.gradient_difference;
 
-    Tensor<type, 1>& training_direction = optimization_data.training_direction;
+    Tensor1& training_direction = optimization_data.training_direction;
 
-    Tensor<type, 2>& inverse_hessian = optimization_data.inverse_hessian;
+    Tensor2& inverse_hessian = optimization_data.inverse_hessian;
 
     Tensor<type, 0>& training_slope = optimization_data.training_slope;
 
@@ -253,7 +252,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
     // Set parameters
 
-    neural_network->set_parameters(parameters);
+    //neural_network->set_parameters(parameters);
 }
 
 
@@ -335,7 +334,6 @@ TrainingResults QuasiNewtonMethod::train()
     QuasiNewtonMethodData optimization_data(this);
 
     const Index parameters_number = neural_network->get_parameters_number();
-    optimization_data.gradient.resize(parameters_number);
 
     // Main loop
 
@@ -357,10 +355,7 @@ TrainingResults QuasiNewtonMethod::train()
                                    training_forward_propagation,
                                    training_back_propagation);
 
-        loss_index->assemble_layers_error_gradient(training_back_propagation,
-                                                   optimization_data.gradient);
-
-        loss_index->add_regularization_gradient(optimization_data.gradient);
+        loss_index->add_regularization_gradient(training_back_propagation.neural_network.gradient);
 
         results.training_error_history(epoch) = training_back_propagation.error();
 
@@ -529,7 +524,6 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
 
     // Neural network data
 
-    parameters.resize(parameters_number);
     old_parameters.resize(parameters_number);
 
     parameters_difference.resize(parameters_number);
@@ -539,7 +533,6 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
 
     // Loss index data
 
-    gradient.resize(parameters_number);
     old_gradient.resize(parameters_number);
     old_gradient.setZero();
 
@@ -580,11 +573,11 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
 
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    Tensor<type, 1>& potential_parameters = optimization_data.potential_parameters;
+    Tensor1& potential_parameters = optimization_data.potential_parameters;
 
-    const Tensor<type, 1>& parameters = optimization_data.parameters;
+    const Tensor1& parameters = neural_network->get_parameters();
 
-    const Tensor<type, 1>& training_direction = optimization_data.training_direction;
+    const Tensor1& training_direction = optimization_data.training_direction;
 
     // Left point
 
@@ -725,9 +718,9 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
     const type rho = 0.5;
     const type c = type(1e-4);
 
-    const Tensor<type, 1>& parameters = optimization_data.parameters;
-    const Tensor<type, 1>& training_direction = optimization_data.training_direction;
-    Tensor<type, 1>& potential_parameters = optimization_data.potential_parameters;
+    const Tensor1& parameters = neural_network->get_parameters();
+    const Tensor1& training_direction = optimization_data.training_direction;
+    Tensor1& potential_parameters = optimization_data.potential_parameters;
 
     const type slope = optimization_data.training_slope(0);
 
@@ -771,7 +764,7 @@ type Triplet::get_length() const
 
 pair<type, type> Triplet::minimum() const
 {
-    Tensor<type, 1> losses(3);
+    Tensor1 losses(3);
 
     losses.setValues({ A.second, U.second, B.second });
 

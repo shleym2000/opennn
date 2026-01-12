@@ -43,11 +43,11 @@ vector<Descriptives> Unscaling::get_descriptives() const
 }
 
 
-Tensor<type, 1> Unscaling::get_minimums() const
+Tensor1 Unscaling::get_minimums() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor<type, 1> minimums(outputs_number);
+    Tensor1 minimums(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -57,11 +57,11 @@ Tensor<type, 1> Unscaling::get_minimums() const
 }
 
 
-Tensor<type, 1> Unscaling::get_maximums() const
+Tensor1 Unscaling::get_maximums() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor<type, 1> maximums(outputs_number);
+    Tensor1 maximums(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -195,7 +195,7 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
 
     const TensorMap<Tensor<type,2>> inputs = tensor_map<2>(input_views[0]);
 
-    Tensor<type, 2>& outputs = this_forward_propagation->outputs;
+    Tensor2& outputs = this_forward_propagation->outputs;
 
     outputs = inputs;
 

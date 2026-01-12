@@ -197,13 +197,13 @@ vector<string> convert_string_vector(const vector<vector<string>>& input_vector,
 }
 
 
-Tensor<type, 1> to_type_vector(const string& text, const string& separator)
+Tensor1 to_type_vector(const string& text, const string& separator)
 {
     const vector<string> tokens = get_tokens(text, separator);
 
     const Index tokens_size = tokens.size();
 
-    Tensor<type, 1> type_vector(tokens_size);
+    Tensor1 type_vector(tokens_size);
 
     for(Index i = 0; i < tokens_size; i++)
         try
@@ -712,7 +712,7 @@ void display_progress_bar(const int& completed, const int& total)
 }
 
 
-void tokenize_whitespace(const vector<string>& context_tokens, Tensor<type, 2>& context)
+void tokenize_whitespace(const vector<string>& context_tokens, Tensor2& context)
 {
 /*
     bool line_ended = false;
@@ -744,7 +744,7 @@ void tokenize_whitespace(const vector<string>& context_tokens, Tensor<type, 2>& 
 }
 
 
-void tokenize_wordpiece(const vector<string>& context_tokens, Tensor<type, 2>& context)
+void tokenize_wordpiece(const vector<string>& context_tokens, Tensor2& context)
 {
     /*
     // unordered_map<string, type> context_vocabulary_map;
@@ -826,7 +826,7 @@ void tokenize_wordpiece(const vector<string>& context_tokens, Tensor<type, 2>& c
 */
 }
 
-void detokenize_whitespace(Tensor<type, 2>& predictions, ostringstream& output_string)
+void detokenize_whitespace(Tensor2& predictions, ostringstream& output_string)
 {
     /*
     for(Index i = 1; i < decoder_length; i++)
@@ -846,7 +846,7 @@ void detokenize_whitespace(Tensor<type, 2>& predictions, ostringstream& output_s
 }
 
 
-void detokenize_wordpiece(Tensor<type, 2>& predictions, ostringstream& buffer)
+void detokenize_wordpiece(Tensor2& predictions, ostringstream& buffer)
 {
     /*
     for (const auto& pair : output_vocabulary) {

@@ -28,17 +28,16 @@ dimensions Recurrent::get_input_dimensions() const
 
 dimensions Recurrent::get_output_dimensions() const
 {
+/*
     return { biases.size() };
+*/
+    return dimensions();
 }
 
 
-vector<ParameterView > Recurrent::get_parameter_views() const
-{
-    return {
-        {(type*)biases.data(), biases.size()},
-        {(type*)input_weights.data(), input_weights.size()},
-        {(type*)recurrent_weights.data(), recurrent_weights.size()}
-    };
+vector<TensorView*> Recurrent::get_parameter_views()
+{  
+    return {&biases, &input_weights, &recurrent_weights};
 }
 
 
@@ -56,13 +55,13 @@ void Recurrent::set(const dimensions& new_input_dimensions, const dimensions& ne
     const Index inputs_number = new_input_dimensions[1];
     const Index outputs_number = new_output_dimensions[0];
 
-    biases.resize(outputs_number);
+    biases.dims = {outputs_number};
 
-    input_weights.resize(inputs_number, outputs_number);
+    input_weights.dims = {inputs_number, outputs_number};
 
-    recurrent_weights.resize(outputs_number, outputs_number);
+    recurrent_weights.dims = {outputs_number, outputs_number};
 
-    set_parameters_random();
+    //set_parameters_random();
 
     label = "recurrent_layer";
 
@@ -79,19 +78,22 @@ void Recurrent::set_input_dimensions(const dimensions& new_input_dimensions)
 
     const Index inputs_number = input_dimensions[1];
     const Index outputs_number = get_outputs_number();
-
+/*
     input_weights.resize(inputs_number, outputs_number);
+*/
 }
 
 
 void Recurrent::set_output_dimensions(const dimensions& new_output_dimensions)
 {
+/*
     const Index inputs_number = input_weights.dimension(0);
     const Index outputs_number = new_output_dimensions[0];
 
     biases.resize(outputs_number);
     input_weights.resize(inputs_number, outputs_number);
     recurrent_weights.resize(outputs_number, outputs_number);
+*/
 }
 
 
@@ -116,19 +118,19 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     const Index past_time_steps = input_views[0].dims[1];
     const Index input_size = input_views[0].dims[2];
 
-    TensorMap<Tensor<type, 3>> inputs(input_views[0].data, batch_size, past_time_steps, input_size);
+    TensorMap3 inputs(input_views[0].data, batch_size, past_time_steps, input_size);
 
     RecurrentForwardPropagation* recurrent_forward =
         static_cast<RecurrentForwardPropagation*>(forward_propagation.get());
 
-    Tensor<type, 2>& outputs = recurrent_forward->outputs;
-    Tensor<type, 3>& activation_derivatives = recurrent_forward->activation_derivatives;
-    Tensor<type, 2>& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
-    Tensor<type, 3>& hidden_states = recurrent_forward->hidden_states;
-
+    Tensor2& outputs = recurrent_forward->outputs;
+    Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
+    Tensor2& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
+    Tensor3& hidden_states = recurrent_forward->hidden_states;
+/*
     const Index output_size = input_weights.dimension(1);
 
-    Tensor<type, 2> previous_hidden_states(batch_size, output_size);
+    Tensor2 previous_hidden_states(batch_size, output_size);
     previous_hidden_states.setZero();
     for(Index time_step = 0; time_step < past_time_steps; time_step++)
     {
@@ -147,6 +149,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
 
         previous_hidden_states = outputs;
     }
+*/
 }
 
 
@@ -160,13 +163,13 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
     const Index input_size = input_views[0].dims[2];
     const Index output_size = get_outputs_number();
 
-    Tensor<type, 2> initial_hidden_states(batch_size, output_size);
+    Tensor2 initial_hidden_states(batch_size, output_size);
     initial_hidden_states.setZero();
 
-    Tensor<type, 2> previous_hidden_states(batch_size, output_size);
+    Tensor2 previous_hidden_states(batch_size, output_size);
 
-    TensorMap<Tensor<type, 3>> inputs(input_views[0].data, batch_size, past_time_steps, input_size);
-    TensorMap<Tensor<type, 2>> deltas(delta_views[0].data, batch_size, output_size);
+    TensorMap3 inputs(input_views[0].data, batch_size, past_time_steps, input_size);
+    TensorMap2 deltas(delta_views[0].data, batch_size, output_size);
 
     RecurrentForwardPropagation* recurrent_forward =
         static_cast<RecurrentForwardPropagation*>(forward_propagation.get());
@@ -174,24 +177,24 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
     RecurrentBackPropagation* recurrent_backward =
         static_cast<RecurrentBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 3>& hidden_states = recurrent_forward->hidden_states;
+    Tensor3& hidden_states = recurrent_forward->hidden_states;
 
-    Tensor<type, 3>& input_deltas = recurrent_backward->input_deltas;
-    Tensor<type, 2>& input_weight_deltas = recurrent_backward->input_weight_deltas;
-    Tensor<type, 2>& recurrent_weight_deltas = recurrent_backward->recurrent_weight_deltas;
-    Tensor<type, 1>& bias_deltas = recurrent_backward->bias_deltas;
-    Tensor<type, 2>& current_combination_deltas = recurrent_backward->current_combination_deltas;
+    Tensor3& input_deltas = recurrent_backward->input_deltas;
+    TensorMap2 input_weight_deltas = tensor_map<2>(recurrent_backward->input_weight_deltas);
+    TensorMap2 recurrent_weight_deltas = tensor_map<2>(recurrent_backward->recurrent_weight_deltas);
+    TensorMap1 bias_deltas = tensor_map<1>(recurrent_backward->bias_deltas);
+    Tensor2& current_combination_deltas = recurrent_backward->current_combination_deltas;
 
-    Tensor<type, 3>& activation_derivatives = recurrent_forward->activation_derivatives;
+    Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
 
     input_weight_deltas.setZero();
     recurrent_weight_deltas.setZero();
     bias_deltas.setZero();
     current_combination_deltas.setZero();
 
-    Tensor<type, 2> combination_deltas(batch_size, output_size);
+    Tensor2 combination_deltas(batch_size, output_size);
 
-    Tensor<type, 2>& current_deltas = recurrent_backward->current_deltas;
+    Tensor2& current_deltas = recurrent_backward->current_deltas;
 
     for(Index time_step = past_time_steps - 1; time_step >= 0; --time_step)
     {             
@@ -218,7 +221,7 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
 
         bias_deltas.device(*device) +=
             combination_deltas.sum(array<Index, 1>({ 0 }));
-
+/*
         if(time_step == 0)
             current_combination_deltas.setZero();
         else
@@ -227,6 +230,7 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
 
         input_deltas.chip(time_step, 1).device(*device)
             = combination_deltas.contract(input_weights.shuffle(array<Index,2>{{1,0}}), axes(1,0));
+*/
     }
 }
 
@@ -256,7 +260,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
             }
             else
                 current_var_name = "recurrent_hidden_t" + to_string(t) + "_" + to_string(j);
-
+/*
             buffer << current_var_name << " = " << activation_function << "( " << biases(j);
 
             for(Index i = 0; i < inputs_number; i++)
@@ -275,7 +279,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
                     buffer << " + (" << prev_var_name << "*" << recurrent_weights(prev_j, j) << ")";
                 }
             }
-
+*/
             buffer << " );\n";
         }
     }
@@ -286,6 +290,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
 
 void Recurrent::print() const
 {
+/*
     cout << "Recurrent layer" << endl
          << "Time steps: " << get_input_dimensions()[0] << endl
          << "Input dimensions: " << get_input_dimensions()[1] << endl
@@ -302,6 +307,7 @@ void Recurrent::print() const
          << recurrent_weights << endl
          << "Activation function: " << activation_function << endl
          << "Total parameters: " << biases.size() + input_weights.size() + recurrent_weights.size() << endl;
+*/
 }
 
 
@@ -316,9 +322,11 @@ void Recurrent::from_XML(const XMLDocument& document)
     set_input_dimensions(string_to_dimensions(read_xml_string(recurrent_layer_element, "InputDimensions")));
     set_output_dimensions({ read_xml_index(recurrent_layer_element, "NeuronsNumber") });
     set_activation_function(read_xml_string(recurrent_layer_element, "Activation"));
+/*
     string_to_tensor<type, 1>(read_xml_string(recurrent_layer_element, "Biases"), biases);
     string_to_tensor<type, 2>(read_xml_string(recurrent_layer_element, "InputWeights"), input_weights);
     string_to_tensor<type, 2>(read_xml_string(recurrent_layer_element, "RecurrentWeights"), recurrent_weights);
+*/
 }
 
 
@@ -330,10 +338,11 @@ void Recurrent::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
     add_xml_element(printer, "Activation", activation_function);
+/*
     add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
     add_xml_element(printer, "InputWeights", tensor_to_string<type, 2>(input_weights));
     add_xml_element(printer, "RecurrentWeights", tensor_to_string<type, 2>(recurrent_weights));
-
+*/
     printer.CloseElement();
 }
 
@@ -391,14 +400,17 @@ void RecurrentBackPropagation::initialize()
     combinations_recurrent_weight_deltas.resize(outputs_number, outputs_number, outputs_number);
     combination_deltas.resize(batch_size, outputs_number);
     current_combination_deltas.resize(batch_size, outputs_number);
+/*
     bias_deltas.resize(outputs_number);
     input_weight_deltas.resize(inputs_number, outputs_number);
     recurrent_weight_deltas.resize(outputs_number, outputs_number);
+*/
     input_deltas.resize(batch_size, past_time_steps, inputs_number);
-
+/*
     input_weight_deltas.setZero();
     recurrent_weight_deltas.setZero();
     bias_deltas.setZero();
+*/
     input_deltas.setZero();
     current_combination_deltas.setZero();
     current_deltas.setZero();
@@ -428,13 +440,16 @@ vector<TensorView> RecurrentBackPropagation::get_input_derivative_views() const
 }
 
 
-vector<ParameterView> RecurrentBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> RecurrentBackPropagation::get_gradient_views() const
 {
-    return {
-        {(type*)bias_deltas.data(), bias_deltas.size()},
+/*
+    return {bias_deltas, input_weight_deltas, recurrent_weight_deltas};
+        {bias_deltas.data(), bias_deltas.size()},
         {(type*)input_weight_deltas.data(), input_weight_deltas.size()},
         {(type*)recurrent_weight_deltas.data(), recurrent_weight_deltas.size()}
     };
+*/
+    return vector<ParameterView>();
 }
 
 REGISTER(Layer, Recurrent, "Recurrent")

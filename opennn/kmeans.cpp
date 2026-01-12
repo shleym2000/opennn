@@ -20,14 +20,14 @@ KMeans::KMeans(Index clusters,
 }
 
 
-void KMeans::fit(const Tensor<type, 2>& data)
+void KMeans::fit(const Tensor2& data)
 {
     const Index rows_number = data.dimension(0);
     const Index columns_number = data.dimension(1);
 
-    Tensor<type, 1> row(rows_number);
-    Tensor<type, 1> center(columns_number);
-    Tensor<type, 1> center_sum(columns_number);
+    Tensor1 row(rows_number);
+    Tensor1 center(columns_number);
+    Tensor1 center_sum(columns_number);
 
     cluster_centers.resize(clusters_number, columns_number);
     rows_cluster_labels.resize(rows_number);
@@ -89,11 +89,11 @@ void KMeans::fit(const Tensor<type, 2>& data)
 }
 
 
-Tensor<Index, 1> KMeans::calculate_outputs(const Tensor<type, 2>& data)
+Tensor<Index, 1> KMeans::calculate_outputs(const Tensor2& data)
 {
     const Index rows_number = data.dimension(0);
-    Tensor<type, 1> row(data.dimension(1));
-    Tensor<type, 1> center;
+    Tensor1 row(data.dimension(1));
+    Tensor1 center;
 
     Tensor<Index, 1> predictions(rows_number);
 
@@ -124,11 +124,11 @@ Tensor<Index, 1> KMeans::calculate_outputs(const Tensor<type, 2>& data)
 }
 
 
-Tensor<type, 1> KMeans::elbow_method(const Tensor<type, 2>& data, Index max_clusters)
+Tensor1 KMeans::elbow_method(const Tensor2& data, Index max_clusters)
 {
-    Tensor<type, 1> data_point;
-    Tensor<type, 1> cluster_center;
-    Tensor<type, 1> sum_squared_error_values(max_clusters);
+    Tensor1 data_point;
+    Tensor1 cluster_center;
+    Tensor1 sum_squared_error_values(max_clusters);
 
     const Index rows_number = data.dimension(0);
 
@@ -160,20 +160,20 @@ Tensor<type, 1> KMeans::elbow_method(const Tensor<type, 2>& data, Index max_clus
 }
 
 
-Index KMeans::find_optimal_clusters(const Tensor<type, 1>& sum_squared_error_values) const
+Index KMeans::find_optimal_clusters(const Tensor1& sum_squared_error_values) const
 {
     const Index cluster_number = sum_squared_error_values.dimension(0);
 
-    Tensor<type, 1> initial_endpoint(2);
+    Tensor1 initial_endpoint(2);
     initial_endpoint.setValues({ type(1), type(sum_squared_error_values(0)) });
 
-    Tensor<type, 1> override_endpoint(2);
+    Tensor1 override_endpoint(2);
     override_endpoint.setValues({ type(clusters_number), sum_squared_error_values(clusters_number - 1) });
 
     type max_distance = type(0);
     Index optimal_clusters_number = 1;
 
-    Tensor<type, 1> current_point(2);
+    Tensor1 current_point(2);
     type perpendicular_distance;
 
     for(Index cluster_index = 1; cluster_index <= cluster_number; cluster_index++)
@@ -197,7 +197,7 @@ Index KMeans::find_optimal_clusters(const Tensor<type, 1>& sum_squared_error_val
 }
 
 
-Tensor<type, 2> KMeans::get_cluster_centers() const
+Tensor2 KMeans::get_cluster_centers() const
 {
     return cluster_centers;
 }
@@ -221,7 +221,7 @@ void KMeans::set_cluster_number(const Index& new_clusters_number)
 }
 
 
-void KMeans::set_centers_random(const Tensor<type, 2>& data)
+void KMeans::set_centers_random(const Tensor2& data)
 {
     const Index data_size = data.dimension(0);
 

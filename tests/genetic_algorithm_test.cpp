@@ -95,7 +95,7 @@ TEST(GeneticAlgorithmTest, InitializePopulationCorrelations)
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_display(false);
 
-    Tensor<type, 2> full_data(samples_number, total_variables);
+    Tensor2 full_data(samples_number, total_variables);
 
     for (Index i = 0; i < samples_number; ++i) {
         type value = static_cast<type>(i);
@@ -171,7 +171,7 @@ TEST(GeneticAlgorithmTest, Selection)
     genetic_algorithm.set_individuals_number(individuals_number);
     genetic_algorithm.initialize_population_random();
 
-    Tensor<type, 1> simulated_fitness(individuals_number);
+    Tensor1 simulated_fitness(individuals_number);
     
     simulated_fitness.setValues({
         0.5,  // Low Fitness
@@ -330,7 +330,7 @@ TEST(GeneticAlgorithmTest, InputSelection_StopsByErrorGoal)
     const Index inputs_number = 3;
     Dataset dataset(20, { inputs_number }, { 1 });
 
-    Tensor<type, 2> data(20, inputs_number + 1);
+    Tensor2 data(20, inputs_number + 1);
     for (Index i = 0; i < 20; i++) {
         data(i, 0) = type(i) / 20.0;
         data(i, 1) = type(10.0);
@@ -365,7 +365,7 @@ TEST(GeneticAlgorithmTest, InputSelection_StopsByMaxEpochs)
     const Index inputs_number = 2;
     Dataset dataset(20, { inputs_number }, { 1 });
 
-    Tensor<type, 2> data(20, inputs_number + 1);
+    Tensor2 data(20, inputs_number + 1);
     for (Index i = 0; i < 20; i++) {
         data(i, 0) = type(i) / 20.0;
         data(i, 1) = type(10.0);

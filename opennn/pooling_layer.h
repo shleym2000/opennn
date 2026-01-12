@@ -75,11 +75,11 @@ public:
                            unique_ptr<LayerForwardPropagation>&,
                            const bool&) override;
 
-    void forward_propagate_max_pooling(const Tensor<type, 4>&,
+    void forward_propagate_max_pooling(const Tensor4&,
                                        unique_ptr<LayerForwardPropagation>&,
                                        const bool&) const;
 
-    void forward_propagate_average_pooling(const Tensor<type, 4>&,
+    void forward_propagate_average_pooling(const Tensor4&,
                                            unique_ptr<LayerForwardPropagation>&,
                                            const bool&) const;
 
@@ -88,13 +88,13 @@ public:
                         unique_ptr<LayerForwardPropagation>&,
                         unique_ptr<LayerBackPropagation>&) const override;
 
-    void back_propagate_max_pooling(const Tensor<type, 4>&,
-                                    const Tensor<type, 4>&,
+    void back_propagate_max_pooling(const Tensor4&,
+                                    const Tensor4&,
                                     unique_ptr<LayerForwardPropagation>&,
                                     unique_ptr<LayerBackPropagation>&) const;
 
-    void back_propagate_average_pooling(const Tensor<type, 4>&,
-                                        const Tensor<type, 4>&,
+    void back_propagate_average_pooling(const Tensor4&,
+                                        const Tensor4&,
                                         unique_ptr<LayerBackPropagation>&) const;
 
     void from_XML(const XMLDocument&) override;
@@ -156,7 +156,7 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 4> outputs;
+    Tensor4 outputs;
 
     Tensor<type, 5> image_patches;
 
@@ -174,9 +174,9 @@ struct PoolingBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 4> deltas_by_pool_size;
+    Tensor4 deltas_by_pool_size;
 
-    Tensor<type, 4> input_deltas;
+    Tensor4 input_deltas;
 };
 
 

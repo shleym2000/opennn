@@ -13,7 +13,7 @@ namespace opennn
 {
 
 
-void scale_mean_standard_deviation(Tensor<type, 2>& matrix,
+void scale_mean_standard_deviation(Tensor2& matrix,
                                    const Index& column_index,
                                    const Descriptives& column_descriptives)
 {
@@ -35,7 +35,7 @@ void scale_mean_standard_deviation(Tensor<type, 2>& matrix,
 }
 
 
-void scale_standard_deviation(Tensor<type, 2>& matrix,
+void scale_standard_deviation(Tensor2& matrix,
                               const Index& column_index,
                               const Descriptives& column_descriptives)
 {
@@ -49,7 +49,7 @@ void scale_standard_deviation(Tensor<type, 2>& matrix,
 }
 
 
-void scale_minimum_maximum(Tensor<type, 2>& matrix,
+void scale_minimum_maximum(Tensor2& matrix,
                            const Index& column_index,
                            const Descriptives& column_descriptives,
                            const type& min_range,
@@ -77,7 +77,7 @@ void scale_minimum_maximum(Tensor<type, 2>& matrix,
 }
 
 
-void scale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
+void scale_logarithmic(Tensor2& matrix, const Index& column_index)
 {
     type min_value = numeric_limits<type>::max();
 
@@ -100,7 +100,7 @@ void scale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
         matrix(i, column_index) = log(matrix(i, column_index));
 }
 
-void scale_mean_standard_deviation_3d(Tensor<type, 3>& tensor,
+void scale_mean_standard_deviation_3d(Tensor3& tensor,
                                       const Index& feature_index,
                                       const Descriptives& feature_descriptives)
 {
@@ -119,7 +119,7 @@ void scale_mean_standard_deviation_3d(Tensor<type, 3>& tensor,
 }
 
 
-void scale_standard_deviation_3d(Tensor<type, 3>& tensor,
+void scale_standard_deviation_3d(Tensor3& tensor,
                                  const Index& feature_index,
                                  const Descriptives& feature_descriptives)
 {
@@ -137,7 +137,7 @@ void scale_standard_deviation_3d(Tensor<type, 3>& tensor,
 }
 
 
-void scale_minimum_maximum_3d(Tensor<type, 3>& tensor,
+void scale_minimum_maximum_3d(Tensor3& tensor,
                               const Index& feature_index,
                               const Descriptives& feature_descriptives,
                               const type& min_range,
@@ -175,7 +175,7 @@ void scale_minimum_maximum_3d(Tensor<type, 3>& tensor,
 }
 
 
-void scale_logarithmic_3d(Tensor<type, 3>& tensor, const Index& feature_index)
+void scale_logarithmic_3d(Tensor3& tensor, const Index& feature_index)
 {
     type min_value = numeric_limits<type>::max();
     const Index batch_size = tensor.dimension(0);
@@ -201,7 +201,7 @@ void scale_logarithmic_3d(Tensor<type, 3>& tensor, const Index& feature_index)
 }
 
 
-void unscale_minimum_maximum(Tensor<type, 2>& matrix,
+void unscale_minimum_maximum(Tensor2& matrix,
                              const Index& column_index,
                              const Descriptives& column_descriptives,
                              const type& min_range,
@@ -220,7 +220,7 @@ void unscale_minimum_maximum(Tensor<type, 2>& matrix,
 }
 
 
-void unscale_mean_standard_deviation(Tensor<type, 2>& matrix, const Index& column_index, const Descriptives& column_descriptives)
+void unscale_mean_standard_deviation(Tensor2& matrix, const Index& column_index, const Descriptives& column_descriptives)
 {
     const type mean = column_descriptives.mean;
     type standard_deviation = column_descriptives.standard_deviation;
@@ -240,7 +240,7 @@ void unscale_mean_standard_deviation(Tensor<type, 2>& matrix, const Index& colum
 }
 
 
-void unscale_standard_deviation(Tensor<type, 2>& matrix, const Index& column_index, const Descriptives& column_descriptives)
+void unscale_standard_deviation(Tensor2& matrix, const Index& column_index, const Descriptives& column_descriptives)
 {
     const type slope = abs(column_descriptives.standard_deviation) < NUMERIC_LIMITS_MIN
             ? type(1)
@@ -253,7 +253,7 @@ void unscale_standard_deviation(Tensor<type, 2>& matrix, const Index& column_ind
 }
 
 
-void unscale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
+void unscale_logarithmic(Tensor2& matrix, const Index& column_index)
 {
     #pragma omp parallel for
 
@@ -262,7 +262,7 @@ void unscale_logarithmic(Tensor<type, 2>& matrix, const Index& column_index)
 }
 
 
-void unscale_image_minimum_maximum(Tensor<type, 2>& matrix, const Index& column_index)
+void unscale_image_minimum_maximum(Tensor2& matrix, const Index& column_index)
 {
     #pragma omp parallel for
 

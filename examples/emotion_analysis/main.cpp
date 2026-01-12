@@ -72,7 +72,7 @@ int main()
         Tensor<string, 1> documents(1);
         documents[0] = "I feel sad";
 
-        Tensor<type, 2> outputs = text_classification_network.calculate_text_outputs(documents);
+        Tensor2 outputs = text_classification_network.calculate_text_outputs(documents);
 
         cout << outputs << endl;
 
@@ -103,4 +103,4 @@ int main()
 // Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software Foundation.
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA), language_dataset.get_target_dimensions(), Dense2d::Activation::Logistic));
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA), language_dataset.get_target_dimensions(), Dense::Activation::Logistic));

@@ -195,11 +195,11 @@ string InputsSelectionResults::write_stopping_condition() const
 
 void InputsSelectionResults::resize_history(const Index& new_size)
 {
-    const Tensor<type, 1> old_training_error_history(training_error_history);
-    const Tensor<type, 1> old_selection_error_history(selection_error_history);
+    const Tensor1 old_training_error_history(training_error_history);
+    const Tensor1 old_selection_error_history(selection_error_history);
 
-    const Tensor<type, 1> old_mean_selection_history(mean_selection_error_history);
-    const Tensor<type, 1> old_mean_training_history(mean_training_error_history);
+    const Tensor1 old_mean_selection_history(mean_selection_error_history);
+    const Tensor1 old_mean_training_history(mean_training_error_history);
 
     training_error_history.resize(new_size);
     selection_error_history.resize(new_size);

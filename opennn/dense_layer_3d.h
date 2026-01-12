@@ -65,9 +65,9 @@ private:
 
     Index sequence_length;
 
-    Tensor<type, 1> biases;
+    Tensor1 biases;
 
-    Tensor<type, 2> weights;
+    Tensor2 weights;
 
     string activation_function;
 
@@ -85,9 +85,9 @@ struct Dense3dForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 3> outputs;
+    Tensor3 outputs;
 
-    Tensor<type, 3> activation_derivatives;
+    Tensor3 activation_derivatives;
 };
 
 
@@ -101,10 +101,10 @@ struct Dense3dBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor<type, 1> bias_deltas;
-    Tensor<type, 2> weight_deltas;
+    Tensor1 bias_deltas;
+    Tensor2 weight_deltas;
 
-    Tensor<type, 3> input_deltas;
+    Tensor3 input_deltas;
 };
 
 

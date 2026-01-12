@@ -242,7 +242,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
 }
 
 
-Tensor<type, 3> resize_image(const Tensor<float, 3>& input_image,
+Tensor3 resize_image(const Tensor<float, 3>& input_image,
                              const Index& output_height,
                              const Index& output_width)
 {
@@ -286,22 +286,22 @@ Tensor<type, 3> resize_image(const Tensor<float, 3>& input_image,
 
 
 void reflect_image_x(const ThreadPoolDevice* device,
-                     Tensor<type, 3>& image)
+                     Tensor3& image)
 {
     image/*.device(device)*/ = image.reverse(array<bool, 3>({false, true, false}));
 }
 
 
 void reflect_image_y(const ThreadPoolDevice* device,
-                     Tensor<type, 3>& image)
+                     Tensor3& image)
 {
     image/*.device(device)*/ = image.reverse(array<bool, 3>({true, false, false}));
 }
 
 
 void rotate_image(const ThreadPoolDevice* device,
-                  const Tensor<type, 3>& input,
-                  Tensor<type, 3>& output,
+                  const Tensor3& input,
+                  Tensor3& output,
                   const type& angle_degree)
 {
     const Index width = input.dimension(0);
@@ -322,8 +322,8 @@ void rotate_image(const ThreadPoolDevice* device,
                                {sin_angle, cos_angle, rotation_center_y - sin_angle * rotation_center_x - cos_angle * rotation_center_y},
                                {type(0), type(0), type(1)}});
 
-    Tensor<type, 1> coordinates(3);
-    Tensor<type, 1> transformed_coordinates(3);
+    Tensor1 coordinates(3);
+    Tensor1 transformed_coordinates(3);
 
     for(Index x = 0; x < width; x++)
     {
@@ -352,8 +352,8 @@ void rotate_image(const ThreadPoolDevice* device,
 
 
 void translate_image_x(const ThreadPoolDevice* device,
-                       const Tensor<type, 3>& input,
-                       Tensor<type, 3>& output,
+                       const Tensor3& input,
+                       Tensor3& output,
                        const Index& shift)
 {
     assert(input.dimension(0) == output.dimension(0));
@@ -374,11 +374,11 @@ void translate_image_x(const ThreadPoolDevice* device,
         const Index channel = i % channels;
         const Index raw_variable = i / channels;
 
-        const TensorMap<const Tensor<type, 2>> input_column_map(input.data() + raw_variable*height + channel*input_size,
+        const TensorMap<const Tensor2> input_column_map(input.data() + raw_variable*height + channel*input_size,
                                                                 height,
                                                                 1);
 
-        TensorMap<Tensor<type, 2>> output_column_map(output.data() + (raw_variable + shift)*height + channel*input_size,
+        TensorMap2 output_column_map(output.data() + (raw_variable + shift)*height + channel*input_size,
                                                      height,
                                                      1);
 
@@ -388,8 +388,8 @@ void translate_image_x(const ThreadPoolDevice* device,
 
 
 void translate_image_y(const ThreadPoolDevice* device,
-                       const Tensor<type, 3>& input,
-                       Tensor<type, 3>& output,
+                       const Tensor3& input,
+                       Tensor3& output,
                        const Index& shift)
 {
     assert(input.dimension(0) == output.dimension(0));

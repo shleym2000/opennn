@@ -34,7 +34,7 @@ TEST(ResponseOptimization, Inputs)
 
     ResponseOptimization response_optimization(&neural_network, &dataset);
 
-    Tensor<type, 2> inputs = response_optimization.calculate_inputs();
+    Tensor2 inputs = response_optimization.calculate_inputs();
 
     EXPECT_EQ(inputs.dimension(0), response_optimization.get_evaluations_number());
     EXPECT_EQ(inputs.dimension(1), neural_network.get_features_number());

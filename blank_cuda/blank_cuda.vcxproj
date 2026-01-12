@@ -141,6 +141,7 @@
     <ClCompile Include="..\opennn\scaling_layer_2d.cpp" />
     <ClCompile Include="..\opennn\scaling_layer_3d.cpp" />
     <ClCompile Include="..\opennn\scaling_layer_4d.cpp" />
+    <ClCompile Include="..\opennn\standard_networks.cpp" />
     <ClCompile Include="..\opennn\statistics.cpp" />
     <ClCompile Include="..\opennn\stochastic_gradient_descent.cpp" />
     <ClCompile Include="..\opennn\strings_utilities.cpp" />

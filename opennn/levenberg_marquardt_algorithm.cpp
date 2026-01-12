@@ -361,16 +361,16 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
 {
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    Tensor<type, 1>& parameters = back_propagation_lm.parameters;
+    Tensor1& parameters = neural_network->get_parameters();
 
     type& error = back_propagation_lm.error();
     type& loss = back_propagation_lm.loss;
 
-    const Tensor<type, 1>& gradient = back_propagation_lm.gradient;
-    Tensor<type, 2>& hessian = back_propagation_lm.hessian;
+    const Tensor1& gradient = back_propagation_lm.gradient;
+    Tensor2& hessian = back_propagation_lm.hessian;
 
-    Tensor<type, 1>& potential_parameters = optimization_data.potential_parameters;
-    Tensor<type, 1>& parameters_increment = optimization_data.parameters_increment;
+    Tensor1& potential_parameters = optimization_data.potential_parameters;
+    Tensor1& parameters_increment = optimization_data.parameters_increment;
 
     const Index parameters_number = parameters.size();
 
@@ -448,7 +448,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
         }
     }
 
-    neural_network->set_parameters(parameters);
+    //neural_network->set_parameters(parameters);
 }
 
 

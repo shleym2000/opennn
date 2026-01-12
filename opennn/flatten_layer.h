@@ -105,7 +105,7 @@ public:
         FlattenForwardPropagation<Rank>* forward_prop =
             static_cast<FlattenForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
-        forward_prop->outputs = TensorMap<Tensor<type, 2>>(input_views[0].data, batch_size, outputs_number);
+        forward_prop->outputs = TensorMap2(input_views[0].data, batch_size, outputs_number);
     }
 
     // Back-propagation
@@ -251,7 +251,7 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     }
 
 
-    Tensor<type, 2> outputs;
+    Tensor2 outputs;
 };
 
 

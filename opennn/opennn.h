@@ -44,9 +44,7 @@
 #include "flatten_layer.h"
 
 // Scaling layers
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
-#include "scaling_layer_4d.h"
+#include "scaling_layer.h"
 #include "unscaling_layer.h"
 #include "bounding_layer.h"
 

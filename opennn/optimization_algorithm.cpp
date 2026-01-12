@@ -10,8 +10,8 @@
 #include "image_dataset.h"
 #include "time_series_dataset.h"
 #include "language_dataset.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "unscaling_layer.h"
 #include "loss_index.h"
 #include "optimization_algorithm.h"
@@ -299,9 +299,9 @@ void OptimizationAlgorithm::set_scaling()
         input_variable_scalers = dataset->get_variable_scalers("Input");
         input_variable_descriptives = dataset->scale_variables("Input");
 
-        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
-        scaling_layer_2d->set_descriptives(input_variable_descriptives);
-        scaling_layer_2d->set_scalers(input_variable_scalers);
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
     else if(neural_network->has("Scaling3d"))
     {
@@ -309,9 +309,9 @@ void OptimizationAlgorithm::set_scaling()
         input_variable_scalers = time_series_dataset->get_variable_scalers("Input");
         input_variable_descriptives = time_series_dataset->scale_variables("Input");
 
-        Scaling<3>* scaling_layer_3d = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
-        scaling_layer_3d->set_descriptives(input_variable_descriptives);
-        scaling_layer_3d->set_scalers(input_variable_scalers);
+        Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
     else if(neural_network->has("Scaling4d"))
     {
@@ -537,7 +537,7 @@ void TrainingResults::resize_training_error_history(const Index& new_size)
         return;
     }
 
-    const Tensor<type, 1> old_training_error_history = training_error_history;
+    const Tensor1 old_training_error_history = training_error_history;
 
     training_error_history.resize(new_size);
 
@@ -556,7 +556,7 @@ void TrainingResults::resize_selection_error_history(const Index& new_size)
         return;
     }
 
-    const Tensor<type, 1> old_selection_error_history = selection_error_history;
+    const Tensor1 old_selection_error_history = selection_error_history;
 
     selection_error_history.resize(new_size);
 

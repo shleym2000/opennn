@@ -49,16 +49,16 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         vector<ParameterView> parameter_views = recurrent_layer.get_parameter_views();
 
-        TensorMap<Tensor<type, 1>> biases_map(parameter_views[0].data, parameter_views[0].size);
+        TensorMap1 biases_map(parameter_views[0].data, parameter_views[0].size);
         biases_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
+        TensorMap2 input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
         input_weights_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
+        TensorMap2 recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
         recurrent_weights_map.setConstant(0.1);
 
-        Tensor<type, 3> inputs(samples_number, time_steps, inputs_number);
+        Tensor3 inputs(samples_number, time_steps, inputs_number);
         inputs.setConstant(type(1));
 
         unique_ptr<LayerForwardPropagation> recurrent_layer_forward_propagation
@@ -92,16 +92,16 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         vector<ParameterView> parameter_views = recurrent_layer.get_parameter_views();
 
-        TensorMap<Tensor<type, 1>> biases_map(parameter_views[0].data, parameter_views[0].size);
+        TensorMap1 biases_map(parameter_views[0].data, parameter_views[0].size);
         biases_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
+        TensorMap2 input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
         input_weights_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
+        TensorMap2 recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
         recurrent_weights_map.setConstant(0.1);
 
-        Tensor<type, 3> inputs(samples_number, time_steps, inputs_number);
+        Tensor3 inputs(samples_number, time_steps, inputs_number);
         inputs.setConstant(type(1));
 
         unique_ptr<LayerForwardPropagation> recurrent_layer_forward_propagation
@@ -134,16 +134,16 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         vector<ParameterView> parameter_views = recurrent_layer.get_parameter_views();
 
-        TensorMap<Tensor<type, 1>> biases_map(parameter_views[0].data, parameter_views[0].size);
+        TensorMap1 biases_map(parameter_views[0].data, parameter_views[0].size);
         biases_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
+        TensorMap2 input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
         input_weights_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
+        TensorMap2 recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
         recurrent_weights_map.setConstant(0.1);
 
-        Tensor<type, 3> inputs(samples_number, time_steps, inputs_number);
+        Tensor3 inputs(samples_number, time_steps, inputs_number);
         inputs.setConstant(type(1));
 
         unique_ptr<LayerForwardPropagation> recurrent_layer_forward_propagation
@@ -176,16 +176,16 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         vector<ParameterView> parameter_views = recurrent_layer.get_parameter_views();
 
-        TensorMap<Tensor<type, 1>> biases_map(parameter_views[0].data, parameter_views[0].size);
+        TensorMap1 biases_map(parameter_views[0].data, parameter_views[0].size);
         biases_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
+        TensorMap2 input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
         input_weights_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
+        TensorMap2 recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
         recurrent_weights_map.setConstant(0.1);
 
-        Tensor<type, 3> inputs(samples_number, time_steps, inputs_number);
+        Tensor3 inputs(samples_number, time_steps, inputs_number);
         inputs.setConstant(type(1));
 
         unique_ptr<LayerForwardPropagation> recurrent_layer_forward_propagation
@@ -219,16 +219,16 @@ TEST(RecurrentLayerTest, ForwardPropagate)
 
         vector<ParameterView> parameter_views = recurrent_layer.get_parameter_views();
 
-        TensorMap<Tensor<type, 1>> biases_map(parameter_views[0].data, parameter_views[0].size);
+        TensorMap1 biases_map(parameter_views[0].data, parameter_views[0].size);
         biases_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
+        TensorMap2 input_weights_map(parameter_views[1].data, inputs_number, outputs_number);
         input_weights_map.setConstant(0.1);
 
-        TensorMap<Tensor<type, 2>> recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
+        TensorMap2 recurrent_weights_map(parameter_views[2].data, outputs_number, outputs_number);
         recurrent_weights_map.setConstant(0.1);
 
-        Tensor<type, 3> inputs(samples_number, time_steps, inputs_number);
+        Tensor3 inputs(samples_number, time_steps, inputs_number);
         inputs.setConstant(1.0);
 
         unique_ptr<LayerForwardPropagation> recurrent_layer_forward_propagation

@@ -57,15 +57,15 @@ void MinkowskiError::calculate_error(const Batch& batch,
 
     const TensorView targets_view = batch.get_target_view();
 
-    const TensorMap<Tensor<type, 2>> targets = tensor_map<2>(targets_view);
+    const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
 
-    const TensorMap<Tensor<type, 2>> outputs = tensor_map<2>(outputs_view);
+    const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
-    Tensor<type, 2>& errors = back_propagation.errors;
+    Tensor2& errors = back_propagation.errors;
 
     Tensor<type, 0>& error = back_propagation.error;
 
@@ -83,11 +83,11 @@ void MinkowskiError::calculate_output_delta(const Batch& batch,
 {
     const Index samples_number = batch.get_samples_number();
 
-    const TensorView delta_views = back_propagation.get_output_deltas_pair();
+    const TensorView delta_views = back_propagation.get_output_deltas_tensor_view();
 
-    TensorMap<Tensor<type, 2>> deltas = tensor_map<2>(delta_views);
+    TensorMap2 deltas = tensor_map<2>(delta_views);
 
-    const Tensor<type, 2>& errors = back_propagation.errors;
+    const Tensor2& errors = back_propagation.errors;
 
     const type coefficient = type(1.0 / samples_number);
 

@@ -48,12 +48,9 @@ dimensions Normalization3d::get_output_dimensions() const
 }
 
 
-vector<ParameterView > Normalization3d::get_parameter_views() const
+vector<TensorView*> Normalization3d::get_parameter_views()
 {
-    return {
-        {(type*)gammas.data(), gammas.size()},
-        {(type*)betas.data(), betas.size()}
-    };
+    return {&gammas, &betas};
 }
 
 
@@ -63,12 +60,14 @@ void Normalization3d::set(const Index& new_sequence_length,
 {
     sequence_length = new_sequence_length;
 
-    gammas.resize(new_embedding_dimension);
+    gammas.dims = {new_embedding_dimension};
+/*
     gammas.setConstant(1);
-
-    betas.resize(new_embedding_dimension);
+*/
+    betas.dims = {new_embedding_dimension};
+/*
     betas.setZero();
-
+*/
     label = new_label;
 
     name = "Normalization3d";
@@ -83,15 +82,15 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
     //    const Index sequence_length = get_sequence_length();
     const Index embedding_dimension = get_embedding_dimension();
 
-    const TensorMap<Tensor<type, 3>> inputs(input_views[0].data, batch_size, sequence_length, embedding_dimension);
+    const TensorMap3 inputs(input_views[0].data, batch_size, sequence_length, embedding_dimension);
 
     Normalization3dForwardPropagation* this_forward_propagation =
         static_cast<Normalization3dForwardPropagation*>(layer_forward_propagation.get());
 
-    Tensor<type, 3>& outputs = this_forward_propagation->outputs;
+    Tensor3& outputs = this_forward_propagation->outputs;
 
-    Tensor<type, 2>& means = this_forward_propagation->means;
-    Tensor<type, 2>& standard_deviations = this_forward_propagation->standard_deviations;
+    Tensor2& means = this_forward_propagation->means;
+    Tensor2& standard_deviations = this_forward_propagation->standard_deviations;
 
     const array<Index, 3> reshape_dims({batch_size, sequence_length, 1});
     const array<Index, 3> broadcast_dims({1, 1, embedding_dimension});
@@ -108,11 +107,12 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
           / (standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims) + numeric_limits<type>::epsilon());
 
     // Affine transformation
-
+/*
     multiply_matrices(device.get(), outputs, gammas);
 
     outputs.device(*device) = outputs + betas.reshape(array<Index, 3>{1, 1, betas.dimension(0)})
                                              .broadcast(array<Index, 3>{outputs.dimension(0), outputs.dimension(1), 1});
+*/
 }
 
 
@@ -127,26 +127,26 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     if(delta_views.size() > 1)
         add_deltas(delta_views);
 
-    const TensorMap<Tensor<type, 3>> deltas = tensor_map<3>(delta_views[0]);
+    const TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
     const Normalization3dForwardPropagation* this_forward_propagation
         = static_cast<Normalization3dForwardPropagation*>(forward_propagation.get());
 
-    const Tensor<type, 3>& outputs = this_forward_propagation->outputs;
-    const Tensor<type, 2>& standard_deviations = this_forward_propagation->standard_deviations;
+    const Tensor3& outputs = this_forward_propagation->outputs;
+    const Tensor2& standard_deviations = this_forward_propagation->standard_deviations;
 
     Normalization3dBackPropagation* this_back_propagation =
         static_cast<Normalization3dBackPropagation*>(back_propagation.get());
 
-    Tensor<type, 1>& gamma_derivatives = this_back_propagation->gamma_derivatives;
-    Tensor<type, 1>& beta_derivatives = this_back_propagation->beta_derivatives;
+    Tensor1& gamma_derivatives = this_back_propagation->gamma_derivatives;
+    Tensor1& beta_derivatives = this_back_propagation->beta_derivatives;
 
-    Tensor<type, 3>& scaled_deltas = this_back_propagation->scaled_deltas;
-    Tensor<type, 3>& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
+    Tensor3& scaled_deltas = this_back_propagation->scaled_deltas;
+    Tensor3& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
 
-    Tensor<type, 3>& input_deltas = this_back_propagation->input_deltas;
+    Tensor3& input_deltas = this_back_propagation->input_deltas;
 
-    Tensor<type, 2>& aux_2d = this_back_propagation->aux_2d;
+    Tensor2& aux_2d = this_back_propagation->aux_2d;
 
     constexpr type epsilon = numeric_limits<type>::epsilon();
 
@@ -156,7 +156,7 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     beta_derivatives.device(*device) = deltas.sum(array<Index, 2>({0, 1}));
 
     // Input derivatives
-
+/*
     scaled_deltas.device(*device) = deltas;
     multiply_matrices(device.get(), scaled_deltas, gammas);
 
@@ -194,9 +194,10 @@ void Normalization3d::from_XML(const XMLDocument& document)
     const Index new_embedding_dimension = read_xml_index(normalization_layer_element, "EmbeddingDimension");
 
     set(new_sequence_length, new_embedding_dimension, new_name);
-
+/*
     string_to_tensor<type, 1>(read_xml_string(normalization_layer_element, "Betas"), betas);
     string_to_tensor<type, 1>(read_xml_string(normalization_layer_element, "Gammas"), gammas);
+*/
 }
 
 
@@ -206,9 +207,10 @@ void Normalization3d::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "Label", label);
     add_xml_element(printer, "SequenceLength", to_string(get_sequence_length()));
     add_xml_element(printer, "EmbeddingDimension", to_string(get_embedding_dimension()));
+/*
     add_xml_element(printer, "Betas", tensor_to_string<type, 1>(betas));
     add_xml_element(printer, "Gammas", tensor_to_string<type, 1>(gammas));
-
+*/
     printer.CloseElement();
 }
 
@@ -296,7 +298,7 @@ vector<TensorView> Normalization3dBackPropagation::get_input_derivative_views() 
     return { {(type*)(input_deltas.data()), {batch_size, sequence_length, embedding_dimension}} };
 }
 
-vector<ParameterView> Normalization3dBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> Normalization3dBackPropagation::get_gradient_views() const
 {
     return {{(type*)gamma_derivatives.data(), gamma_derivatives.size()},
             {(type*)beta_derivatives.data(), beta_derivatives.size()}

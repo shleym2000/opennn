@@ -8,7 +8,7 @@
 
 #include "tensors.h"
 #include "response_optimization.h"
-#include "scaling_layer_2d.h"
+#include "scaling_layer.h"
 #include "bounding_layer.h"
 #include "dataset.h"
 #include "neural_network.h"
@@ -44,10 +44,10 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
 
-        input_minimums = scaling_layer_2d->get_minimums();
-        input_maximums = scaling_layer_2d->get_maximums();
+        input_minimums = scaling_layer->get_minimums();
+        input_maximums = scaling_layer->get_maximums();
     }
 
     // @todo from unscaling layer?
@@ -142,25 +142,25 @@ Index ResponseOptimization::get_evaluations_number() const
 }
 
 
-Tensor<type, 1> ResponseOptimization::get_input_minimums() const
+Tensor1 ResponseOptimization::get_input_minimums() const
 {
     return input_minimums;
 }
 
 
-Tensor<type, 1> ResponseOptimization::get_input_maximums() const
+Tensor1 ResponseOptimization::get_input_maximums() const
 {
     return input_maximums;
 }
 
 
-Tensor<type, 1> ResponseOptimization::get_outputs_minimums() const
+Tensor1 ResponseOptimization::get_outputs_minimums() const
 {
     return output_minimums;
 }
 
 
-Tensor<type, 1> ResponseOptimization::get_outputs_maximums() const
+Tensor1 ResponseOptimization::get_outputs_maximums() const
 {
     return output_maximums;
 }
@@ -168,7 +168,7 @@ Tensor<type, 1> ResponseOptimization::get_outputs_maximums() const
 
 void ResponseOptimization::set_input_condition(const string& name,
                                                const ResponseOptimization::Condition& condition,
-                                               const Tensor<type, 1>& values)
+                                               const Tensor1& values)
 {
     const Index raw_index = dataset->get_raw_variable_index(name);
 
@@ -278,7 +278,7 @@ void ResponseOptimization::set_input_condition(const string& name,
 
 void ResponseOptimization::set_output_condition(const string& variable_name,
                                                 const ResponseOptimization::Condition& condition,
-                                                const Tensor<type, 1>& values)
+                                                const Tensor1& values)
 {
     const Index raw_index = dataset->get_raw_variable_index(variable_name);
 
@@ -381,7 +381,7 @@ void ResponseOptimization::set_output_condition(const string& variable_name,
 
 void ResponseOptimization::set_input_condition(const Index& index,
                                                const ResponseOptimization::Condition& condition,
-                                               const Tensor<type, 1>& values)
+                                               const Tensor1& values)
 {
     switch(condition)
     {       
@@ -436,7 +436,7 @@ void ResponseOptimization::set_input_condition(const Index& index,
 
 void ResponseOptimization::set_output_condition(const Index& index,
                                                 const ResponseOptimization::Condition& condition,
-                                                const Tensor<type, 1>& values)
+                                                const Tensor1& values)
 {
     switch(condition)
     {        
@@ -518,11 +518,11 @@ Tensor<ResponseOptimization::Condition, 1> ResponseOptimization::get_conditions(
 }
 
 
-Tensor<type, 2> ResponseOptimization::calculate_inputs() const
+Tensor2 ResponseOptimization::calculate_inputs() const
 {
     const Index inputs_number = neural_network->get_features_number();
 
-    Tensor<type, 2> inputs(evaluations_number, inputs_number);
+    Tensor2 inputs(evaluations_number, inputs_number);
     inputs.setZero();
 
     const Index input_raw_variables_number = dataset->get_raw_variables_number("Input");
@@ -627,7 +627,7 @@ Tensor<type,2> ResponseOptimization::calculate_envelope(const Tensor<type,2>& in
 
     const Index outputs_number = neural_network->get_outputs_number();
 
-    Tensor<type, 2> envelope = assemble_matrix_matrix(inputs, outputs);
+    Tensor2 envelope = assemble_matrix_matrix(inputs, outputs);
 
     if(envelope.size() == 0)
         return Tensor<type,2>();
@@ -959,10 +959,10 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
 }
 
 
-ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const Tensor<type, 2>& objectives,
-                                                                                 const Tensor<type, 1>& sense,
-                                                                                 const Tensor<type, 2>& inputs,
-                                                                                 const Tensor<type, 2>& envelope) const
+ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const Tensor2& objectives,
+                                                                                 const Tensor1& sense,
+                                                                                 const Tensor2& inputs,
+                                                                                 const Tensor2& envelope) const
 {
 
     Pareto pareto;
@@ -1035,11 +1035,11 @@ ResponseOptimization::Pareto ResponseOptimization::perform_pareto_analysis(const
 
 ResponseOptimization::Pareto ResponseOptimization::perform_pareto() const
 {
-    const Tensor<type, 2> inputs  = calculate_inputs();
+    const Tensor2 inputs  = calculate_inputs();
 
-    const Tensor<type, 2> outputs = neural_network->calculate_outputs<2,2>(inputs);
+    const Tensor2 outputs = neural_network->calculate_outputs<2,2>(inputs);
 
-    const Tensor<type, 2> envelope = calculate_envelope(inputs, outputs);
+    const Tensor2 envelope = calculate_envelope(inputs, outputs);
 
     if(envelope.size() == 0)
         return Pareto{};

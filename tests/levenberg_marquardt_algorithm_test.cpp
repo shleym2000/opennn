@@ -42,7 +42,7 @@ TEST(LevenbergMarquardtAlgorithmTest, Train)
 
     NeuralNetwork neural_network;
 
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ 1 },
+    neural_network.add_layer(make_unique<Dense>(dimensions{ 1 },
         dimensions{ 1 },
         "Linear"));
 

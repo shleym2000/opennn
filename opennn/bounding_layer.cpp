@@ -38,7 +38,7 @@ type Bounding::get_lower_bound(const Index& i) const
 }
 
 
-const Tensor<type, 1>& Bounding::get_lower_bounds() const
+const Tensor1& Bounding::get_lower_bounds() const
 {
     return lower_bounds;
 }
@@ -56,7 +56,7 @@ type Bounding::get_upper_bound(const Index& i) const
 }
 
 
-const Tensor<type, 1>& Bounding::get_upper_bounds() const
+const Tensor1& Bounding::get_upper_bounds() const
 {
     return upper_bounds;
 }
@@ -114,7 +114,7 @@ void Bounding::set_lower_bound(const Index& index, const type& new_lower_bound)
 }
 
 
-void Bounding::set_lower_bounds(const Tensor<type, 1>& new_lower_bounds)
+void Bounding::set_lower_bounds(const Tensor1& new_lower_bounds)
 {
     lower_bounds = new_lower_bounds;
 }
@@ -130,7 +130,7 @@ void Bounding::set_output_dimensions(const dimensions& new_output_dimensions)
 }
 
 
-void Bounding::set_upper_bounds(const Tensor<type, 1>& new_upper_bounds)
+void Bounding::set_upper_bounds(const Tensor1& new_upper_bounds)
 {
     upper_bounds = new_upper_bounds;
 }

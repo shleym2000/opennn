@@ -11,8 +11,8 @@
 #include "time_series_dataset.h"
 #include "growing_inputs.h"
 #include "correlations.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "optimization_algorithm.h"
 #include "training_strategy.h"
 
@@ -124,8 +124,8 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     if(display) cout << "Calculating correlations..." << endl;
 
-    const Tensor<type, 2> correlations = get_correlation_values(dataset->calculate_input_target_raw_variable_pearson_correlations());
-    const Tensor<type, 1> total_correlations = correlations.abs().chip(0, 1);
+    const Tensor2 correlations = get_correlation_values(dataset->calculate_input_target_raw_variable_pearson_correlations());
+    const Tensor1 total_correlations = correlations.abs().chip(0, 1);
 
     vector<Index> correlation_indices(original_input_raw_variables_number);
     iota(correlation_indices.begin(), correlation_indices.end(), 0);
@@ -232,7 +232,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
             {
                 input_selection_results.optimal_input_raw_variables_indices = dataset->get_raw_variable_indices("Input");
                 input_selection_results.optimal_input_raw_variable_names = dataset->get_raw_variable_names("Input");
-                neural_network->get_parameters(input_selection_results.optimal_parameters);
+                //neural_network->get_parameters(input_selection_results.optimal_parameters);
                 input_selection_results.optimum_training_error = training_results.get_training_error();
                 input_selection_results.optimum_selection_error = training_results.get_selection_error();
             }
@@ -357,15 +357,15 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
-        scaling_layer_2d->set_descriptives(input_variable_descriptives);
-        scaling_layer_2d->set_scalers(input_variable_scalers);
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
     else if(neural_network->has("Scaling3d"))
     {
-        Scaling<3>* scaling_layer_3d = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
-        scaling_layer_3d->set_descriptives(input_variable_descriptives);
-        scaling_layer_3d->set_scalers(input_variable_scalers);
+        Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
 
     neural_network->set_parameters(input_selection_results.optimal_parameters);

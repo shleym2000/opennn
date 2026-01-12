@@ -49,9 +49,30 @@ public:
 
     virtual void set_parameters_glorot();
 
-    Index get_parameters_number() const;
+    Index get_parameters_number();
 
-    virtual vector<ParameterView> get_parameter_views() const;
+    virtual vector<TensorView*> get_parameter_views()
+    {
+        return vector<TensorView*>();
+    }
+
+    type* link_parameters(type* ptr)
+    {        
+        vector<TensorView*> parameter_views = get_parameter_views();
+
+        for(Index i = 0; i < parameter_views.size(); i++)
+        {
+            parameter_views[i]->data = ptr;
+            ptr += parameter_views[i]->size();
+
+//            const size_t address = reinterpret_cast<size_t>(ptr);
+//            if (address % 64 != 0)
+//                ptr += (16 - ((address / sizeof(type)) % 16));
+
+        }
+
+        return ptr;
+    }
 
     //virtual pair
 
@@ -84,7 +105,7 @@ public:
 
     virtual void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>&,
                                                    const Index&,
-                                                   Tensor<type, 2>&) const {}
+                                                   Tensor2&) const {}
 
     virtual void from_XML(const tinyxml2::XMLDocument&) {}
 
@@ -111,9 +132,9 @@ protected:
 
     bool is_trainable = true;
 
-    Tensor<type, 2> empty_2;
-    Tensor<type, 3> empty_3;
-    Tensor<type, 4> empty_4;
+    Tensor2 empty_2;
+    Tensor3 empty_3;
+    Tensor4 empty_4;
 
     bool display = true;
 
@@ -232,11 +253,11 @@ protected:
         dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
-    void softmax(Tensor<type, 2>&) const;
-    void softmax(Tensor<type, 3>&) const;
-    void softmax(Tensor<type, 4>&) const;
+    void softmax(Tensor2&) const;
+    void softmax(Tensor3&) const;
+    void softmax(Tensor4&) const;
 
-    void softmax_derivatives_times_tensor(const Tensor<type, 3>&, TensorMap<Tensor<type, 3>>&, Tensor<type, 1>&) const;
+    void softmax_derivatives_times_tensor(const Tensor3&, TensorMap3&, Tensor1&) const;
 
     void add_deltas(const vector<TensorView>& delta_views) const;
 
@@ -244,12 +265,12 @@ protected:
     void normalize_batch(
         Tensor<type, Rank>& outputs,
         Tensor<type, Rank>& normalized_outputs,
-        Tensor<type, 1>& batch_means,
-        Tensor<type, 1>& batch_stds,
-        Tensor<type, 1>& moving_means,
-        Tensor<type, 1>& moving_stds,
-        const Tensor<type, 1>& scales,
-        const Tensor<type, 1>& offsets,
+        Tensor1& batch_means,
+        Tensor1& batch_stds,
+        Tensor1& moving_means,
+        Tensor1& moving_stds,
+        const Tensor1& scales,
+        const Tensor1& offsets,
         const bool& is_training,
         const type momentum = type(0.9),
         const type epsilon = type(1e-5)) const
@@ -309,8 +330,8 @@ protected:
     template <int Rank>
     void calculate_combinations(
         const Tensor<type, Rank>& inputs,
-        const Tensor<type, 2>& weights,
-        const Tensor<type, 1>& biases,
+        const Tensor2& weights,
+        const Tensor1& biases,
         Tensor<type, Rank>& combinations) const
     {
         const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
@@ -379,7 +400,13 @@ protected:
 struct LayerForwardPropagation
 {
     LayerForwardPropagation() {}
+
     virtual ~LayerForwardPropagation() = default;
+
+    virtual Index get_workspace_size() const
+    {
+        return 0;
+    }
 
     void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
     {
@@ -416,9 +443,14 @@ struct LayerBackPropagation
 
     virtual void initialize() = 0;
 
+    virtual type* link_gradient(type* ptr)
+    {
+        return ptr;
+    }
+
     virtual vector<TensorView> get_input_derivative_views() const = 0;
 
-    virtual vector<ParameterView> get_parameter_delta_views() const
+    virtual vector<ParameterView> get_gradient_views() const
     {
         return vector<ParameterView>();
     }
@@ -489,7 +521,7 @@ struct LayerBackPropagationCuda
 
     virtual vector<float*> get_input_derivatives_device() { return {input_deltas}; }
 
-    virtual vector<ParameterView> get_parameter_delta_views_device() const
+    virtual vector<ParameterView> get_gradient_views_device() const
     {
         return vector<ParameterView>();
     }

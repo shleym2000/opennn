@@ -40,7 +40,7 @@ public:
 
     dimensions get_output_dimensions() const override;
 
-    vector<ParameterView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     void set(const Index& = 0,
              const Index& = 0,
@@ -51,7 +51,7 @@ public:
 
     void set_dropout_rate(const type&);
 
-    void apply_causal_mask(Tensor<type, 4>&) const;
+    void apply_causal_mask(Tensor4&) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -67,11 +67,11 @@ public:
     void to_XML(XMLPrinter&) const override;
     void from_XML(const XMLDocument&) override;
 
+    void apply_key_padding_mask(const Tensor<bool, 2>&,Tensor4&) const;
+
 #ifdef OPENNN_CUDA
         // @todo
 #endif
-
-    void apply_key_padding_mask(const Tensor<bool, 2>&,Tensor<type, 4>&) const;
 
 private:
 
@@ -79,21 +79,21 @@ private:
     Index query_sequence_length = 0;
     Index source_sequence_length = 0;
 
-    Tensor<type, 2> query_weights;
-    Tensor<type, 1> query_biases;
+    TensorView query_weights;
+    TensorView query_biases;
 
-    Tensor<type, 2> key_weights;
-    Tensor<type, 1> key_biases;
+    TensorView key_weights;
+    TensorView key_biases;
 
-    Tensor<type, 2> value_weights;
-    Tensor<type, 1> value_biases;
+    TensorView value_weights;
+    TensorView value_biases;
 
-    Tensor<type, 2> projection_weights;
-    Tensor<type, 1> projection_biases;
+    TensorView projection_weights;
+    TensorView projection_biases;
 
     bool use_causal_mask = false;
 
-    Tensor<type, 2> causal_mask;
+    Tensor2 causal_mask;
     Tensor<bool,2> key_mask; // Starting to implement (should be used before softmax so that the probability of the padding is zero)
 
     type dropout_rate = type(0);
@@ -113,20 +113,16 @@ struct MultiHeadAttentionForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 4> query;
-    Tensor<type, 4> key;
-    Tensor<type, 4> value;
+    Tensor4 query;
+    Tensor4 key;
+    Tensor4 value;
 
-    Tensor<type, 4> attention_weights;
-    Tensor<type, 4> attention_outputs;
+    Tensor4 attention_weights;
+    Tensor4 attention_outputs;
 
-    Tensor<type, 3> concatenated_attention_outputs;
+    Tensor3 concatenated_attention_outputs;
 
-    Tensor<type, 4> projection_outputs;
-
-    Tensor<type, 3> outputs;
-
-//    Tensor<type, 2> sample_matrix;
+    Tensor3 outputs;
 };
 
 
@@ -136,41 +132,37 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor<type, 4> attention_weight_deltas;
-    Tensor<type, 4> attention_output_deltas;
-    Tensor<type, 3> concatenated_attention_output_deltas;
+    Tensor4 attention_weight_deltas;
+    Tensor4 attention_output_deltas;
+    Tensor3 concatenated_attention_output_deltas;
 
-    Tensor<type, 4> query_deltas;
-    Tensor<type, 4> key_deltas;
-    Tensor<type, 4> value_deltas;
+    Tensor4 query_deltas;
+    Tensor4 key_deltas;
+    Tensor4 value_deltas;
 
-    Tensor<type, 2> query_weight_deltas;
-    Tensor<type, 2> key_weight_deltas;
-    Tensor<type, 2> value_weight_deltas;
+    Tensor2 query_weight_deltas;
+    Tensor2 key_weight_deltas;
+    Tensor2 value_weight_deltas;
 
-    Tensor<type, 2> projection_weight_deltas;
+    Tensor2 projection_weight_deltas;
 
-    Tensor<type, 1> query_bias_deltas;
-    Tensor<type, 1> key_bias_deltas;
-    Tensor<type, 1> value_bias_deltas;
-    Tensor<type, 1> projection_bias_deltas;
+    Tensor1 query_bias_deltas;
+    Tensor1 key_bias_deltas;
+    Tensor1 value_bias_deltas;
+    Tensor1 projection_bias_deltas;
 
-    Tensor<type, 1> aux_rows;
+    Tensor1 aux_rows;
 
-    Tensor<type, 3> input_query_deltas;
-    Tensor<type, 3> input_source_deltas;
+    Tensor3 input_query_deltas;
+    Tensor3 input_source_deltas;
 
-    Tensor<type, 4> softmax_deltas;
-
-    Tensor<type, 3> query_deltas_reshaped;
-    Tensor<type, 3> key_deltas_reshaped;
-    Tensor<type, 3> value_deltas_reshaped;
+    Tensor4 softmax_deltas;
 };
 
 #ifdef OPENNN_CUDA

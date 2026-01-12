@@ -72,7 +72,7 @@ public:
                                      const vector<Index>&,
                                      type*) const override;
 
-    Tensor<type, 2> perform_augmentation(const Tensor<type, 2>& data);
+    Tensor2 perform_augmentation(const Tensor2& data);
 
 private:
 
