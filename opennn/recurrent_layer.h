@@ -95,7 +95,7 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_gradient_views() const override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 

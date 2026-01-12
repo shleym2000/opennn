@@ -450,9 +450,9 @@ struct LayerBackPropagation
 
     virtual vector<TensorView> get_input_derivative_views() const = 0;
 
-    virtual vector<ParameterView> get_gradient_views() const
+    virtual vector<TensorView*> get_gradient_views()
     {
-        return vector<ParameterView>();
+        return vector<TensorView*>();
     }
 
     virtual void print() const {}

@@ -28,10 +28,7 @@ dimensions Recurrent::get_input_dimensions() const
 
 dimensions Recurrent::get_output_dimensions() const
 {
-/*
     return { biases.size() };
-*/
-    return dimensions();
 }
 
 
@@ -78,22 +75,19 @@ void Recurrent::set_input_dimensions(const dimensions& new_input_dimensions)
 
     const Index inputs_number = input_dimensions[1];
     const Index outputs_number = get_outputs_number();
-/*
-    input_weights.resize(inputs_number, outputs_number);
-*/
+
+    input_weights.dims = {inputs_number, outputs_number};
 }
 
 
 void Recurrent::set_output_dimensions(const dimensions& new_output_dimensions)
 {
-/*
-    const Index inputs_number = input_weights.dimension(0);
+    const Index inputs_number = input_weights.dims[0];
     const Index outputs_number = new_output_dimensions[0];
 
-    biases.resize(outputs_number);
-    input_weights.resize(inputs_number, outputs_number);
-    recurrent_weights.resize(outputs_number, outputs_number);
-*/
+    biases.dims = {outputs_number};
+    input_weights.dims = {inputs_number, outputs_number};
+    recurrent_weights.dims = {outputs_number, outputs_number};
 }
 
 
@@ -290,15 +284,15 @@ string Recurrent::get_expression(const vector<string>& feature_names,
 
 void Recurrent::print() const
 {
-/*
+
     cout << "Recurrent layer" << endl
          << "Time steps: " << get_input_dimensions()[0] << endl
          << "Input dimensions: " << get_input_dimensions()[1] << endl
          << "Output dimensions: " << get_output_dimensions()[0] << endl
-         << "Biases dimensions: " << biases.dimensions() << endl
-         << "Input weights dimensions: " << input_weights.dimensions() << endl
-         << "Recurrent weights dimensions: " << recurrent_weights.dimensions() << endl;
-
+         << "Biases dimensions: " << biases.dims << endl
+         << "Input weights dimensions: " << input_weights.dims << endl
+         << "Recurrent weights dimensions: " << recurrent_weights.dims << endl;
+/*
     cout << "Biases:" << endl
          << biases << endl
          << "Input weights:" << endl
@@ -322,11 +316,6 @@ void Recurrent::from_XML(const XMLDocument& document)
     set_input_dimensions(string_to_dimensions(read_xml_string(recurrent_layer_element, "InputDimensions")));
     set_output_dimensions({ read_xml_index(recurrent_layer_element, "NeuronsNumber") });
     set_activation_function(read_xml_string(recurrent_layer_element, "Activation"));
-/*
-    string_to_tensor<type, 1>(read_xml_string(recurrent_layer_element, "Biases"), biases);
-    string_to_tensor<type, 2>(read_xml_string(recurrent_layer_element, "InputWeights"), input_weights);
-    string_to_tensor<type, 2>(read_xml_string(recurrent_layer_element, "RecurrentWeights"), recurrent_weights);
-*/
 }
 
 
@@ -338,11 +327,6 @@ void Recurrent::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
     add_xml_element(printer, "Activation", activation_function);
-/*
-    add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
-    add_xml_element(printer, "InputWeights", tensor_to_string<type, 2>(input_weights));
-    add_xml_element(printer, "RecurrentWeights", tensor_to_string<type, 2>(recurrent_weights));
-*/
     printer.CloseElement();
 }
 
@@ -440,17 +424,11 @@ vector<TensorView> RecurrentBackPropagation::get_input_derivative_views() const
 }
 
 
-vector<ParameterView> RecurrentBackPropagation::get_gradient_views() const
+vector<TensorView*> RecurrentBackPropagation::get_gradient_views()
 {
-/*
-    return {bias_deltas, input_weight_deltas, recurrent_weight_deltas};
-        {bias_deltas.data(), bias_deltas.size()},
-        {(type*)input_weight_deltas.data(), input_weight_deltas.size()},
-        {(type*)recurrent_weight_deltas.data(), recurrent_weight_deltas.size()}
-    };
-*/
-    return vector<ParameterView>();
+    return {&bias_deltas, &input_weight_deltas, &recurrent_weight_deltas};
 }
+
 
 REGISTER(Layer, Recurrent, "Recurrent")
 REGISTER(LayerForwardPropagation, RecurrentForwardPropagation, "Recurrent")

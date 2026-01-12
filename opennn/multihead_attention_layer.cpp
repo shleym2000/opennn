@@ -270,20 +270,20 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     MultiHeadAttentionBackPropagation* this_back_propagation =
         static_cast<MultiHeadAttentionBackPropagation*>(back_propagation.get());
 
-    Tensor2& projection_weight_deltas = this_back_propagation->projection_weight_deltas;
-    Tensor1& projection_bias_deltas = this_back_propagation->projection_bias_deltas;
+    TensorMap2 projection_weight_deltas = tensor_map<2>(this_back_propagation->projection_weight_deltas);
+    TensorMap1 projection_bias_deltas = tensor_map<1>(this_back_propagation->projection_bias_deltas);
     Tensor3& concatenated_attention_output_deltas = this_back_propagation->concatenated_attention_output_deltas;
     Tensor4& attention_output_deltas = this_back_propagation->attention_output_deltas;
     Tensor4& attention_weight_deltas = this_back_propagation->attention_weight_deltas;
     Tensor4& query_deltas = this_back_propagation->query_deltas;
     Tensor4& key_deltas = this_back_propagation->key_deltas;
     Tensor4& value_deltas = this_back_propagation->value_deltas;
-    Tensor2& query_weight_deltas = this_back_propagation->query_weight_deltas;
-    Tensor1& query_bias_deltas = this_back_propagation->query_bias_deltas;
-    Tensor2& key_weight_deltas = this_back_propagation->key_weight_deltas;
-    Tensor1& key_bias_deltas = this_back_propagation->key_bias_deltas;
-    Tensor2& value_weight_deltas = this_back_propagation->value_weight_deltas;
-    Tensor1& value_bias_deltas = this_back_propagation->value_bias_deltas;
+    TensorMap2 query_weight_deltas = tensor_map<2>(this_back_propagation->query_weight_deltas);
+    TensorMap1 query_bias_deltas = tensor_map<1>(this_back_propagation->query_bias_deltas);
+    TensorMap2 key_weight_deltas = tensor_map<2>(this_back_propagation->key_weight_deltas);
+    TensorMap1 key_bias_deltas = tensor_map<1>(this_back_propagation->key_bias_deltas);
+    TensorMap2 value_weight_deltas = tensor_map<2>(this_back_propagation->value_weight_deltas);
+    TensorMap1 value_bias_deltas = tensor_map<1>(this_back_propagation->value_bias_deltas);
     Tensor3& input_query_deltas = this_back_propagation->input_query_deltas;
     Tensor3& input_source_deltas = this_back_propagation->input_source_deltas;
     Tensor4& softmax_deltas = this_back_propagation->softmax_deltas;
@@ -551,15 +551,15 @@ void MultiHeadAttentionBackPropagation::initialize()
     const Index heads_number = multihead_attention_layer->get_heads_number();
     const Index head_dimension = multihead_attention_layer->get_head_dimension();
 
-    query_weight_deltas.resize(embedding_dimension, embedding_dimension);
-    key_weight_deltas.resize(embedding_dimension, embedding_dimension);
-    value_weight_deltas.resize(embedding_dimension, embedding_dimension);
-    projection_weight_deltas.resize(embedding_dimension, embedding_dimension);
+    query_weight_deltas.dims = {embedding_dimension, embedding_dimension};
+    key_weight_deltas.dims = {embedding_dimension, embedding_dimension};
+    value_weight_deltas.dims = {embedding_dimension, embedding_dimension};
+    projection_weight_deltas.dims = {embedding_dimension, embedding_dimension};
 
-    query_bias_deltas.resize(embedding_dimension);
-    key_bias_deltas.resize(embedding_dimension);
-    value_bias_deltas.resize(embedding_dimension);
-    projection_bias_deltas.resize(embedding_dimension);
+    query_bias_deltas.dims = {embedding_dimension};
+    key_bias_deltas.dims = {embedding_dimension};
+    value_bias_deltas.dims = {embedding_dimension};
+    projection_bias_deltas.dims = {embedding_dimension};
 
     input_query_deltas.resize(batch_size, query_sequence_length, embedding_dimension);
     input_source_deltas.resize(batch_size, source_sequence_length, embedding_dimension);
@@ -609,16 +609,12 @@ vector<TensorView> MultiHeadAttentionBackPropagation::get_input_derivative_views
 }
 
 
-vector<ParameterView> MultiHeadAttentionBackPropagation::get_gradient_views() const
+vector<TensorView*> MultiHeadAttentionBackPropagation::get_gradient_views()
 {
-    return {{(type*)query_weight_deltas.data(), query_weight_deltas.size()},
-            {(type*)query_bias_deltas.data(), query_bias_deltas.size()},
-            {(type*)key_weight_deltas.data(), key_weight_deltas.size()},
-            {(type*)key_bias_deltas.data(), key_bias_deltas.size()},
-            {(type*)value_weight_deltas.data(), value_weight_deltas.size()},
-            {(type*)value_bias_deltas.data(), value_bias_deltas.size()},
-            {(type*)projection_weight_deltas.data(), projection_weight_deltas.size()},
-            {(type*)projection_bias_deltas.data(), projection_bias_deltas.size()}};
+    return {&query_weight_deltas, &query_bias_deltas,
+            &key_weight_deltas, &key_bias_deltas,
+            &value_weight_deltas, &value_bias_deltas,
+            &projection_weight_deltas, &projection_bias_deltas};
 }
 
 REGISTER(Layer, MultiHeadAttention, "MultiHeadAttention")

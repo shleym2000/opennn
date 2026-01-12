@@ -188,7 +188,7 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
     EmbeddingBackPropagation* embedding_back_propagation =
         static_cast<EmbeddingBackPropagation*>(back_propagation.get());
 
-    Tensor2& weight_deltas = embedding_back_propagation->weight_deltas;
+    TensorMap2 weight_deltas = tensor_map<2>(embedding_back_propagation->weight_deltas);
     weight_deltas.setZero();
 
     if(scale_embedding)
@@ -313,9 +313,9 @@ vector<TensorView> EmbeddingBackPropagation::get_input_derivative_views() const
     return vector<TensorView>();
 }
 
-vector<ParameterView> EmbeddingBackPropagation::get_gradient_views() const
+vector<TensorView*> EmbeddingBackPropagation::get_gradient_views()
 {
-    return {{(type*)weight_deltas.data(), weight_deltas.size()}};
+    return {&weight_deltas};
 }
 
 
@@ -326,7 +326,7 @@ void EmbeddingBackPropagation::initialize()
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
     const Index vocabulary_size = embedding_layer->get_vocabulary_size();
 
-    weight_deltas.resize(vocabulary_size, embedding_dimension);
+    weight_deltas.dims = {vocabulary_size, embedding_dimension};
 }
 
 

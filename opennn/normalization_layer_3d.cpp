@@ -138,8 +138,8 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     Normalization3dBackPropagation* this_back_propagation =
         static_cast<Normalization3dBackPropagation*>(back_propagation.get());
 
-    Tensor1& gamma_derivatives = this_back_propagation->gamma_derivatives;
-    Tensor1& beta_derivatives = this_back_propagation->beta_derivatives;
+    TensorMap1 gamma_derivatives = tensor_map<1>(this_back_propagation->gamma_derivatives);
+    TensorMap1 beta_derivatives = tensor_map<1>(this_back_propagation->beta_derivatives);
 
     Tensor3& scaled_deltas = this_back_propagation->scaled_deltas;
     Tensor3& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
@@ -261,8 +261,8 @@ void Normalization3dBackPropagation::initialize()
     const Index sequence_length = normalization_layer_3d->get_sequence_length();
     const Index embedding_dimension = normalization_layer_3d->get_embedding_dimension();
 
-    gamma_derivatives.resize(embedding_dimension);
-    beta_derivatives.resize(embedding_dimension);
+    gamma_derivatives.dims = {embedding_dimension};
+    beta_derivatives.dims = {embedding_dimension};
 
     scaled_deltas.resize(batch_size, sequence_length, embedding_dimension);
     standard_deviation_derivatives.resize(batch_size, sequence_length, embedding_dimension);
@@ -274,10 +274,12 @@ void Normalization3dBackPropagation::initialize()
 
 void Normalization3dBackPropagation::print() const
 {
+/*
     cout << "Gammas derivatives:" << endl
          << gamma_derivatives << endl
          << "Betas derivatives:" << endl
          << beta_derivatives << endl;
+*/
 }
 
 
@@ -298,11 +300,9 @@ vector<TensorView> Normalization3dBackPropagation::get_input_derivative_views() 
     return { {(type*)(input_deltas.data()), {batch_size, sequence_length, embedding_dimension}} };
 }
 
-vector<ParameterView> Normalization3dBackPropagation::get_gradient_views() const
+vector<TensorView*> Normalization3dBackPropagation::get_gradient_views()
 {
-    return {{(type*)gamma_derivatives.data(), gamma_derivatives.size()},
-            {(type*)beta_derivatives.data(), beta_derivatives.size()}
-    };
+    return {&gamma_derivatives, &beta_derivatives};
 }
 
 

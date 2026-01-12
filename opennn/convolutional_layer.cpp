@@ -54,15 +54,18 @@ void Convolutional::calculate_convolutions(const Tensor4& inputs,
 {  
     const Index kernels_number = get_kernels_number();
 
+    const TensorMap2 weights_map = tensor_map<2>(weights);
+    const TensorMap1 biases_map = tensor_map<1>(biases);
+
     for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
 /*
-        const TensorMap3 kernel_weights = tensor_map(weights, kernel_index);
+        const TensorMap3 kernel_weights = tensor_map(weights_map, kernel_index);
         TensorMap3 kernel_convolutions = tensor_map(convolutions, kernel_index);
 
         kernel_convolutions.device(*device) =
             (inputs.convolve(kernel_weights, array_3( 1, 2, 3)))
-                .reshape(kernel_convolutions.dimensions()) + biases(kernel_index);
+                .reshape(kernel_convolutions.dimensions()) + biases_map(kernel_index);
 */
     }
 }
@@ -102,80 +105,6 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
         : calculate_activations(activation_function, outputs, empty_4);
 }
 
-/*
-void Convolutional::back_propagate(const vector<TensorView>& input_views,
-                                   const vector<TensorView>& delta_views,
-                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
-                                   unique_ptr<LayerBackPropagation>& back_propagation) const
-{
-    // --- 1. SETUP ---
-    const TensorMap4 inputs = tensor_map<4>(input_views[0]);
-    TensorMap4 deltas = tensor_map<4>(delta_views[0]);
-
-    const ConvolutionalForwardPropagation* this_forward_propagation =
-        static_cast<const ConvolutionalForwardPropagation*>(forward_propagation.get());
-
-    ConvolutionalBackPropagation* convolutional_back_propagation =
-        static_cast<ConvolutionalBackPropagation*>(back_propagation.get());
-
-    const Tensor4& preprocessed_inputs = this_forward_propagation->preprocessed_inputs;
-    const Tensor4& activation_derivatives = this_forward_propagation->activation_derivatives;
-
-    Tensor1& bias_deltas = convolutional_back_propagation->bias_deltas;
-    Tensor4& weight_deltas = convolutional_back_propagation->weight_deltas;
-    Tensor4& input_deltas = convolutional_back_propagation->input_deltas;
-
-    const Index batch_size = inputs.dimension(0);
-
-    // --- 2. APPLY ACTIVATION DERIVATIVE ---
-    deltas.device(*device) = deltas * activation_derivatives;
-
-    // --- 3. CALCULATE BIAS GRADIENTS ---
-    bias_deltas.device(*device) = deltas.sum(array<Index, 3>({0, 1, 2}));
-
-    // --- 4. CALCULATE WEIGHT GRADIENTS (REFACTORED) ---
-    const array<Index, 2> deltas_matrix_dims = {
-        batch_size * get_output_height() * get_output_width(),
-        get_kernels_number()
-    };
-    Tensor2 deltas_as_matrix = deltas.reshape(deltas_matrix_dims);
-
-    Tensor2 patches_as_matrix = preprocessed_inputs.extract_image_patches(
-                                                               get_kernel_height(), get_kernel_width(),
-                                                               row_stride, column_stride,
-                                                               1, 1,
-                                                               Eigen::PADDING_VALID
-                                                               ).reshape(
-                                                array<Index, 2>{
-                                                    batch_size * get_output_height() * get_output_width(),
-                                                    get_kernel_height() * get_kernel_width() * get_input_channels()
-                                                }
-                                                );
-
-    const array<IndexPair<Index>, 1> contract_axes = { IndexPair<Index>(0, 0) };
-    Tensor2 weight_deltas_matrix = patches_as_matrix.contract(deltas_as_matrix, contract_axes);
-
-    convolutional_back_propagation->weight_deltas = weight_deltas_matrix.reshape(
-        array<Index, 4>{get_kernel_height(), get_kernel_width(), get_input_channels(), get_kernels_number()}
-        );
-
-    // --- 5. CALCULATE INPUT GRADIENTS (REFACTORED) ---
-    const array<bool, 4> reverse_spatial_dims = {true, true, false, false};
-    const array<int, 4>  shuffle_channel_dims = {0, 1, 3, 2};
-    Tensor4 weights_transformed = weights.reverse(reverse_spatial_dims).shuffle(shuffle_channel_dims);
-
-    const array<pair<Index, Index>, 4> full_paddings = {
-        make_pair(0, 0),
-        make_pair(get_kernel_height() - 1, get_kernel_height() - 1),
-        make_pair(get_kernel_width() - 1, get_kernel_width() - 1),
-        make_pair(0, 0)
-    };
-    Tensor4 padded_deltas = deltas.pad(full_paddings);
-
-    const array<Index, 3> convolution_axes = {1, 2, 3};
-    input_deltas.device(*device) = padded_deltas.convolve(weights_transformed, convolution_axes);
-}
-*/
 
 void Convolutional::back_propagate(const vector<TensorView>& input_views,
                                    const vector<TensorView>& delta_views,
@@ -213,9 +142,9 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     ConvolutionalBackPropagation* convolutional_back_propagation =
         static_cast<ConvolutionalBackPropagation*>(back_propagation.get());
 
-    Tensor1& bias_deltas = convolutional_back_propagation->bias_deltas;
+    TensorMap1 bias_deltas = tensor_map<1>(convolutional_back_propagation->bias_deltas);
 
-    type* weight_deltas_data = convolutional_back_propagation->weight_deltas.data();
+    type* weight_deltas_data = convolutional_back_propagation->weight_deltas.data;
 
     Tensor4& rotated_weights = convolutional_back_propagation->rotated_weights;
 
@@ -239,15 +168,9 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 
     preprocess_inputs(inputs, preprocessed_inputs);
 
-    // Convolution deltas
-
     deltas.device(*device) = deltas*activation_derivatives;
 
-    // Biases derivatives
-
     bias_deltas.device(*device) = deltas.sum(array<Index, 3>({0, 1, 2}));
-
-    // Weigth derivatives
 
 #pragma omp parallel for
     for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
@@ -264,6 +187,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 /*
     rotated_weights.device(*device) = weights.reverse(array<Index, 4>({1, 1, 0, 0}));
 */
+
 #pragma omp parallel for //schedule(static)
     for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
     {
@@ -306,19 +230,16 @@ const string& Convolutional::get_activation_function() const
 
 Index Convolutional::get_output_height() const
 {
-    if (convolution_type == "Same")
-        return (get_input_height() + get_row_stride() - 1) / get_row_stride();
-    else
-        return (get_input_height() - get_kernel_height()) / get_row_stride() + 1;
-}
+    return (convolution_type == "Same")
+        ? (get_input_height() + get_row_stride() - 1) / get_row_stride()
+        : (get_input_height() - get_kernel_height()) / get_row_stride() + 1;}
 
 
 Index Convolutional::get_output_width() const
 {
-    if (convolution_type == "Same")
-        return (get_input_width() + get_column_stride() - 1) / get_column_stride();
-    else
-        return (get_input_width() - get_kernel_width()) / get_column_stride() + 1;
+    return (convolution_type == "Same")
+        ? (get_input_width() + get_column_stride() - 1) / get_column_stride()
+        : (get_input_width() - get_kernel_width()) / get_column_stride() + 1;
 }
 
 
@@ -354,37 +275,26 @@ Index Convolutional::get_row_stride() const
 
 Index Convolutional::get_kernel_height() const
 {
-/*
-    return weights.dimension(0);
-*/
-    return 0;
+    return weights.dims[0];
 }
 
 
 Index Convolutional::get_kernel_width() const
 {
-/*
-    return weights.dimension(1);
-*/
-    return 0;
+    return weights.dims[1];
 }
 
 
 Index Convolutional::get_kernel_channels() const
 {
-/*
-    return weights.dimension(2);
-*/
-    return 0;
+    return weights.dims[2];
 }
 
 
 Index Convolutional::get_kernels_number() const
 {
-/*
-    return weights.dimension(3);
-*/
-    return 0;
+
+    return weights.dims[3];
 }
 
 
@@ -463,13 +373,13 @@ void Convolutional::set(const dimensions& new_input_dimensions,
     set_activation_function(new_activation_function);
 
     set_convolution_type(new_convolution_type);
-/*
-    biases.resize(kernels_number);
-    weights.resize(kernel_height, kernel_width, kernel_channels, kernels_number);
-*/
-    set_parameters_random();
 
-    set_batch_normalization(new_batch_normalization);
+    biases.dims = {kernels_number};
+    weights.dims = {kernel_height, kernel_width, kernel_channels, kernels_number};
+/*
+    set_parameters_random();
+*/
+    batch_normalization = new_batch_normalization;
 
     if (batch_normalization)
     {
@@ -477,10 +387,11 @@ void Convolutional::set(const dimensions& new_input_dimensions,
         moving_means.setZero();
         moving_standard_deviations.resize(kernels_number);
         moving_standard_deviations.setZero();
+
+        scales.dims = {kernels_number};
+        offsets.dims = {kernels_number};
 /*
-        scales.resize(kernels_number);
         scales.setConstant(1.0);
-        offsets.resize(kernels_number);
         offsets.setZero();
 */
     }
@@ -656,17 +567,16 @@ Index Convolutional::get_input_channels() const
 
 void Convolutional::print() const
 {
-/*
+
     cout << "Convolutional layer" << endl
          << "Input dimensions: " << input_dimensions << endl
          << "Output dimensions: " << get_output_dimensions() << endl
-         << "Biases dimensions: " << biases.dimensions() << endl
-         << "Weights dimensions: " << weights.dimensions() << endl
+         << "Biases dimensions: " << biases.dims << endl
+         << "Weights dimensions: " << weights.dims << endl
          << "biases:" << endl;
     //cout << biases << endl;
     cout << "Weights:" << endl;
     //cout << weights << endl;
-*/
 }
 
 
@@ -692,8 +602,6 @@ void Convolutional::to_XML(XMLPrinter& printer) const
         add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
         add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
     }
-    add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
-    add_xml_element(printer, "Weights", tensor_to_string<type, 4>(weights));
 */
     printer.CloseElement();
 }
@@ -745,9 +653,6 @@ void Convolutional::from_XML(const XMLDocument& document)
         string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "MovingMeans"), moving_means);
         string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
     }
-
-    string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "Biases"), biases);
-    string_to_tensor<type, 4>(read_xml_string(convolutional_layer_element, "Weights"), weights);
 */
 }
 
@@ -838,12 +743,9 @@ void ConvolutionalBackPropagation::initialize()
     const Index kernel_channels = convolutional_layer->get_kernel_channels();
     const Index kernels_number = convolutional_layer->get_kernels_number();
 
-    bias_deltas.resize(kernels_number);
+    bias_deltas.dims = {kernels_number};
 
-    weight_deltas.resize(kernels_number,
-                         kernel_height,
-                         kernel_width,
-                         kernel_channels);
+    weight_deltas.dims = {kernels_number, kernel_height, kernel_width, kernel_channels};
 
     rotated_weights.resize(kernel_height,
                            kernel_width,
@@ -859,8 +761,8 @@ void ConvolutionalBackPropagation::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        bn_scale_deltas.resize(kernels_number);
-        bn_offset_deltas.resize(kernels_number);
+        bn_scale_deltas.dims = {kernels_number};
+        bn_offset_deltas.dims = {kernels_number};
     }
 }
 
@@ -879,33 +781,31 @@ vector<TensorView> ConvolutionalBackPropagation::get_input_derivative_views() co
 }
 
 
-vector<ParameterView> ConvolutionalBackPropagation::get_gradient_views() const
+vector<TensorView*> ConvolutionalBackPropagation::get_gradient_views()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 
-    vector<ParameterView> delta_views =
-        {
-            {const_cast<type*>(bias_deltas.data()), bias_deltas.size()},
-            {const_cast<type*>(weight_deltas.data()), weight_deltas.size()}
-        };
+    vector<TensorView*> gradient_views = {&bias_deltas, &weight_deltas};
 
     if (convolutional_layer->get_batch_normalization())
     {
-        delta_views.push_back({ const_cast<type*>(bn_scale_deltas.data()), bn_scale_deltas.size() });
-        delta_views.push_back({ const_cast<type*>(bn_offset_deltas.data()), bn_offset_deltas.size() });
+        gradient_views.push_back(&bn_scale_deltas);
+        gradient_views.push_back(&bn_offset_deltas);
     }
 
-    return delta_views;
+    return gradient_views;
 }
 
 
 void ConvolutionalBackPropagation::print() const
 {
+/*
     cout << "Convolutional layer back propagation" << endl
          << "Biases derivatives:\n" << endl
          << bias_deltas << endl
          << "Synaptic weights derivatives:\n" << endl
          << weight_deltas << endl;
+*/
 }
 
 

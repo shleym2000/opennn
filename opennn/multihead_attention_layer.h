@@ -132,7 +132,7 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_gradient_views() const override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 
@@ -146,16 +146,16 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
     Tensor4 key_deltas;
     Tensor4 value_deltas;
 
-    Tensor2 query_weight_deltas;
-    Tensor2 key_weight_deltas;
-    Tensor2 value_weight_deltas;
+    TensorView query_weight_deltas;
+    TensorView key_weight_deltas;
+    TensorView value_weight_deltas;
 
-    Tensor2 projection_weight_deltas;
+    TensorView projection_weight_deltas;
 
-    Tensor1 query_bias_deltas;
-    Tensor1 key_bias_deltas;
-    Tensor1 value_bias_deltas;
-    Tensor1 projection_bias_deltas;
+    TensorView query_bias_deltas;
+    TensorView key_bias_deltas;
+    TensorView value_bias_deltas;
+    TensorView projection_bias_deltas;
 
     Tensor1 aux_rows;
 

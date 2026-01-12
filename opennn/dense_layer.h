@@ -14,6 +14,8 @@
 namespace opennn
 {
 
+template<int Rank> class Dense;
+
 template<int Rank>
 struct DenseForwardPropagation final : LayerForwardPropagation
 {
@@ -47,45 +49,24 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_gradient_views() const override
+    vector<TensorView*> get_gradient_views() override
     {
-/*
-        const auto* dense_layer = static_cast<const Dense*>(layer);
+        vector<TensorView*> gradient_views = {&bias_deltas, &weight_deltas};
 
-        vector<ParameterView> delta_views =
-            {{const_cast<type*>(bias_deltas.data()), bias_deltas.size()},
-             {const_cast<type*>(weight_deltas.data()), weight_deltas.size()}};
+        const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
 
         if (dense_layer->get_batch_normalization())
         {
-            delta_views.push_back({ const_cast<type*>(bn_scale_deltas.data()), bn_scale_deltas.size() });
-            delta_views.push_back({ const_cast<type*>(bn_offset_deltas.data()), bn_offset_deltas.size() });
+            gradient_views.push_back(&bn_scale_deltas);
+            gradient_views.push_back(&bn_offset_deltas);
         }
 
-        return delta_views;
-*/
-        return vector<ParameterView>();
+        return gradient_views;
     }
 
     void initialize() override;
 
     void print() const override;
-
-    type* link_gradients(type* ptr)
-    {        
-        weight_deltas.data = ptr;
-        ptr += weight_deltas.size();
-
-//        size_t address = reinterpret_cast<size_t>(ptr);
-//        if (address % 64 != 0) {
-//            ptr += (16 - ((address / sizeof(type)) % 16));
-//        }
-
-        bias_deltas.data = ptr;
-        ptr += bias_deltas.size();
-
-        return ptr;
-    }
 
     TensorView input_deltas;
 
@@ -116,6 +97,7 @@ struct Dense2dBackPropagationLM final : LayerBackPropagationLM
 
 struct Dense2dForwardPropagationLM;
 */
+
 
 template<int Rank>
 class Dense final : public Layer
@@ -318,10 +300,30 @@ public:
 #endif
     }
 
-    void set_dropout_rate(const type&);
+    void set_dropout_rate(const type& new_dropout_rate)
+    {
+        if (new_dropout_rate < type(0) || new_dropout_rate >= type(1))
+            throw runtime_error("Dropout rate must be in [0,1).");
 
-    void normalization(Tensor1&, Tensor1&, const Tensor2&, Tensor2&) const;
+        dropout_rate = new_dropout_rate;
+    }
+/*
+    void normalization(Tensor1& means, Tensor1& standard_deviations, const Tensor2& inputs, Tensor2& outputs) const
+    {
+        const array<Index, 2> rows({outputs.dimension(0), 1});
 
+        const array<int, 1> axis_x({0});
+
+        means.device(*device) = outputs.mean(axis_x);
+
+        standard_deviations.device(*device)
+            = (outputs - means.broadcast(rows)).square().mean(axis_x).sqrt();
+
+        outputs = inputs;// -means.broadcast(array<Index, 2>({ outputs.dimension(0), 1 }));
+            //shifts.broadcast(rows);
+            //+ (outputs - means.broadcast(rows))*scales.broadcast(rows)/standard_deviations.broadcast(rows);
+    }
+*/
     void set_batch_normalization(const bool& new_batch_normalization)
     {
         batch_normalization = new_batch_normalization;
@@ -603,9 +605,6 @@ public:
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), moving_means);
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
         }
-
-        string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Biases"), biases);
-        string_to_tensor<type, 2>(read_xml_string(dense2d_layer_element, "Weights"), weights);
 */
     }
 
@@ -626,9 +625,6 @@ public:
             add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
             add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
         }
-
-        add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
-        add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
 */
         printer.CloseElement();
     }

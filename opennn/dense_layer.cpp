@@ -514,9 +514,6 @@ void Dense::from_XML(const XMLDocument& document)
         string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), moving_means);
         string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
     }
-
-    string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Biases"), biases);
-    string_to_tensor<type, 2>(read_xml_string(dense2d_layer_element, "Weights"), weights);
 }
 
 
@@ -536,8 +533,6 @@ void Dense::to_XML(XMLPrinter& printer) const
         add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
         add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
     }
-    add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
-    add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
 
     printer.CloseElement();
 }

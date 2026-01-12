@@ -124,13 +124,13 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_gradient_views() const override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor2 weight_deltas;
+    TensorView weight_deltas;
 };
 
 #ifdef OPENNN_CUDA
