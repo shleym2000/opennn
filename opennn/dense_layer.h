@@ -165,8 +165,8 @@ public:
              const bool& new_batch_normalization = false,
              const string& new_label = "dense_layer")
     {
-        if (new_input_dimensions.size() != 1)
-            throw runtime_error("Input dimensions size is not 1");
+        if (new_input_dimensions.size() != Rank - 1)
+            throw runtime_error("Input dimensions size must be " + to_string(Rank - 1));
 
         if (new_output_dimensions.size() != 1)
             throw runtime_error("Output dimensions size is not 1");
@@ -199,7 +199,7 @@ public:
 
         set_label(new_label);
 
-        name = "Dense";
+        name = "Dense" + to_string(Rank) + "d";
 
 #ifdef OPENNN_CUDA
 
