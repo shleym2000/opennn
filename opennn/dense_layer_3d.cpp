@@ -83,8 +83,6 @@ void Dense3d::set(const Index& new_sequence_length,
 
     weights.resize(new_input_dimension, new_output_dimension);
 
-    set_parameters_glorot();
-
     set_activation_function(new_activation_function);
 
     label = new_label;

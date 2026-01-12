@@ -166,8 +166,6 @@ public:
         biases.dims = { new_output_dimensions[0] };
         weights.dims = { new_input_dimensions[0], new_output_dimensions[0] };
 
-        set_parameters_random();
-
         set_activation_function(new_activation_function);
 
         set_batch_normalization(new_batch_normalization);

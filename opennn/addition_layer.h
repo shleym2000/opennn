@@ -71,10 +71,7 @@ public:
         const TensorMap<Tensor<type, Rank>> input_1 = tensor_map<Rank>(input_views[0]);
         const TensorMap<Tensor<type, Rank>> input_2 = tensor_map<Rank>(input_views[1]);
 
-        AdditionForwardPropagation<Rank>* this_forward_propagation =
-            static_cast<AdditionForwardPropagation<Rank>*>(layer_forward_propagation.get());
-
-        Tensor<type, Rank>& outputs = this_forward_propagation->outputs;
+        TensorMap<Tensor<type, Rank>> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
         outputs.device(*device) = input_1 + input_2;
 
     }
@@ -89,11 +86,11 @@ public:
 
         const TensorMap<Tensor<type, Rank>> deltas = tensor_map<Rank>(delta_views[0]);
 
-        AdditionBackPropagation<Rank>* this_back_propagation =
-            static_cast<AdditionBackPropagation<Rank>*>(back_propagation.get());
+        TensorMap<Tensor<type, Rank>> input_deltas_0 = tensor_map<Rank>(back_propagation->input_deltas[0]);
+        TensorMap<Tensor<type, Rank>> input_deltas_1 = tensor_map<Rank>(back_propagation->input_deltas[1]);
 
-        this_back_propagation->input_1_derivatives.device(*device) = deltas;
-        this_back_propagation->input_2_derivatives.device(*device) = deltas;
+        input_deltas_0.device(*device) = deltas;
+        input_deltas_1.device(*device) = deltas;
     }
 
     void from_XML(const XMLDocument& document) override
@@ -180,13 +177,13 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
 
-        DSizes<Index, Rank+1> full_dimensions;   // Rank+1 to include batch
+        dimensions full_dimensions(Rank+1);   // Rank+1 to include batch
         full_dimensions[0] = batch_size;
 
         for (int i = 0; i < Rank; ++i)
             full_dimensions[i+1] = output_dimensions[i];
 
-        outputs.resize(full_dimensions);
+        outputs.dims = full_dimensions;
     }
 
 
@@ -194,8 +191,6 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
     {
         // @todo
     }
-
-    Tensor<type, Rank> outputs;
 };
 
 
@@ -225,8 +220,6 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
     }
 
-    Tensor<type, Rank> input_1_derivatives;
-    Tensor<type, Rank> input_2_derivatives;
 };
 
 

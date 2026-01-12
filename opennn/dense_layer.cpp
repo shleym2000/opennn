@@ -104,8 +104,6 @@ void Dense::set(const dimensions& new_input_dimensions,
     biases.resize(new_output_dimensions[0]);
     weights.resize(new_input_dimensions[0], new_output_dimensions[0]);
 
-    set_parameters_random();
-
     set_activation_function(new_activation_function);
 
     set_batch_normalization(new_batch_normalization);

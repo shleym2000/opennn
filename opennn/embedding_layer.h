@@ -37,12 +37,13 @@ public:
              const Index& = 0,
              const string & = "embedding_layer");
 
-    void set_scale_embedding(const bool& new_scale_embedding);
-    void set_add_positional_encoding(const bool& new_add_positional_encoding);
+    void set_scale_embedding(const bool&);
+    void set_add_positional_encoding(const bool&);
 
     void set_dropout_rate(const type&);
 
     void set_parameters_random() override;
+    void set_parameters_glorot() override;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,

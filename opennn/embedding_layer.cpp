@@ -70,7 +70,6 @@ void Embedding::set(const Index& new_vocabulary_size,
     label = new_label;
 
     weights.dims = {new_vocabulary_size, new_embedding_dimension};
-    set_parameters_random();
 
     positional_encoding.resize(sequence_length, new_embedding_dimension);
     positional_encoding.setZero();
@@ -86,13 +85,13 @@ void Embedding::set(const Index& new_vocabulary_size,
                 : cos(i / pow(10000, (j - Index(half_depth)) / half_depth));
 }
 
-void Embedding::set_scale_embedding(const bool &new_scale_embedding)
+void Embedding::set_scale_embedding(const bool& new_scale_embedding)
 {
     scale_embedding = new_scale_embedding;
 }
 
 
-void Embedding::set_add_positional_encoding(const bool &new_add_positional_encoding)
+void Embedding::set_add_positional_encoding(const bool& new_add_positional_encoding)
 {
     add_positional_encoding = new_add_positional_encoding;
 }
@@ -112,7 +111,19 @@ void Embedding::set_parameters_random()
 
     weights_map.setRandom();
     weights_map.chip(0, 0).setZero(); // First row is padding
+}
 
+
+void Embedding::set_parameters_glorot()
+{
+    if(weights.size() == 0) return;
+
+    // @todo
+
+    TensorMap2 weights_map = tensor_map<2>(weights);
+
+    weights_map.setRandom();
+    weights_map.chip(0, 0).setZero(); // First row is padding
 }
 
 
@@ -132,8 +143,10 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
     if (outputs.dimension(0) != batch_size)
         throw runtime_error("Batch size mismatch between inputs and outputs: inputs.dimension(0) = "
                             + to_string(batch_size) + ", outputs.dimension(0) = " + to_string(outputs.dimension(0)));
-/*
-#pragma omp parallel for
+
+    const TensorMap2 weights_map = tensor_map<2>(weights);
+
+    #pragma omp parallel for
     for (Index sample_index = 0; sample_index < batch_size; sample_index++)
     {
         auto sample_output = outputs.chip(sample_index, 0);
@@ -145,14 +158,14 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
             if (token_id < 0 || token_id >= weights.dims[0])
                 throw runtime_error("Invalid token_id \n");
 
-            const auto embedding = weights.chip(token_id, 0);
+            const auto embedding = weights_map.chip(token_id, 0);
 
             scale_embedding
                 ? sample_output.chip(word_index, 0) = embedding*coefficient
                 : sample_output.chip(word_index, 0) = embedding;
         }
     }
-*/
+
     if(add_positional_encoding)
         outputs.device(*device) += positional_encoding
                                   .reshape(array_3(1, sequence_length, embedding_dimension))
@@ -191,8 +204,7 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
     if(scale_embedding)
         deltas.device(*device) = deltas*sqrt(type(embedding_dimension));
 
-#pragma omp parallel for
-
+    #pragma omp parallel for
     for(Index sample_index = 0; sample_index < batch_size; sample_index++)
     {
         auto sample_deltas = deltas.chip(sample_index, 0);
@@ -219,8 +231,8 @@ void Embedding::print() const
          << "Dropout rate: " << dropout_rate << endl
          << "Weights dimensions: " << weights.dims << endl;
 
-    //cout << "Weights:\n " << weights << endl;
-    //cout << "Positional encoding:\n" << positional_encoding << endl;
+    cout << "Weights:\n " << weights.dims << endl;
+    cout << "Positional encoding:\n" << positional_encoding << endl;
 }
 
 
@@ -237,9 +249,6 @@ void Embedding::from_XML(const XMLDocument& document)
     const Index new_embedding_dimension = read_xml_index(embedding_layer_element, "EmbeddingSize");
 
     set(new_vocabulary_size, new_sequence_length, new_embedding_dimension, new_name);
-/*
-    string_to_tensor<type, 2>(read_xml_string(embedding_layer_element, "Weights"), weights);
-*/
 }
 
 
@@ -251,9 +260,7 @@ void Embedding::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "VocabularySize", to_string(get_vocabulary_size()));
     add_xml_element(printer, "SequenceLength", to_string(get_sequence_length()));
     add_xml_element(printer, "EmbeddingSize", to_string(get_embedding_dimension()));
-/*
-    add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
-*/
+
     printer.CloseElement();
 }
 
@@ -270,7 +277,6 @@ void EmbeddingForwardPropagation::initialize()
     const Embedding* embedding_layer = static_cast<Embedding*>(layer);
 
     const Index sequence_length = embedding_layer->get_sequence_length();
-
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
 
     outputs.dims = {batch_size, sequence_length, embedding_dimension};
@@ -279,7 +285,7 @@ void EmbeddingForwardPropagation::initialize()
 
 void EmbeddingForwardPropagation::print() const
 {
-    cout << "Outputs dimensions:" << endl;
+    cout << "Output dimensions:" << endl;
     //       cout << output_dimensions << endl;
     cout << "Outputs:" << endl;
     //       cout << TensorMap<Tensor<type,3>>(outputs_data, output_dimensions(0), output_dimensions(1), output_dimensions(2)) << endl;

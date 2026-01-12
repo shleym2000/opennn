@@ -377,9 +377,7 @@ void Convolutional::set(const dimensions& new_input_dimensions,
 
     biases.dims = {kernels_number};
     weights.dims = {kernel_height, kernel_width, kernel_channels, kernels_number};
-/*
-    set_parameters_random();
-*/
+
     batch_normalization = new_batch_normalization;
 
     if (batch_normalization)

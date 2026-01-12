@@ -58,8 +58,6 @@ void Recurrent::set(const dimensions& new_input_dimensions, const dimensions& ne
 
     recurrent_weights.dims = {outputs_number, outputs_number};
 
-    //set_parameters_random();
-
     label = "recurrent_layer";
 
     name = "Recurrent";
@@ -329,6 +327,7 @@ void Recurrent::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
     add_xml_element(printer, "Activation", activation_function);
+
     printer.CloseElement();
 }
 
@@ -355,9 +354,7 @@ void RecurrentForwardPropagation::initialize()
     activation_derivatives.resize(batch_size, past_time_steps, outputs_number);
 
     outputs.dims = {batch_size, outputs_number};
-/*
-    outputs.setZero();
-*/
+
     hidden_states.resize(batch_size, past_time_steps, outputs_number);
 
     hidden_states.setZero();
