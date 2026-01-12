@@ -101,4 +101,4 @@ int main()
 // Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software Foundation.
-// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA), language_dataset.get_target_dimensions(), Dense2d::Activation::Logistic));
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA), language_dataset.get_target_dimensions(), Dense::Activation::Logistic));

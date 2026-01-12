@@ -13,7 +13,7 @@
 namespace opennn
 {
 /*
-Dense2d::Dense2d(const dimensions& new_input_dimensions,
+Dense::Dense(const dimensions& new_input_dimensions,
                  const dimensions& new_output_dimensions,
                  const string& new_activation_function,
                  const bool& new_batch_normalization,
@@ -23,19 +23,19 @@ Dense2d::Dense2d(const dimensions& new_input_dimensions,
 }
 
 
-dimensions Dense2d::get_input_dimensions() const
+dimensions Dense::get_input_dimensions() const
 {
     return { weights.dimension(0) };
 }
 
 
-dimensions Dense2d::get_output_dimensions() const
+dimensions Dense::get_output_dimensions() const
 {
     return { biases.size() };
 }
 
 
-vector<ParameterView> Dense2d::get_parameter_views() const
+vector<ParameterView> Dense::get_parameter_views() const
 {
     vector<ParameterView> parameter_views =
         {{(type*)(biases.data()), biases.size()},
@@ -51,7 +51,7 @@ vector<ParameterView> Dense2d::get_parameter_views() const
 }
 
 
-void Dense2d::set_dropout_rate(const type& new_dropout_rate)
+void Dense::set_dropout_rate(const type& new_dropout_rate)
 {
     if (new_dropout_rate < type(0) || new_dropout_rate >= type(1))
         throw runtime_error("Dropout rate must be in [0,1).");
@@ -60,35 +60,35 @@ void Dense2d::set_dropout_rate(const type& new_dropout_rate)
 }
 
 
-type Dense2d::get_dropout_rate() const
+type Dense::get_dropout_rate() const
 {
     return dropout_rate;
 }
 
 
-bool Dense2d::get_batch_normalization() const
+bool Dense::get_batch_normalization() const
 {
     return batch_normalization;
 }
 
-Tensor1 Dense2d::get_scales() const
+Tensor1 Dense::get_scales() const
 {
     return scales;
 }
 
-Tensor1 Dense2d::get_offsets() const
+Tensor1 Dense::get_offsets() const
 {
     return offsets;
 }
 
 
-const string& Dense2d::get_activation_function() const
+const string& Dense::get_activation_function() const
 {
     return activation_function;
 }
 
 
-void Dense2d::set(const dimensions& new_input_dimensions,
+void Dense::set(const dimensions& new_input_dimensions,
                   const dimensions& new_output_dimensions,
                   const string& new_activation_function,
                   const bool& new_batch_normalization,
@@ -128,7 +128,7 @@ void Dense2d::set(const dimensions& new_input_dimensions,
 
     set_label(new_label);
 
-    name = "Dense2d";
+    name = "Dense";
 
 #ifdef OPENNN_CUDA
 
@@ -146,7 +146,7 @@ void Dense2d::set(const dimensions& new_input_dimensions,
 }
 
 
-void Dense2d::set_input_dimensions(const dimensions& new_input_dimensions)
+void Dense::set_input_dimensions(const dimensions& new_input_dimensions)
 {
     const Index inputs_number = new_input_dimensions[0];
     const Index outputs_number = get_outputs_number();
@@ -157,7 +157,7 @@ void Dense2d::set_input_dimensions(const dimensions& new_input_dimensions)
 }
 
 
-void Dense2d::set_output_dimensions(const dimensions& new_output_dimensions)
+void Dense::set_output_dimensions(const dimensions& new_output_dimensions)
 {
     const Index inputs_number = get_inputs_number();
     const Index neurons_number = new_output_dimensions[0];
@@ -168,13 +168,13 @@ void Dense2d::set_output_dimensions(const dimensions& new_output_dimensions)
 }
 
 
-void Dense2d::set_batch_normalization(const bool& new_batch_normalization)
+void Dense::set_batch_normalization(const bool& new_batch_normalization)
 {
     batch_normalization = new_batch_normalization;
 }
 
 
-void Dense2d::set_activation_function(const string& new_activation_function)
+void Dense::set_activation_function(const string& new_activation_function)
 {
     if(new_activation_function == "Logistic"
         || new_activation_function == "HyperbolicTangent"
@@ -240,7 +240,7 @@ void Dense2d::set_activation_function(const string& new_activation_function)
 }
 
 
-void Dense2d::apply_batch_normalization_backward(TensorMap2& deltas,
+void Dense::apply_batch_normalization_backward(TensorMap2& deltas,
                                                  unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                  unique_ptr<LayerBackPropagation>& back_propagation) const
 {
@@ -278,7 +278,7 @@ void Dense2d::apply_batch_normalization_backward(TensorMap2& deltas,
 }
 
 
-void Dense2d::forward_propagate(const vector<TensorView>& input_views,
+void Dense::forward_propagate(const vector<TensorView>& input_views,
                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                 const bool& is_training)
 {
@@ -312,7 +312,7 @@ void Dense2d::forward_propagate(const vector<TensorView>& input_views,
 }
 
 
-void Dense2d::back_propagate(const vector<TensorView>& input_views,
+void Dense::back_propagate(const vector<TensorView>& input_views,
                              const vector<TensorView>& delta_views,
                              unique_ptr<LayerForwardPropagation>& forward_propagation,
                              unique_ptr<LayerBackPropagation>& back_propagation) const
@@ -355,7 +355,7 @@ void Dense2d::back_propagate(const vector<TensorView>& input_views,
 }
 
 
-void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
+void Dense::back_propagate_lm(const vector<TensorView>& input_views,
                                 const vector<TensorView>& delta_views,
                                 unique_ptr<LayerForwardPropagation>& forward_propagation,
                                 unique_ptr<LayerBackPropagationLM>& back_propagation) const
@@ -417,7 +417,7 @@ void Dense2d::back_propagate_lm(const vector<TensorView>& input_views,
 }
 
 
-void Dense2d::insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
+void Dense::insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
                                                 const Index& index,
                                                 Tensor2& squared_errors_Jacobian) const
 {
@@ -435,7 +435,7 @@ void Dense2d::insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationL
 }
 
 
-string Dense2d::get_expression(const vector<string>& new_feature_names,
+string Dense::get_expression(const vector<string>& new_feature_names,
                                const vector<string>& new_output_names) const
 {
     const vector<string> feature_names = new_feature_names.empty()
@@ -467,9 +467,9 @@ string Dense2d::get_expression(const vector<string>& new_feature_names,
 }
 
 
-void Dense2d::print() const
+void Dense::print() const
 {
-    cout << "Dense2d layer" << endl
+    cout << "Dense layer" << endl
          << "Input dimensions: " << get_input_dimensions()[0] << endl
          << "Output dimensions: " << get_output_dimensions()[0] << endl
          << "Biases dimensions: " << biases.dimensions() << endl
@@ -480,12 +480,12 @@ void Dense2d::print() const
 }
 
 
-void Dense2d::from_XML(const XMLDocument& document)
+void Dense::from_XML(const XMLDocument& document)
 {
-    const XMLElement* dense2d_layer_element = document.FirstChildElement("Dense2d");
+    const XMLElement* dense2d_layer_element = document.FirstChildElement("Dense");
 
     if(!dense2d_layer_element)
-        throw runtime_error("Dense2d element is nullptr.\n");
+        throw runtime_error("Dense element is nullptr.\n");
 
     set_label(read_xml_string(dense2d_layer_element, "Label"));
 
@@ -520,9 +520,9 @@ void Dense2d::from_XML(const XMLDocument& document)
 }
 
 
-void Dense2d::to_XML(XMLPrinter& printer) const
+void Dense::to_XML(XMLPrinter& printer) const
 {
-    printer.OpenElement("Dense2d");
+    printer.OpenElement("Dense");
 
     add_xml_element(printer, "Label", label);
     add_xml_element(printer, "InputsNumber", to_string(get_input_dimensions()[0]));
@@ -553,7 +553,7 @@ void DenseForwardPropagation<2>::initialize()
 
     activation_derivatives.setConstant((type)NAN);
 
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
 
     if (dense_layer->get_batch_normalization())
     {
@@ -608,7 +608,7 @@ void DenseBackPropagation<2>::initialize()
 
     input_deltas.resize(batch_size, inputs_number);
 
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
 
     if (dense_layer->get_batch_normalization())
     {
@@ -631,7 +631,7 @@ vector<TensorView> DenseBackPropagation<2>::get_input_derivative_views() const
 
 vector<ParameterView> DenseBackPropagation<2>::get_parameter_delta_views() const
 {
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
 
     vector<ParameterView> delta_views =
         {{const_cast<type*>(bias_deltas.data()), bias_deltas.size()},
@@ -696,7 +696,7 @@ void Dense2dBackPropagationLM::print() const
 }
 
 
-void Dense2d::normalization(Tensor1 &means,
+void Dense::normalization(Tensor1 &means,
                             Tensor1 &standard_deviations,
                             const Tensor2 &inputs,
                             Tensor2 &outputs) const
@@ -718,11 +718,11 @@ void Dense2d::normalization(Tensor1 &means,
 
 #ifdef OPENNN_CUDA
 
-void Dense2d::forward_propagate_cuda(const vector<float*>& inputs_device,
+void Dense::forward_propagate_cuda(const vector<float*>& inputs_device,
                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                      const bool& is_training)
 {
-    // Dense2d layer
+    // Dense layer
 
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
@@ -768,7 +768,7 @@ void Dense2d::forward_propagate_cuda(const vector<float*>& inputs_device,
                                           outputs_buffer);
 
     if (status != CUDNN_STATUS_SUCCESS)
-        cerr << "Dense2d CUDA: cudnnAddTensor failed. Error: " << cudnnGetErrorString(status) << endl;
+        cerr << "Dense CUDA: cudnnAddTensor failed. Error: " << cudnnGetErrorString(status) << endl;
 
     // Batch Normalization
 
@@ -864,12 +864,12 @@ void Dense2d::forward_propagate_cuda(const vector<float*>& inputs_device,
 }
 
 
-void Dense2d::back_propagate_cuda(const vector<float*>& inputs_device,
+void Dense::back_propagate_cuda(const vector<float*>& inputs_device,
                                   const vector<float*>& deltas_device,
                                   unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                   unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
 {
-    // Dense2d layer
+    // Dense layer
 
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
@@ -879,7 +879,7 @@ void Dense2d::back_propagate_cuda(const vector<float*>& inputs_device,
     DenseForwardPropagation<2>Cuda* dense2d_layer_forward_propagation_cuda =
         static_cast<DenseForwardPropagation<2>Cuda*>(forward_propagation_cuda.get());
 
-    Dense2d* dense2d_layer = static_cast<Dense2d*>(dense2d_layer_forward_propagation_cuda->layer);
+    Dense* dense2d_layer = static_cast<Dense*>(dense2d_layer_forward_propagation_cuda->layer);
 
     const Index batch_size = dense2d_layer_forward_propagation_cuda->batch_size;
 
@@ -1032,7 +1032,7 @@ void Dense2d::back_propagate_cuda(const vector<float*>& inputs_device,
 }
 
 
-vector<ParameterView> Dense2d::get_parameter_views_device() const
+vector<ParameterView> Dense::get_parameter_views_device() const
 {
     vector<ParameterView> parameter_views =
         {
@@ -1050,7 +1050,7 @@ vector<ParameterView> Dense2d::get_parameter_views_device() const
 }
 
 
-void Dense2d::allocate_parameters_device()
+void Dense::allocate_parameters_device()
 {
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
@@ -1077,7 +1077,7 @@ void Dense2d::allocate_parameters_device()
 }
 
 
-void Dense2d::free_parameters_device()
+void Dense::free_parameters_device()
 {
     cudaFree(biases_device);
     cudaFree(weights_device);
@@ -1103,7 +1103,7 @@ void Dense2d::free_parameters_device()
 }
 
 
-void Dense2d::copy_parameters_device()
+void Dense::copy_parameters_device()
 {
     if (!biases_device) cout << "Biases device is null" << endl;
     if (!weights_device) cout << "Weights device is null" << endl;
@@ -1122,7 +1122,7 @@ void Dense2d::copy_parameters_device()
 }
 
 
-void Dense2d::copy_parameters_host()
+void Dense::copy_parameters_host()
 {
     if (!biases_device) cout << "Biases is null" << endl;
     if (!weights_device) cout << "Synaptic weights is null" << endl;
@@ -1156,7 +1156,7 @@ void DenseForwardPropagation<2>Cuda::set(const Index& new_batch_size, Layer* new
     batch_size = new_batch_size;
     layer = new_layer;
 
-    Dense2d* dense2d_layer = static_cast<Dense2d*>(layer);
+    Dense* dense2d_layer = static_cast<Dense*>(layer);
 
     const Index outputs_number = dense2d_layer->get_outputs_number();
 
@@ -1255,7 +1255,7 @@ void DenseForwardPropagation<2>Cuda::print() const
     cout << "  Layer: " << layer->get_label() << " (" << layer->get_name() << ")" << endl;
     cout << "  Batch Size: " << batch_size << endl;
 
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
     const dimensions output_dims = dense_layer->get_output_dimensions();
 
     cout << "  Outputs Tensor Dimensions: { " << batch_size << ", " << output_dims[0] << " }" << endl;
@@ -1352,7 +1352,7 @@ void DenseBackPropagation<2>Cuda::set(const Index& new_batch_size, Layer* new_la
 
     // Batch Normalization
 
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
 
     if (dense_layer->get_batch_normalization())
     {
@@ -1366,7 +1366,7 @@ void DenseBackPropagation<2>Cuda::set(const Index& new_batch_size, Layer* new_la
 
 vector<ParameterView> DenseBackPropagation<2>Cuda::get_parameter_delta_views_device() const
 {
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
     const Index weight_deltas_size = dense_layer->get_input_dimensions()[0] * dense_layer->get_output_dimensions()[0];
     const Index bias_deltas_size = dense_layer->get_output_dimensions()[0];
 
@@ -1392,7 +1392,7 @@ void DenseBackPropagation<2>Cuda::print() const
     cout << "  Layer: " << layer->get_label() << " (" << layer->get_name() << ")" << endl;
     cout << "  Batch Size: " << batch_size << endl;
 
-    const auto* dense_layer = static_cast<const Dense2d*>(layer);
+    const auto* dense_layer = static_cast<const Dense*>(layer);
     const dimensions input_dims = dense_layer->get_input_dimensions();
     const dimensions output_dims = dense_layer->get_output_dimensions();
 
@@ -1430,14 +1430,14 @@ void DenseBackPropagation<2>Cuda::free()
     cudnnDestroyTensorDescriptor(deltas_tensor_descriptor);
 }
 
-REGISTER(LayerForwardPropagationCuda, DenseForwardPropagation<2>Cuda, "Dense2d")
-REGISTER(LayerBackPropagationCuda, DenseBackPropagation<2>Cuda, "Dense2d")
+REGISTER(LayerForwardPropagationCuda, DenseForwardPropagation<2>Cuda, "Dense")
+REGISTER(LayerBackPropagationCuda, DenseBackPropagation<2>Cuda, "Dense")
 
 #endif
 
-REGISTER(Layer, Dense2d, "Dense2d")
-REGISTER(LayerForwardPropagation, DenseForwardPropagation<2>, "Dense2d")
-REGISTER(LayerBackPropagation, DenseBackPropagation<2>, "Dense2d")
+REGISTER(Layer, Dense, "Dense")
+REGISTER(LayerForwardPropagation, DenseForwardPropagation<2>, "Dense")
+REGISTER(LayerBackPropagation, DenseBackPropagation<2>, "Dense")
 */
 } // namespace opennn
 

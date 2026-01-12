@@ -6,8 +6,8 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef DENSE2D_H
-#define DENSE2D_H
+#ifndef DENSE_H
+#define DENSE_H
 
 #include "layer.h"
 
@@ -78,7 +78,8 @@ struct DenseBackPropagation final : LayerBackPropagation
 };
 
 
-struct Dense2dBackPropagationLM : LayerBackPropagationLM
+/*
+struct Dense2dBackPropagationLM final : LayerBackPropagationLM
 {
     Dense2dBackPropagationLM(const Index& = 0, Layer* = nullptr);
 
@@ -95,6 +96,7 @@ struct Dense2dBackPropagationLM : LayerBackPropagationLM
 
 
 struct Dense2dForwardPropagationLM;
+*/
 
 template<int Rank>
 class Dense final : public Layer
@@ -103,25 +105,26 @@ class Dense final : public Layer
 public:
 
     Dense(const dimensions& new_input_dimensions = {0},
-            const dimensions& new_output_dimensions = {0},
-            const string& new_activation_function = "HyperbolicTangent",
-            const bool& new_batch_normalization = false,
-            const string& new_label = "dense2d_layer")
+          const dimensions& new_output_dimensions = {0},
+          const string& new_activation_function = "HyperbolicTangent",
+          const bool& new_batch_normalization = false,
+          const string& new_label = "dense2d_layer")
     {
         set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_label);
     }
 
+
     dimensions get_input_dimensions() const override
     {
-        return {};
-        //return { weights.dimension(0) };
+        return { weights.dims[0] };
     }
+
 
     dimensions get_output_dimensions() const override
     {
-        return {};
-        //return { biases.size() };
+        return { biases.size() };
     }
+
 
     vector<TensorView> get_parameter_views() const override
     {
@@ -142,31 +145,34 @@ public:
         return dropout_rate;
     }
 
+
     bool get_batch_normalization() const
     {
         return batch_normalization;
     }
+
 
     const string& get_activation_function() const
     {
         return activation_function;
     }
 
+
     void set(const dimensions& new_input_dimensions = {},
              const dimensions& new_output_dimensions = {},
              const string& new_activation_function = "HyperbolicTangent",
              const bool& new_batch_normalization = false,
-             const string& new_label = "dense2d_layer")
+             const string& new_label = "dense_layer")
     {
         if (new_input_dimensions.size() != 1)
             throw runtime_error("Input dimensions size is not 1");
 
         if (new_output_dimensions.size() != 1)
             throw runtime_error("Output dimensions size is not 1");
-/*
-        biases.resize(new_output_dimensions[0]);
-        weights.resize(new_input_dimensions[0], new_output_dimensions[0]);
-*/
+
+        biases.dims = { new_output_dimensions[0] };
+        weights.dims = { new_input_dimensions[0], new_output_dimensions[0] };
+
         set_parameters_random();
 
         set_activation_function(new_activation_function);
@@ -194,7 +200,7 @@ public:
 
         set_label(new_label);
 
-        name = "Dense2d";
+        name = "Dense";
 
 #ifdef OPENNN_CUDA
 
@@ -211,26 +217,24 @@ public:
 #endif
     }
 
+
     void set_input_dimensions(const dimensions& new_input_dimensions) override
     {
         const Index inputs_number = new_input_dimensions[0];
         const Index outputs_number = get_outputs_number();
-/*
-        biases.resize(outputs_number);
 
-        weights.resize(inputs_number, outputs_number);
-*/
+        biases.dims = { outputs_number };
+        weights.dims = { inputs_number, outputs_number };
     }
+
 
     void set_output_dimensions(const dimensions& new_output_dimensions) override
     {
         const Index inputs_number = get_inputs_number();
         const Index neurons_number = new_output_dimensions[0];
-/*
-        biases.resize(neurons_number);
 
-        weights.resize(inputs_number, neurons_number);
-*/
+        biases.dims = { neurons_number };
+        weights.dims = { inputs_number, neurons_number };
     }
 
 
@@ -301,7 +305,10 @@ public:
 
     void normalization(Tensor1&, Tensor1&, const Tensor2&, Tensor2&) const;
 
-    void set_batch_normalization(const bool&);
+    void set_batch_normalization(const bool& new_batch_normalization)
+    {
+        batch_normalization = new_batch_normalization;
+    }
 
     void apply_batch_normalization_backward(TensorMap2& deltas,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
@@ -485,6 +492,7 @@ public:
                                            const Index& index,
                                            Tensor2& squared_errors_Jacobian) const override
     {
+        /*
         const Index parameters_number = get_parameters_number();
         const Index batch_size = back_propagation->batch_size;
 
@@ -496,6 +504,7 @@ public:
         memcpy(squared_errors_Jacobian.data() + index,
                this_squared_errors_Jacobian_data,
                parameters_number * batch_size * sizeof(type));
+        */
     }
 
     string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& new_output_names = vector<string>()) const override
@@ -531,7 +540,7 @@ public:
     void print() const override
     {
 /*
-        cout << "Dense2d layer" << endl
+        cout << "Dense layer" << endl
              << "Input dimensions: " << get_input_dimensions()[0] << endl
              << "Output dimensions: " << get_output_dimensions()[0] << endl
              << "Biases dimensions: " << biases.dimensions() << endl
@@ -544,10 +553,10 @@ public:
 
     void from_XML(const XMLDocument& document) override
     {
-        const XMLElement* dense2d_layer_element = document.FirstChildElement("Dense2d");
+        const XMLElement* dense2d_layer_element = document.FirstChildElement("Dense");
 
         if(!dense2d_layer_element)
-            throw runtime_error("Dense2d element is nullptr.\n");
+            throw runtime_error("Dense element is nullptr.\n");
 
         set_label(read_xml_string(dense2d_layer_element, "Label"));
 
@@ -585,7 +594,7 @@ public:
 
     void to_XML(XMLPrinter& printer) const override
     {
-        printer.OpenElement("Dense2d");
+        printer.OpenElement("Dense");
 
         add_xml_element(printer, "Label", label);
         add_xml_element(printer, "InputsNumber", to_string(get_input_dimensions()[0]));

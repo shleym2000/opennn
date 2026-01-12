@@ -7,8 +7,8 @@
 //   artelnics@artelnics.com
 
 #include "model_expression.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "strings_utilities.h"
 #include "dataset.h"
 #include "neural_network.h"

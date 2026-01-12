@@ -9,7 +9,7 @@
 #ifndef CORRELATIONS_H
 #define CORRELATIONS_H
 
-#include <string>
+#include "pch.h"
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 
 using type = float;

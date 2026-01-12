@@ -11,8 +11,8 @@
 #include "images.h"
 #include "neural_network.h"
 #include "dense_layer.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "flatten_layer.h"
 #include "addition_layer.h"
 #include "embedding_layer.h"
@@ -705,11 +705,11 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
 {
     // Tensor3 image = read_bmp_image(image_path);
 
-    // Scaling4d* scaling_layer_4d = static_cast<Scaling4d*>(get_first("Scaling4d"));
+    // Scaling4d* scaling_layer = static_cast<Scaling4d*>(get_first("Scaling4d"));
 
-    // const Index height = scaling_layer_4d->get_input_dimensions()[0];
-    // const Index width = scaling_layer_4d->get_input_dimensions()[1];
-    // const Index channels = scaling_layer_4d->get_input_dimensions()[2];
+    // const Index height = scaling_layer->get_input_dimensions()[0];
+    // const Index width = scaling_layer->get_input_dimensions()[1];
+    // const Index channels = scaling_layer->get_input_dimensions()[2];
 
     // const Index current_height = image.dimension(0);
     // const Index current_width = image.dimension(1);
@@ -817,7 +817,7 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
     Index dense2d_layers_number = 0;
 
     for(Index i = 0; i < layers_number; i++)
-        if (layers[i]->get_name() == "Dense2d" && layers[i]->get_label().find("classification") == string::npos)
+        if (layers[i]->get_name() == "Dense" && layers[i]->get_label().find("classification") == string::npos)
             dense2d_layers_number++;
 
     Tensor<string, 2> information(dense2d_layers_number, 4);
@@ -829,7 +829,7 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
         const string& name = layers[i]->get_name();
         const string label = layers[i]->get_label();
 
-        if (name != "Dense2d" || label.find("classification") != string::npos)
+        if (name != "Dense" || label.find("classification") != string::npos)
             continue;
 
         information(dense2d_layer_index, 0) = label;
@@ -1402,10 +1402,11 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
     layers.resize(layers_number);
-
+    /*
     for(Index i = 0; i < layers_number; i++)
-        if(neural_network_layers[i]->get_name() == "Dense2d")
+        if(neural_network_layers[i]->get_name() == "Dense")
             layers[i] = make_unique<Dense2dBackPropagationLM>(batch_size, neural_network_layers[i].get());
+    */
 }
 
 

@@ -9,7 +9,7 @@
 #include "tensors.h"
 #include "correlations.h"
 #include "dataset.h"
-#include "scaling_layer_2d.h"
+#include "scaling_layer.h"
 #include "dense_layer.h"
 #include "neural_network.h"
 #include "standard_networks.h"
@@ -734,12 +734,12 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
 
     ClassificationNetwork neural_network({ input_variables_number }, {1}, {target_variables_number});
 
-    Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
+    Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
-    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense2d"));
+    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense"));
 
     dense_2d->set_activation_function("Softmax");
-    scaling_layer_2d->set_display(false);
+    scaling_layer->set_display(false);
 
     CrossEntropyError2d cross_entropy_error_2d(&neural_network, &dataset);
     cross_entropy_error_2d.set_regularization_method("None");
@@ -846,13 +846,13 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     ClassificationNetwork neural_network({input_variables_number }, {}, {target_variables_number});
 
-    Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
+    Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
-    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense2d"));
+    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense"));
 
     dense_2d->set_activation_function("Softmax");
 
-    scaling_layer_2d->set_display(false);
+    scaling_layer->set_display(false);
 
     MeanSquaredError mean_squared_error(&neural_network, &Dataset);
     mean_squared_error.set_regularization_method("None");

@@ -8,7 +8,7 @@
 
 #include "tensors.h"
 #include "response_optimization.h"
-#include "scaling_layer_2d.h"
+#include "scaling_layer.h"
 #include "bounding_layer.h"
 #include "dataset.h"
 #include "neural_network.h"
@@ -44,10 +44,10 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
 
-        input_minimums = scaling_layer_2d->get_minimums();
-        input_maximums = scaling_layer_2d->get_maximums();
+        input_minimums = scaling_layer->get_minimums();
+        input_maximums = scaling_layer->get_maximums();
     }
 
     // @todo from unscaling layer?

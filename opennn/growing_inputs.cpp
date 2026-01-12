@@ -11,8 +11,8 @@
 #include "time_series_dataset.h"
 #include "growing_inputs.h"
 #include "correlations.h"
-#include "scaling_layer_2d.h"
-#include "scaling_layer_3d.h"
+#include "scaling_layer.h"
+#include "scaling_layer.h"
 #include "optimization_algorithm.h"
 #include "training_strategy.h"
 
@@ -357,15 +357,15 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     if(neural_network->has("Scaling2d"))
     {
-        Scaling<2>* scaling_layer_2d = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
-        scaling_layer_2d->set_descriptives(input_variable_descriptives);
-        scaling_layer_2d->set_scalers(input_variable_scalers);
+        Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
     else if(neural_network->has("Scaling3d"))
     {
-        Scaling<3>* scaling_layer_3d = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
-        scaling_layer_3d->set_descriptives(input_variable_descriptives);
-        scaling_layer_3d->set_scalers(input_variable_scalers);
+        Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
+        scaling_layer->set_descriptives(input_variable_descriptives);
+        scaling_layer->set_scalers(input_variable_scalers);
     }
 
     neural_network->set_parameters(input_selection_results.optimal_parameters);

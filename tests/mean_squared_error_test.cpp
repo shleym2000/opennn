@@ -49,7 +49,7 @@ TEST(MeanSquaredErrorTest, BackPropagateDense2d)
     dataset.set_sample_roles("Training"); 
 
     NeuralNetwork neural_network; 
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ inputs_number }, dimensions{ dataset.get_target_dimensions()}));
+    neural_network.add_layer(make_unique<Dense>(dimensions{ inputs_number }, dimensions{ dataset.get_target_dimensions()}));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -106,7 +106,7 @@ TEST(MeanSquaredErrorTest, BackPropagateConvolutional)
     const dimensions flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_dimensions();
     neural_network.add_layer(make_unique<Flatten<4>>(dimensions{ flatten_layer_input_dimensions }));
     const dimensions dense_layer_input_dimensions = neural_network.get_layer(1).get()->get_output_dimensions();
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ dense_layer_input_dimensions }, dimensions{ dataset.get_target_dimensions() }));
+    neural_network.add_layer(make_unique<Dense>(dimensions{ dense_layer_input_dimensions }, dimensions{ dataset.get_target_dimensions() }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -140,7 +140,7 @@ TEST(MeanSquaredErrorTest, BackPropagatePooling)
     const dimensions pool_output_dimensions = neural_network.get_layer(1)->get_output_dimensions();
     neural_network.add_layer(make_unique<Flatten<4>>(pool_output_dimensions));
     const dimensions flatten_output_dimensions = neural_network.get_layer(2)->get_output_dimensions();
-    neural_network.add_layer(make_unique<Dense2d>(flatten_output_dimensions, dataset.get_target_dimensions()));
+    neural_network.add_layer(make_unique<Dense>(flatten_output_dimensions, dataset.get_target_dimensions()));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -173,7 +173,7 @@ TEST(MeanSquaredErrorTest, BackPropagateEmbedding)
     neural_network.add_layer(make_unique<Embedding>(dimensions{ inputs_number, sequence_length }, embeding_dim));
     const dimensions flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_dimensions();
     neural_network.add_layer(make_unique<Flatten<3>>(dimensions{ flatten_layer_input_dimensions }));
-    neural_network.add_layer(make_unique<Dense2d>(dimensions{ flattened_size }, dimensions{ targets_number }));
+    neural_network.add_layer(make_unique<Dense>(dimensions{ flattened_size }, dimensions{ targets_number }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 

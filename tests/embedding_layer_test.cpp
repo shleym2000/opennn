@@ -100,7 +100,7 @@ TEST(Embedding, BackPropagate)
 
     neural_network.add_layer(make_unique<Embedding>(input_dimensions, embedding_dimension));
     neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_dimensions()));
-    neural_network.add_layer(make_unique<Dense2d>(neural_network.get_output_dimensions(), language_dataset.get_target_dimensions(), "Logistic"));
+    neural_network.add_layer(make_unique<Dense>(neural_network.get_output_dimensions(), language_dataset.get_target_dimensions(), "Logistic"));
 
     Tensor2 inputs  = language_dataset.get_data_variables("Input");
     const Index batch_size = inputs.dimension(0);
