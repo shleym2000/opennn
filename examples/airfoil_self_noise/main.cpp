@@ -51,6 +51,7 @@ int main()
         ApproximationNetwork approximation_network(dataset.get_input_dimensions(), {neurons_number}, dataset.get_target_dimensions());
 
         reference_scaling_layer();
+        reference_dense_layer();
 
         // Training strategy
 
