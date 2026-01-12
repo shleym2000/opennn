@@ -23,6 +23,8 @@ struct DenseForwardPropagation final : LayerForwardPropagation
 
     TensorView get_output_view() const override;
 
+    vector<TensorView*> get_workspace_views();
+
     void initialize() override;
 
     void print() const override;
