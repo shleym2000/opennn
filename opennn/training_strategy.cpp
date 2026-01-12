@@ -173,7 +173,7 @@ void TrainingStrategy::set_default()
         set_optimization_algorithm("AdaptiveMomentEstimation");
 
         auto* adam = static_cast<AdaptiveMomentEstimation*>(optimization_algorithm.get());
-        adam->set_learning_rate(0.0001);
+        adam->set_learning_rate(0.0001F);
         return;
     }
 
