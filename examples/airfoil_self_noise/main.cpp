@@ -14,6 +14,7 @@
 #include "../../opennn/dataset.h"
 #include "../../opennn/standard_networks.h"
 #include "../../opennn/dense_layer.h"
+#include "../../opennn/scaling_layer.h"
 #include "../../opennn/neural_network.h"
 #include "../../opennn/training_strategy.h"
 #include "../../opennn/testing_analysis.h"
@@ -48,6 +49,9 @@ int main()
         // Neural Network
 
         ApproximationNetwork approximation_network(dataset.get_input_dimensions(), {neurons_number}, dataset.get_target_dimensions());
+
+        reference_scaling_layer();
+        reference_dense_layer();
 
         // Training strategy
 

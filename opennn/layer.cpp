@@ -55,36 +55,32 @@ void Layer::set_display(const bool& new_display)
 
 void Layer::set_parameters_random()
 {
-/*
-    const vector<TensorView> parameter_views = get_parameter_views();
+    const vector<TensorView*> parameter_views = get_parameter_views();
 
     for (const auto& view : parameter_views)
     {
-        TensorMap1 this_parameters(view.data, view.size);
+        TensorMap1 this_parameters(view->data, view->size());
 
         set_random(this_parameters);
     }
-*/
 }
 
 
 void Layer::set_parameters_glorot()
 {
-    /*
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
 
     const type limit = sqrt(6.0 / (inputs_number + outputs_number));
 
-    const vector<TensorView> parameter_views = get_parameter_views();
+    const vector<TensorView*> parameter_views = get_parameter_views();
 
     for (const auto& view : parameter_views)
     {
-        TensorMap1 this_parameters(view.data, view.size);
+        TensorMap1 this_parameters(view->data, view->size());
 
         set_random(this_parameters, -limit, limit);
     }
-*/
 }
 
 

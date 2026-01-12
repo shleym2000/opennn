@@ -1,55 +1,56 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   P E R C E P T R O N   L A Y E R   C L A S S
+//   D E N S E   L A Y E R   C L A S S
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
 #include "registry.h"
-#include "tensors.h"
 #include "dense_layer.h"
-
+/*
 namespace opennn
 {
-/*
-Dense::Dense(const dimensions& new_input_dimensions,
-                 const dimensions& new_output_dimensions,
-                 const string& new_activation_function,
-                 const bool& new_batch_normalization,
-                 const string& new_label) : Layer()
-{
-    set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_label);
-}
+    using Dense2d = Dense<2>;
+    using DenseForwardPropagation2d = DenseForwardPropagation<2>;
+    using DenseBackPropagation2d = DenseBackPropagation<2>;
 
+    using Dense3d = Dense<3>;
+    using DenseForwardPropagation3d = DenseForwardPropagation<3>;
+    using DenseBackPropagation3d = DenseBackPropagation<3>;
 
-dimensions Dense::get_input_dimensions() const
-{
-    return { weights.dimension(0) };
-}
+    #ifdef OPENNN_CUDA
+    using DenseForwardPropagationCuda2d = DenseForwardPropagationCuda<2>;
+    using DenseBackPropagationCuda2d = DenseBackPropagationCuda<2>;
+    using DenseForwardPropagationCuda3d = DenseForwardPropagationCuda<3>;
+    using DenseBackPropagationCuda3d = DenseBackPropagationCuda<3>;
+    #endif
 
+    REGISTER(Layer, Dense2d, "Dense2d")
+    REGISTER(LayerForwardPropagation, DenseForwardPropagation2d, "Dense2d")
+    REGISTER(LayerBackPropagation, DenseBackPropagation2d, "Dense2d")
 
-dimensions Dense::get_output_dimensions() const
-{
-    return { biases.size() };
-}
+    #ifdef OPENNN_CUDA
+    REGISTER(LayerForwardPropagationCuda, DenseForwardPropagationCuda2d, "Dense2d")
+    REGISTER(LayerBackPropagationCuda, DenseBackPropagationCuda2d, "Dense2d")
+    #endif
 
+    REGISTER(Layer, Dense3d, "Dense3d")
+    REGISTER(LayerForwardPropagation, DenseForwardPropagation3d, "Dense3d")
+    REGISTER(LayerBackPropagation, DenseBackPropagation3d, "Dense3d")
 
-vector<ParameterView> Dense::get_parameter_views()
-{
-    vector<ParameterView> parameter_views =
-        {{(type*)(biases.data()), biases.size()},
-         {(type*)(weights.data()), weights.size()}};
+    #ifdef OPENNN_CUDA
+    REGISTER(LayerForwardPropagationCuda, DenseForwardPropagationCuda3d, "Dense3d")
+    REGISTER(LayerBackPropagationCuda, DenseBackPropagationCuda3d, "Dense3d")
+    #endif
 
-    if (batch_normalization)
-    {
-        parameter_views.push_back({ const_cast<type*>(scales.data()), scales.size() });
-        parameter_views.push_back({ const_cast<type*>(offsets.data()), offsets.size() });
-    }
+    template class Dense<2>;
+    template class Dense<3>;
 
-    return parameter_views;
-}
+    template struct DenseForwardPropagation<2>;
+    template struct DenseForwardPropagation<3>;
 
+    void reference_dense_layer() { }
 
 void Dense::set_dropout_rate(const type& new_dropout_rate)
 {
@@ -102,8 +103,6 @@ void Dense::set(const dimensions& new_input_dimensions,
 
     biases.resize(new_output_dimensions[0]);
     weights.resize(new_input_dimensions[0], new_output_dimensions[0]);
-
-    set_parameters_random();
 
     set_activation_function(new_activation_function);
 
@@ -514,9 +513,6 @@ void Dense::from_XML(const XMLDocument& document)
         string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), moving_means);
         string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
     }
-
-    string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Biases"), biases);
-    string_to_tensor<type, 2>(read_xml_string(dense2d_layer_element, "Weights"), weights);
 }
 
 
@@ -536,8 +532,6 @@ void Dense::to_XML(XMLPrinter& printer) const
         add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
         add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
     }
-    add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
-    add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
 
     printer.CloseElement();
 }
@@ -561,14 +555,6 @@ void DenseForwardPropagation<2>::initialize()
         standard_deviations.resize(outputs_number);
         normalized_outputs.resize(batch_size, outputs_number);
     }
-}
-
-
-TensorView DenseForwardPropagation<2>::get_output_view() const
-{
-    const dimensions output_dimensions = layer->get_output_dimensions();
-
-    return TensorView((type*)outputs.data(), {{batch_size, output_dimensions[0]}});
 }
 
 
@@ -621,7 +607,7 @@ void DenseBackPropagation<2>::initialize()
 }
 
 
-vector<TensorView> DenseBackPropagation<2>::get_input_derivative_views() const
+vector<TensorView> DenseBackPropagation<2>::get_input_deltas() const
 {
     const Index inputs_number = layer->get_input_dimensions()[0];
 
@@ -679,7 +665,7 @@ void Dense2dBackPropagationLM::set(const Index&new_samples_number, Layer *new_la
 }
 
 
-vector<TensorView> Dense2dBackPropagationLM::get_input_derivative_views() const
+vector<TensorView> Dense2dBackPropagationLM::get_input_deltas() const
 {
     const Index inputs_number = layer->get_input_dimensions()[0];
 
@@ -1438,9 +1424,9 @@ REGISTER(LayerBackPropagationCuda, DenseBackPropagation<2>Cuda, "Dense")
 REGISTER(Layer, Dense, "Dense")
 REGISTER(LayerForwardPropagation, DenseForwardPropagation<2>, "Dense")
 REGISTER(LayerBackPropagation, DenseBackPropagation<2>, "Dense")
-*/
-} // namespace opennn
 
+} // namespace opennn
+*/
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.

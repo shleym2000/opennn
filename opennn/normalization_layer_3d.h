@@ -62,13 +62,9 @@ struct Normalization3dForwardPropagation final : LayerForwardPropagation
 {
     Normalization3dForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
 
     void print() const override;
-
-    Tensor3 outputs;
 
     Tensor2 means;
     Tensor2 standard_deviations;
@@ -80,18 +76,14 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
     Normalization3dBackPropagation(const Index& new_batch_size = 0,
                                    Layer* new_layer = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
-    vector<ParameterView> get_gradient_views() const override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor1 gamma_derivatives;
-    Tensor1 beta_derivatives;
-
-    Tensor3 input_deltas;
+    TensorView gamma_derivatives;
+    TensorView beta_derivatives;
 
     Tensor3 scaled_deltas;
     Tensor3 standard_deviation_derivatives;

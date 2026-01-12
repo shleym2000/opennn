@@ -60,7 +60,7 @@ public:
     {        
         vector<TensorView*> parameter_views = get_parameter_views();
 
-        for(Index i = 0; i < Index(parameter_views.size()); i++)
+        for(size_t i = 0; i < parameter_views.size(); i++)
         {
             parameter_views[i]->data = ptr;
             ptr += parameter_views[i]->size();
@@ -68,7 +68,6 @@ public:
 //            const size_t address = reinterpret_cast<size_t>(ptr);
 //            if (address % 64 != 0)
 //                ptr += (16 - ((address / sizeof(type)) % 16));
-
         }
 
         return ptr;
@@ -418,13 +417,18 @@ struct LayerForwardPropagation
 
     virtual void initialize() = 0;
 
-    virtual TensorView get_output_view() const = 0;
+    TensorView get_outputs() const
+    {
+        return outputs;
+    }
 
     virtual void print() const {}
 
     Index batch_size = 0;
 
     Layer* layer = nullptr;
+
+    TensorView outputs;
 };
 
 
@@ -448,11 +452,14 @@ struct LayerBackPropagation
         return ptr;
     }
 
-    virtual vector<TensorView> get_input_derivative_views() const = 0;
-
-    virtual vector<ParameterView> get_gradient_views() const
+    vector<TensorView> get_input_deltas() const
     {
-        return vector<ParameterView>();
+        return input_deltas;
+    }
+
+    virtual vector<TensorView*> get_gradient_views()
+    {
+        return vector<TensorView*>();
     }
 
     virtual void print() const {}
@@ -462,6 +469,8 @@ struct LayerBackPropagation
     Layer* layer = nullptr;
 
     bool is_first_layer = false;
+
+    vector<TensorView> input_deltas;
 };
 
 
@@ -470,7 +479,7 @@ struct LayerBackPropagationLM
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 
-    virtual vector<TensorView> get_input_derivative_views() const = 0;
+    virtual vector<TensorView> get_input_deltas() const = 0;
 
     virtual void set(const Index& = 0, Layer* = nullptr) = 0;
 

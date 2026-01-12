@@ -83,8 +83,6 @@ void Dense3d::set(const Index& new_sequence_length,
 
     weights.resize(new_input_dimension, new_output_dimension);
 
-    set_parameters_glorot();
-
     set_activation_function(new_activation_function);
 
     label = new_label;
@@ -116,8 +114,8 @@ void Dense3d::forward_propagate(const vector<TensorView>& input_views,
     Dense3dForwardPropagation* this_forward_propagation =
         static_cast<Dense3dForwardPropagation*>(layer_forward_propagation.get());
 
-    Tensor3& outputs = this_forward_propagation->outputs;
-
+    TensorMap3 outputs = tensor_map<3>(this_forward_propagation->outputs);
+/*
     calculate_combinations<3>(inputs, weights, biases, outputs);
 
     if(is_training && dropout_rate > type(0))
@@ -126,6 +124,7 @@ void Dense3d::forward_propagate(const vector<TensorView>& input_views,
     is_training
         ? calculate_activations(activation_function, outputs, this_forward_propagation->activation_derivatives)
         : calculate_activations(activation_function, outputs, empty_3);
+*/
 }
 
 
@@ -150,13 +149,13 @@ void Dense3d::back_propagate(const vector<TensorView>& input_views,
 
     // Back propagation
 
+    TensorMap3 input_deltas = tensor_map<3>(back_propagation->input_deltas[0]);
+
     Dense3dBackPropagation* dense3d_back_propagation =
         static_cast<Dense3dBackPropagation*>(back_propagation.get());
 
     Tensor1& bias_deltas = dense3d_back_propagation->bias_deltas;
     Tensor2& weight_deltas = dense3d_back_propagation->weight_deltas;
-
-    Tensor3& input_deltas = dense3d_back_propagation->input_deltas;
 
     deltas.device(*device) = deltas * activation_derivatives;
 
@@ -183,9 +182,6 @@ void Dense3d::from_XML(const XMLDocument& document)
 
     set_label(read_xml_string(dense2d_layer_element, "Label"));
     set_activation_function(read_xml_string(dense2d_layer_element, "Activation"));
-
-    string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Biases"), biases);
-    string_to_tensor<type, 2>(read_xml_string(dense2d_layer_element, "Weights"), weights);
 }
 
 
@@ -198,8 +194,6 @@ void Dense3d::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "InputsDepth", to_string(get_input_embedding()));
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_embedding()));
     add_xml_element(printer, "Activation", activation_function);
-    add_xml_element(printer, "Biases", tensor_to_string<type, 1>(biases));
-    add_xml_element(printer, "Weights", tensor_to_string<type, 2>(weights));
 
     printer.CloseElement();
 }
@@ -208,7 +202,7 @@ void Dense3d::to_XML(XMLPrinter& printer) const
 void Dense3dForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs << endl
+         << outputs.dims << endl
          << "Activation derivatives:" << endl
          << activation_derivatives << endl;
 }
@@ -221,17 +215,6 @@ Dense3dForwardPropagation::Dense3dForwardPropagation(const Index& new_batch_size
 }
 
 
-TensorView Dense3dForwardPropagation::get_output_view() const
-{
-    Dense3d* dense_3d = static_cast<Dense3d*>(layer);
-
-    const Index sequence_length = dense_3d->get_sequence_length();
-    const Index output_embedding = dense_3d->get_output_embedding();
-
-    return { (type*)outputs.data(), { batch_size, sequence_length, output_embedding } };
-}
-
-
 void Dense3dForwardPropagation::initialize()
 {
     Dense3d* dense_3d = static_cast<Dense3d*>(layer);
@@ -240,7 +223,7 @@ void Dense3dForwardPropagation::initialize()
 
     const Index sequence_length = dense_3d->get_sequence_length();
 
-    outputs.resize(batch_size, sequence_length, output_embedding);
+    outputs.dims = {batch_size, sequence_length, output_embedding};
 
     activation_derivatives.resize(batch_size, sequence_length, output_embedding);
 }
@@ -256,7 +239,9 @@ void Dense3dBackPropagation::initialize()
 
     bias_deltas.resize(output_embedding);
     weight_deltas.resize(input_embedding, output_embedding);
-    input_deltas.resize(batch_size, sequence_length, input_embedding);
+
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, sequence_length, input_embedding};
 }
 
 
@@ -275,16 +260,6 @@ Dense3dBackPropagation::Dense3dBackPropagation(const Index& new_batch_size, Laye
     set(new_batch_size, new_layer);
 }
 
-
-vector<TensorView> Dense3dBackPropagation::get_input_derivative_views() const
-{
-    Dense3d* dense_3d = static_cast<Dense3d*>(layer);
-
-    const Index sequence_length = dense_3d->get_sequence_length();
-    const Index input_embedding = dense_3d->get_input_embedding();
-
-    return {{(type*)(input_deltas.data()), {batch_size, sequence_length, input_embedding}}};
-}
 
 REGISTER(Layer, Dense3d, "Dense3d")
 REGISTER(LayerForwardPropagation, Dense3dForwardPropagation, "Dense3d")

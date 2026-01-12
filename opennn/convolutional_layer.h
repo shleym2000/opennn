@@ -85,11 +85,9 @@ public:
 
     // Forward propagation
 
-    void preprocess_inputs(const Tensor4&,
-                           Tensor4&) const;
+    void preprocess_inputs(const Tensor4&, Tensor4&) const;
 
-    void calculate_convolutions(const Tensor4&,
-                                Tensor4&) const;
+    void calculate_convolutions(const Tensor4&,Tensor4&) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -163,7 +161,6 @@ private:
     TensorView offsets;
 
     Index row_stride = 1;
-
     Index column_stride = 1;
 
     dimensions input_dimensions;
@@ -188,13 +185,9 @@ struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 {
     ConvolutionalForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
 
     void print() const override;
-
-    Tensor4 outputs;
 
     Tensor4 preprocessed_inputs;
 
@@ -209,22 +202,20 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 {
     ConvolutionalBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView> get_input_derivative_views() const override;
-
-    vector<ParameterView> get_gradient_views() const override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 
     void print() const override;
 
-    Tensor1 bias_deltas;
-    Tensor4 weight_deltas;
-    Tensor4 input_deltas;
+    TensorView bias_deltas;
+    TensorView weight_deltas;
+
+    TensorView bn_scale_deltas;
+    TensorView bn_offset_deltas;
 
     Tensor4 rotated_weights;
 
-    Tensor1 bn_scale_deltas;
-    Tensor1 bn_offset_deltas;
 };
 
 

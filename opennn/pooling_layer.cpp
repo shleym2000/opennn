@@ -260,11 +260,12 @@ void Pooling::forward_propagate_average_pooling(const Tensor4& inputs,
                                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                 const bool&) const
 {
+    TensorMap4 outputs = tensor_map<4>(layer_forward_propagation->outputs);
+
     PoolingForwardPropagation* this_forward_propagation =
         static_cast<PoolingForwardPropagation*>(layer_forward_propagation.get());
 
     Tensor<type, 5>& image_patches = this_forward_propagation->image_patches;
-    Tensor4& outputs = this_forward_propagation->outputs;
 
     image_patches.device(*device) = inputs.extract_image_patches(
         pool_height,
@@ -277,9 +278,8 @@ void Pooling::forward_propagate_average_pooling(const Tensor4& inputs,
         type(padding_width)
         );
 
-    outputs.device(*device) = image_patches
-                                              .mean(array_2(1, 2))
-                                              .reshape(array_4(outputs.dimension(0), outputs.dimension(1), outputs.dimension(2), outputs.dimension(3)));
+    outputs.device(*device) = image_patches.mean(array_2(1, 2))
+                              .reshape(array_4(outputs.dimension(0), outputs.dimension(1), outputs.dimension(2), outputs.dimension(3)));
 }
 
 
@@ -287,11 +287,12 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             const bool& is_training) const
 {
+    TensorMap4 outputs = tensor_map<4>(layer_forward_propagation->outputs);
+
     PoolingForwardPropagation* pooling_layer_forward_propagation =
         static_cast<PoolingForwardPropagation*>(layer_forward_propagation.get());
 
     Tensor<type, 5>& image_patches = pooling_layer_forward_propagation->image_patches;
-    Tensor4& outputs = pooling_layer_forward_propagation->outputs;
 
     const Index batch_size = outputs.dimension(0);
     const Index output_width = outputs.dimension(1);
@@ -374,16 +375,10 @@ void Pooling::back_propagate_max_pooling(const Tensor4& inputs,
 
     // Back propagation
 
-    PoolingBackPropagation* pooling_layer_back_propagation =
-        static_cast<PoolingBackPropagation*>(back_propagation.get());
-
-    Tensor4& input_deltas = pooling_layer_back_propagation->input_deltas;
-
-    // Input derivatives
-
+    TensorMap4 input_deltas = tensor_map<4>(back_propagation->input_deltas[0]);
     input_deltas.setZero();
 
-#pragma omp parallel for collapse (2)
+    #pragma omp parallel for collapse (2)
     for (Index channel_index = 0; channel_index < channels; channel_index++)
         for (Index batch_index = 0; batch_index < batch_size; batch_index++)
             for (Index output_height_index = 0; output_height_index < output_height; output_height_index++)
@@ -419,10 +414,10 @@ void Pooling::back_propagate_average_pooling(const Tensor4& inputs,
 
     // Back propagation
 
+    TensorMap4 input_deltas = tensor_map<4>(back_propagation->input_deltas[0]);
+
     PoolingBackPropagation* pooling_layer_back_propagation =
         static_cast<PoolingBackPropagation*>(back_propagation.get());
-
-    Tensor4& input_deltas = pooling_layer_back_propagation->input_deltas;
 
     Tensor4& deltas_by_pool_size = pooling_layer_back_propagation->deltas_by_pool_size;
 
@@ -498,18 +493,6 @@ PoolingForwardPropagation::PoolingForwardPropagation(const Index& new_batch_size
 }
 
 
-TensorView PoolingForwardPropagation::get_output_view() const
-{
-    const Pooling* pooling_layer = static_cast<Pooling*>(layer);
-
-    const Index output_height = pooling_layer->get_output_height();
-    const Index output_width = pooling_layer->get_output_width();
-    const Index channels = pooling_layer->get_channels_number();
-
-    return {(type*)outputs.data(), {batch_size, output_height, output_width, channels}};
-}
-
-
 void PoolingForwardPropagation::initialize()
 {
     const Pooling* pooling_layer = static_cast<Pooling*>(layer);
@@ -522,10 +505,7 @@ void PoolingForwardPropagation::initialize()
 
     const Index channels = pooling_layer->get_channels_number();
 
-    outputs.resize(batch_size,
-                   output_height,
-                   output_width,
-                   channels);
+    outputs.dims = {batch_size, output_height, output_width, channels};
 
     image_patches.resize(batch_size,
                          pool_height,
@@ -544,7 +524,7 @@ void PoolingForwardPropagation::print() const
 {
     cout << "Pooling layer forward propagation" << endl
          << "Outputs:" << endl
-         << outputs(0) << endl;
+         << outputs.dims << endl;
 }
 
 
@@ -564,26 +544,16 @@ void PoolingBackPropagation::initialize()
 
     deltas_by_pool_size.resize(batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]);
 
-    input_deltas.resize(batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]);
-}
-
-
-vector<TensorView> PoolingBackPropagation::get_input_derivative_views() const
-{
-    const Pooling* pooling_layer = static_cast<Pooling*>(layer);
-
-    const dimensions& input_dimensions = pooling_layer->get_input_dimensions();
-
-    return {{(type*)(input_deltas.data()),
-             {batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]}} };
+    input_deltas.resize(1);
+    input_deltas[0].dims = {batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]};
 }
 
 
 void PoolingBackPropagation::print() const
 {
     cout << "Pooling layer back propagation" << endl;
-    cout << "Input derivatives:" << endl
-         << input_deltas << endl;
+    cout << "Input deltas:" << endl
+         << input_deltas[0].dims << endl;
 }
 
 
@@ -783,7 +753,7 @@ void PoolingBackPropagationCuda::print() const
     const Index channels = pooling_layer->get_channels_number();
 
     cout << "Pooling layer back propagation CUDA" << endl;
-    cout << "Input derivatives:" << endl
+    cout << "Input deltas:" << endl
          << matrix_4d_from_device(input_deltas, batch_size, input_height, input_width, channels) << endl;
 }
 

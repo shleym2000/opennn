@@ -99,13 +99,18 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
     {
+/*
         const Index batch_size = layer_forward_propagation->batch_size;
         const Index outputs_number = get_outputs_number();
+
+        //TensorMap
 
         FlattenForwardPropagation<Rank>* forward_prop =
             static_cast<FlattenForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
+
         forward_prop->outputs = TensorMap2(input_views[0].data, batch_size, outputs_number);
+*/
     }
 
     // Back-propagation
@@ -230,28 +235,17 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     }
 
 
-    TensorView get_output_view() const override
-    {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-
-        return {(type*)outputs.data(), {batch_size, output_dimensions[0]}};
-    }
-
-
     void initialize() override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
-        outputs.resize(batch_size, output_dimensions[0]);
+        outputs.dims = {batch_size, output_dimensions[0]};
     }
 
 
     void print() const override
     {
-        cout << "Flatten Outputs:" << endl << outputs.dimensions() << endl;
+        cout << "Flatten Outputs:" << endl << outputs.dims << endl;
     }
-
-
-    Tensor2 outputs;
 };
 
 
@@ -264,40 +258,28 @@ struct FlattenBackPropagation final : LayerBackPropagation
     }
 
 
-    vector<TensorView> get_input_derivative_views() const override
-    {
-        const Flatten<Rank>* layer_ptr = static_cast<const Flatten<Rank>*>(layer);
-        const dimensions input_dimensions = layer_ptr->get_input_dimensions();
-
-        dimensions full_dimensions;
-        full_dimensions.reserve(Rank + 1);
-        full_dimensions.push_back(batch_size);
-        full_dimensions.insert(full_dimensions.end(), input_dimensions.begin(), input_dimensions.end());
-
-        return {{(type*)(input_deltas.data()), full_dimensions}};
-    }
-
     void initialize()
     {
         const Flatten<Rank>* layer_ptr = static_cast<const Flatten<Rank>*>(layer);
         const dimensions input_dimensions = layer_ptr->get_input_dimensions();
 
-        array<Index, Rank + 1> resize_dimensions;
+        dimensions resize_dimensions(Rank + 1);
         resize_dimensions[0] = batch_size;
 
         for(int i = 0; i < Rank; ++i)
             resize_dimensions[i + 1] = input_dimensions[i];
 
-        input_deltas.resize(resize_dimensions);
+        input_deltas.resize(1);
+        input_deltas[0].dims = resize_dimensions;
     }
 
 
     void print() const override
     {
-        cout << "Flatten Input derivatives:" << endl << input_deltas.dimensions() << endl;
+        cout << "Flatten Input derivatives:" << endl << input_deltas[0].dims << endl;
     }
 
-    Tensor<type, Rank> input_deltas;
+    //Tensor<type, Rank> input_deltas;
 };
 
 
