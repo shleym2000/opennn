@@ -1,13 +1,13 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   P E R C E P T R O N   L A Y E R   C L A S S   H E A D E R
+//   D E N S E   L A Y E R   C L A S S   H E A D E R
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef DENSE_H
-#define DENSE_H
+#ifndef DENSELAYER_H
+#define DENSELAYER_H
 
 #include "layer.h"
 
@@ -632,24 +632,166 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<float*>&,
-                                unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+    void allocate_parameters_device()
+    {
+        const Index inputs_number = get_input_dimensions().back();
+        const Index outputs_number = get_output_dimensions().back();
 
-    void back_propagate_cuda(const vector<float*>&,
-                             const vector<float*>&,
-                             unique_ptr<LayerForwardPropagationCuda>&,
-                             unique_ptr<LayerBackPropagationCuda>&) const override;
+        CHECK_CUDA(cudaMalloc(&biases_device, outputs_number * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&weights_device, inputs_number * outputs_number * sizeof(float)));
 
-    vector<ParameterView> get_parameter_views_device() const override;
+        if (batch_normalization) {
+            CHECK_CUDA(cudaMalloc(&bn_scale_device, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_offset_device, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_running_mean_device, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_running_variance_device, outputs_number * sizeof(float)));
 
-    void copy_parameters_host();
+            cudnnCreateTensorDescriptor(&bn_tensor_descriptor);
+            cudnnSetTensor4dDescriptor(bn_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, (int)outputs_number, 1, 1);
+        }
+    }
 
-    void copy_parameters_device();
+    void copy_parameters_device()
+    {
+        CHECK_CUDA(cudaMemcpy(biases_device, biases.data, biases.size() * sizeof(float), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(weights_device, weights.data, weights.size() * sizeof(float), cudaMemcpyHostToDevice));
 
-    void allocate_parameters_device();
+        if (batch_normalization) {
+            CHECK_CUDA(cudaMemcpy(bn_scale_device, scales.data, scales.size() * sizeof(float), cudaMemcpyHostToDevice));
+            CHECK_CUDA(cudaMemcpy(bn_offset_device, offsets.data, offsets.size() * sizeof(float), cudaMemcpyHostToDevice));
+            CHECK_CUDA(cudaMemcpy(bn_running_mean_device, moving_means.data, moving_means.size() * sizeof(float), cudaMemcpyHostToDevice));
+            // OpenNN suele guardar desviación estándar, pero CUDA usa varianza
+            std::vector<float> vars(moving_standard_deviations.size());
+            for(size_t i=0; i<vars.size(); ++i) vars[i] = powf(moving_standard_deviations.data[i], 2.0f);
+            CHECK_CUDA(cudaMemcpy(bn_running_variance_device, vars.data(), vars.size() * sizeof(float), cudaMemcpyHostToDevice));
+        }
+    }
 
-    void free_parameters_device();
+    void copy_parameters_host()
+    {
+        CHECK_CUDA(cudaMemcpy(biases.data, biases_device, biases.size() * sizeof(float), cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(weights.data, weights_device, weights.size() * sizeof(float), cudaMemcpyDeviceToHost));
+        // ... repetir para BN si es necesario
+    }
+
+    void forward_propagate_cuda(const vector<float*>& inputs_device,
+                                             unique_ptr<LayerForwardPropagationCuda>& fp_cuda,
+                                             const bool& is_training)
+    {
+        auto* fp = static_cast<DenseForwardPropagationCuda<Rank>*>(fp_cuda.get());
+        const Index inputs_number = get_input_dimensions().back();
+        const Index outputs_number = get_output_dimensions().back();
+
+        Index total_rows = fp->batch_size;
+        if constexpr (Rank == 3) total_rows *= get_input_dimensions()[0];
+
+        float* out_ptr = use_combinations ? fp->combinations : fp->outputs;
+
+        // Y = X * W
+        cublasSgemm(cublas_handle, CUBLAS_OP_N, CUBLAS_OP_N,
+                    (int)total_rows, (int)outputs_number, (int)inputs_number,
+                    &alpha, inputs_device[0], (int)total_rows,
+                    weights_device, (int)inputs_number,
+                    &beta, out_ptr, (int)total_rows);
+
+        // Y = Y + Bias
+        cudnnAddTensor(cudnn_handle, &alpha, fp->biases_tensor_descriptor, biases_device,
+                       &beta_add, fp->biases_add_tensor_descriptor, out_ptr);
+
+        // Batch Norm
+        if (batch_normalization) {
+            if (is_training) {
+                cudnnBatchNormalizationForwardTraining(cudnn_handle, CUDNN_BATCHNORM_PER_ACTIVATION, &alpha, &beta_add,
+                                                       fp->output_tensor_descriptor, out_ptr, fp->output_tensor_descriptor, out_ptr,
+                                                       bn_tensor_descriptor, bn_scale_device, bn_offset_device, 0.1,
+                                                       bn_running_mean_device, bn_running_variance_device, 1e-5, fp->bn_saved_mean, fp->bn_saved_inv_variance);
+            } else {
+                cudnnBatchNormalizationForwardInference(cudnn_handle, CUDNN_BATCHNORM_PER_ACTIVATION, &alpha, &beta_add,
+                                                        fp->output_tensor_descriptor, out_ptr, fp->output_tensor_descriptor, out_ptr,
+                                                        bn_tensor_descriptor, bn_scale_device, bn_offset_device, bn_running_mean_device, bn_running_variance_device, 1e-5);
+            }
+        }
+
+        // Activation
+        if (activation_function == "Softmax") {
+            cudnnSoftmaxForward(cudnn_handle, CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
+                                &alpha, fp->output_softmax_tensor_descriptor, out_ptr,
+                                &beta, fp->output_softmax_tensor_descriptor, fp->outputs);
+        } else if (activation_function != "Linear") {
+            cudnnActivationForward(cudnn_handle, activation_descriptor, &alpha,
+                                   fp->output_tensor_descriptor, out_ptr,
+                                   &beta, fp->output_tensor_descriptor, fp->outputs);
+        }
+    }
+
+    void back_propagate_cuda(const vector<float*>& inputs_device,
+                                          const vector<float*>& deltas_device,
+                                          unique_ptr<LayerForwardPropagationCuda>& fp_cuda,
+                                          unique_ptr<LayerBackPropagationCuda>& bp_cuda) const
+    {
+        auto* fp = static_cast<DenseForwardPropagationCuda<Rank>*>(fp_cuda.get());
+        auto* bp = static_cast<DenseBackPropagationCuda<Rank>*>(bp_cuda.get());
+
+        const Index inputs_number = get_input_dimensions().back();
+        const Index outputs_number = get_output_dimensions().back();
+
+        Index total_rows = fp->batch_size;
+        if constexpr (Rank == 3) total_rows *= get_input_dimensions()[0];
+
+        // 1. Derivada de activación
+        if (activation_function != "Linear" && activation_function != "Softmax") {
+            cudnnActivationBackward(cudnn_handle, activation_descriptor, &alpha,
+                                    fp->output_tensor_descriptor, fp->outputs,
+                                    fp->output_tensor_descriptor, deltas_device[0],
+                                    fp->output_tensor_descriptor, use_combinations ? fp->combinations : fp->outputs,
+                                    &beta, fp->output_tensor_descriptor, deltas_device[0]);
+        }
+
+        // 2. Bias deltas (reducción sumando deltas)
+        cublasSgemm(cublas_handle, CUBLAS_OP_T, CUBLAS_OP_N,
+                    (int)outputs_number, 1, (int)total_rows,
+                    &alpha, deltas_device[0], (int)total_rows,
+                    bp->ones, (int)total_rows,
+                    &beta, bp->bias_deltas_device, (int)outputs_number);
+
+        // 3. Weight deltas: dW = inputs^T * deltas
+        cublasSgemm(cublas_handle, CUBLAS_OP_T, CUBLAS_OP_N,
+                    (int)inputs_number, (int)outputs_number, (int)total_rows,
+                    &alpha, inputs_device[0], (int)total_rows,
+                    deltas_device[0], (int)total_rows,
+                    &beta, bp->weight_deltas_device, (int)inputs_number);
+
+        // 4. Input deltas: dX = deltas * weights^T
+        cublasSgemm(cublas_handle, CUBLAS_OP_N, CUBLAS_OP_T,
+                    (int)total_rows, (int)inputs_number, (int)outputs_number,
+                    &alpha, deltas_device[0], (int)total_rows,
+                    weights_device, (int)inputs_number,
+                    &beta, bp->input_deltas, (int)total_rows);
+    }
+
+    vector<ParameterView> get_parameter_views_device() const
+    {
+        vector<ParameterView> views = {
+            {biases_device, biases.size()},
+            {weights_device, weights.size()}
+        };
+        if (batch_normalization) {
+            views.push_back({bn_scale_device, scales.size()});
+            views.push_back({bn_offset_device, offsets.size()});
+        }
+        return views;
+    }
+
+    void free_parameters_device()
+    {
+        if (biases_device) cudaFree(biases_device);
+        if (weights_device) cudaFree(weights_device);
+        if (bn_scale_device) cudaFree(bn_scale_device);
+        if (bn_offset_device) cudaFree(bn_offset_device);
+        if (bn_running_mean_device) cudaFree(bn_running_mean_device);
+        if (bn_running_variance_device) cudaFree(bn_running_variance_device);
+        if (bn_tensor_descriptor) cudnnDestroyTensorDescriptor(bn_tensor_descriptor);
+    }
 
     bool use_combinations = true;
 
@@ -694,60 +836,177 @@ private:
 
 #ifdef OPENNN_CUDA
 
-struct DenseForwardPropagation<2>Cuda : public LayerForwardPropagationCuda
+template<int Rank>
+struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    DenseForwardPropagation<2>Cuda(const Index& = 0, Layer* = nullptr);
+    DenseForwardPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+        : LayerForwardPropagationCuda()
+    {
+        set(new_batch_size, new_layer);
+    }
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    void set(const Index& new_batch_size, Layer* new_layer) override
+    {
+        if (!new_layer)
+            return;
 
-    void print() const override;
+        this->batch_size = new_batch_size;
+        this->layer = new_layer;
 
-    void free() override;
+        auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
+        const Index outputs_number = dense_layer->get_output_dimensions().back();
+
+        Index total_rows = new_batch_size;
+        if constexpr (Rank == 3)
+            total_rows *= dense_layer->get_input_dimensions()[0];
+
+        cudnnCreateTensorDescriptor(&biases_tensor_descriptor);
+        cudnnSetTensor4dDescriptor(biases_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, (int)outputs_number, 1, 1);
+
+        cudnnCreateTensorDescriptor(&biases_add_tensor_descriptor);
+        cudnnSetTensor4dDescriptor(biases_add_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, (int)outputs_number, (int)total_rows, 1);
+
+        CHECK_CUDA(cudaMalloc(&outputs, total_rows * outputs_number * sizeof(float)));
+        if (dense_layer->use_combinations)
+            CHECK_CUDA(cudaMalloc(&combinations, total_rows * outputs_number * sizeof(float)));
+
+        cudnnCreateTensorDescriptor(&output_softmax_tensor_descriptor);
+        cudnnSetTensor4dDescriptor(output_softmax_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, (int)outputs_number, (int)total_rows, 1);
+
+        cudnnCreateTensorDescriptor(&output_tensor_descriptor);
+        cudnnSetTensor4dDescriptor(output_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, (int)total_rows, (int)outputs_number, 1, 1);
+
+        if (dense_layer->get_dropout_rate() > 0)
+        {
+            std::random_device rd;
+            dropout_seed = rd();
+            cudnnCreateDropoutDescriptor(&dropout_descriptor);
+            cudnnDropoutGetStatesSize(dense_layer->get_cudnn_handle(), &dropout_states_size);
+            CHECK_CUDA(cudaMalloc(&dropout_states, dropout_states_size));
+            cudnnSetDropoutDescriptor(dropout_descriptor, dense_layer->get_cudnn_handle(), (float)dense_layer->get_dropout_rate(), dropout_states, dropout_states_size, dropout_seed);
+            cudnnDropoutGetReserveSpaceSize(output_tensor_descriptor, &dropout_reserve_space_size);
+            CHECK_CUDA(cudaMalloc(&dropout_reserve_space, dropout_reserve_space_size));
+        }
+
+        if (dense_layer->get_batch_normalization())
+        {
+            CHECK_CUDA(cudaMalloc(&bn_saved_mean, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_saved_inv_variance, outputs_number * sizeof(float)));
+        }
+    }
+
+    void free() override
+    {
+        if (combinations) cudaFree(combinations);
+        if (outputs) cudaFree(outputs);
+        if (dropout_states) cudaFree(dropout_states);
+        if (dropout_reserve_space) cudaFree(dropout_reserve_space);
+        if (bn_saved_mean) cudaFree(bn_saved_mean);
+        if (bn_saved_inv_variance) cudaFree(bn_saved_inv_variance);
+
+        cudnnDestroyTensorDescriptor(output_softmax_tensor_descriptor);
+        cudnnDestroyTensorDescriptor(output_tensor_descriptor);
+        cudnnDestroyTensorDescriptor(biases_tensor_descriptor);
+        cudnnDestroyTensorDescriptor(biases_add_tensor_descriptor);
+        if (dropout_descriptor) cudnnDestroyDropoutDescriptor(dropout_descriptor);
+    }
 
     float* combinations = nullptr;
-
+    float* outputs = nullptr;
     cudnnTensorDescriptor_t output_softmax_tensor_descriptor = nullptr;
-
+    cudnnTensorDescriptor_t output_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t biases_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t biases_add_tensor_descriptor = nullptr;
-
     cudnnDropoutDescriptor_t dropout_descriptor = nullptr;
     void* dropout_states = nullptr;
     size_t dropout_states_size = 0;
     unsigned long long dropout_seed;
-
     void* dropout_reserve_space = nullptr;
     size_t dropout_reserve_space_size = 0;
-
     float* bn_saved_mean = nullptr;
     float* bn_saved_inv_variance = nullptr;
 };
 
-
-struct DenseBackPropagation<2>Cuda : public LayerBackPropagationCuda
+template<int Rank>
+struct DenseBackPropagationCuda : public LayerBackPropagationCuda
 {
-    DenseBackPropagation<2>Cuda(const Index& = 0, Layer* = nullptr);
+    DenseBackPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+        : LayerBackPropagationCuda()
+    {
+        set(new_batch_size, new_layer);
+    }
 
-    vector<ParameterView> get_gradient_views_device() const override;
+    void set(const Index& new_batch_size, Layer* new_layer) override
+    {
+        if (!new_layer)
+            return;
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+        this->batch_size = new_batch_size;
+        this->layer = new_layer;
 
-    void print() const override;
+        auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
+        const Index outputs_number = dense_layer->get_output_dimensions().back();
+        const Index inputs_number = dense_layer->get_input_dimensions().back();
 
-    void free() override;
+        Index total_rows = new_batch_size;
+        if constexpr (Rank == 3)
+            total_rows *= dense_layer->get_input_dimensions()[0];
+
+        CHECK_CUDA(cudaMalloc(&ones, total_rows * sizeof(float)));
+        std::vector<float> ones_host(total_rows, 1.0f);
+        CHECK_CUDA(cudaMemcpy(ones, ones_host.data(), total_rows * sizeof(float), cudaMemcpyHostToDevice));
+
+        CHECK_CUDA(cudaMalloc(&bias_deltas_device, outputs_number * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&weight_deltas_device, inputs_number * outputs_number * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&input_deltas, total_rows * inputs_number * sizeof(float)));
+
+        cudnnCreateTensorDescriptor(&deltas_tensor_descriptor);
+        cudnnSetTensor4dDescriptor(deltas_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, (int)total_rows, (int)outputs_number, 1, 1);
+
+        if (dense_layer->get_batch_normalization())
+        {
+            CHECK_CUDA(cudaMalloc(&bn_scale_deltas_device, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_offset_deltas_device, outputs_number * sizeof(float)));
+        }
+    }
+
+    vector<ParameterView> get_gradient_views_device() const override
+    {
+        auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
+        vector<ParameterView> views = {
+            {bias_deltas_device, dense_layer->get_output_dimensions().back()},
+            {weight_deltas_device, dense_layer->get_input_dimensions().back() * dense_layer->get_output_dimensions().back()}
+        };
+        if (dense_layer->get_batch_normalization()) {
+            views.push_back({bn_scale_deltas_device, dense_layer->get_output_dimensions().back()});
+            views.push_back({bn_offset_deltas_device, dense_layer->get_output_dimensions().back()});
+        }
+        return views;
+    }
+
+    void free() override
+    {
+        if (bias_deltas_device) cudaFree(bias_deltas_device);
+        if (weight_deltas_device) cudaFree(weight_deltas_device);
+        if (input_deltas) cudaFree(input_deltas);
+        if (ones) cudaFree(ones);
+        if (bn_scale_deltas_device) cudaFree(bn_scale_deltas_device);
+        if (bn_offset_deltas_device) cudaFree(bn_offset_deltas_device);
+        cudnnDestroyTensorDescriptor(deltas_tensor_descriptor);
+    }
 
     float* bias_deltas_device = nullptr;
     float* weight_deltas_device = nullptr;
-
+    float* input_deltas = nullptr;
     float* ones = nullptr;
-
     cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
-
     float* bn_scale_deltas_device = nullptr;
     float* bn_offset_deltas_device = nullptr;
 };
 
 #endif
+
+void reference_dense_layer();
 
 }
 

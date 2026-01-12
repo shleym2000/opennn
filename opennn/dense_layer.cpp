@@ -1,56 +1,58 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   P E R C E P T R O N   L A Y E R   C L A S S
+//   D E N S E   L A Y E R   C L A S S
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
 #include "registry.h"
-#include "tensors.h"
 #include "dense_layer.h"
 
 namespace opennn
 {
-/*
-Dense::Dense(const dimensions& new_input_dimensions,
-                 const dimensions& new_output_dimensions,
-                 const string& new_activation_function,
-                 const bool& new_batch_normalization,
-                 const string& new_label) : Layer()
-{
-    set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_label);
-}
+    using Dense2d = Dense<2>;
+    using DenseForwardPropagation2d = DenseForwardPropagation<2>;
+    using DenseBackPropagation2d = DenseBackPropagation<2>;
 
+    using Dense3d = Dense<3>;
+    using DenseForwardPropagation3d = DenseForwardPropagation<3>;
+    using DenseBackPropagation3d = DenseBackPropagation<3>;
 
-dimensions Dense::get_input_dimensions() const
-{
-    return { weights.dimension(0) };
-}
+    #ifdef OPENNN_CUDA
+    using DenseForwardPropagationCuda2d = DenseForwardPropagationCuda<2>;
+    using DenseBackPropagationCuda2d = DenseBackPropagationCuda<2>;
+    using DenseForwardPropagationCuda3d = DenseForwardPropagationCuda<3>;
+    using DenseBackPropagationCuda3d = DenseBackPropagationCuda<3>;
+    #endif
 
+    REGISTER(Layer, Dense2d, "Dense2d")
+    REGISTER(LayerForwardPropagation, DenseForwardPropagation2d, "Dense2d")
+    REGISTER(LayerBackPropagation, DenseBackPropagation2d, "Dense2d")
 
-dimensions Dense::get_output_dimensions() const
-{
-    return { biases.size() };
-}
+    #ifdef OPENNN_CUDA
+    REGISTER(LayerForwardPropagationCuda, DenseForwardPropagationCuda2d, "Dense2d")
+    REGISTER(LayerBackPropagationCuda, DenseBackPropagationCuda2d, "Dense2d")
+    #endif
 
+    REGISTER(Layer, Dense3d, "Dense3d")
+    REGISTER(LayerForwardPropagation, DenseForwardPropagation3d, "Dense3d")
+    REGISTER(LayerBackPropagation, DenseBackPropagation3d, "Dense3d")
 
-vector<ParameterView> Dense::get_parameter_views()
-{
-    vector<ParameterView> parameter_views =
-        {{(type*)(biases.data()), biases.size()},
-         {(type*)(weights.data()), weights.size()}};
+    #ifdef OPENNN_CUDA
+    REGISTER(LayerForwardPropagationCuda, DenseForwardPropagationCuda3d, "Dense3d")
+    REGISTER(LayerBackPropagationCuda, DenseBackPropagationCuda3d, "Dense3d")
+    #endif
 
-    if (batch_normalization)
-    {
-        parameter_views.push_back({ const_cast<type*>(scales.data()), scales.size() });
-        parameter_views.push_back({ const_cast<type*>(offsets.data()), offsets.size() });
-    }
+    template class Dense<2>;
+    template class Dense<3>;
 
-    return parameter_views;
-}
+    template struct DenseForwardPropagation<2>;
+    template struct DenseForwardPropagation<3>;
 
+    void reference_dense_layer() { }
 
+<<<<<<< HEAD
 void Dense::set_dropout_rate(const type& new_dropout_rate)
 {
     if (new_dropout_rate < type(0) || new_dropout_rate >= type(1))
@@ -1426,6 +1428,8 @@ REGISTER(Layer, Dense, "Dense")
 REGISTER(LayerForwardPropagation, DenseForwardPropagation<2>, "Dense")
 REGISTER(LayerBackPropagation, DenseBackPropagation<2>, "Dense")
 */
+=======
+>>>>>>> 00f195c1839733123a5637655db1269f9a3eaf28
 } // namespace opennn
 
 
