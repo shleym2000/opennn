@@ -35,7 +35,7 @@ dimensions Dense::get_output_dimensions() const
 }
 
 
-vector<ParameterView> Dense::get_parameter_views() const
+vector<ParameterView> Dense::get_parameter_views()
 {
     vector<ParameterView> parameter_views =
         {{(type*)(biases.data()), biases.size()},
@@ -629,7 +629,7 @@ vector<TensorView> DenseBackPropagation<2>::get_input_derivative_views() const
 }
 
 
-vector<ParameterView> DenseBackPropagation<2>::get_parameter_delta_views() const
+vector<ParameterView> DenseBackPropagation<2>::get_gradient_views() const
 {
     const auto* dense_layer = static_cast<const Dense*>(layer);
 
@@ -1364,7 +1364,7 @@ void DenseBackPropagation<2>Cuda::set(const Index& new_batch_size, Layer* new_la
 }
 
 
-vector<ParameterView> DenseBackPropagation<2>Cuda::get_parameter_delta_views_device() const
+vector<ParameterView> DenseBackPropagation<2>Cuda::get_gradient_views_device() const
 {
     const auto* dense_layer = static_cast<const Dense*>(layer);
     const Index weight_deltas_size = dense_layer->get_input_dimensions()[0] * dense_layer->get_output_dimensions()[0];

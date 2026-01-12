@@ -28,26 +28,6 @@ public:
                        const Index& = 0,
                        const string& = string());
 
-    type* link_parameters(type* ptr) override
-    {
-        auto link_block = [&](type* p, type*& w, type*& b, Index dim) {
-            w = p;
-            p += (dim * dim);
-            p = (type*)(((size_t)p + 63) & ~63);
-            b = p;
-            p += dim;
-            return (type*)(((size_t)p + 63) & ~63);
-        };
-/*
-        Index e = get_embedding_dimension();
-        ptr = link_block(ptr, q_weights_ptr, q_biases_ptr, e);
-        ptr = link_block(ptr, k_weights_ptr, k_biases_ptr, e);
-        ptr = link_block(ptr, v_weights_ptr, v_biases_ptr, e);
-        ptr = link_block(ptr, proj_weights_ptr, proj_biases_ptr, e);
-*/
-        return ptr;
-    }
-
     Index get_query_sequence_length() const;
     Index get_source_sequence_length() const;
     Index get_embedding_dimension() const;
@@ -60,7 +40,7 @@ public:
 
     dimensions get_output_dimensions() const override;
 
-    vector<TensorView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     void set(const Index& = 0,
              const Index& = 0,
@@ -152,7 +132,7 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 

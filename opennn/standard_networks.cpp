@@ -12,8 +12,6 @@
 #include "standard_networks.h"
 #include "multihead_attention_layer.h"
 #include "scaling_layer.h"
-#include "scaling_layer.h"
-#include "scaling_layer.h"
 #include "unscaling_layer.h"
 #include "dense_layer.h"
 #include "bounding_layer.h"

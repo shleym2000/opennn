@@ -306,8 +306,8 @@ public:
 
         string expression = buffer.str();
 
-        replace(expression, "+-", "-");
-        replace(expression, "--", "+");
+        expression = std::regex_replace(expression, std::regex("\\+-"), "-");
+        expression = std::regex_replace(expression, std::regex("--"), "+");
 
         return expression;
     }
@@ -394,7 +394,7 @@ public:
 
             if (!descriptives_element)
                 throw runtime_error("Descriptives element " + to_string(i + 1) + " is nullptr.\n");
-
+/*
             if (descriptives_element->GetText()) {
                 const vector<string> descriptives_string = get_tokens(descriptives_element->GetText(), " ");
                 descriptives[i].set(
@@ -404,7 +404,7 @@ public:
                     type(stof(descriptives_string[3]))
                     );
             }
-
+*/
             scalers[i] = read_xml_string(scaling_neuron_element, "Scaler");
 
             start_element = scaling_neuron_element;

@@ -49,6 +49,15 @@ struct ForwardPropagation
     vector<unique_ptr<LayerForwardPropagation>> layers;
 
     Tensor1 workspace;
+
+    void compile()
+    {
+        Index maximum_layer_size = 0;
+
+        workspace.resize(2*maximum_layer_size);
+    }
+
+
 };
 
 
@@ -93,9 +102,8 @@ public:
 
             current_ptr += layer_parameters_number;
 
-            if (layer_parameters_number % 16 != 0)
-                current_ptr += 16 - layer_parameters_number%16;
-
+            //if (layer_parameters_number % 16 != 0)
+            //    current_ptr += 16 - layer_parameters_number%16;
         }
     }
 
@@ -243,7 +251,6 @@ public:
 
     Tensor2 calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
 
-
     // Serialization
 
     Tensor<string, 2> get_dense2d_layers_information() const;
@@ -324,6 +331,7 @@ protected:
 
 };
 
+
 struct NeuralNetworkBackPropagation
 {
     NeuralNetworkBackPropagation(const Index& = 0, NeuralNetwork* = nullptr);
@@ -358,7 +366,6 @@ struct NeuralNetworkBackPropagation
                 current_ptr = layer->link_gradient(current_ptr);
 
     }
-
 };
 
 

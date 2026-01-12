@@ -21,27 +21,10 @@ public:
 
     Recurrent(const dimensions & = {0, 0}, const dimensions& = {0});
 
-    type* link_parameters(type* ptr) override
-    {
-/*
-        input_weights = ptr;
-        //ptr += input_weights.size();
-
-        ptr = (type*)(((size_t)ptr + 63) & ~63);
-        recurrent_weights = ptr;
-        //ptr += recurrent_weights.size();
-
-        ptr = (type*)(((size_t)ptr + 63) & ~63);
-        biases = ptr;
-        //ptr += biases.size();
-*/
-        return ptr;
-    }
-
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<TensorView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     string get_activation_function() const;
 
@@ -112,7 +95,7 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 

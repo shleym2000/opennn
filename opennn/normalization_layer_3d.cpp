@@ -48,9 +48,9 @@ dimensions Normalization3d::get_output_dimensions() const
 }
 
 
-vector<TensorView> Normalization3d::get_parameter_views() const
+vector<TensorView*> Normalization3d::get_parameter_views()
 {
-    return {gammas, betas};
+    return {&gammas, &betas};
 }
 
 
@@ -298,7 +298,7 @@ vector<TensorView> Normalization3dBackPropagation::get_input_derivative_views() 
     return { {(type*)(input_deltas.data()), {batch_size, sequence_length, embedding_dimension}} };
 }
 
-vector<ParameterView> Normalization3dBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> Normalization3dBackPropagation::get_gradient_views() const
 {
     return {{(type*)gamma_derivatives.data(), gamma_derivatives.size()},
             {(type*)beta_derivatives.data(), beta_derivatives.size()}

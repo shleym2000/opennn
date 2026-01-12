@@ -634,15 +634,14 @@ Index Convolutional::get_input_width() const
 }
 
 
-vector<TensorView> Convolutional::get_parameter_views() const
+vector<TensorView*> Convolutional::get_parameter_views()
 {
-
-    vector<TensorView> parameter_views = {biases, weights};
+    vector<TensorView*> parameter_views = {&biases, &weights};
 
     if (batch_normalization)
     {
-        parameter_views.push_back(scales);
-        parameter_views.push_back(offsets);
+        parameter_views.push_back(&scales);
+        parameter_views.push_back(&offsets);
     }
 
     return parameter_views;
@@ -880,7 +879,7 @@ vector<TensorView> ConvolutionalBackPropagation::get_input_derivative_views() co
 }
 
 
-vector<ParameterView> ConvolutionalBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> ConvolutionalBackPropagation::get_gradient_views() const
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 
@@ -1528,7 +1527,7 @@ ConvolutionalBackPropagationCuda::ConvolutionalBackPropagationCuda(const Index& 
 }
 
 
-vector<ParameterView> ConvolutionalBackPropagationCuda::get_parameter_delta_views_device() const
+vector<ParameterView> ConvolutionalBackPropagationCuda::get_gradient_views_device() const
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 

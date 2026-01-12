@@ -45,7 +45,25 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override
+    {
+/*
+        const auto* dense_layer = static_cast<const Dense*>(layer);
+
+        vector<ParameterView> delta_views =
+            {{const_cast<type*>(bias_deltas.data()), bias_deltas.size()},
+             {const_cast<type*>(weight_deltas.data()), weight_deltas.size()}};
+
+        if (dense_layer->get_batch_normalization())
+        {
+            delta_views.push_back({ const_cast<type*>(bn_scale_deltas.data()), bn_scale_deltas.size() });
+            delta_views.push_back({ const_cast<type*>(bn_offset_deltas.data()), bn_offset_deltas.size() });
+        }
+
+        return delta_views;
+*/
+        return vector<ParameterView>();
+    }
 
     void initialize() override;
 
@@ -74,7 +92,6 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     TensorView bn_scale_deltas;
     TensorView bn_offset_deltas;
-
 };
 
 
@@ -126,14 +143,14 @@ public:
     }
 
 
-    vector<TensorView> get_parameter_views() const override
+    vector<TensorView*> get_parameter_views() override
     {
-        vector<TensorView> parameter_views = {biases, weights};
+        vector<TensorView*> parameter_views = {&biases, &weights};
 
         if (batch_normalization)
         {
-            parameter_views.push_back(scales);
-            parameter_views.push_back(offsets);
+            parameter_views.push_back(&scales);
+            parameter_views.push_back(&offsets);
         }
 
         return parameter_views;
@@ -183,18 +200,16 @@ public:
 
         if (batch_normalization)
         {
+            scales.dims = {outputs_number};
+            offsets.dims = {outputs_number};
+            moving_means.dims = {outputs_number};
+            moving_standard_deviations.dims = {outputs_number};
 /*
-            scales.resize(outputs_number);
             scales.setConstant(1.0);
-
-            offsets.resize(outputs_number);
             offsets.setZero();
 
-            moving_means.resize(outputs_number);
-            moving_means.setZero();
-
-            moving_standard_deviations.resize(outputs_number);
             moving_standard_deviations.setZero();
+            moving_means.setZero();
 */
         }
 
@@ -617,26 +632,6 @@ public:
     }
 
 
-    type* link_parameters(type* ptr) override
-    {
-/*
-        weights = ptr;
-
-        ptr += inputs_number*outputs_number;
-
-        const size_t address = reinterpret_cast<size_t>(ptr);
-
-        if (address % 64 != 0)
-            ptr += (16 - ((address / sizeof(type)) % 16));
-
-        biases = ptr;
-
-        ptr += outputs_number;
-*/
-        return ptr;
-    }
-
-
 #ifdef OPENNN_CUDA
 
 public:
@@ -737,7 +732,7 @@ struct DenseBackPropagation<2>Cuda : public LayerBackPropagationCuda
 {
     DenseBackPropagation<2>Cuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_parameter_delta_views_device() const override;
+    vector<ParameterView> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 

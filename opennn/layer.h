@@ -49,13 +49,29 @@ public:
 
     virtual void set_parameters_glorot();
 
-    Index get_parameters_number() const;
+    Index get_parameters_number();
 
-    virtual vector<TensorView> get_parameter_views() const;
-
-    virtual type* link_parameters(type*)
+    virtual vector<TensorView*> get_parameter_views()
     {
-        return nullptr;
+        return vector<TensorView*>();
+    }
+
+    type* link_parameters(type* ptr)
+    {        
+        vector<TensorView*> parameter_views = get_parameter_views();
+
+        for(Index i = 0; i < parameter_views.size(); i++)
+        {
+            parameter_views[i]->data = ptr;
+            ptr += parameter_views[i]->size();
+
+//            const size_t address = reinterpret_cast<size_t>(ptr);
+//            if (address % 64 != 0)
+//                ptr += (16 - ((address / sizeof(type)) % 16));
+
+        }
+
+        return ptr;
     }
 
     //virtual pair
@@ -434,7 +450,7 @@ struct LayerBackPropagation
 
     virtual vector<TensorView> get_input_derivative_views() const = 0;
 
-    virtual vector<ParameterView> get_parameter_delta_views() const
+    virtual vector<ParameterView> get_gradient_views() const
     {
         return vector<ParameterView>();
     }
@@ -505,7 +521,7 @@ struct LayerBackPropagationCuda
 
     virtual vector<float*> get_input_derivatives_device() { return {input_deltas}; }
 
-    virtual vector<ParameterView> get_parameter_delta_views_device() const
+    virtual vector<ParameterView> get_gradient_views_device() const
     {
         return vector<ParameterView>();
     }

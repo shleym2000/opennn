@@ -28,7 +28,7 @@ public:
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<TensorView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     void set(const Index& = 0, const Index& = 0, const string& = "normalization_layer_3d");
 
@@ -82,7 +82,7 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 

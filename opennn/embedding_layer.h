@@ -30,7 +30,7 @@ public:
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
-    vector<TensorView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     void set(const Index& = 0,
              const Index& = 0,
@@ -124,7 +124,7 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 
@@ -149,7 +149,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 {
     EmbeddingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_parameter_delta_views_device() const override;
+    vector<ParameterView> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 

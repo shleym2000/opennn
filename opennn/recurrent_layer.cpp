@@ -35,16 +35,9 @@ dimensions Recurrent::get_output_dimensions() const
 }
 
 
-vector<TensorView> Recurrent::get_parameter_views() const
-{
-/*
-    return {
-        {(type*)biases.data(), biases.size()},
-        {(type*)input_weights.data(), input_weights.size()},
-        {(type*)recurrent_weights.data(), recurrent_weights.size()}
-    };
-*/
-    return vector<TensorView>();
+vector<TensorView*> Recurrent::get_parameter_views()
+{  
+    return {&biases, &input_weights, &recurrent_weights};
 }
 
 
@@ -61,14 +54,14 @@ void Recurrent::set(const dimensions& new_input_dimensions, const dimensions& ne
 
     const Index inputs_number = new_input_dimensions[1];
     const Index outputs_number = new_output_dimensions[0];
-/*
-    biases.resize(outputs_number);
 
-    input_weights.resize(inputs_number, outputs_number);
+    biases.dims = {outputs_number};
 
-    recurrent_weights.resize(outputs_number, outputs_number);
-*/
-    set_parameters_random();
+    input_weights.dims = {inputs_number, outputs_number};
+
+    recurrent_weights.dims = {outputs_number, outputs_number};
+
+    //set_parameters_random();
 
     label = "recurrent_layer";
 
@@ -447,7 +440,7 @@ vector<TensorView> RecurrentBackPropagation::get_input_derivative_views() const
 }
 
 
-vector<ParameterView> RecurrentBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> RecurrentBackPropagation::get_gradient_views() const
 {
 /*
     return {bias_deltas, input_weight_deltas, recurrent_weight_deltas};

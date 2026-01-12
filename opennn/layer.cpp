@@ -8,6 +8,7 @@
 
 #include "layer.h"
 #include "tensors.h"
+#include <vector>
 
 namespace opennn
 {
@@ -69,6 +70,7 @@ void Layer::set_parameters_random()
 
 void Layer::set_parameters_glorot()
 {
+    /*
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
 
@@ -78,31 +80,24 @@ void Layer::set_parameters_glorot()
 
     for (const auto& view : parameter_views)
     {
-/*
         TensorMap1 this_parameters(view.data, view.size);
 
         set_random(this_parameters, -limit, limit);
-*/
     }
+*/
 }
 
 
-Index Layer::get_parameters_number() const
+Index Layer::get_parameters_number()
 {
-    const vector<TensorView> parameter_views = get_parameter_views();
+    vector<TensorView*> parameter_views = get_parameter_views();
 
     Index parameters_number = 0;
 
     for(Index i = 0; i < Index(parameter_views.size()); i++)
-        parameters_number += parameter_views[i].size();
+        parameters_number += parameter_views[i]->size();
 
     return parameters_number;
-}
-
-
-vector<TensorView> Layer::get_parameter_views() const
-{
-    return vector<TensorView>();
 }
 
 

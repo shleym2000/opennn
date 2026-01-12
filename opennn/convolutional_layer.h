@@ -27,35 +27,6 @@ public:
                   const bool& = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
 
-
-    type* link_parameters(type* ptr) override
-    {
-/*
-        weights = ptr;
-
-        //ptr += weights.size();
-
-        ptr = (type*)(((size_t)ptr + 63) & ~63);
-
-        biases = ptr;
-
-        ptr += biases.size();
-
-        if (batch_normalization) {
-            // 3. BN Scales (gamma)
-            ptr = (type*)(((size_t)ptr + 63) & ~63);
-            bn_scales_ptr = ptr;
-            ptr += scales.size();
-
-            // 4. BN Offsets (beta)
-            ptr = (type*)(((size_t)ptr + 63) & ~63);
-            bn_offsets_ptr = ptr;
-            ptr += offsets.size();
-        }
-*/
-        return ptr;
-    }
-
     bool get_batch_normalization() const;
 
     const string& get_activation_function() const;
@@ -88,7 +59,7 @@ public:
     Index get_input_height() const;
     Index get_input_width() const;
 
-    vector<TensorView> get_parameter_views() const override;
+    vector<TensorView*> get_parameter_views() override;
 
     // Set
 
@@ -240,7 +211,7 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
     vector<TensorView> get_input_derivative_views() const override;
 
-    vector<ParameterView> get_parameter_delta_views() const override;
+    vector<ParameterView> get_gradient_views() const override;
 
     void initialize() override;
 
@@ -299,7 +270,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 {
     ConvolutionalBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_parameter_delta_views_device() const override;
+    vector<ParameterView> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 

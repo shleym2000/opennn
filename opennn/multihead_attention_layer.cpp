@@ -99,12 +99,12 @@ dimensions MultiHeadAttention::get_output_dimensions() const
 }
 
 
-vector<TensorView> MultiHeadAttention::get_parameter_views() const
+vector<TensorView*> MultiHeadAttention::get_parameter_views()
 {
-    return {query_weights, query_biases,
-            key_weights, key_biases,
-            value_weights, value_biases,
-            projection_weights, projection_biases};
+    return {&query_weights, &query_biases,
+            &key_weights, &key_biases,
+            &value_weights, &value_biases,
+            &projection_weights, &projection_biases};
 }
 
 
@@ -609,7 +609,7 @@ vector<TensorView> MultiHeadAttentionBackPropagation::get_input_derivative_views
 }
 
 
-vector<ParameterView> MultiHeadAttentionBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> MultiHeadAttentionBackPropagation::get_gradient_views() const
 {
     return {{(type*)query_weight_deltas.data(), query_weight_deltas.size()},
             {(type*)query_bias_deltas.data(), query_bias_deltas.size()},

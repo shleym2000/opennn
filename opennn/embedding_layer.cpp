@@ -55,9 +55,9 @@ dimensions Embedding::get_output_dimensions() const
 }
 
 
-vector<TensorView> Embedding::get_parameter_views() const
+vector<TensorView*> Embedding::get_parameter_views()
 {
-    return {weights};
+    return {&weights};
 }
 
 
@@ -105,12 +105,14 @@ void Embedding::set_dropout_rate(const type& new_dropout_rate)
 
 
 void Embedding::set_parameters_random()
-{
-/*
+{        
     if(weights.size() == 0) return;
-    weights.setRandom();
-    weights.chip(0, 0).setZero(); // First row is padding
-*/
+
+    TensorMap2 weights_map = tensor_map<2>(weights);
+
+    weights_map.setRandom();
+    weights_map.chip(0, 0).setZero(); // First row is padding
+
 }
 
 
@@ -311,7 +313,7 @@ vector<TensorView> EmbeddingBackPropagation::get_input_derivative_views() const
     return vector<TensorView>();
 }
 
-vector<ParameterView> EmbeddingBackPropagation::get_parameter_delta_views() const
+vector<ParameterView> EmbeddingBackPropagation::get_gradient_views() const
 {
     return {{(type*)weight_deltas.data(), weight_deltas.size()}};
 }
@@ -420,7 +422,7 @@ EmbeddingBackPropagationCuda::EmbeddingBackPropagationCuda(const Index& new_batc
 }
 
 
-vector<ParameterView> EmbeddingBackPropagationCuda::get_parameter_delta_views_device() const
+vector<ParameterView> EmbeddingBackPropagationCuda::get_gradient_views_device() const
 {
     return vector<ParameterView>();
 }
