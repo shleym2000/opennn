@@ -418,9 +418,9 @@ struct LayerForwardPropagation
 
     virtual void initialize() = 0;
 
-    TensorView get_output_view() const
+    TensorView get_outputs() const
     {
-        return output;
+        return outputs;
     }
 
     virtual void print() const {}
@@ -429,7 +429,7 @@ struct LayerForwardPropagation
 
     Layer* layer = nullptr;
 
-    TensorView output;
+    TensorView outputs;
 };
 
 

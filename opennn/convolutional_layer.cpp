@@ -77,14 +77,16 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
     ConvolutionalForwardPropagation* this_forward_propagation =
         static_cast<ConvolutionalForwardPropagation*>(layer_forward_propagation.get());
 
+    TensorMap4 outputs = tensor_map<4>(this_forward_propagation->outputs);
+
     Tensor4& preprocessed_inputs = this_forward_propagation->preprocessed_inputs;
-    Tensor4& outputs = this_forward_propagation->outputs;
+
     Tensor4& activation_derivatives = this_forward_propagation->activation_derivatives;
 
     preprocess_inputs(inputs, preprocessed_inputs);
-
-    calculate_convolutions(preprocessed_inputs, outputs);
 /*
+    calculate_convolutions(preprocessed_inputs, outputs);
+
     if(batch_normalization)
         normalize_batch<4>(
             this_forward_propagation->outputs,
@@ -96,10 +98,11 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
             scales,
             offsets,
             is_training);
-*/
+
     is_training
         ? calculate_activations(activation_function, outputs, activation_derivatives)
         : calculate_activations(activation_function, outputs, empty_4);
+*/
 }
 
 
@@ -682,10 +685,7 @@ void ConvolutionalForwardPropagation::initialize()
                                input_width + (padding_width*2),
                                input_channels);
 
-    outputs.resize(batch_size,
-                   output_height,
-                   output_width,
-                   kernels_number);
+    outputs.dims = {batch_size, output_height, output_width, kernels_number};
 
     means.resize(kernels_number);
 
@@ -702,7 +702,7 @@ void ConvolutionalForwardPropagation::print() const
 {
     cout << "Convolutional layer" << endl
          << "Outputs:" << endl
-         << outputs << endl
+         << outputs.dims << endl
          << "Activation derivatives:" << endl
          << activation_derivatives << endl;
 }

@@ -851,7 +851,7 @@ string Transformer::calculate_outputs(const string& source)
 
         forward_propagate(inputs, forward_propagation, false);
 
-        const TensorView output_view = forward_propagation.get_output_view();
+        const TensorView output_view = forward_propagation.get_outputs();
 
         const Index vocabulary_size = output_view.dims[2];
 

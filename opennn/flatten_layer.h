@@ -99,13 +99,18 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
     {
+/*
         const Index batch_size = layer_forward_propagation->batch_size;
         const Index outputs_number = get_outputs_number();
+
+        //TensorMap
 
         FlattenForwardPropagation<Rank>* forward_prop =
             static_cast<FlattenForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
+
         forward_prop->outputs = TensorMap2(input_views[0].data, batch_size, outputs_number);
+*/
     }
 
     // Back-propagation
@@ -233,13 +238,13 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
-        outputs.resize(batch_size, output_dimensions[0]);
+        outputs.dims = {batch_size, output_dimensions[0]};
     }
 
 
     void print() const override
     {
-        cout << "Flatten Outputs:" << endl << outputs.dimensions() << endl;
+        cout << "Flatten Outputs:" << endl << outputs.dims << endl;
     }
 };
 

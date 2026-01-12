@@ -8,7 +8,7 @@
 
 #include "registry.h"
 #include "dense_layer.h"
-
+/*
 namespace opennn
 {
     using Dense2d = Dense<2>;
@@ -52,7 +52,6 @@ namespace opennn
 
     void reference_dense_layer() { }
 
-<<<<<<< HEAD
 void Dense::set_dropout_rate(const type& new_dropout_rate)
 {
     if (new_dropout_rate < type(0) || new_dropout_rate >= type(1))
@@ -1427,11 +1426,9 @@ REGISTER(LayerBackPropagationCuda, DenseBackPropagation<2>Cuda, "Dense")
 REGISTER(Layer, Dense, "Dense")
 REGISTER(LayerForwardPropagation, DenseForwardPropagation<2>, "Dense")
 REGISTER(LayerBackPropagation, DenseBackPropagation<2>, "Dense")
-*/
-=======
->>>>>>> 00f195c1839733123a5637655db1269f9a3eaf28
-} // namespace opennn
 
+} // namespace opennn
+*/
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.

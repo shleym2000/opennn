@@ -260,11 +260,12 @@ void Pooling::forward_propagate_average_pooling(const Tensor4& inputs,
                                                 unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                                 const bool&) const
 {
+    TensorMap4 outputs = tensor_map<4>(layer_forward_propagation->outputs);
+
     PoolingForwardPropagation* this_forward_propagation =
         static_cast<PoolingForwardPropagation*>(layer_forward_propagation.get());
 
     Tensor<type, 5>& image_patches = this_forward_propagation->image_patches;
-    Tensor4& outputs = this_forward_propagation->outputs;
 
     image_patches.device(*device) = inputs.extract_image_patches(
         pool_height,
@@ -277,9 +278,8 @@ void Pooling::forward_propagate_average_pooling(const Tensor4& inputs,
         type(padding_width)
         );
 
-    outputs.device(*device) = image_patches
-                                              .mean(array_2(1, 2))
-                                              .reshape(array_4(outputs.dimension(0), outputs.dimension(1), outputs.dimension(2), outputs.dimension(3)));
+    outputs.device(*device) = image_patches.mean(array_2(1, 2))
+                              .reshape(array_4(outputs.dimension(0), outputs.dimension(1), outputs.dimension(2), outputs.dimension(3)));
 }
 
 
@@ -287,11 +287,12 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             const bool& is_training) const
 {
+    TensorMap4 outputs = tensor_map<4>(layer_forward_propagation->outputs);
+
     PoolingForwardPropagation* pooling_layer_forward_propagation =
         static_cast<PoolingForwardPropagation*>(layer_forward_propagation.get());
 
     Tensor<type, 5>& image_patches = pooling_layer_forward_propagation->image_patches;
-    Tensor4& outputs = pooling_layer_forward_propagation->outputs;
 
     const Index batch_size = outputs.dimension(0);
     const Index output_width = outputs.dimension(1);
@@ -510,10 +511,7 @@ void PoolingForwardPropagation::initialize()
 
     const Index channels = pooling_layer->get_channels_number();
 
-    outputs.resize(batch_size,
-                   output_height,
-                   output_width,
-                   channels);
+    outputs.dims = {batch_size, output_height, output_width, channels};
 
     image_patches.resize(batch_size,
                          pool_height,
@@ -532,7 +530,7 @@ void PoolingForwardPropagation::print() const
 {
     cout << "Pooling layer forward propagation" << endl
          << "Outputs:" << endl
-         << outputs(0) << endl;
+         << outputs.dims << endl;
 }
 
 

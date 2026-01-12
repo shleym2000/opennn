@@ -117,7 +117,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     RecurrentForwardPropagation* recurrent_forward =
         static_cast<RecurrentForwardPropagation*>(forward_propagation.get());
 
-    Tensor2& outputs = recurrent_forward->outputs;
+    TensorMap2 outputs = tensor_map<2>(recurrent_forward->outputs);
     Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
     Tensor2& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
     Tensor3& hidden_states = recurrent_forward->hidden_states;
@@ -339,14 +339,6 @@ RecurrentForwardPropagation::RecurrentForwardPropagation(const Index& new_batch_
 }
 
 
-TensorView RecurrentForwardPropagation::get_output_view() const
-{
-    const Index outputs_number = layer->get_outputs_number();
-
-    return {(type*)outputs.data(), {{batch_size, outputs_number}}};
-}
-
-
 void RecurrentForwardPropagation::initialize()
 {
     if(layer == nullptr)
@@ -362,10 +354,12 @@ void RecurrentForwardPropagation::initialize()
 
     activation_derivatives.resize(batch_size, past_time_steps, outputs_number);
 
-    outputs.resize(batch_size, outputs_number);
+    outputs.dims = {batch_size, outputs_number};
+/*
     outputs.setZero();
-
+*/
     hidden_states.resize(batch_size, past_time_steps, outputs_number);
+
     hidden_states.setZero();
 }
 

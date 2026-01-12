@@ -122,10 +122,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
 {
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    EmbeddingForwardPropagation* embedding_forward_propagation =
-        static_cast<EmbeddingForwardPropagation*>(layer_forward_propagation.get());
-
-    Tensor3& outputs = embedding_forward_propagation->outputs;
+    Tensor3 outputs = tensor_map<3>(layer_forward_propagation->outputs);
 
     const Index batch_size = outputs.dimension(0);
     const Index embedding_dimension = outputs.dimension(2);
@@ -276,7 +273,7 @@ void EmbeddingForwardPropagation::initialize()
 
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
 
-    outputs.resize(batch_size, sequence_length, embedding_dimension);
+    outputs.dims = {batch_size, sequence_length, embedding_dimension};
 }
 
 

@@ -177,18 +177,20 @@ public:
             scaler = new_scaler;
     }
 
+
     void forward_propagate(const vector<TensorView>& input_views,
-                           unique_ptr<LayerForwardPropagation>& forward_propagation,
+                           unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
     {
         const Index outputs_number = get_outputs_number();
 
-        ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
-            static_cast<ScalingForwardPropagation<Rank>*>(forward_propagation.get());
-
         const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-        Tensor2& outputs = scaling_layer_forward_propagation->outputs;
+        TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
+/*
+        ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
+            static_cast<ScalingForwardPropagation<Rank>*>(layer_forward_propagation.get());
+
         outputs = inputs;
 
         for(Index i = 0; i < outputs_number; i++)
@@ -210,6 +212,7 @@ public:
             else
                 throw runtime_error("Unknown scaling method.\n");
         }
+*/
     }
 
     //void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>& );
@@ -483,20 +486,19 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         set(new_batch_size, new_layer);
     }
 
-
     virtual ~ScalingForwardPropagation() = default;
 
     void initialize() override
     {
         const Index outputs_number = layer->get_outputs_number();
 
-        outputs.resize(batch_size, outputs_number);
+        outputs.dims = {batch_size, outputs_number};
     }
 
     void print() const override
     {
         cout << "Outputs:" << endl
-             << outputs << endl;
+             << outputs.dims << endl;
     }
 };
 

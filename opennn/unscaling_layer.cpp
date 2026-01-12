@@ -188,6 +188,8 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
                                   const bool&)
 {
+    TensorMap2 outputs = tensor_map<2>(forward_propagation->outputs);
+
     const Index outputs_number = get_outputs_number();
 
     UnscalingForwardPropagation* this_forward_propagation =
@@ -195,10 +197,8 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
 
     const TensorMap<Tensor<type,2>> inputs = tensor_map<2>(input_views[0]);
 
-    Tensor2& outputs = this_forward_propagation->outputs;
-
     outputs = inputs;
-
+/*
     for(Index i = 0; i < outputs_number; i++)
     {
         const string& scaler = scalers[i];
@@ -223,6 +223,7 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
         else
             throw runtime_error("Unknown scaling method\n");
     }
+*/
 }
 
 
@@ -319,14 +320,14 @@ void UnscalingForwardPropagation::initialize()
 {
     const dimensions output_dimensions = static_cast<Unscaling*>(layer)->get_output_dimensions();
 
-    outputs.resize(batch_size, output_dimensions[0]);
+    outputs.dims = {batch_size, output_dimensions[0]};
 }
 
 
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs << endl;
+         << outputs.dims << endl;
 }
 
 REGISTER(Layer, Unscaling, "Unscaling")

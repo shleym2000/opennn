@@ -84,10 +84,10 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
 
     const TensorMap3 inputs(input_views[0].data, batch_size, sequence_length, embedding_dimension);
 
+    TensorMap3 outputs = tensor_map<3>(layer_forward_propagation->outputs);
+
     Normalization3dForwardPropagation* this_forward_propagation =
         static_cast<Normalization3dForwardPropagation*>(layer_forward_propagation.get());
-
-    Tensor3& outputs = this_forward_propagation->outputs;
 
     Tensor2& means = this_forward_propagation->means;
     Tensor2& standard_deviations = this_forward_propagation->standard_deviations;
@@ -129,10 +129,11 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
 
     const TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
+    const TensorMap3 outputs = tensor_map<3>(forward_propagation->outputs);
+
     const Normalization3dForwardPropagation* this_forward_propagation
         = static_cast<Normalization3dForwardPropagation*>(forward_propagation.get());
 
-    const Tensor3& outputs = this_forward_propagation->outputs;
     const Tensor2& standard_deviations = this_forward_propagation->standard_deviations;
 
     Normalization3dBackPropagation* this_back_propagation =
@@ -229,7 +230,7 @@ void Normalization3dForwardPropagation::initialize()
     const Index sequence_length = normalization_3d->get_sequence_length();
     const Index embedding_dimension = normalization_3d->get_embedding_dimension();
 
-    outputs.resize(batch_size, sequence_length, embedding_dimension);
+    outputs.dims = {batch_size, sequence_length, embedding_dimension};
 
     means.resize(batch_size, sequence_length);
     standard_deviations.resize(batch_size, sequence_length);
@@ -239,7 +240,7 @@ void Normalization3dForwardPropagation::initialize()
 void Normalization3dForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs << endl;
+         << outputs.dims << endl;
 }
 
 

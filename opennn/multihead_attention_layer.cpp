@@ -179,7 +179,7 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
 
     Tensor3& concatenated_attention_outputs = this_forward_propagation->concatenated_attention_outputs;
 
-    Tensor3& outputs = this_forward_propagation->outputs;
+    TensorMap3 outputs = tensor_map<3>(this_forward_propagation->outputs);
 
     const Index embedding_dimension = get_embedding_dimension();
     const Index head_dimension = get_head_dimension();
@@ -517,8 +517,12 @@ void MultiHeadAttentionForwardPropagation::initialize()
     attention_weights.resize(batch_size, heads_number, query_sequence_length, source_sequence_length);
 
     attention_outputs.resize(batch_size, heads_number, query_sequence_length, head_dimension);
+
+    // @todo can we remove concatenated_attention_outputs and assign to outputs?
+
     concatenated_attention_outputs.resize(batch_size, query_sequence_length, embedding_dimension);
-    outputs.resize(batch_size, query_sequence_length, embedding_dimension);
+
+    outputs.dims = {batch_size, query_sequence_length, embedding_dimension};
 }
 
 

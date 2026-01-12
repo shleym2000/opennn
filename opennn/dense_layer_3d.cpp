@@ -116,8 +116,8 @@ void Dense3d::forward_propagate(const vector<TensorView>& input_views,
     Dense3dForwardPropagation* this_forward_propagation =
         static_cast<Dense3dForwardPropagation*>(layer_forward_propagation.get());
 
-    Tensor3& outputs = this_forward_propagation->outputs;
-
+    TensorMap3 outputs = tensor_map<3>(this_forward_propagation->outputs);
+/*
     calculate_combinations<3>(inputs, weights, biases, outputs);
 
     if(is_training && dropout_rate > type(0))
@@ -126,6 +126,7 @@ void Dense3d::forward_propagate(const vector<TensorView>& input_views,
     is_training
         ? calculate_activations(activation_function, outputs, this_forward_propagation->activation_derivatives)
         : calculate_activations(activation_function, outputs, empty_3);
+*/
 }
 
 
@@ -203,7 +204,7 @@ void Dense3d::to_XML(XMLPrinter& printer) const
 void Dense3dForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs << endl
+         << outputs.dims << endl
          << "Activation derivatives:" << endl
          << activation_derivatives << endl;
 }
@@ -224,7 +225,7 @@ void Dense3dForwardPropagation::initialize()
 
     const Index sequence_length = dense_3d->get_sequence_length();
 
-    output.resize(batch_size, sequence_length, output_embedding);
+    outputs.dims = {batch_size, sequence_length, output_embedding};
 
     activation_derivatives.resize(batch_size, sequence_length, output_embedding);
 }

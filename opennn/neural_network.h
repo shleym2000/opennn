@@ -35,9 +35,9 @@ struct ForwardPropagation
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
 
-    TensorView get_output_view()
+    TensorView get_outputs()
     {
-        return layers.back()->get_output_view();
+        return layers.back()->get_outputs();
     }
 
     void print() const;
@@ -227,7 +227,7 @@ public:
 
         forward_propagate({input_view}, forward_propagation, false);
 
-        const TensorView& output_view = forward_propagation.layers.back()->get_output_view();
+        const TensorView& output_view = forward_propagation.layers.back()->get_outputs();
 
         if constexpr (output_rank == 2)
            return tensor_map<2>(output_view);
