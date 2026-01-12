@@ -60,7 +60,7 @@ public:
     {        
         vector<TensorView*> parameter_views = get_parameter_views();
 
-        for(Index i = 0; i < parameter_views.size(); i++)
+        for(Index i = 0; i < Index(parameter_views.size()); i++)
         {
             parameter_views[i]->data = ptr;
             ptr += parameter_views[i]->size();
