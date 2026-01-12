@@ -121,13 +121,15 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     Tensor3& activation_derivatives = recurrent_forward->activation_derivatives;
     Tensor2& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
     Tensor3& hidden_states = recurrent_forward->hidden_states;
-/*
-    const Index output_size = input_weights.dimension(1);
+
+    const Index output_size = input_weights.dims[1];
 
     Tensor2 previous_hidden_states(batch_size, output_size);
+
     previous_hidden_states.setZero();
+
     for(Index time_step = 0; time_step < past_time_steps; time_step++)
-    {
+    {/*
         calculate_combinations<2>(inputs.chip(time_step, 1), input_weights, biases, outputs);
 
         outputs.device(*device) += previous_hidden_states.contract(recurrent_weights, axes(1,0));
@@ -142,8 +144,8 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
         hidden_states.chip(time_step, 1) = outputs;
 
         previous_hidden_states = outputs;
-    }
 */
+    }
 }
 
 
@@ -384,11 +386,11 @@ void RecurrentBackPropagation::initialize()
     combinations_recurrent_weight_deltas.resize(outputs_number, outputs_number, outputs_number);
     combination_deltas.resize(batch_size, outputs_number);
     current_combination_deltas.resize(batch_size, outputs_number);
-/*
-    bias_deltas.resize(outputs_number);
-    input_weight_deltas.resize(inputs_number, outputs_number);
-    recurrent_weight_deltas.resize(outputs_number, outputs_number);
-*/
+
+    bias_deltas.dims = {outputs_number};
+    input_weight_deltas.dims = {inputs_number, outputs_number};
+    recurrent_weight_deltas.dims = {outputs_number, outputs_number};
+
     input_deltas.resize(batch_size, past_time_steps, inputs_number);
 /*
     input_weight_deltas.setZero();

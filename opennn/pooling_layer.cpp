@@ -498,18 +498,6 @@ PoolingForwardPropagation::PoolingForwardPropagation(const Index& new_batch_size
 }
 
 
-TensorView PoolingForwardPropagation::get_output_view() const
-{
-    const Pooling* pooling_layer = static_cast<Pooling*>(layer);
-
-    const Index output_height = pooling_layer->get_output_height();
-    const Index output_width = pooling_layer->get_output_width();
-    const Index channels = pooling_layer->get_channels_number();
-
-    return {(type*)outputs.data(), {batch_size, output_height, output_width, channels}};
-}
-
-
 void PoolingForwardPropagation::initialize()
 {
     const Pooling* pooling_layer = static_cast<Pooling*>(layer);

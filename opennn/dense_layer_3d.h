@@ -79,13 +79,9 @@ struct Dense3dForwardPropagation final : LayerForwardPropagation
 {
     Dense3dForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
 
     void print() const override;
-
-    Tensor3 outputs;
 
     Tensor3 activation_derivatives;
 };

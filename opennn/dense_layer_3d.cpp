@@ -216,17 +216,6 @@ Dense3dForwardPropagation::Dense3dForwardPropagation(const Index& new_batch_size
 }
 
 
-TensorView Dense3dForwardPropagation::get_output_view() const
-{
-    Dense3d* dense_3d = static_cast<Dense3d*>(layer);
-
-    const Index sequence_length = dense_3d->get_sequence_length();
-    const Index output_embedding = dense_3d->get_output_embedding();
-
-    return { (type*)outputs.data(), { batch_size, sequence_length, output_embedding } };
-}
-
-
 void Dense3dForwardPropagation::initialize()
 {
     Dense3d* dense_3d = static_cast<Dense3d*>(layer);
@@ -235,7 +224,7 @@ void Dense3dForwardPropagation::initialize()
 
     const Index sequence_length = dense_3d->get_sequence_length();
 
-    outputs.resize(batch_size, sequence_length, output_embedding);
+    output.resize(batch_size, sequence_length, output_embedding);
 
     activation_derivatives.resize(batch_size, sequence_length, output_embedding);
 }

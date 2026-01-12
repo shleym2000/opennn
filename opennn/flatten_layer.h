@@ -230,14 +230,6 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     }
 
 
-    TensorView get_output_view() const override
-    {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-
-        return {(type*)outputs.data(), {batch_size, output_dimensions[0]}};
-    }
-
-
     void initialize() override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
@@ -249,9 +241,6 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     {
         cout << "Flatten Outputs:" << endl << outputs.dimensions() << endl;
     }
-
-
-    Tensor2 outputs;
 };
 
 

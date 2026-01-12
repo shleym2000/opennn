@@ -486,26 +486,6 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
 
     virtual ~ScalingForwardPropagation() = default;
 
-    TensorView get_output_view() const override
-    {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-
-        // Warning: this assumes output_dimensions[0] is correct for 2D view. 
-        // For Rank > 2, we might want to return full dimensions?
-        // But LayerForwardPropagation base usually expects flat or 2D view if not overridden specifically?
-        // Existing 2D code: {batch_size, output_dimensions[0]}.
-        // If output_dimensions has size > 1, accessing [0] gives first dim. 
-        // But we want flattened feature size.
-        
-        Index features_size = 1; 
-        if(!output_dimensions.empty())
-        {
-             features_size = accumulate(output_dimensions.begin(), output_dimensions.end(), 1, multiplies<Index>());
-        }
-
-        return {(type*)outputs.data(), {batch_size, features_size}};
-    }
-
     void initialize() override
     {
         const Index outputs_number = layer->get_outputs_number();
@@ -518,8 +498,6 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         cout << "Outputs:" << endl
              << outputs << endl;
     }
-
-    Tensor2 outputs;
 };
 
 

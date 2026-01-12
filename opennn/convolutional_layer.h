@@ -85,11 +85,9 @@ public:
 
     // Forward propagation
 
-    void preprocess_inputs(const Tensor4&,
-                           Tensor4&) const;
+    void preprocess_inputs(const Tensor4&, Tensor4&) const;
 
-    void calculate_convolutions(const Tensor4&,
-                                Tensor4&) const;
+    void calculate_convolutions(const Tensor4&,Tensor4&) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -163,7 +161,6 @@ private:
     TensorView offsets;
 
     Index row_stride = 1;
-
     Index column_stride = 1;
 
     dimensions input_dimensions;
@@ -188,13 +185,9 @@ struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 {
     ConvolutionalForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
 
     void print() const override;
-
-    Tensor4 outputs;
 
     Tensor4 preprocessed_inputs;
 

@@ -500,17 +500,6 @@ MultiHeadAttentionForwardPropagation::MultiHeadAttentionForwardPropagation(const
 }
 
 
-TensorView MultiHeadAttentionForwardPropagation::get_output_view() const
-{
-    MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);
-
-    const Index query_sequence_length = multihead_attention_layer->get_query_sequence_length();
-    const Index embedding_dimension = multihead_attention_layer->get_embedding_dimension();
-
-    return { (type*)outputs.data(), {{ batch_size, query_sequence_length, embedding_dimension }} };
-}
-
-
 void MultiHeadAttentionForwardPropagation::initialize()
 {
     MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);

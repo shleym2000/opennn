@@ -315,14 +315,6 @@ UnscalingForwardPropagation::UnscalingForwardPropagation(const Index& new_batch_
 }
 
 
-TensorView UnscalingForwardPropagation::get_output_view() const
-{
-    const dimensions output_dimensions = layer->get_output_dimensions();
-
-    return { (type*)outputs.data(), { batch_size, output_dimensions[0]}};
-}
-
-
 void UnscalingForwardPropagation::initialize()
 {
     const dimensions output_dimensions = static_cast<Unscaling*>(layer)->get_output_dimensions();

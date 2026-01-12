@@ -150,13 +150,9 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 {
     PoolingForwardPropagation(const Index& = 0, Layer* = nullptr);
 
-    TensorView get_output_view() const override;
-
     void initialize() override;
 
     void print() const override;
-
-    Tensor4 outputs;
 
     Tensor<type, 5> image_patches;
 

@@ -268,18 +268,6 @@ EmbeddingForwardPropagation::EmbeddingForwardPropagation(const Index& new_batch_
 }
 
 
-TensorView EmbeddingForwardPropagation::get_output_view() const
-{
-    const Embedding* embedding_layer = static_cast<Embedding*>(layer);
-
-    const Index sequence_length = embedding_layer->get_sequence_length();
-
-    const Index embedding_dimension = embedding_layer->get_embedding_dimension();
-
-    return {(type*)outputs.data(), {batch_size, sequence_length, embedding_dimension}};
-}
-
-
 void EmbeddingForwardPropagation::initialize()
 {
     const Embedding* embedding_layer = static_cast<Embedding*>(layer);

@@ -159,7 +159,7 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
     BoundingForwardPropagation* this_forward_propagation =
         static_cast<BoundingForwardPropagation*>(forward_propagation.get());
 
-    Tensor<type,2>& outputs = this_forward_propagation->outputs;
+    Tensor<type,2>& outputs = this_forward_propagation->output;
 
     if(bounding_method == BoundingMethod::NoBounding)
     {
@@ -289,14 +289,6 @@ BoundingForwardPropagation::BoundingForwardPropagation(const Index& new_batch_si
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
-}
-
-
-TensorView BoundingForwardPropagation::get_output_view() const
-{
-    const dimensions output_dimensions = layer->get_output_dimensions();
-
-    return { (type*)outputs.data(), { batch_size, output_dimensions[0]}};
 }
 
 

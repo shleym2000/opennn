@@ -418,13 +418,18 @@ struct LayerForwardPropagation
 
     virtual void initialize() = 0;
 
-    virtual TensorView get_output_view() const = 0;
+    TensorView get_output_view() const
+    {
+        return output;
+    }
 
     virtual void print() const {}
 
     Index batch_size = 0;
 
     Layer* layer = nullptr;
+
+    TensorView output;
 };
 
 

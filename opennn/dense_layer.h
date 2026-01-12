@@ -23,8 +23,6 @@ struct DenseForwardPropagation final : LayerForwardPropagation
 
     virtual ~DenseForwardPropagation() = default;
 
-    TensorView get_output_view() const override;
-
     vector<TensorView*> get_workspace_views();
 
     void initialize() override;

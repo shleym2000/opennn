@@ -559,14 +559,6 @@ void DenseForwardPropagation<2>::initialize()
 }
 
 
-TensorView DenseForwardPropagation<2>::get_output_view() const
-{
-    const dimensions output_dimensions = layer->get_output_dimensions();
-
-    return TensorView((type*)outputs.data(), {{batch_size, output_dimensions[0]}});
-}
-
-
 DenseForwardPropagation<2>::DenseForwardPropagation<2>(const Index& new_batch_size, Layer *new_layer)
     : LayerForwardPropagation()
 {

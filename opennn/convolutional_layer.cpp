@@ -42,20 +42,17 @@ bool Convolutional::get_batch_normalization() const
 void Convolutional::preprocess_inputs(const Tensor4& inputs,
                                       Tensor4& preprocessed_inputs) const
 {
-    if (convolution_type == "Same")
-        preprocessed_inputs = inputs.pad(get_paddings());
-    else
-        preprocessed_inputs.device(*device) = inputs;
-}
+    preprocessed_inputs = (convolution_type == "Same")
+        ? inputs.pad(get_paddings())
+        : inputs;}
 
 
-void Convolutional::calculate_convolutions(const Tensor4& inputs,
-                                           Tensor4& convolutions) const
+void Convolutional::calculate_convolutions(const Tensor4& inputs, Tensor4& convolutions) const
 {  
     const Index kernels_number = get_kernels_number();
 
-    const TensorMap2 weights_map = tensor_map<2>(weights);
-    const TensorMap1 biases_map = tensor_map<1>(biases);
+//    const TensorMap2 weights_map = tensor_map<2>(weights);
+//    const TensorMap1 biases_map = tensor_map<1>(biases);
 
     for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
@@ -203,7 +200,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     {
         const TensorMap3 kernel_convolution_deltas = tensor_map_(deltas, kernel_index);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for (Index image_index = 0; image_index < batch_size; ++image_index)
         {
             const Tensor2 image_kernel_convolutions_derivatives_padded = kernel_convolution_deltas.chip(image_index, 0).pad(paddings);
@@ -211,7 +208,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
             for (Index channel_index = 0; channel_index < input_channels; ++channel_index)
             {
                 const Tensor2 convolution_result = image_kernel_convolutions_derivatives_padded
-                                                               .convolve(precomputed_rotated_slices[kernel_index][channel_index], convolution_dimensions_2d);
+                .convolve(precomputed_rotated_slices[kernel_index][channel_index], convolution_dimensions_2d);
 
                 for (Index h = 0; h < input_height; ++h)
                     for (Index w = 0; w < input_width; ++w)
@@ -661,18 +658,6 @@ ConvolutionalForwardPropagation::ConvolutionalForwardPropagation(const Index& ne
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
-}
-
-
-TensorView ConvolutionalForwardPropagation::get_output_view() const
-{
-    const Convolutional* convolutional_layer = static_cast<Convolutional*>(layer);
-
-    const Index output_height = convolutional_layer->get_output_height();
-    const Index output_width = convolutional_layer->get_output_width();
-    const Index kernels_number = convolutional_layer->get_kernels_number();
-
-    return {(type*)outputs.data(), {batch_size, output_height, output_width, kernels_number}};
 }
 
 

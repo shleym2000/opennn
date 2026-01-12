@@ -222,17 +222,6 @@ Normalization3dForwardPropagation::Normalization3dForwardPropagation(const Index
 }
 
 
-TensorView Normalization3dForwardPropagation::get_output_view() const
-{
-    Normalization3d* normalization_3d = static_cast<Normalization3d*>(layer);
-
-    const Index sequence_length = normalization_3d->get_sequence_length();
-    const Index embedding_dimension = normalization_3d->get_embedding_dimension();
-
-    return { (type*)outputs.data(), { batch_size, sequence_length, embedding_dimension } };
-}
-
-
 void Normalization3dForwardPropagation::initialize()
 {
     Normalization3d* normalization_3d = static_cast<Normalization3d*>(layer);

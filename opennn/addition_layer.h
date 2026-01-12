@@ -177,17 +177,6 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
     }
 
 
-    TensorView get_output_view() const override
-    {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-
-        dimensions full_dimensions = {batch_size};
-        full_dimensions.insert(full_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
-
-        return {(type*)outputs.data(), full_dimensions};
-    }
-
-
     void initialize() override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
