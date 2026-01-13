@@ -332,7 +332,7 @@ public:
 
     void from_XML(const XMLDocument& document) override
     {
-        const XMLElement* scaling_layer_element = document.FirstChildElement("Scaling");
+        const XMLElement* scaling_layer_element = document.FirstChildElement(name.c_str());
 
         if(!scaling_layer_element)
             throw runtime_error("Scaling element is nullptr.\n");
@@ -416,7 +416,7 @@ public:
 
     void to_XML(XMLPrinter& printer) const override
     {
-        printer.OpenElement("Scaling");
+        printer.OpenElement(name.c_str());
 
         add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>())));
 
