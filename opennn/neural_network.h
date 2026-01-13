@@ -178,6 +178,8 @@ public:
 
         ForwardPropagation forward_propagation(batch_size, this);
 
+        forward_propagation.compile();
+
         dimensions input_dimensions;
         input_dimensions.reserve(input_rank);
 

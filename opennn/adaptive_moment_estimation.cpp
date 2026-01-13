@@ -186,13 +186,17 @@ TrainingResults AdaptiveMomentEstimation::train()
     BackPropagation training_back_propagation(training_batch_samples_number, loss_index);
     unique_ptr<BackPropagation> selection_back_propagation;
 
+    training_back_propagation.neural_network.allocate();
+
     //training_back_propagation.compile();
 
     if (has_selection)
     {
         selection_batch = make_unique<Batch>(selection_batch_samples_number, dataset);
         selection_forward_propagation = make_unique<ForwardPropagation>(selection_batch_samples_number, neural_network);
+        selection_forward_propagation->compile();
         selection_back_propagation = make_unique<BackPropagation>(selection_batch_samples_number, loss_index);
+        selection_back_propagation->neural_network.allocate();
     }
 
     type training_error = type(0);
