@@ -177,12 +177,16 @@ TrainingResults AdaptiveMomentEstimation::train()
     ForwardPropagation training_forward_propagation(training_batch_samples_number, neural_network);
     unique_ptr<ForwardPropagation> selection_forward_propagation;
 
+    training_forward_propagation.compile();
+
     // Loss index
 
     loss_index->set_normalization_coefficient();
 
     BackPropagation training_back_propagation(training_batch_samples_number, loss_index);
     unique_ptr<BackPropagation> selection_back_propagation;
+
+    //training_back_propagation.compile();
 
     if (has_selection)
     {

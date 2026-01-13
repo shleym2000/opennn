@@ -173,8 +173,8 @@ private:
 
     bool batch_normalization = false;
 
-    Tensor1 moving_means;
-    Tensor1 moving_standard_deviations;
+    TensorView moving_means;
+    TensorView moving_standard_deviations;
 
     type momentum = type(0.9);
 

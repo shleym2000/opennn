@@ -433,10 +433,10 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
 vector<Descriptives> ImageDataset::scale_variables(const string&)
 {
     TensorMap4 inputs_data(data.data(),
-                                           get_samples_number(),
-                                           input_dimensions[0],
-                                           input_dimensions[1],
-                                           input_dimensions[2]);
+                           get_samples_number(),
+                           input_dimensions[0],
+                           input_dimensions[1],
+                           input_dimensions[2]);
 
     inputs_data.device(*device) = inputs_data / type(255);
 

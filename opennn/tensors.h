@@ -34,6 +34,34 @@ struct TensorView
 
         return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
     }
+
+    void print() const
+    {
+        if (!data || dims.empty())
+        {
+            cout << "TensorView: Empty or Null" << endl;
+            return;
+        }
+
+        cout << "Dims: (";
+        for (size_t i = 0; i < dims.size(); ++i)
+            cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
+
+        cout << ")" << endl;
+
+        const Index total_size = size();
+        const Index last_dim_stride = dims.back();
+
+        for (Index i = 0; i < total_size; ++i)
+        {
+            cout << data[i] << " ";
+
+            if (dims.size() > 1 && (i + 1) % last_dim_stride == 0)
+                cout << endl;
+        }
+        if (dims.size() == 1 || total_size % last_dim_stride != 0)
+            cout << endl;
+    }
 };
 
 

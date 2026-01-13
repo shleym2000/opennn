@@ -35,7 +35,7 @@ int main()
         // Neural Network
 
         ClassificationNetwork classification_network(dataset.get_input_dimensions(), { neurons_number}, dataset.get_target_dimensions());
-        classification_network.print();
+        //classification_network.print();
 
         // Training Strategy
 
