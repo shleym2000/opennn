@@ -133,7 +133,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
 {
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    Tensor3 outputs = tensor_map<3>(layer_forward_propagation->outputs);
+    TensorMap3 outputs = tensor_map<3>(layer_forward_propagation->outputs);
 
     const Index batch_size = outputs.dimension(0);
     const Index embedding_dimension = outputs.dimension(2);

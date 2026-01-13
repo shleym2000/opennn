@@ -32,7 +32,6 @@
 
 // Neural network layers
 #include "dense_layer.h"
-#include "dense_layer_3d.h"
 #include "convolutional_layer.h"
 #include "pooling_layer.h"
 #include "pooling_layer_3d.h"

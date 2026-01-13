@@ -56,22 +56,7 @@ public:
         return vector<TensorView*>();
     }
 
-    type* link_parameters(type* ptr)
-    {        
-        vector<TensorView*> parameter_views = get_parameter_views();
-
-        for(size_t i = 0; i < parameter_views.size(); i++)
-        {
-            parameter_views[i]->data = ptr;
-            ptr += parameter_views[i]->size();
-
-//            const size_t address = reinterpret_cast<size_t>(ptr);
-//            if (address % 64 != 0)
-//                ptr += (16 - ((address / sizeof(type)) % 16));
-        }
-
-        return ptr;
-    }
+    void link_parameters(type* ptr);
 
     //virtual pair
 
@@ -139,8 +124,8 @@ protected:
 
     template <int Rank>
     void calculate_activations(const string& activation_function,
-                               Tensor<type, Rank>& activations,
-                               Tensor<type, Rank>& activation_derivatives) const
+                               TensorMap<Tensor<type, Rank>> activations,
+                               TensorMap<Tensor<type, Rank>> activation_derivatives) const
     {
         if (activation_function == "Linear")
             linear(activations, activation_derivatives);
@@ -162,7 +147,7 @@ protected:
 
 
     template <int Rank>
-    void binary(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx, type threshold) const
+    void binary(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx, type threshold) const
     {
         y.device(*device) = (y < threshold).select(type(0), type(1));
 
@@ -173,7 +158,7 @@ protected:
 
 
     template <int Rank>
-    void linear(Tensor<type, Rank>&, Tensor<type, Rank>& dy_dx) const
+    void linear(TensorMap<Tensor<type, Rank>>, TensorMap<Tensor<type, Rank>> dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -182,7 +167,7 @@ protected:
 
 
     template <int Rank>
-    void exponential_linear(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx) const
+    void exponential_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
     {
         const type alpha = type(1);
 
@@ -195,7 +180,7 @@ protected:
 
 
     template <int Rank>
-    void hyperbolic_tangent(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx) const
+    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
     {
         y.device(*device) = y.tanh();
 
@@ -206,7 +191,7 @@ protected:
 
 
     template <int Rank>
-    void logistic(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx) const
+    void logistic(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
     {
         y.device(*device) = (type(1) + (-y).exp()).inverse();
 
@@ -217,7 +202,7 @@ protected:
 
 
     template <int Rank>
-    void rectified_linear(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx) const
+    void rectified_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
     {
         y.device(*device) = y.cwiseMax(type(0));
 
@@ -228,7 +213,7 @@ protected:
 
 
     template <int Rank>
-    void leaky_rectified_linear(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx, type slope) const
+    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx, type slope) const
     {
         y.device(*device) = (y > type(0)).select(y, slope * y);
 
@@ -239,7 +224,7 @@ protected:
 
 
     template <int Rank>
-    void scaled_exponential_linear(Tensor<type, Rank>& y, Tensor<type, Rank>& dy_dx) const
+    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -252,24 +237,24 @@ protected:
         dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
-    void softmax(Tensor2&) const;
-    void softmax(Tensor3&) const;
-    void softmax(Tensor4&) const;
+    void softmax(TensorMap2) const;
+    void softmax(TensorMap3) const;
+    void softmax(TensorMap4) const;
 
-    void softmax_derivatives_times_tensor(const Tensor3&, TensorMap3&, Tensor1&) const;
+    void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 
     void add_deltas(const vector<TensorView>& delta_views) const;
 
     template <int Rank>
     void normalize_batch(
-        Tensor<type, Rank>& outputs,
-        Tensor<type, Rank>& normalized_outputs,
-        Tensor1& batch_means,
-        Tensor1& batch_stds,
-        Tensor1& moving_means,
-        Tensor1& moving_stds,
-        const Tensor1& scales,
-        const Tensor1& offsets,
+        TensorMap<Tensor<type, Rank>>& outputs,
+        TensorMap<Tensor<type, Rank>>& normalized_outputs,
+        TensorMap1 batch_means,
+        TensorMap1 batch_stds,
+        TensorMap1 moving_means,
+        TensorMap1 moving_stds,
+        const TensorMap1 scales,
+        const TensorMap1 offsets,
         const bool& is_training,
         const type momentum = type(0.9),
         const type epsilon = type(1e-5)) const
@@ -309,7 +294,7 @@ protected:
     }
 
     template <int Rank>
-    void dropout(Tensor<type, Rank>& tensor, const type& dropout_rate) const
+    void dropout(TensorMap<Tensor<type, Rank>> tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
@@ -328,10 +313,10 @@ protected:
 
     template <int Rank>
     void calculate_combinations(
-        const Tensor<type, Rank>& inputs,
+        const TensorMap<Tensor<type, Rank>>& inputs,
         const Tensor2& weights,
         const Tensor1& biases,
-        Tensor<type, Rank>& combinations) const
+        TensorMap<Tensor<type, Rank>> combinations) const
     {
         const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
 
@@ -402,20 +387,18 @@ struct LayerForwardPropagation
 
     virtual ~LayerForwardPropagation() = default;
 
-    virtual Index get_workspace_size() const
-    {
-        return 0;
-    }
-
-    void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
-    {
-        if (!new_layer) return;
-        batch_size = new_batch_size;
-        layer = new_layer;
-        initialize();
-    }
+    void set(const Index& = 0, Layer* = nullptr);
 
     virtual void initialize() = 0;
+
+    Index get_workspace_size();
+
+    virtual vector<TensorView*> get_tensor_views()
+    {
+        return vector<TensorView*>();
+    }
+
+    void link_workspace(type*);
 
     TensorView get_outputs() const
     {

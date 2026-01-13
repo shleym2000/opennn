@@ -31,6 +31,8 @@ struct ForwardPropagation
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     TensorView get_last_trainable_layer_outputs_pair() const;
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
@@ -49,15 +51,6 @@ struct ForwardPropagation
     vector<unique_ptr<LayerForwardPropagation>> layers;
 
     Tensor1 workspace;
-
-    void compile()
-    {
-        Index maximum_layer_size = 0;
-
-        workspace.resize(2*maximum_layer_size);
-    }
-
-
 };
 
 
@@ -73,39 +66,7 @@ public:
     void add_layer(unique_ptr<Layer>,
                   const vector<Index>& = vector<Index>());
 
-    void compile()
-    {
-        Index layer_parameters_number = 0;
-
-        Index parameters_number = 0;
-
-        for (auto& layer : layers)
-        {
-            layer_parameters_number = layer->get_parameters_number();
-
-            parameters_number += layer_parameters_number;
-
-            if (layer_parameters_number % 16 != 0)
-                parameters_number += (16 - layer_parameters_number%16);
-        }
-
-        parameters.resize(parameters_number);
-        parameters.setZero();
-
-        type* current_ptr = parameters.data();
-
-        for (auto& layer : layers)
-        {
-            layer_parameters_number = layer->get_parameters_number();
-
-            layer->link_parameters(current_ptr);
-
-            current_ptr += layer_parameters_number;
-
-            //if (layer_parameters_number % 16 != 0)
-            //    current_ptr += 16 - layer_parameters_number%16;
-        }
-    }
+    void compile();
 
     bool validate_name(const string&) const;
 
@@ -216,6 +177,8 @@ public:
         const Index batch_size = inputs.dimension(0);
 
         ForwardPropagation forward_propagation(batch_size, this);
+
+        forward_propagation.compile();
 
         dimensions input_dimensions;
         input_dimensions.reserve(input_rank);
@@ -328,7 +291,6 @@ protected:
     bool display = true;
 
     Tensor1 parameters;
-
 };
 
 

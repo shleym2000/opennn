@@ -28,7 +28,6 @@ struct DenseForwardPropagation final : LayerForwardPropagation
 
     vector<TensorView*> get_workspace_views();
 
-
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
@@ -51,6 +50,20 @@ struct DenseForwardPropagation final : LayerForwardPropagation
         }
     }
 
+    vector<TensorView*> get_tensor_views() override
+    {
+        vector<TensorView*> views = { &outputs, &activation_derivatives };
+
+        if (means.size() > 0)
+        {
+            views.push_back(&means);
+            views.push_back(&standard_deviations);
+            views.push_back(&normalized_outputs);
+        }
+
+        return views;
+    }
+
 
     void print() const override
     {
@@ -63,7 +76,6 @@ struct DenseForwardPropagation final : LayerForwardPropagation
     TensorView means;
     TensorView standard_deviations;
     TensorView normalized_outputs;
-    TensorView outputs;
     TensorView activation_derivatives;
 };
 
@@ -278,13 +290,6 @@ public:
             offsets.dims = {outputs_number};
             moving_means.dims = {outputs_number};
             moving_standard_deviations.dims = {outputs_number};
-/*
-            scales.setConstant(1.0);
-            offsets.setZero();
-
-            moving_standard_deviations.setZero();
-            moving_means.setZero();
-*/
         }
 
         set_label(new_label);
@@ -466,11 +471,13 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool& is_training) override
     {
+
+        //input_views[0].print();
         auto* dense_forward_propagation = static_cast<DenseForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
         const auto inputs = tensor_map<Rank>(input_views[0]);
         auto outputs = tensor_map<Rank>(dense_forward_propagation->outputs);
-/*
+
         calculate_combinations<Rank>(inputs, tensor_map<2>(weights), tensor_map<1>(biases), outputs);
 
         if(batch_normalization)
@@ -498,13 +505,13 @@ public:
         else
         {
             if constexpr(Rank == 2)
-                calculate_activations<Rank>(activation_function, outputs, empty_2);
+                calculate_activations<Rank>(activation_function, outputs, TensorMap2(empty_2.data(), empty_2.dimensions()));
             else if constexpr(Rank == 3)
-                calculate_activations<Rank>(activation_function, outputs, empty_3);
+                calculate_activations<Rank>(activation_function, outputs, TensorMap3(empty_3.data(), empty_3.dimensions()));
         }
 
         if(is_training && dropout_rate > type(0))
-            dropout<Rank>(outputs, dropout_rate);*/
+            dropout<Rank>(outputs, dropout_rate);
     }
 
 

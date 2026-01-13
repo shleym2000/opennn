@@ -382,17 +382,18 @@ void Convolutional::set(const dimensions& new_input_dimensions,
 
     if (batch_normalization)
     {
-        moving_means.resize(kernels_number);
-        moving_means.setZero();
-        moving_standard_deviations.resize(kernels_number);
-        moving_standard_deviations.setZero();
+        moving_means.dims = {kernels_number};
+        moving_standard_deviations.dims = {kernels_number};
 
         scales.dims = {kernels_number};
         offsets.dims = {kernels_number};
-/*
-        scales.setConstant(1.0);
-        offsets.setZero();
-*/
+    }
+    else
+    {
+        moving_means.dims.clear();
+        moving_standard_deviations.dims.clear();
+        scales.dims.clear();
+        offsets.dims.clear();
     }
 
     set_label(new_label);
@@ -552,6 +553,9 @@ vector<TensorView*> Convolutional::get_parameter_views()
     {
         parameter_views.push_back(&scales);
         parameter_views.push_back(&offsets);
+
+        parameter_views.push_back(&moving_means);
+        parameter_views.push_back(&moving_standard_deviations);
     }
 
     return parameter_views;
