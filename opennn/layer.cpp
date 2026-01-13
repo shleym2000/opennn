@@ -97,6 +97,20 @@ Index Layer::get_parameters_number()
 }
 
 
+type* Layer::link_parameters(type* ptr)
+{
+    vector<TensorView*> parameter_views = get_parameter_views();
+
+    for(TensorView* view : parameter_views)
+    {
+        view->data = ptr;
+        ptr += view->size();
+    }
+
+    return ptr;
+}
+
+
 void Layer::set_threads_number(const int& new_threads_number)
 {
     thread_pool.reset();

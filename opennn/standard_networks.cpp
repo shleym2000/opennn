@@ -57,6 +57,8 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Bounding>(output_dimensions));
 
+    this->compile();
+
     const Index features_number = get_features_number();
     feature_names.resize(features_number);
 

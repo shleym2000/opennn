@@ -50,6 +50,46 @@ void NeuralNetwork::add_layer(unique_ptr<Layer> layer, const vector<Index>& inpu
 }
 
 
+void NeuralNetwork::compile()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_parameters_size = 0;
+
+    for (const unique_ptr<Layer>& layer : layers)
+    {
+        Index layer_parameters_number = layer->get_parameters_number();
+
+        if (layer_parameters_number > 0)
+        {
+            Index padded_size = (layer_parameters_number + ALIGNMENT - 1) & MASK;
+            total_parameters_size += padded_size;
+        }
+    }
+
+    if (total_parameters_size == 0) return;
+
+    parameters.resize(total_parameters_size);
+    parameters.setZero();
+
+    type* current_ptr = parameters.data();
+
+    for (unique_ptr<Layer>& layer : layers)
+    {
+        Index layer_parameters_number = layer->get_parameters_number();
+
+        if (layer_parameters_number > 0)
+        {
+            layer->link_parameters(current_ptr);
+
+            Index padded_size = (layer_parameters_number + ALIGNMENT - 1) & MASK;
+            current_ptr += padded_size;
+        }
+    }
+}
+
+
 bool NeuralNetwork::validate_name(const string& name) const
 {
     if(name == "Bounding")
@@ -61,6 +101,7 @@ bool NeuralNetwork::validate_name(const string& name) const
 
 void NeuralNetwork::reference_all_layers()
 {
+    reference_scaling_layer();
     reference_flatten_layer();
     reference_addition_layer();
     // Add more template layers

@@ -56,22 +56,7 @@ public:
         return vector<TensorView*>();
     }
 
-    type* link_parameters(type* ptr)
-    {        
-        vector<TensorView*> parameter_views = get_parameter_views();
-
-        for(size_t i = 0; i < parameter_views.size(); i++)
-        {
-            parameter_views[i]->data = ptr;
-            ptr += parameter_views[i]->size();
-
-//            const size_t address = reinterpret_cast<size_t>(ptr);
-//            if (address % 64 != 0)
-//                ptr += (16 - ((address / sizeof(type)) % 16));
-        }
-
-        return ptr;
-    }
+    type* link_parameters(type* ptr);
 
     //virtual pair
 
