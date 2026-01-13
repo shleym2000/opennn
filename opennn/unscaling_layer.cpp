@@ -195,7 +195,7 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
     UnscalingForwardPropagation* this_forward_propagation =
         static_cast<UnscalingForwardPropagation*>(forward_propagation.get());
 
-    const TensorMap<Tensor<type,2>> inputs = tensor_map<2>(input_views[0]);
+    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
     outputs = inputs;
 /*

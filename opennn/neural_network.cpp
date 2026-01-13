@@ -604,7 +604,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         if(layers_number == 0)
         {
-            scaled_outputs = TensorMap<Tensor<type,2>>(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
+            scaled_outputs = TensorMap2(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
             return scaled_outputs;
         }
 
@@ -631,7 +631,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
         }
         else
         {
-            scaled_outputs = TensorMap<Tensor<type,2>>(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
+            scaled_outputs = TensorMap2(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
         }
 
         last_layer_outputs = scaled_outputs;
