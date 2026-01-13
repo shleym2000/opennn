@@ -13,6 +13,64 @@
 namespace opennn
 {
 
+
+void LayerForwardPropagation::set(const Index& new_batch_size, Layer* new_layer)
+{
+    if (!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+Index LayerForwardPropagation::get_workspace_size()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_bytes = 0;
+
+    vector<TensorView*> views = get_tensor_views();
+
+    for (const TensorView* view : views)
+    {
+        const Index size = view->size();
+
+        if (size > 0)
+        {
+            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            total_bytes += padded_size;
+        }
+    }
+
+    return total_bytes;
+}
+
+
+void LayerForwardPropagation::link_workspace(type* ptr)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    vector<TensorView*> views = get_tensor_views();
+
+    for (TensorView* view : views)
+    {
+        const Index size = view->size();
+
+        if (size > 0)
+        {
+            view->data = ptr;
+
+            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            ptr += padded_size;
+        }
+    }
+}
+
+
 Layer::Layer()
 {
     const unsigned int threads_number = thread::hardware_concurrency();
@@ -94,6 +152,18 @@ Index Layer::get_parameters_number()
         parameters_number += parameter_views[i]->size();
 
     return parameters_number;
+}
+
+
+void Layer::link_parameters(type* ptr)
+{
+    vector<TensorView*> parameter_views = get_parameter_views();
+
+    for(TensorView* view : parameter_views)
+    {
+        view->data = ptr;
+        ptr += view->size();
+    }
 }
 
 

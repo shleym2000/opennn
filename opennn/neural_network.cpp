@@ -50,6 +50,46 @@ void NeuralNetwork::add_layer(unique_ptr<Layer> layer, const vector<Index>& inpu
 }
 
 
+void NeuralNetwork::compile()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_parameters_size = 0;
+
+    for (const unique_ptr<Layer>& layer : layers)
+    {
+        Index layer_parameters_number = layer->get_parameters_number();
+
+        if (layer_parameters_number > 0)
+        {
+            Index padded_size = (layer_parameters_number + ALIGNMENT - 1) & MASK;
+            total_parameters_size += padded_size;
+        }
+    }
+
+    if (total_parameters_size == 0) return;
+
+    parameters.resize(total_parameters_size);
+    parameters.setZero();
+
+    type* current_ptr = parameters.data();
+
+    for (unique_ptr<Layer>& layer : layers)
+    {
+        Index layer_parameters_number = layer->get_parameters_number();
+
+        if (layer_parameters_number > 0)
+        {
+            layer->link_parameters(current_ptr);
+
+            Index padded_size = (layer_parameters_number + ALIGNMENT - 1) & MASK;
+            current_ptr += padded_size;
+        }
+    }
+}
+
+
 bool NeuralNetwork::validate_name(const string& name) const
 {
     if(name == "Bounding")
@@ -61,6 +101,8 @@ bool NeuralNetwork::validate_name(const string& name) const
 
 void NeuralNetwork::reference_all_layers()
 {
+    reference_dense_layer();
+    reference_scaling_layer();
     reference_flatten_layer();
     reference_addition_layer();
     // Add more template layers
@@ -1321,6 +1363,56 @@ void ForwardPropagation::set(const Index& new_samples_number, NeuralNetwork* new
     {
         layers[i] = Registry<LayerForwardPropagation>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(samples_number, neural_network_layers[i].get());
+    }
+}
+
+
+void ForwardPropagation::compile()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_workspace_size = 0;
+
+    for (const auto& layer_prop : layers)
+    {
+        vector<TensorView*> views = layer_prop->get_tensor_views();
+
+        for(const TensorView* view : views)
+        {
+            Index size = view->size();
+
+            if (size > 0)
+            {
+                Index padded_size = (size + ALIGNMENT - 1) & MASK;
+                total_workspace_size += padded_size;
+            }
+        }
+    }
+
+    if (total_workspace_size == 0) return;
+
+    workspace.resize(total_workspace_size);
+    workspace.setConstant(std::numeric_limits<type>::quiet_NaN());
+
+    type* current_ptr = workspace.data();
+
+    for (auto& layer_prop : layers)
+    {
+        vector<TensorView*> views = layer_prop->get_tensor_views();
+
+        for(TensorView* view : views)
+        {
+            Index size = view->size();
+
+            if (size > 0)
+            {
+                view->data = current_ptr;
+
+                Index padded_size = (size + ALIGNMENT - 1) & MASK;
+                current_ptr += padded_size;
+            }
+        }
     }
 }
 
