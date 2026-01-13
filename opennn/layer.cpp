@@ -260,7 +260,7 @@ void Layer::set_output_dimensions(const dimensions&)
 }
 
 
-void Layer::softmax(Tensor2& y) const
+void Layer::softmax(TensorMap2 y) const
 {
     const Index rows_number = y.dimension(0);
     const Index columns_number = y.dimension(1);
@@ -279,7 +279,7 @@ void Layer::softmax(Tensor2& y) const
 }
 
 
-void Layer::softmax(Tensor3& y) const
+void Layer::softmax(TensorMap3 y) const
 {
     const Index rows_number = y.dimension(0);
     const Index columns_number = y.dimension(1);
@@ -299,7 +299,7 @@ void Layer::softmax(Tensor3& y) const
 }
 
 
-void Layer::softmax(Tensor4& y) const
+void Layer::softmax(TensorMap4 y) const
 {
     const Index rows_number    = y.dimension(0);
     const Index columns_number = y.dimension(1);
@@ -320,9 +320,9 @@ void Layer::softmax(Tensor4& y) const
 }
 
 
-void Layer::softmax_derivatives_times_tensor(const Tensor3& softmax,
-                                             TensorMap3& result,
-                                             Tensor1& aux_rows) const
+void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
+                                             TensorMap3 result,
+                                             TensorMap1 aux_rows) const
 {
     const Index rows = softmax.dimension(0);
     const Index columns = softmax.dimension(1);
