@@ -24,7 +24,6 @@
 #include "addition_layer.h"
 #include "normalization_layer_3d.h"
 #include "multihead_attention_layer.h"
-#include "dense_layer_3d.h"
 #include "strings_utilities.h"
 
 using namespace std;
@@ -74,19 +73,22 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
     const Index complexity_size = complexity_dimensions.size();
 
     add_layer(make_unique<Scaling<2>>(input_dimensions));
-
+    /*
     for (Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{complexity_dimensions[i]},
                                        "HyperbolicTangent",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
-
+    */
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,
                                    output_dimensions[0] == 1 ? "Logistic" : "Softmax",
                                    false,
                                    "classification_layer"));
+
+    this->compile();
+    this->set_parameters_random();
 
     const Index features_number = get_features_number();
     feature_names.resize(features_number);
@@ -113,6 +115,9 @@ ForecastingNetwork::ForecastingNetwork(const dimensions& input_dimensions,
     add_layer(make_unique<Unscaling>(output_dimensions));
 
     add_layer(make_unique<Bounding>(output_dimensions));
+
+    this->compile();
+    this->set_parameters_random();
 
     const Index features_number = get_features_number();
     feature_names.resize(features_number);
@@ -156,6 +161,9 @@ AutoAssociationNetwork::AutoAssociationNetwork(const dimensions& input_dimension
                                    "output_layer"));
 
     add_layer(make_unique<Unscaling>(output_dimensions));
+
+    this->compile();
+    this->set_parameters_random();
 }
 
 
@@ -204,6 +212,9 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                    "Softmax",
                                    false, // Batch normalization
                                    "dense_2d_layer"));
+
+    this->compile();
+    this->set_parameters_random();
 
     const Index features_number = get_features_number();
     feature_names.resize(features_number);
@@ -355,6 +366,9 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
                                             "dense_classifier");
 
     add_layer(std::move(dense_layer), { last_layer_index });
+
+    this->compile();
+    this->set_parameters_random();
 }
 
 
@@ -534,6 +548,9 @@ void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_ta
                                    "Softmax",
                                    false,
                                    "dense_classifier"));
+
+    this->compile();
+    this->set_parameters_random();
 }
 
 
@@ -585,6 +602,9 @@ TextClassificationNetwork::TextClassificationNetwork(const dimensions& input_dim
         "classification_layer"));
 
     input_vocabulary = new_input_vocabulary;
+
+    this->compile();
+    this->set_parameters_random();
 }
 
 
@@ -621,7 +641,7 @@ void Transformer::set(const Index& input_sequence_length,
 
     layers.clear();
     layer_input_indices.clear();
-
+    /*
     if (input_sequence_length == 0 || decoder_sequence_length == 0)
         return;
 
@@ -671,13 +691,13 @@ void Transformer::set(const Index& input_sequence_length,
 
         const Index norm_1_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Dense3d>(input_sequence_length,
+        add_layer(make_unique<Dense<3>>(input_sequence_length,
                                        embedding_dimension,
                                        feed_forward_dimension,
                                        "RectifiedLinear",
                                        "encoder_internal_dense_" + to_string(i+1)));
 
-        add_layer(make_unique<Dense3d>(input_sequence_length,
+        add_layer(make_unique<Dense<3>>(input_sequence_length,
                                        feed_forward_dimension,
                                        embedding_dimension,
                                        "HyperbolicTangent",
@@ -736,13 +756,13 @@ void Transformer::set(const Index& input_sequence_length,
 
         const Index norm_2_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Dense3d>(decoder_sequence_length,
+        add_layer(make_unique<Dense<3>>(decoder_sequence_length,
                                        embedding_dimension,
                                        feed_forward_dimension,
                                        "RectifiedLinear",
                                        "decoder_internal_dense_" + to_string(i+1)));
 
-        add_layer(make_unique<Dense3d>(decoder_sequence_length,
+        add_layer(make_unique<Dense<3>>(decoder_sequence_length,
                                        feed_forward_dimension,
                                        embedding_dimension,
                                        "HyperbolicTangent",
@@ -760,11 +780,15 @@ void Transformer::set(const Index& input_sequence_length,
         current_dec_idx = get_layers_number() - 1;
     }
 
-    add_layer(make_unique<Dense3d>(decoder_sequence_length,
+    add_layer(make_unique<Dense<3>>(decoder_sequence_length,
                                    embedding_dimension,
                                    output_vocabulary_size,
                                    "Softmax", // Change from "Linear" to "Softmax"
                                    "output_projection"));
+
+    this->compile();
+    this->set_parameters_random();
+    */
 }
 
 

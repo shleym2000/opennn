@@ -31,6 +31,8 @@ struct ForwardPropagation
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     TensorView get_last_trainable_layer_outputs_pair() const;
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
@@ -49,15 +51,6 @@ struct ForwardPropagation
     vector<unique_ptr<LayerForwardPropagation>> layers;
 
     Tensor1 workspace;
-
-    void compile()
-    {
-        Index maximum_layer_size = 0;
-
-        workspace.resize(2*maximum_layer_size);
-    }
-
-
 };
 
 
@@ -296,7 +289,6 @@ protected:
     bool display = true;
 
     Tensor1 parameters;
-
 };
 
 

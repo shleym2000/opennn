@@ -56,7 +56,7 @@ public:
         return vector<TensorView*>();
     }
 
-    type* link_parameters(type* ptr);
+    void link_parameters(type* ptr);
 
     //virtual pair
 
@@ -387,20 +387,18 @@ struct LayerForwardPropagation
 
     virtual ~LayerForwardPropagation() = default;
 
-    virtual Index get_workspace_size() const
-    {
-        return 0;
-    }
-
-    void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
-    {
-        if (!new_layer) return;
-        batch_size = new_batch_size;
-        layer = new_layer;
-        initialize();
-    }
+    void set(const Index& = 0, Layer* = nullptr);
 
     virtual void initialize() = 0;
+
+    Index get_workspace_size();
+
+    virtual vector<TensorView*> get_tensor_views()
+    {
+        return vector<TensorView*>();
+    }
+
+    void link_workspace(type*);
 
     TensorView get_outputs() const
     {
