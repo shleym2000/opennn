@@ -89,7 +89,7 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 {
     RecurrentBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView*> get_gradient_views() override;
+    vector<TensorView*> get_tensor_views() override;
 
     void initialize() override;
 

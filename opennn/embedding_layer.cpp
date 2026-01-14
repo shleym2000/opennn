@@ -172,8 +172,8 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
                                   .broadcast(array_3(batch_size, 1, 1));
 
 
-    if(is_training && dropout_rate > 0)
-        dropout(outputs, dropout_rate);
+    //if(is_training && dropout_rate > 0)
+    //    dropout(outputs, dropout_rate);
 }
 
 
@@ -299,7 +299,7 @@ EmbeddingBackPropagation::EmbeddingBackPropagation(const Index& new_batch_size, 
 }
 
 
-vector<TensorView*> EmbeddingBackPropagation::get_gradient_views()
+vector<TensorView*> EmbeddingBackPropagation::get_tensor_views()
 {
     return {&weight_deltas};
 }

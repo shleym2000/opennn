@@ -152,7 +152,7 @@ void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3
 
     for(Index i = 0; i < depth; i++)
     {
-        TensorMap<Tensor<type,2>> matrix = tensor_map(tensor, i);
+        TensorMap2 matrix = tensor_map(tensor, i);
 
         matrix.device(*device) = matrix + vector(i);
     }

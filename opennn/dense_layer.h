@@ -39,8 +39,6 @@ struct DenseForwardPropagation final : LayerForwardPropagation
         outputs.dims = full_output_dims;
         activation_derivatives.dims = full_output_dims;
 
-        //activation_derivatives.setConstant((type)NAN);
-
         if (dense_layer->get_batch_normalization())
         {
             const Index outputs_number = dense_layer->get_outputs_number();
@@ -91,22 +89,6 @@ struct DenseBackPropagation final : LayerBackPropagation
     virtual ~DenseBackPropagation() = default;
 
 
-    vector<TensorView*> get_gradient_views() override
-    {
-        vector<TensorView*> gradient_views = {&bias_deltas, &weight_deltas};
-
-        const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
-
-        if (dense_layer->get_batch_normalization())
-        {
-            gradient_views.push_back(&bn_scale_deltas);
-            gradient_views.push_back(&bn_offset_deltas);
-        }
-
-        return gradient_views;
-    }
-
-
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
@@ -115,10 +97,7 @@ struct DenseBackPropagation final : LayerBackPropagation
         const Index inputs_number = layer->get_input_dimensions()[0];
 
         bias_deltas.dims = {outputs_number};
-        //bias_deltas.setZero();
-
         weight_deltas.dims = {inputs_number, outputs_number};
-        //weight_deltas.setZero();
 
         input_deltas.resize(1);
 
@@ -131,11 +110,24 @@ struct DenseBackPropagation final : LayerBackPropagation
         if (dense_layer->get_batch_normalization())
         {
             bn_scale_deltas.dims = {outputs_number};
-            //bn_scale_deltas.setZero();
-
             bn_offset_deltas.dims = {outputs_number};
-            //bn_offset_deltas.setZero();
         }
+    }
+
+
+    vector<TensorView*> get_tensor_views() override
+    {
+        vector<TensorView*> views = {&bias_deltas, &weight_deltas, &input_deltas[0]};
+
+        const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
+
+        if (dense_layer->get_batch_normalization())
+        {
+            views.push_back(&bn_scale_deltas);
+            views.push_back(&bn_offset_deltas);
+        }
+
+        return views;
     }
 
 
@@ -471,14 +463,11 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool& is_training) override
     {
-
-        //input_views[0].print();
         auto* dense_forward_propagation = static_cast<DenseForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
-        const auto inputs = tensor_map<Rank>(input_views[0]);
         auto outputs = tensor_map<Rank>(dense_forward_propagation->outputs);
 
-        calculate_combinations<Rank>(inputs, tensor_map<2>(weights), tensor_map<1>(biases), outputs);
+        calculate_combinations<Rank>(tensor_map<Rank>(input_views[0]), tensor_map<2>(weights), tensor_map<1>(biases), outputs);
 
         if(batch_normalization)
         {

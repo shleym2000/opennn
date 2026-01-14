@@ -276,21 +276,20 @@ struct BackPropagation
 
     NeuralNetworkBackPropagation neural_network;
 
-    Tensor<type, 0> error;
-    //    type regularization = type(0);
-    type loss = type(0);
-
-    Tensor2 errors;
-    Tensor2 errors_weights;
-
-    Tensor1 output_deltas;
+    Tensor<type,0> error;
+    Tensor2 errors;         // Tensor2
+    Tensor2 errors_weights; // Tensor2
+    Tensor1 output_deltas;  // Tensor1
     dimensions output_deltas_dimensions;
 
     Tensor<type, 0> accuracy;
     Tensor2 predictions;
+
     Tensor<bool, 2> matches;
     Tensor<bool, 2> mask;
+
     bool built_mask = false;
+    type loss = type(0);
 };
 
 

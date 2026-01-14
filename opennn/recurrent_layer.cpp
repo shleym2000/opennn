@@ -410,7 +410,7 @@ RecurrentBackPropagation::RecurrentBackPropagation(const Index& new_batch_size, 
 }
 
 
-vector<TensorView*> RecurrentBackPropagation::get_gradient_views()
+vector<TensorView*> RecurrentBackPropagation::get_tensor_views()
 {
     return {&bias_deltas, &input_weight_deltas, &recurrent_weight_deltas};
 }

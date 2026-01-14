@@ -76,7 +76,7 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
     Normalization3dBackPropagation(const Index& new_batch_size = 0,
                                    Layer* new_layer = nullptr);
 
-    vector<TensorView*> get_gradient_views() override;
+    vector<TensorView*> get_tensor_views() override;
 
     void initialize() override;
 

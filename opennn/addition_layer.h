@@ -68,10 +68,10 @@ public:
         if (input_views[0].dims != input_views[1].dims)
             throw runtime_error("Input dimensions for " + name + " must be identical.");
 
-        const TensorMap<Tensor<type, Rank>> input_1 = tensor_map<Rank>(input_views[0]);
-        const TensorMap<Tensor<type, Rank>> input_2 = tensor_map<Rank>(input_views[1]);
+        const TensorMap<Tensor<type, Rank>, Aligned16> input_1 = tensor_map<Rank>(input_views[0]);
+        const TensorMap<Tensor<type, Rank>, Aligned16> input_2 = tensor_map<Rank>(input_views[1]);
 
-        TensorMap<Tensor<type, Rank>> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
+        TensorMap<Tensor<type, Rank>, Aligned16> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
         outputs.device(*device) = input_1 + input_2;
 
     }
@@ -84,10 +84,10 @@ public:
         if (delta_views.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input.");
 
-        const TensorMap<Tensor<type, Rank>> deltas = tensor_map<Rank>(delta_views[0]);
+        const TensorMap<Tensor<type, Rank>, Aligned16> deltas = tensor_map<Rank>(delta_views[0]);
 
-        TensorMap<Tensor<type, Rank>> input_deltas_0 = tensor_map<Rank>(back_propagation->input_deltas[0]);
-        TensorMap<Tensor<type, Rank>> input_deltas_1 = tensor_map<Rank>(back_propagation->input_deltas[1]);
+        TensorMap<Tensor<type, Rank>, Aligned16> input_deltas_0 = tensor_map<Rank>(back_propagation->input_deltas[0]);
+        TensorMap<Tensor<type, Rank>, Aligned16> input_deltas_1 = tensor_map<Rank>(back_propagation->input_deltas[1]);
 
         input_deltas_0.device(*device) = deltas;
         input_deltas_1.device(*device) = deltas;

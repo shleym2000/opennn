@@ -29,6 +29,8 @@ class Layer
 
 public:
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     Layer();
     virtual ~Layer();
 
@@ -56,7 +58,7 @@ public:
         return vector<TensorView*>();
     }
 
-    void link_parameters(type* ptr);
+    type* link_parameters(type* ptr);
 
     //virtual pair
 
@@ -124,8 +126,8 @@ protected:
 
     template <int Rank>
     void calculate_activations(const string& activation_function,
-                               TensorMap<Tensor<type, Rank>> activations,
-                               TensorMap<Tensor<type, Rank>> activation_derivatives) const
+                               TensorMap<Tensor<type, Rank>, Aligned16> activations,
+                               TensorMap<Tensor<type, Rank>, Aligned16> activation_derivatives) const
     {
         if (activation_function == "Linear")
             linear(activations, activation_derivatives);
@@ -147,7 +149,7 @@ protected:
 
 
     template <int Rank>
-    void binary(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx, type threshold) const
+    void binary(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx, type threshold) const
     {
         y.device(*device) = (y < threshold).select(type(0), type(1));
 
@@ -158,7 +160,7 @@ protected:
 
 
     template <int Rank>
-    void linear(TensorMap<Tensor<type, Rank>>, TensorMap<Tensor<type, Rank>> dy_dx) const
+    void linear(TensorMap<Tensor<type, Rank>, Aligned16>, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -167,7 +169,7 @@ protected:
 
 
     template <int Rank>
-    void exponential_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
+    void exponential_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
     {
         const type alpha = type(1);
 
@@ -180,7 +182,7 @@ protected:
 
 
     template <int Rank>
-    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
+    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
     {
         y.device(*device) = y.tanh();
 
@@ -191,7 +193,7 @@ protected:
 
 
     template <int Rank>
-    void logistic(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
+    void logistic(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
     {
         y.device(*device) = (type(1) + (-y).exp()).inverse();
 
@@ -202,7 +204,7 @@ protected:
 
 
     template <int Rank>
-    void rectified_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
+    void rectified_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
     {
         y.device(*device) = y.cwiseMax(type(0));
 
@@ -213,7 +215,7 @@ protected:
 
 
     template <int Rank>
-    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx, type slope) const
+    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx, type slope) const
     {
         y.device(*device) = (y > type(0)).select(y, slope * y);
 
@@ -224,7 +226,7 @@ protected:
 
 
     template <int Rank>
-    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>> y, TensorMap<Tensor<type, Rank>> dy_dx) const
+    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -247,8 +249,8 @@ protected:
 
     template <int Rank>
     void normalize_batch(
-        TensorMap<Tensor<type, Rank>>& outputs,
-        TensorMap<Tensor<type, Rank>>& normalized_outputs,
+        TensorMap<Tensor<type, Rank>, Aligned16>& outputs,
+        TensorMap<Tensor<type, Rank>, Aligned16>& normalized_outputs,
         TensorMap1 batch_means,
         TensorMap1 batch_stds,
         TensorMap1 moving_means,
@@ -294,7 +296,7 @@ protected:
     }
 
     template <int Rank>
-    void dropout(TensorMap<Tensor<type, Rank>> tensor, const type& dropout_rate) const
+    void dropout(TensorMap<Tensor<type, Rank>, Aligned16> tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
@@ -313,10 +315,10 @@ protected:
 
     template <int Rank>
     void calculate_combinations(
-        const TensorMap<Tensor<type, Rank>>& inputs,
-        const Tensor2& weights,
-        const Tensor1& biases,
-        TensorMap<Tensor<type, Rank>> combinations) const
+        const TensorMap<Tensor<type, Rank>, Aligned16>& inputs,
+        const TensorMap2& weights,
+        const TensorMap1& biases,
+        TensorMap<Tensor<type, Rank>, Aligned16>& combinations) const
     {
         const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
 
@@ -383,6 +385,8 @@ protected:
 
 struct LayerForwardPropagation
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     LayerForwardPropagation() {}
 
     virtual ~LayerForwardPropagation() = default;
@@ -398,7 +402,7 @@ struct LayerForwardPropagation
         return vector<TensorView*>();
     }
 
-    void link_workspace(type*);
+    type* link_workspace(type*);
 
     TensorView get_outputs() const
     {
@@ -417,32 +421,27 @@ struct LayerForwardPropagation
 
 struct LayerBackPropagation
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     LayerBackPropagation() {}
     virtual ~LayerBackPropagation() = default;
 
-    void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
-    {
-        if (!new_layer) return;
-        batch_size = new_batch_size;
-        layer = new_layer;
-        initialize();
-    }
+    void set(const Index& = 0, Layer* = nullptr);
 
     virtual void initialize() = 0;
 
-    virtual type* link_gradient(type* ptr)
+    Index get_workspace_size();
+
+    virtual vector<TensorView*> get_tensor_views()
     {
-        return ptr;
+        return vector<TensorView*>();
     }
+
+    type* link_workspace(type*);
 
     vector<TensorView> get_input_deltas() const
     {
         return input_deltas;
-    }
-
-    virtual vector<TensorView*> get_gradient_views()
-    {
-        return vector<TensorView*>();
     }
 
     virtual void print() const {}
@@ -459,6 +458,8 @@ struct LayerBackPropagation
 
 struct LayerBackPropagationLM
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 

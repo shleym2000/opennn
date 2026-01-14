@@ -753,7 +753,7 @@ void ConvolutionalBackPropagation::initialize()
 }
 
 
-vector<TensorView*> ConvolutionalBackPropagation::get_gradient_views()
+vector<TensorView*> ConvolutionalBackPropagation::get_tensor_views()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 

@@ -11,6 +11,8 @@
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 
+#define EIGEN_MAX_ALIGN_BYTES 64
+
 #include <algorithm>
 #include <string>
 #include <cassert>
@@ -111,10 +113,10 @@ using Tensor2 = Tensor<type, 2>;
 using Tensor3 = Tensor<type, 3>;
 using Tensor4 = Tensor<type, 4>;
 
-using TensorMap1 = TensorMap<Tensor<type, 1>>;
-using TensorMap2 = TensorMap<Tensor<type, 2>>;
-using TensorMap3 = TensorMap<Tensor<type, 3>>;
-using TensorMap4 = TensorMap<Tensor<type, 4>>;
+using TensorMap1 = TensorMap<Tensor<type, 1>, Aligned16>;
+using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned16>;
+using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned16>;
+using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned16>;
 
 
 template<typename Base, typename T>

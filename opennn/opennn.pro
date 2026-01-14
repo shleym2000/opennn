@@ -25,11 +25,38 @@ win32 {
 }
 CONFIG(release, debug|release): DEFINES += NDEBUG
 
+win32-msvc* {
+    # Enables AVX2 instructions (32-byte alignment req, but we use 64 for safety)
+    QMAKE_CXXFLAGS += /arch:AVX2
+    # Optimization level
+    QMAKE_CXXFLAGS += /O2
+}
+
+# --- Windows: MinGW (g++) ---
+win32-g++ {
+    # Enables all instructions supported by your current CPU (AVX, AVX2, AVX512)
+    QMAKE_CXXFLAGS += -march=native
+    # CRITICAL: Realigns the stack to 64-byte boundaries at every function entry
+    QMAKE_CXXFLAGS += -mstackrealign
+    # High optimization
+    QMAKE_CXXFLAGS += -O3
+}
+
+unix:!macx {
+    QMAKE_CXXFLAGS += -march=native -O3
+}
+
+macx {
+    QMAKE_CXXFLAGS += -march=native -O3
+}
+
 # Eigen library
 
 INCLUDEPATH += ../eigen
 
 # Source files
+
+
 
 PRECOMPILED_HEADER = pch.h
 HEADERS += $$files($$PWD/*.h)
