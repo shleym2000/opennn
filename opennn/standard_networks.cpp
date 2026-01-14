@@ -24,10 +24,6 @@
 #include "addition_layer.h"
 #include "normalization_layer_3d.h"
 #include "multihead_attention_layer.h"
-<<<<<<< HEAD
-//#include "dense_layer_3d.h"
-=======
->>>>>>> fb888180392ba730156d7e0ad6f4a72e1c377ecc
 #include "strings_utilities.h"
 
 using namespace std;

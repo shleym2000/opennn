@@ -59,6 +59,8 @@ class NeuralNetwork
 
 public:
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     NeuralNetwork();
 
     NeuralNetwork(const filesystem::path&);

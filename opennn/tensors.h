@@ -134,7 +134,7 @@ void set_random(Tensor<type, rank>& tensor, const type& minimum = -0.1, const ty
 
 
 template<int rank>
-void set_random(TensorMap<Tensor<type, rank>, Aligned>& tensor, const type& minimum = -0.1, const type& maximum = 0.1)
+void set_random(TensorMap<Tensor<type, rank>, Aligned16>& tensor, const type& minimum = -0.1, const type& maximum = 0.1)
 {
     random_device rd;
     mt19937 gen(rd());
@@ -362,14 +362,14 @@ TensorMap3 tensor_map_(const TensorMap4&, const Index&);
 TensorMap1 tensor_map_(const TensorMap2&, const Index&);
 
 template <Index rank>
-TensorMap<Tensor<type, rank>, Aligned> tensor_map(const TensorView& tensor_view)
+TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_view)
 {
     if (!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
 
-    if (reinterpret_cast<uintptr_t>(tensor_view.data) % 64 != 0)
-        throw runtime_error("tensor_map alignment error: Pointer is not 64-byte aligned. "
-                            "This will cause a crash with Aligned TensorMaps.");
+    if (reinterpret_cast<uintptr_t>(tensor_view.data) % 16 != 0)
+        throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned. "
+                            "This will cause a crash with Aligned16 TensorMaps.");
 
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));

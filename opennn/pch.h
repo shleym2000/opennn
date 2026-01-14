@@ -113,10 +113,10 @@ using Tensor2 = Tensor<type, 2>;
 using Tensor3 = Tensor<type, 3>;
 using Tensor4 = Tensor<type, 4>;
 
-using TensorMap1 = TensorMap<Tensor<type, 1>, Aligned>;
-using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned>;
-using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned>;
-using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned>;
+using TensorMap1 = TensorMap<Tensor<type, 1>, Aligned16>;
+using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned16>;
+using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned16>;
+using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned16>;
 
 
 template<typename Base, typename T>
