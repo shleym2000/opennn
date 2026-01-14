@@ -293,8 +293,10 @@ TrainingResults QuasiNewtonMethod::train()
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
     ForwardPropagation training_forward_propagation(training_samples_number, neural_network);
+    training_forward_propagation.compile();
 
     ForwardPropagation selection_forward_propagation(selection_samples_number, neural_network);
+    selection_forward_propagation.compile();
 
     set_names();
 
@@ -315,7 +317,10 @@ TrainingResults QuasiNewtonMethod::train()
     loss_index->set_normalization_coefficient();
 
     BackPropagation training_back_propagation(training_samples_number, loss_index);
+    training_back_propagation.neural_network.compile();
+
     BackPropagation selection_back_propagation(selection_samples_number, loss_index);
+    selection_back_propagation.neural_network.compile();
 
     // Optimization algorithm
 
