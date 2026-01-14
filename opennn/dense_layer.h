@@ -211,6 +211,20 @@ public:
     }
 
 
+    Dense(const Index& input_sequence_length,
+          const Index& embedding_dimension,
+          const Index& feed_forward_dimension,
+          const string& new_activation_function,
+          const string& new_label)
+    {
+        set({input_sequence_length, embedding_dimension},
+            {feed_forward_dimension},
+            new_activation_function,
+            false,
+            new_label);
+    }
+
+
     dimensions get_input_dimensions() const override
     {
         return { weights.dims[0] };

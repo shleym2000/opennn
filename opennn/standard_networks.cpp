@@ -641,7 +641,7 @@ void Transformer::set(const Index& input_sequence_length,
 
     layers.clear();
     layer_input_indices.clear();
-    /*
+
     if (input_sequence_length == 0 || decoder_sequence_length == 0)
         return;
 
@@ -788,7 +788,6 @@ void Transformer::set(const Index& input_sequence_length,
 
     this->compile();
     this->set_parameters_random();
-    */
 }
 
 
