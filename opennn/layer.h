@@ -29,6 +29,8 @@ class Layer
 
 public:
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     Layer();
     virtual ~Layer();
 
@@ -56,7 +58,7 @@ public:
         return vector<TensorView*>();
     }
 
-    void link_parameters(type* ptr);
+    type* link_parameters(type* ptr);
 
     //virtual pair
 
@@ -383,6 +385,8 @@ protected:
 
 struct LayerForwardPropagation
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     LayerForwardPropagation() {}
 
     virtual ~LayerForwardPropagation() = default;
@@ -398,7 +402,7 @@ struct LayerForwardPropagation
         return vector<TensorView*>();
     }
 
-    void link_workspace(type*);
+    type* link_workspace(type*);
 
     TensorView get_outputs() const
     {
@@ -417,32 +421,27 @@ struct LayerForwardPropagation
 
 struct LayerBackPropagation
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     LayerBackPropagation() {}
     virtual ~LayerBackPropagation() = default;
 
-    void set(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
-    {
-        if (!new_layer) return;
-        batch_size = new_batch_size;
-        layer = new_layer;
-        initialize();
-    }
+    void set(const Index& = 0, Layer* = nullptr);
 
     virtual void initialize() = 0;
 
-    virtual type* link_gradient(type* ptr)
+    Index get_workspace_size();
+
+    virtual vector<TensorView*> get_tensor_views()
     {
-        return ptr;
+        return vector<TensorView*>();
     }
+
+    type* link_workspace(type*);
 
     vector<TensorView> get_input_deltas() const
     {
         return input_deltas;
-    }
-
-    virtual vector<TensorView*> get_gradient_views()
-    {
-        return vector<TensorView*>();
     }
 
     virtual void print() const {}
@@ -459,6 +458,8 @@ struct LayerBackPropagation
 
 struct LayerBackPropagationLM
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 

@@ -299,7 +299,7 @@ EmbeddingBackPropagation::EmbeddingBackPropagation(const Index& new_batch_size, 
 }
 
 
-vector<TensorView*> EmbeddingBackPropagation::get_gradient_views()
+vector<TensorView*> EmbeddingBackPropagation::get_tensor_views()
 {
     return {&weight_deltas};
 }

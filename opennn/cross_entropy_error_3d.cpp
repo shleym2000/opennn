@@ -25,6 +25,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
                                                  const ForwardPropagation& forward_propagation,
                                                  BackPropagation& back_propagation) const
 {
+    /*
     const TensorView targets_view = batch.get_target_view();
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
@@ -69,6 +70,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
         back_propagation.error.device(*device) = total_masked_loss / active_elements();
     else
         back_propagation.error.setZero();
+    */
 }
 
 
@@ -76,6 +78,7 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
                                                    const ForwardPropagation& forward_propagation,
                                                    BackPropagation& back_propagation) const
 {
+    /*
     const TensorView targets_view = batch.get_target_view();
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
@@ -129,6 +132,7 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     active_tokens_count > 0
         ? back_propagation.error.setValues({total_log_loss/static_cast<type>(active_tokens_count)})
         : back_propagation.error.setZero();
+    */
 }
 
 
@@ -137,6 +141,7 @@ void CrossEntropyError3d::calculate_error(const Batch& batch,
                                           const ForwardPropagation& forward_propagation,
                                           BackPropagation& back_propagation) const
 {
+    /*
     const Index outputs_number = neural_network->get_outputs_number();
 
     outputs_number == 1
@@ -145,6 +150,7 @@ void CrossEntropyError3d::calculate_error(const Batch& batch,
 
     if (isnan(back_propagation.error()))
         throw runtime_error("Error is NAN.");
+    */
 }
 
 

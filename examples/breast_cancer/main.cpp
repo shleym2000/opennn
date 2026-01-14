@@ -37,9 +37,6 @@ int main()
         ClassificationNetwork classification_network(dataset.get_input_dimensions(), { neurons_number}, dataset.get_target_dimensions());
         //classification_network.print();
 
-        classification_network.compile();
-        classification_network.set_parameters_random();
-
         // Training Strategy
 
         TrainingStrategy training_strategy(&classification_network, &dataset);

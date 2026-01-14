@@ -27,6 +27,8 @@ struct NeuralNetworkBackPropagationCuda;
 
 struct ForwardPropagation
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     ForwardPropagation(const Index& = 0, NeuralNetwork* = nullptr);
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
@@ -302,6 +304,8 @@ struct NeuralNetworkBackPropagation
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     const vector<unique_ptr<LayerBackPropagation>>& get_layers() const;
 
     void print() const;
@@ -314,22 +318,7 @@ struct NeuralNetworkBackPropagation
 
     vector<unique_ptr<LayerBackPropagation>> layers;
 
-    Tensor1 gradient;
-
-    void allocate()
-    {
-        const Index total_size = neural_network->get_parameters_number();
-
-        gradient.resize(total_size);
-        gradient.setZero();
-
-        type* current_ptr = gradient.data();
-
-        for (auto& layer : layers)
-            if (layer)
-                current_ptr = layer->link_gradient(current_ptr);
-
-    }
+    Tensor1 workspace;
 };
 
 

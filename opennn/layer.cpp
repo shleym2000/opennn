@@ -36,10 +36,9 @@ Index LayerForwardPropagation::get_workspace_size()
 
     for (const TensorView* view : views)
     {
-        const Index size = view->size();
-
-        if (size > 0)
+        if (view && view->size() > 0)
         {
+            Index size = view->size();
             Index padded_size = (size + ALIGNMENT - 1) & MASK;
             total_bytes += padded_size;
         }
@@ -49,7 +48,7 @@ Index LayerForwardPropagation::get_workspace_size()
 }
 
 
-void LayerForwardPropagation::link_workspace(type* ptr)
+type* LayerForwardPropagation::link_workspace(type* ptr)
 {
     constexpr Index ALIGNMENT = 16;
     constexpr Index MASK = ~(ALIGNMENT - 1);
@@ -63,11 +62,69 @@ void LayerForwardPropagation::link_workspace(type* ptr)
         if (size > 0)
         {
             view->data = ptr;
-
             Index padded_size = (size + ALIGNMENT - 1) & MASK;
             ptr += padded_size;
         }
     }
+
+    return ptr;
+}
+
+
+void LayerBackPropagation::set(const Index& new_batch_size, Layer* new_layer)
+{
+    if (!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+Index LayerBackPropagation::get_workspace_size()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_size = 0;
+
+    vector<TensorView*> views = get_tensor_views();
+
+    for (const TensorView* view : views)
+    {
+        if (view && view->size() > 0)
+        {
+            Index size = view->size();
+            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            total_size += padded_size;
+        }
+    }
+
+    return total_size;
+}
+
+
+type* LayerBackPropagation::link_workspace(type* ptr)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    vector<TensorView*> views = get_tensor_views();
+
+    for (TensorView* view : views)
+    {
+        const Index size = view->size();
+
+        if (size > 0)
+        {
+            view->data = ptr;
+            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            ptr += padded_size;
+        }
+    }
+
+    return ptr;
 }
 
 
@@ -155,15 +212,28 @@ Index Layer::get_parameters_number()
 }
 
 
-void Layer::link_parameters(type* ptr)
+type* Layer::link_parameters(type* ptr)
 {
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
     vector<TensorView*> parameter_views = get_parameter_views();
 
-    for(TensorView* view : parameter_views)
+    for (TensorView* view : parameter_views)
     {
-        view->data = ptr;
-        ptr += view->size();
+        if (!view) continue;
+
+        const Index size = view->size();
+
+        if (size > 0)
+        {
+            view->data = ptr;
+            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            ptr += padded_size;
+        }
     }
+
+    return ptr;
 }
 
 

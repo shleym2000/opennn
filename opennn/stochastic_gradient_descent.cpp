@@ -137,7 +137,7 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 
     Tensor1& parameters = neural_network->get_parameters();
 
-    Tensor1& gradient = back_propagation.neural_network.gradient;
+    Tensor1& gradient = back_propagation.neural_network.workspace;
 
     Tensor1& parameters_increment = optimization_data.parameters_increment;
     Tensor1& last_parameters_increment = optimization_data.last_parameters_increment;
