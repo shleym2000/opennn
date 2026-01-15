@@ -354,7 +354,7 @@ public:
                                      unique_ptr<LayerForwardPropagationCuda>&,
                                      unique_ptr<LayerBackPropagationCuda>&) const {}
 
-    virtual vector<TensorView*> get_parameter_views_device() const;
+    virtual vector<TensorViewCuda*> get_parameter_views_device();
 
     virtual void copy_parameters_host() {}
 

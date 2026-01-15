@@ -472,9 +472,9 @@ cudnnHandle_t Layer::get_cudnn_handle()
 }
 
 
-vector<TensorView> Layer::get_parameter_views_device() const
+vector<TensorViewCuda*> Layer::get_parameter_views_device()
 {
-    return vector<TensorView>();
+    return vector<TensorViewCuda*>();
 }
 
 #endif

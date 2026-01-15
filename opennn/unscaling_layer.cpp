@@ -376,14 +376,14 @@ void UnscalingForwardPropagationCuda::print() const
     const Index outputs_number = layer->get_outputs_number();
 
     cout << "Unscaling CUDA Outputs (pass-through):" << endl
-        << matrix_from_device(outputs, batch_size, outputs_number) << endl;
+        << matrix_from_device(outputs.data, batch_size, outputs_number) << endl;
 }
 
 
 void UnscalingForwardPropagationCuda::free()
 {
-    cudaFree(outputs);
-    outputs = nullptr;
+    cudaFree(outputs.data);
+    outputs.data = nullptr;
 }
 
 

@@ -258,7 +258,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
     void free() override
     {
         if (combinations) cudaFree(combinations);
-        if (outputs) cudaFree(outputs);
+        if (outputs.data) cudaFree(outputs.data);
         if (dropout_states) cudaFree(dropout_states);
         if (dropout_reserve_space) cudaFree(dropout_reserve_space);
         if (bn_saved_mean) cudaFree(bn_saved_mean);
@@ -985,15 +985,15 @@ public:
     void copy_parameters_host()
     {
         if (!biases_device.data) cout << "Biases is null" << endl;
-        if (!weights_device) cout << "Synaptic weights is null" << endl;
+        if (!weights_device.data) cout << "Synaptic weights is null" << endl;
 
         CHECK_CUDA(cudaMemcpy(biases.data, biases_device.data, biases.size() * sizeof(type), cudaMemcpyDeviceToHost));
         CHECK_CUDA(cudaMemcpy(weights.data, weights_device.data, weights.size() * sizeof(type), cudaMemcpyDeviceToHost));
 
         if (batch_normalization)
         {
-            CHECK_CUDA(cudaMemcpy(scales.data, bn_scale_device, scales.size() * sizeof(type), cudaMemcpyDeviceToHost));
-            CHECK_CUDA(cudaMemcpy(offsets.data, bn_offset_device, offsets.size() * sizeof(type), cudaMemcpyDeviceToHost));
+            CHECK_CUDA(cudaMemcpy(scales.data, bn_scale_device.data, scales.size() * sizeof(type), cudaMemcpyDeviceToHost));
+            CHECK_CUDA(cudaMemcpy(offsets.data, bn_offset_device.data, offsets.size() * sizeof(type), cudaMemcpyDeviceToHost));
             CHECK_CUDA(cudaMemcpy(moving_means.data(), bn_running_mean_device, moving_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
             Tensor1 moving_variances(moving_standard_deviations.size());
             CHECK_CUDA(cudaMemcpy(moving_variances.data(), bn_running_variance_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
@@ -1316,14 +1316,14 @@ public:
     }
 
 
-    vector<TensorView*> get_parameter_views_device() const
+    vector<TensorViewCuda*> get_parameter_views_device()
     {
-        vector<TensorView*> parameter_views = {&biases_device, &weights_device};
+        vector<TensorViewCuda*> parameter_views = {&biases_device, &weights_device};
 
         if (batch_normalization)
         {
-            parameter_views.push_back({ bn_scale_device, scales.size() });
-            parameter_views.push_back({ bn_offset_device, offsets.size() });
+            parameter_views.push_back(&bn_scale_device);
+            parameter_views.push_back(&bn_offset_device);
         }
 
         return parameter_views;
@@ -1368,8 +1368,10 @@ private:
     cudnnActivationDescriptor_t activation_descriptor = nullptr;
 
     // Batch Normalization
-    float* bn_scale_device = nullptr;
-    float* bn_offset_device = nullptr;
+    //float* bn_scale_device = nullptr;
+    //float* bn_offset_device = nullptr;
+    TensorViewCuda bn_scale_device;
+    TensorViewCuda bn_offset_device;
     float* bn_running_mean_device = nullptr;
     float* bn_running_variance_device = nullptr;
     cudnnTensorDescriptor_t bn_tensor_descriptor = nullptr;

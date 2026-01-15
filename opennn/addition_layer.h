@@ -150,7 +150,7 @@ public:
                       errors_device);
 
 */
-        addition_cuda(total_elements, inputs_device[0], inputs_device[1], forward_propagation_cuda->outputs);
+        addition_cuda(total_elements, inputs_device[0], inputs_device[1], forward_propagation_cuda->outputs.data);
     }
 
     void back_propagate_cuda(const vector<float*>&,
@@ -263,7 +263,7 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
         const size_t layer_elements = accumulate(input_dims.begin(), input_dims.end(), 1, multiplies<Index>());
         const size_t total_elements = static_cast<size_t>(batch_size) * layer_elements;
 
-        CHECK_CUDA(cudaMalloc(&outputs, total_elements * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&outputs.data, total_elements * sizeof(float)));
         //CUDA_MALLOC_AND_REPORT(outputs, total_elements * sizeof(float));
     }
 
@@ -276,8 +276,8 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        if (outputs) cudaFree(outputs);
-        outputs = nullptr;
+        if (outputs.data) cudaFree(outputs.data);
+        outputs.data = nullptr;
     }
 };
 
