@@ -77,6 +77,8 @@ struct UnscalingForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
+    vector<TensorView*> get_tensor_views() override;
+
     void print() const override;
 };
 

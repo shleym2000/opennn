@@ -433,6 +433,11 @@ vector<Index> NeuralNetwork::get_layer_parameter_numbers() const
 void NeuralNetwork::set_parameters(const Tensor1& new_parameters)
 {
     parameters = new_parameters;
+
+    type* current_ptr = parameters.data();
+
+    for (unique_ptr<Layer>& layer : layers)
+        current_ptr = layer->link_parameters(current_ptr);
 }
 
 
@@ -565,7 +570,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       const Tensor1& new_parameters,
                                       ForwardPropagation& forward_propagation)
 {
-    const Tensor1& original_parameters = get_parameters();
+    const Tensor1 original_parameters = get_parameters();
 
     set_parameters(new_parameters);
 

@@ -139,19 +139,18 @@ void LossIndex::back_propagate(const Batch& batch,
                                BackPropagation& back_propagation) const
 {
     if(batch.is_empty()) return;
-    cout << "0" << endl;
+
     calculate_error(batch, forward_propagation, back_propagation);
-cout << "1" << endl;
+
     calculate_layers_error_gradient(batch, forward_propagation, back_propagation);
-cout << "2" << endl;
+
     back_propagation.loss = back_propagation.error();
 
     // Regularization
 
     add_regularization(back_propagation);
-cout << "3" << endl;
+
     add_regularization_to_deltas(back_propagation);
-    cout << "4" << endl;
 }
 
 
@@ -588,11 +587,13 @@ type LossIndex::calculate_numerical_error() const
     batch.fill(training_indices, input_indices, target_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     neural_network->forward_propagate(batch.get_input_views(),
                                       forward_propagation);
 
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     calculate_error(batch, forward_propagation, back_propagation);
 
@@ -612,11 +613,15 @@ Tensor1 LossIndex::calculate_gradient()
     const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
 
     Batch batch(samples_number, dataset);
-
     // batch.fill(sample_indices, input_variable_indices, decoder_variable_indices, target_variable_indices);
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
+
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
+
     const Tensor1& parameters = neural_network->get_parameters();
 
     neural_network->forward_propagate(batch.get_input_views(),
@@ -642,7 +647,10 @@ Tensor1 LossIndex::calculate_numerical_gradient()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
+
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -705,7 +713,10 @@ Tensor1 LossIndex::calculate_numerical_gradient_lm()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
+
     BackPropagationLM back_propagation_lm(samples_number, this);
+    //back_propagation_lm.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -782,8 +793,10 @@ Tensor1 LossIndex::calculate_numerical_input_deltas()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     type h;
 
@@ -837,10 +850,13 @@ Tensor2 LossIndex::calculate_numerical_jacobian()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
+    //back_propagation_lm.neural_network.compile();
 
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     Tensor1 parameters = neural_network->get_parameters();
 
@@ -916,8 +932,10 @@ Tensor2 LossIndex::calculate_numerical_hessian()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
+    //back_propagation_lm.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
