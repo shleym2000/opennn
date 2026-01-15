@@ -628,23 +628,23 @@ type standard_deviation(const Tensor1& vector)
 }
 
 
-type median(const Tensor1& vector)
+type median(const Tensor1& input_vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = input_vector.dimension(0);
 
     // Fix missing values
 
     Index new_size = 0;
 
     for (Index i = 0; i < size; i++)
-        if (!isnan(vector(i)))
+        if (!isnan(input_vector(i)))
             new_size++;
 
     vector<Index> sorted_vector;
 
     for (Index i = 0; i < size; i++)
-        if (!isnan(vector(i))) {
-            sorted_vector.push_back(vector(i));
+        if (!isnan(input_vector(i))) {
+            sorted_vector.push_back(input_vector(i));
         }
 
     // Calculate median
@@ -668,23 +668,23 @@ type median(const Tensor1& vector)
 }
 
 
-Tensor1 quartiles(const Tensor1& vector)
+Tensor1 quartiles(const Tensor1& input_vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = input_vector.dimension(0);
 
     // Fix missing values
 
     Index new_size = 0;
 
     for (Index i = 0; i < size; i++)
-        if (!isnan(vector(i)))
+        if (!isnan(input_vector(i)))
             new_size++;
 
     vector<type> sorted_vector;
 
     for (Index i = 0; i < size; i++)
-        if (!isnan(vector(i))) {
-            sorted_vector.push_back(vector(i));
+        if (!isnan(input_vector(i))) {
+            sorted_vector.push_back(input_vector(i));
         }
     std::sort(sorted_vector.begin(), sorted_vector.end());
     
@@ -1723,11 +1723,11 @@ Index maximal_index(const Tensor1& vector)
 }
 
 
-Tensor<Index, 1> minimal_indices(const Tensor1& vector, const Index& number)
+Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, const Index& number)
 {
-    vector<type> vector_(vector.dimension(0));
-    for (Index i = 0; i < vector.dimension(0); i++) {
-        vector_[i] = vector(i);
+    vector<type> vector_(input_vector.dimension(0));
+    for (Index i = 0; i < input_vector.dimension(0); i++) {
+        vector_[i] = input_vector(i);
     }
 
     const Index size = vector_.size();
@@ -1735,8 +1735,8 @@ Tensor<Index, 1> minimal_indices(const Tensor1& vector, const Index& number)
 
     Index val_max=0;
     for (Index i = 0; i < size; i++) {
-        if (vector(i) > val_max) {
-            val_max = vector(i);
+        if (input_vector(i) > val_max) {
+            val_max = input_vector(i);
         }
     }
 
@@ -1762,19 +1762,19 @@ Tensor<Index, 1> minimal_indices(const Tensor1& vector, const Index& number)
 }
 
 
-Tensor<Index, 1> maximal_indices(const Tensor1& vector, const Index& number)
+Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, const Index& number)
 {
-    vector<type> vector_(vector.dimension(0));
-    for (Index i = 0; i < vector.dimension(0); i++) {
-        vector_[i] = vector(i);
+    vector<type> vector_(input_vector.dimension(0));
+    for (Index i = 0; i < input_vector.dimension(0); i++) {
+        vector_[i] = input_vector(i);
     }
 
     const Index size = vector_.size();
 
     Index val_min = 0;
     for (Index i = 0; i < size; i++) {
-        if (vector(i) < val_min) {
-            val_min = vector(i);
+        if (input_vector(i) < val_min) {
+            val_min = input_vector(i);
         }
     }
 
@@ -1856,14 +1856,14 @@ Tensor<Index, 1> maximal_indices(const Tensor2& matrix)
 }
 
 
-Tensor1 percentiles(const Tensor1& vector)
+Tensor1 percentiles(const Tensor1& input_vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = input_vector.dimension(0);
 
     Index new_size = 0;
 
     for (Index i = 0; i < size; i++)
-        if (!isnan(vector(i)))
+        if (!isnan(input_vector(i)))
             new_size++;
 
     if (new_size == 0)
@@ -1878,8 +1878,8 @@ Tensor1 percentiles(const Tensor1& vector)
     vector<type> new_vector(new_size);
 
     for (Index i = 0; i < size; i++)
-        if (!isnan(vector(i)))
-            new_vector[index++] = vector(i);
+        if (!isnan(input_vector(i)))
+            new_vector[index++] = input_vector(i);
 
     vector<type> sorted_vector(new_size);
     sorted_vector = new_vector;
