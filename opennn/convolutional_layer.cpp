@@ -1081,9 +1081,9 @@ void Convolutional::back_propagate_cuda(const vector<float*>& inputs_device,
 }
 
 
-vector<ParameterView> Convolutional::get_parameter_views_device() const
+vector<TensorView> Convolutional::get_parameter_views_device() const
 {
-    vector<ParameterView> parameter_views =
+    vector<TensorView> parameter_views =
         {
             {biases_device, biases.size()},
             {weights_device, weights.size()}
@@ -1399,7 +1399,7 @@ ConvolutionalBackPropagationCuda::ConvolutionalBackPropagationCuda(const Index& 
 }
 
 
-vector<ParameterView> ConvolutionalBackPropagationCuda::get_gradient_views_device() const
+vector<TensorView> ConvolutionalBackPropagationCuda::get_gradient_views_device() const
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 
@@ -1410,11 +1410,11 @@ vector<ParameterView> ConvolutionalBackPropagationCuda::get_gradient_views_devic
 
     const Index bias_deltas_size = convolutional_layer->get_kernels_number();
 
-    vector<ParameterView> delta_views =
-        {
-            {bias_deltas_device, bias_deltas_size},
-            {weight_deltas_device, weight_deltas_size}
-        };
+    vector<TensorView> delta_views =
+    {
+        {bias_deltas_device, bias_deltas_size},
+        {weight_deltas_device, weight_deltas_size}
+    };
 
     if (convolutional_layer->get_batch_normalization())
     {

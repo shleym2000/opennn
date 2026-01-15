@@ -1376,8 +1376,8 @@ void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation_cu
 
         LayerBackPropagationCuda* layer_back_prop_cuda = back_propagation_cuda.neural_network.layers[layer_index].get();
 
-        const vector<ParameterView>& parameter_device_pairs = layer->get_parameter_views_device();
-        const vector<ParameterView>& delta_device_pairs = layer_back_prop_cuda->get_gradient_views_device();
+        const vector<TensorView>& parameter_device_pairs = layer->get_parameter_views_device();
+        const vector<TensorView>& delta_device_pairs = layer_back_prop_cuda->get_gradient_views_device();
 
         for (Index param_index = 0; param_index < Index(parameter_device_pairs.size()); ++param_index)
         {

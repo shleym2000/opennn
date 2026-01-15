@@ -118,7 +118,7 @@ public:
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
-    vector<ParameterView> get_parameter_views_device() const override;
+    vector<TensorView> get_parameter_views_device() const override;
 
     void copy_parameters_host();
 
@@ -261,7 +261,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 {
     ConvolutionalBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_gradient_views_device() const override;
+    vector<TensorView*> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 

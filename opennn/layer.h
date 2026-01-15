@@ -354,7 +354,7 @@ public:
                                      unique_ptr<LayerForwardPropagationCuda>&,
                                      unique_ptr<LayerBackPropagationCuda>&) const {}
 
-    virtual vector<ParameterView> get_parameter_views_device() const;
+    virtual vector<TensorView*> get_parameter_views_device() const;
 
     virtual void copy_parameters_host() {}
 
@@ -490,15 +490,13 @@ struct LayerForwardPropagationCuda
 
     virtual void free() {}
 
-    virtual float* get_output_device() { return outputs; }
+    virtual TensorViewCuda get_outputs() { return outputs; }
 
     Index batch_size = 0;
 
     Layer* layer = nullptr;
 
-    float* outputs = nullptr;
-
-    cudnnTensorDescriptor_t output_tensor_descriptor = nullptr;
+    TensorViewCuda outputs;
 };
 
 
@@ -514,9 +512,9 @@ struct LayerBackPropagationCuda
 
     virtual vector<float*> get_input_derivatives_device() { return {input_deltas}; }
 
-    virtual vector<ParameterView> get_gradient_views_device() const
+    virtual vector<TensorView*> get_gradient_views_device() const
     {
-        return vector<ParameterView>();
+        return vector<TensorView*>();
     }
 
     Index batch_size = 0;

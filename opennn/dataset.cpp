@@ -7,6 +7,7 @@
 //   artelnics@artelnics.com
 
 #include "dataset.h"
+#include "image_dataset.h"
 #include "time_series_dataset.h"
 #include "statistics.h"
 #include "scaling.h"
@@ -4531,7 +4532,7 @@ void BatchCuda::fill(const vector<Index>& sample_indices,
 
     dataset->fill_target_tensor(sample_indices, target_indices, targets_host);
     
-    Index batch_size = sample_indices.size();
+    const Index batch_size = sample_indices.size();
 
     copy_device(batch_size);
 }

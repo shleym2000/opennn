@@ -339,9 +339,9 @@ void Embedding::back_propagate_cuda(const vector<float*>&,
 }
 
 
-vector<ParameterView> Embedding::get_parameter_views_device() const
+vector<TensorView> Embedding::get_parameter_views_device() const
 {
-    return vector<ParameterView>();
+    return vector<TensorView>();
 }
 
 
@@ -408,9 +408,9 @@ EmbeddingBackPropagationCuda::EmbeddingBackPropagationCuda(const Index& new_batc
 }
 
 
-vector<ParameterView> EmbeddingBackPropagationCuda::get_gradient_views_device() const
+vector<TensorView> EmbeddingBackPropagationCuda::get_gradient_views_device() const
 {
-    return vector<ParameterView>();
+    return vector<TensorView>();
 }
 
 

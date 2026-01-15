@@ -1904,6 +1904,7 @@ string TestingAnalysis::test_transformer(const vector<string>& context_string, c
 
     return transformer->calculate_outputs(context_string);
 */
+    return string();
 }
 
 

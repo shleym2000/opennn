@@ -640,7 +640,7 @@ type median(const Tensor1& vector)
         if (!isnan(vector(i)))
             new_size++;
 
-    std::vector<Index> sorted_vector;
+    vector<Index> sorted_vector;
 
     for (Index i = 0; i < size; i++)
         if (!isnan(vector(i))) {
@@ -680,7 +680,7 @@ Tensor1 quartiles(const Tensor1& vector)
         if (!isnan(vector(i)))
             new_size++;
 
-    std::vector<type> sorted_vector;
+    vector<type> sorted_vector;
 
     for (Index i = 0; i < size; i++)
         if (!isnan(vector(i))) {
@@ -690,8 +690,8 @@ Tensor1 quartiles(const Tensor1& vector)
     
     // Calculate quartiles
 
-    std::vector<type> first_sorted_vector;
-    std::vector<type> last_sorted_vector;
+    vector<type> first_sorted_vector;
+    vector<type> last_sorted_vector;
 
     if (new_size % 2 == 0)
     {
@@ -918,7 +918,7 @@ Histogram histogram(const Tensor1& new_vector, const Index& bins_number)
     Tensor<Index, 1> frequencies(bins_number);
     frequencies.setZero();
 
-    std::vector<type> unique_values;
+    vector<type> unique_values;
 
     unique_values.reserve(min<Index>(size, bins_number));
     unique_values.push_back(new_vector(0));
@@ -1725,7 +1725,7 @@ Index maximal_index(const Tensor1& vector)
 
 Tensor<Index, 1> minimal_indices(const Tensor1& vector, const Index& number)
 {
-    std::vector<type> vector_(vector.dimension(0));
+    vector<type> vector_(vector.dimension(0));
     for (Index i = 0; i < vector.dimension(0); i++) {
         vector_[i] = vector(i);
     }
@@ -1764,7 +1764,7 @@ Tensor<Index, 1> minimal_indices(const Tensor1& vector, const Index& number)
 
 Tensor<Index, 1> maximal_indices(const Tensor1& vector, const Index& number)
 {
-    std::vector<type> vector_(vector.dimension(0));
+    vector<type> vector_(vector.dimension(0));
     for (Index i = 0; i < vector.dimension(0); i++) {
         vector_[i] = vector(i);
     }
@@ -1875,13 +1875,13 @@ Tensor1 percentiles(const Tensor1& vector)
 
     Index index = 0;
     
-    std::vector<type> new_vector(new_size);
+    vector<type> new_vector(new_size);
 
     for (Index i = 0; i < size; i++)
         if (!isnan(vector(i)))
             new_vector[index++] = vector(i);
 
-    std::vector<type> sorted_vector(new_size);
+    vector<type> sorted_vector(new_size);
     sorted_vector = new_vector;
     sort(sorted_vector.begin(), sorted_vector.end());
 

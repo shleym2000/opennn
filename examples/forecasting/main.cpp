@@ -135,7 +135,7 @@ int main()
         cout << "outputs: " << outputs << endl;
 
         /// Pruebas output funcion seno
-        // const std::vector<std::pair<type, type>> input_views = {
+        // const vector<std::pair<type, type>> input_views = {
         //     {0.0,          0.0998334166},
         //     {0.0998334166, 0.1986693308},
         //     {0.198669331,  0.295520207},

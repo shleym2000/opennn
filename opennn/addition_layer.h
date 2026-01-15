@@ -126,14 +126,31 @@ public:
         if (inputs_device.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs for CUDA propagation.");
 
-        AdditionForwardPropagationCuda<Rank>* this_forward_propagation =
-            static_cast<AdditionForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
-
         const dimensions input_dims = get_input_dimensions();
         const size_t layer_elements = accumulate(input_dims.begin(), input_dims.end(), 1, multiplies<Index>());
-        const size_t total_elements = static_cast<size_t>(this_forward_propagation->batch_size) * layer_elements;
+        const size_t total_elements = static_cast<size_t>(forward_propagation_cuda->batch_size) * layer_elements;
 
-        addition_cuda(total_elements, inputs_device[0], inputs_device[1], this_forward_propagation->outputs);
+
+        float alpha = 1.0f;
+        float alpha_minus_one = -1.0f;
+        const float beta = 0.0f;
+
+        // @todo substitute addition_cuda by cudnn function similar as follows
+/*
+        cudnnOpTensor(cudnn_handle,
+                      operator_sum_descriptor,
+                      &alpha_minus_one,
+                      output_tensor_descriptor,
+                      targets,
+                      &alpha,
+                      output_tensor_descriptor,
+                      outputs,
+                      &beta,
+                      output_tensor_descriptor,
+                      errors_device);
+
+*/
+        addition_cuda(total_elements, inputs_device[0], inputs_device[1], forward_propagation_cuda->outputs);
     }
 
     void back_propagate_cuda(const vector<float*>&,

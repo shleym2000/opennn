@@ -1702,7 +1702,7 @@ vector<vector<float*>> ForwardPropagationCuda::get_layer_inputs_device(const vec
                 layer_input_device[i] = batch_input_device;
                 continue;
             }
-        };
+        }
 
         const Index this_layer_inputs_number = this_layer_input_indices.size();
 

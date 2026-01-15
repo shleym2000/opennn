@@ -72,15 +72,15 @@ public:
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
-    vector<ParameterView> get_parameter_views_device() const override;
+    vector<TensorView> get_parameter_views_device() const override;
 
-    void copy_parameters_host();
+    void copy_parameters_host() override;
 
-    void copy_parameters_device();
+    void copy_parameters_device() override;
 
-    void allocate_parameters_device();
+    void allocate_parameters_device() override;
 
-    void free_parameters_device();
+    void free_parameters_device() override;
 
 private:
 
@@ -144,7 +144,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 {
     EmbeddingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_gradient_views_device() const override;
+    vector<TensorView*> get_gradient_views_device() const override;
 
     void set(const Index& = 0, Layer* = nullptr) override;
 

@@ -790,6 +790,8 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     const float bias_correction_1 = 1.0f - powf(beta_1, static_cast<float>(iteration));
     const float bias_correction_2 = 1.0f - powf(beta_2, static_cast<float>(iteration));
 
+    constexpr type epsilon = numeric_limits<type>::epsilon();
+
     for (Index layer_index = 0; layer_index < layers_number; ++layer_index)
     {
         Layer* layer = neural_network->get_layer(layer_index).get();
@@ -797,10 +799,10 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
         if (!layer->get_is_trainable())
             continue;
 
-        const vector<ParameterView> parameter_views = layer->get_parameter_views_device();
+        const vector<TensorView*> parameter_views = layer->get_parameter_views_device();
 
         LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
-        const vector<ParameterView> delta_views = layer_back_prop->get_gradient_views_device();
+        const vector<TensorView> delta_views = layer_back_prop->get_gradient_views_device();
 
         assert(parameter_views.size() == delta_views.size());
 

@@ -781,9 +781,9 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
         if (!layer->get_is_trainable())
             continue;
 
-        const vector<ParameterView> parameter_views = layer->get_parameter_views_device();
+        const vector<TensorView*> parameter_views = layer->get_parameter_views_device();
         LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
-        const vector<ParameterView> delta_views = layer_back_prop->get_gradient_views_device();
+        const vector<TensorView> delta_views = layer_back_prop->get_gradient_views_device();
 
         for (Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
         {
