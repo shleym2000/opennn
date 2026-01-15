@@ -35,12 +35,12 @@ int main()
         // Neural Network
 
         ClassificationNetwork classification_network(dataset.get_input_dimensions(), { neurons_number}, dataset.get_target_dimensions());
-        //classification_network.print();
 
         // Training Strategy
 
         TrainingStrategy training_strategy(&classification_network, &dataset);
 
+        training_strategy.get_loss_index()->set_regularization_method("None");
         training_strategy.set_optimization_algorithm("AdaptiveMomentEstimation");
         AdaptiveMomentEstimation* adam = dynamic_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
         adam->set_maximum_epochs_number(1000);
@@ -49,8 +49,8 @@ int main()
 
         // Testing Analysis
 
-        // TestingAnalysis testing_analysis(&classification_network, &dataset);
-        // testing_analysis.print_binary_classification_tests();
+        TestingAnalysis testing_analysis(&classification_network, &dataset);
+        testing_analysis.print_binary_classification_tests();
 
         cout << "Good bye!" << endl;
 

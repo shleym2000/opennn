@@ -1406,7 +1406,7 @@ void ForwardPropagation::compile()
 }
 
 
-TensorView ForwardPropagation::get_last_trainable_layer_outputs_pair() const
+TensorView ForwardPropagation::get_last_trainable_layer_outputs_view() const
 {
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 

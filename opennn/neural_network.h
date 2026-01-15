@@ -35,7 +35,7 @@ struct ForwardPropagation
 
     void compile();
 
-    TensorView get_last_trainable_layer_outputs_pair() const;
+    TensorView get_last_trainable_layer_outputs_view() const;
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
 
@@ -181,7 +181,6 @@ public:
         const Index batch_size = inputs.dimension(0);
 
         ForwardPropagation forward_propagation(batch_size, this);
-
         forward_propagation.compile();
 
         dimensions input_dimensions;
@@ -195,7 +194,7 @@ public:
         forward_propagate({input_view}, forward_propagation, false);
 
         const TensorView& output_view = forward_propagation.layers.back()->get_outputs();
-
+ 
         if constexpr (output_rank == 2)
            return tensor_map<2>(output_view);
         else if constexpr (output_rank == 3)

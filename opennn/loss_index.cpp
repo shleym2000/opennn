@@ -110,7 +110,7 @@ void LossIndex::calculate_errors_lm(const Batch& batch,
                                     BackPropagationLM & back_propagation) const
 {
     const TensorView outputs_view
-        = forward_propagation.get_last_trainable_layer_outputs_pair();
+        = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -139,18 +139,19 @@ void LossIndex::back_propagate(const Batch& batch,
                                BackPropagation& back_propagation) const
 {
     if(batch.is_empty()) return;
-
+    cout << "0" << endl;
     calculate_error(batch, forward_propagation, back_propagation);
-
+cout << "1" << endl;
     calculate_layers_error_gradient(batch, forward_propagation, back_propagation);
-
+cout << "2" << endl;
     back_propagation.loss = back_propagation.error();
 
     // Regularization
 
     add_regularization(back_propagation);
-
+cout << "3" << endl;
     add_regularization_to_deltas(back_propagation);
+    cout << "4" << endl;
 }
 
 

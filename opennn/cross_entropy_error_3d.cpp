@@ -29,7 +29,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     const TensorView targets_view = batch.get_target_view();
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
     const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
@@ -82,7 +82,7 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     const TensorView targets_view = batch.get_target_view();
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
     const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);

@@ -294,8 +294,8 @@ public:
         {
             scales.dims = {outputs_number};
             offsets.dims = {outputs_number};
-            moving_means.dims = {outputs_number};
-            moving_standard_deviations.dims = {outputs_number};
+            moving_means.resize(outputs_number);
+            moving_standard_deviations.resize(outputs_number);
         }
 
         set_label(new_label);
@@ -492,8 +492,8 @@ public:
                 normalized_outputs,
                 tensor_map<1>(dense_forward_propagation->means),
                 tensor_map<1>(dense_forward_propagation->standard_deviations),
-                tensor_map<1>(moving_means),
-                tensor_map<1>(moving_standard_deviations),
+                moving_means,
+                moving_standard_deviations,
                 tensor_map<1>(scales),
                 tensor_map<1>(offsets),
                 is_training,
@@ -1204,8 +1204,8 @@ private:
     TensorView scales;
     TensorView offsets;
 
-    TensorView moving_means;
-    TensorView moving_standard_deviations;
+    Tensor1 moving_means;
+    Tensor1 moving_standard_deviations;
 
     bool batch_normalization = false;
 

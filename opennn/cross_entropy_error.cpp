@@ -47,7 +47,7 @@ void CrossEntropyError2d::calculate_binary_error(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -78,7 +78,7 @@ void CrossEntropyError2d::calculate_multiple_error(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -118,7 +118,7 @@ void CrossEntropyError2d::calculate_binary_output_delta(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -149,7 +149,7 @@ void CrossEntropyError2d::calculate_multiple_output_delta(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 

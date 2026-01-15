@@ -214,12 +214,16 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
     ForwardPropagation training_forward_propagation(training_samples_number, neural_network);
     ForwardPropagation selection_forward_propagation(selection_samples_number, neural_network);
 
+    training_forward_propagation.compile();
+
     // Loss index
 
     loss_index->set_normalization_coefficient();
 
     BackPropagation training_back_propagation(training_samples_number, loss_index);
     BackPropagation selection_back_propagation(selection_samples_number, loss_index);
+
+    training_back_propagation.neural_network.compile();
 
     type old_loss = type(0);
     type loss_decrease = numeric_limits<type>::max();
