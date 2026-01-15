@@ -99,13 +99,13 @@ struct DenseBackPropagation final : LayerBackPropagation
         bias_deltas.dims = {outputs_number};
         weight_deltas.dims = {inputs_number, outputs_number};
 
-        input_deltas.resize(1);
-
         const dimensions input_dims = dense_layer->get_input_dimensions();
         dimensions full_input_dims = {batch_size};
         full_input_dims.insert(full_input_dims.end(), input_dims.begin(), input_dims.end());
 
-        input_deltas[0].dims = full_input_dims;
+        input_deltas_tensor.resize(full_input_dims);
+        input_deltas.resize(1);
+        input_deltas[0] = TensorView(input_deltas_tensor.data(), full_input_dims);
 
         if (dense_layer->get_batch_normalization())
         {
@@ -117,7 +117,7 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     vector<TensorView*> get_tensor_views() override
     {
-        vector<TensorView*> views = {&bias_deltas, &weight_deltas, &input_deltas[0]};
+        vector<TensorView*> views = {&bias_deltas, &weight_deltas};
 
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
 
@@ -144,6 +144,8 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     TensorView bn_scale_deltas;
     TensorView bn_offset_deltas;
+
+    Tensor<type, Rank> input_deltas_tensor;
 };
 
 

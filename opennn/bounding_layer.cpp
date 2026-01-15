@@ -297,6 +297,12 @@ void BoundingForwardPropagation::initialize()
 }
 
 
+vector<TensorView *> BoundingForwardPropagation::get_tensor_views()
+{
+    return { &outputs };
+}
+
+
 void BoundingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl

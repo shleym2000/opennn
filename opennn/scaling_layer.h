@@ -187,11 +187,8 @@ public:
         const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
         TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
-/*
-        ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
-            static_cast<ScalingForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
-        outputs = inputs;
+        outputs.device(*device) = inputs;
 
         for(Index i = 0; i < outputs_number; i++)
         {
@@ -212,7 +209,6 @@ public:
             else
                 throw runtime_error("Unknown scaling method.\n");
         }
-*/
     }
 
     //void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>& );
@@ -493,6 +489,11 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         const Index outputs_number = layer->get_outputs_number();
 
         outputs.dims = {batch_size, outputs_number};
+    }
+
+    vector<TensorView*> get_tensor_views() override
+    {
+        return { &outputs };
     }
 
     void print() const override

@@ -211,31 +211,30 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
     optimization_data.learning_rate = directional_point.first;
     back_propagation.loss = directional_point.second;
 
+    Tensor1& final_parameters = neural_network->get_parameters();
+
     if(abs(optimization_data.learning_rate) > type(0))
     {
         optimization_data.parameters_increment.device(*device)
             = optimization_data.training_direction*optimization_data.learning_rate;
 
-        parameters.device(*device) += optimization_data.parameters_increment;
+        final_parameters.device(*device) += optimization_data.parameters_increment;
     }
     else
     {
-        const Index parameters_number = parameters.size();
+        const Index parameters_number = final_parameters.size();
 
         constexpr type epsilon = numeric_limits<type>::epsilon();
 
         #pragma omp parallel for
-
         for(Index i = 0; i < parameters_number; i++)
         {
             if (abs(gradient(i)) < NUMERIC_LIMITS_MIN)
-            {
                 parameters_increment(i) = type(0);
-            }
             else
             {
                 parameters_increment(i) = (gradient(i) > type(0)) ? -epsilon : epsilon;
-                parameters(i) += parameters_increment(i);
+                final_parameters(i) += parameters_increment(i);
             }
         }
 
@@ -252,7 +251,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
     // Set parameters
 
-    //neural_network->set_parameters(parameters);
+    neural_network->set_parameters(final_parameters);
 }
 
 
