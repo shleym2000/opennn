@@ -63,16 +63,16 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<float*>&,
+    void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
                                 const bool&) override;
 
-    void back_propagate_cuda(const vector<float*>&,
-                             const vector<float*>&,
+    void back_propagate_cuda(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>&,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
-    vector<TensorView> get_parameter_views_device() const override;
+    vector<TensorViewCuda> get_parameter_views_device() override;
 
     void copy_parameters_host() override;
 
@@ -119,9 +119,9 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 {
     EmbeddingBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView*> get_tensor_views() override;
-
     void initialize() override;
+
+    vector<TensorView*> get_tensor_views() override;
 
     void print() const override;
 
@@ -134,7 +134,7 @@ struct EmbeddingForwardPropagationCuda : public LayerForwardPropagationCuda
 {
     EmbeddingForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    void initialize() override;
 
     void print() const override;
 };
@@ -144,13 +144,13 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 {
     EmbeddingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView*> get_gradient_views_device() const override;
+    void initialize() override;
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    vector<TensorViewCuda*> get_tensor_views_device() override;
 
     void print() const override;
 
-    type* weight_deltas_device = nullptr;
+    TensorView weight_deltas_device;
 };
 
 #endif

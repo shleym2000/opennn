@@ -781,6 +781,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_propagation_cuda,
                                                       ADAMOptimizationDataCuda& optimization_data_cuda) const
 {
+    /*
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
     const Index layers_number = neural_network->get_layers_number();
 
@@ -799,7 +800,8 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
         if (!layer->get_is_trainable())
             continue;
 
-        const vector<TensorViewCuda*> parameter_views = layer->get_parameter_views_device();
+        const vector<TensorView*> parameter_views = layer->get_parameter_views();
+        const vector<TensorViewCuda*> parameter_views_device = layer->get_parameter_views_device();
 
         LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
         const vector<TensorView*> delta_views = layer_back_prop->get_gradient_views_device();
@@ -808,7 +810,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 
         for (Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
         {
-            float* params_d = parameter_views[parameter_index]->data;
+            float* params_d = parameter_views_device[parameter_index]->data;
             const Index param_size = parameter_views[parameter_index]->size();
             const float* grads_d = delta_views[parameter_index]->data;
 
@@ -830,6 +832,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
             );
         }
     }
+    */
 }
 
 
@@ -858,7 +861,7 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
             continue;
         }
 
-        const auto parameter_views = layer->get_parameter_views_device();
+        const auto parameter_views = layer->get_parameter_views();
         const size_t param_blocks_count = parameter_views.size();
 
         gradient_exponential_decay[i].resize(param_blocks_count, nullptr);
@@ -932,7 +935,7 @@ void ADAMOptimizationDataCuda::print() const
 
         cout << "Layer " << i << " (" << layer->get_name() << "):" << endl;
 
-        const auto parameter_views = layer->get_parameter_views_device();
+        const vector<TensorView*> parameter_views = layer->get_parameter_views();
 
         for (Index j = 0; j < Index(parameter_views.size()); ++j)
         {

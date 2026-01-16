@@ -119,7 +119,7 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<float*>& inputs_device,
+    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                 const bool&) override
     {
@@ -150,11 +150,11 @@ public:
                       errors_device);
 
 */
-        addition_cuda(total_elements, inputs_device[0], inputs_device[1], forward_propagation_cuda->outputs.data);
+        addition_cuda(total_elements, inputs_device[0].data, inputs_device[1].data, forward_propagation_cuda->outputs.data);
     }
 
-    void back_propagate_cuda(const vector<float*>&,
-                             const vector<float*>& deltas_device,
+    void back_propagate_cuda(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>& deltas_device,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const override
     {
@@ -168,8 +168,8 @@ public:
         const size_t layer_elements = accumulate(input_dims.begin(), input_dims.end(), 1, multiplies<Index>());
         const size_t total_elements = static_cast<size_t>(this_back_propagation->batch_size) * layer_elements;
 
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->inputs_1_derivatives, deltas_device[0], total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->inputs_2_derivatives, deltas_device[0], total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->inputs_1_derivatives.data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->inputs_2_derivatives.data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
     }
 
 #endif
@@ -251,20 +251,14 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
         set(new_batch_size, new_layer);
     }
 
-
-    void set(const Index& new_batch_size, Layer* new_layer) override
+    void initialize() override
     {
-        if (!new_layer) return;
-
-        layer = new_layer;
-        batch_size = new_batch_size;
-
         const dimensions input_dims = layer->get_input_dimensions();
         const size_t layer_elements = accumulate(input_dims.begin(), input_dims.end(), 1, multiplies<Index>());
         const size_t total_elements = static_cast<size_t>(batch_size) * layer_elements;
 
         CHECK_CUDA(cudaMalloc(&outputs.data, total_elements * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(outputs, total_elements * sizeof(float));
+        //CUDA_MALLOC_AND_REPORT(outputs.data, total_elements * sizeof(float));
     }
 
 
@@ -292,27 +286,16 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
     }
 
 
-    vector<float*> get_input_derivatives_device() override
+    void initialize() override
     {
-        return { inputs_1_derivatives, inputs_2_derivatives };
-    }
-
-
-    void set(const Index& new_batch_size, Layer* new_layer) override
-    {
-        if (!new_layer) return;
-
-        layer = new_layer;
-        batch_size = new_batch_size;
-
         const dimensions input_dims = layer->get_input_dimensions();
         const size_t layer_elements = accumulate(input_dims.begin(), input_dims.end(), 1, multiplies<Index>());
         const size_t total_elements = static_cast<size_t>(batch_size) * layer_elements;
 
-        CHECK_CUDA(cudaMalloc(&inputs_1_derivatives, total_elements * sizeof(float)));
-        CHECK_CUDA(cudaMalloc(&inputs_2_derivatives, total_elements * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(inputs_1_derivatives, total_elements * sizeof(float));
-        //CUDA_MALLOC_AND_REPORT(inputs_2_derivatives, total_elements * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&inputs_1_derivatives.data, total_elements * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&inputs_2_derivatives.data, total_elements * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(inputs_1_derivatives.data, total_elements * sizeof(float));
+        //CUDA_MALLOC_AND_REPORT(inputs_2_derivatives.data, total_elements * sizeof(float));
     }
 
 
@@ -324,15 +307,15 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
 
     void free() override
     {
-        if (inputs_1_derivatives) cudaFree(inputs_1_derivatives);
-        if (inputs_2_derivatives) cudaFree(inputs_2_derivatives);
+        if (inputs_1_derivatives.data) cudaFree(inputs_1_derivatives.data);
+        if (inputs_2_derivatives.data) cudaFree(inputs_2_derivatives.data);
 
-        inputs_1_derivatives = nullptr;
-        inputs_2_derivatives = nullptr;
+        inputs_1_derivatives.data = nullptr;
+        inputs_2_derivatives.data = nullptr;
     }
 
-    float* inputs_1_derivatives = nullptr;
-    float* inputs_2_derivatives = nullptr;
+    TensorViewCuda inputs_1_derivatives;
+    TensorViewCuda inputs_2_derivatives;
 };
 
 #endif // OPENNN_CUDA

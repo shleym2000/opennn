@@ -1352,10 +1352,10 @@ void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda
     const Index first_trainable_layer_index = neural_network->get_first_trainable_layer_index();
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
-    const vector<vector<float*>> layer_input_pairs
+    const vector<vector<TensorViewCuda>> layer_input_pairs
         = forward_propagation_cuda.get_layer_inputs_device(batch_cuda.get_input_device(), true);
 
-    const vector<vector<float*>> layer_delta_pairs
+    const vector<vector<TensorViewCuda>> layer_delta_pairs
         = back_propagation_cuda.get_layer_deltas_device();
 
     calculate_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);

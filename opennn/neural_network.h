@@ -56,6 +56,34 @@ struct ForwardPropagation
 };
 
 
+#ifdef OPENNN_CUDA
+
+struct ForwardPropagationCuda
+{
+    ForwardPropagationCuda(const Index & = 0, NeuralNetwork* = nullptr);
+
+    ~ForwardPropagationCuda() { free(); }
+
+    void set(const Index & = 0, NeuralNetwork* = nullptr);
+
+    float* get_last_trainable_layer_outputs_device() const;
+
+    vector<vector<float*>> get_layer_inputs_device(const vector<float*>&, const bool&) const;
+
+    void print();
+
+    void free();
+
+    Index samples_number = 0;
+
+    NeuralNetwork* neural_network = nullptr;
+
+    vector<unique_ptr<LayerForwardPropagationCuda>> layers;
+};
+
+#endif
+
+
 class NeuralNetwork
 {
 
@@ -274,6 +302,8 @@ protected:
     cublasHandle_t cublas_handle;
     cudnnHandle_t cudnn_handle;
 
+    float* parameters_device = nullptr;
+
 #endif
 
 protected:
@@ -385,35 +415,6 @@ struct NeuralNetworkBackPropagationLM
 
     vector<unique_ptr<LayerBackPropagationLM>> layers;
 };
-
-
-#ifdef OPENNN_CUDA
-
-struct ForwardPropagationCuda
-{
-    ForwardPropagationCuda(const Index& = 0, NeuralNetwork* = nullptr);
-
-    ~ForwardPropagationCuda() { free(); }
-
-    void set(const Index& = 0, NeuralNetwork* = nullptr);
-
-    float* get_last_trainable_layer_outputs_device() const;
-
-    vector<vector<float*>> get_layer_inputs_device(const vector<float*>&, const bool&) const;
-
-    void print();
-
-    void free();
-
-    Index samples_number = 0;
-
-    NeuralNetwork* neural_network = nullptr;
-
-    vector<unique_ptr<LayerForwardPropagationCuda>> layers;
-};
-
-#endif
-
 
 }
 

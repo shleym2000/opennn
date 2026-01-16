@@ -82,6 +82,24 @@ void NeuralNetwork::compile()
 
     for (unique_ptr<Layer>& layer : layers)
         current_ptr = layer->link_parameters(current_ptr);
+
+#ifdef OPENNN_CUDA
+
+    if (parameters_device)
+    {
+        cudaFree(parameters_device);
+        parameters_device = nullptr;
+    }
+
+    CHECK_CUDA(cudaMalloc((void**)&parameters_device, total_parameters_size * sizeof(float)));
+    cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
+
+    float* current_ptr_device = parameters_device;
+
+    for (unique_ptr<Layer>& layer : layers)
+        current_ptr_device = layer->link_parameters_device(current_ptr_device);
+
+#endif
 }
 
 

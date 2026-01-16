@@ -58,7 +58,7 @@ public:
         return vector<TensorView*>();
     }
 
-    type* link_parameters(type* ptr);
+    type* link_parameters(type*);
 
     //virtual pair
 
@@ -342,19 +342,24 @@ public:
 
     cudnnHandle_t get_cudnn_handle();
 
-    virtual void forward_propagate_cuda(const vector<float*>&,
+    virtual void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                         unique_ptr<LayerForwardPropagationCuda>&,
                                         const bool&)
     {
         throw runtime_error("CUDA forward propagation not implemented for layer type: " + get_name());
     }
 
-    virtual void back_propagate_cuda(const vector<float*>&,
-                                     const vector<float*>&,
+    virtual void back_propagate_cuda(const vector<TensorViewCuda>&,
+                                     const vector<TensorViewCuda>&,
                                      unique_ptr<LayerForwardPropagationCuda>&,
                                      unique_ptr<LayerBackPropagationCuda>&) const {}
 
-    virtual vector<TensorViewCuda*> get_parameter_views_device();
+    virtual vector<TensorViewCuda*> get_parameter_views_device()
+    {
+        return vector<TensorViewCuda*>();
+    }
+
+    type* link_parameters_device(type*);
 
     virtual void copy_parameters_host() {}
 
@@ -388,11 +393,9 @@ struct LayerForwardPropagation
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     LayerForwardPropagation() {}
-
     virtual ~LayerForwardPropagation() = default;
 
     void set(const Index& = 0, Layer* = nullptr);
-
     virtual void initialize() = 0;
 
     Index get_workspace_size();
@@ -427,7 +430,6 @@ struct LayerBackPropagation
     virtual ~LayerBackPropagation() = default;
 
     void set(const Index& = 0, Layer* = nullptr);
-
     virtual void initialize() = 0;
 
     Index get_workspace_size();
@@ -481,16 +483,26 @@ struct LayerBackPropagationLM
 
 struct LayerForwardPropagationCuda
 {
-    explicit LayerForwardPropagationCuda() {}
+    LayerForwardPropagationCuda() {}
     virtual ~LayerForwardPropagationCuda() {}
 
-    virtual void set(const Index& = 0, Layer* = nullptr) = 0;
+    void set(const Index& = 0, Layer* = nullptr);
+    virtual void initialize() = 0;
+
+    Index get_workspace_size();
+
+    virtual vector<TensorViewCuda*> get_tensor_views_device()
+    {
+        return vector<TensorViewCuda*>();
+    }
+
+    type* link_workspace(type*);
 
     virtual void print() const {}
 
     virtual void free() {}
 
-    virtual TensorViewCuda get_outputs() { return outputs; }
+    virtual TensorViewCuda get_outputs_views_device() { return outputs; }
 
     Index batch_size = 0;
 
@@ -503,19 +515,23 @@ struct LayerForwardPropagationCuda
 struct LayerBackPropagationCuda
 {
     LayerBackPropagationCuda() {}
+    virtual ~LayerBackPropagationCuda() {}
 
-    virtual void set(const Index& = 0, Layer* = nullptr) = 0;
+    void set(const Index& = 0, Layer* = nullptr);
+    virtual void initialize() = 0;
+
+    Index get_workspace_size();
+
+    virtual vector<TensorViewCuda*> get_tensor_views_device()
+    {
+        return vector<TensorViewCuda*>();
+    }
+
+    type* link_workspace(type*);
 
     virtual void print() const {}
 
     virtual void free() {}
-
-    virtual vector<float*> get_input_derivatives_device() { return {input_deltas}; }
-
-    virtual vector<TensorView*> get_gradient_views_device() const
-    {
-        return vector<TensorView*>();
-    }
 
     Index batch_size = 0;
 
@@ -523,9 +539,7 @@ struct LayerBackPropagationCuda
 
     bool is_first_layer = false;
 
-    float* input_deltas = nullptr;
-
-    cudnnTensorDescriptor_t input_derivatives_tensor_descriptor = nullptr;
+    TensorViewCuda input_deltas;
 };
 
 #endif

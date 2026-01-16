@@ -67,8 +67,10 @@
     cudaError_t err = call; \
     if (err != cudaSuccess) \
     { \
-        fprintf(stderr, "CUDA Error %s:%d - %s (%d)\n", \
-                __FILE__, __LINE__, cudaGetErrorString(err), err); \
+        string error_msg = std::string("CUDA Error: ") + cudaGetErrorString(err) + \
+                                " in " + __FILE__ + ":" + std::to_string(__LINE__); \
+        fprintf(stderr, "%s\n", error_msg.c_str()); \
+        throw runtime_error(error_msg); \
     } \
 } while(0)
 

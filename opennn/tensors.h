@@ -483,6 +483,7 @@ struct TensorViewCuda
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
 };
+
 #endif
 
 }

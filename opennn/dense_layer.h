@@ -205,14 +205,9 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         set(new_batch_size, new_layer);
     }
 
-    void set(const Index& new_batch_size, Layer* new_layer) override
+
+    void initialize() override
     {
-        if (!new_layer)
-            return;
-
-        batch_size = new_batch_size;
-        layer = new_layer;
-
         auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
         const Index outputs_number = dense_layer->get_output_dimensions().back();
 
@@ -255,6 +250,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         }
     }
 
+
     void free() override
     {
         if (combinations) cudaFree(combinations);
@@ -265,7 +261,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         if (bn_saved_inv_variance) cudaFree(bn_saved_inv_variance);
 
         cudnnDestroyTensorDescriptor(output_softmax_tensor_descriptor);
-        cudnnDestroyTensorDescriptor(output_tensor_descriptor);
+        cudnnDestroyTensorDescriptor(outputs.descriptor);
         cudnnDestroyTensorDescriptor(biases_tensor_descriptor);
         cudnnDestroyTensorDescriptor(biases_add_tensor_descriptor);
         if (dropout_descriptor) cudnnDestroyDropoutDescriptor(dropout_descriptor);
@@ -296,14 +292,9 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         set(new_batch_size, new_layer);
     }
 
-    void set(const Index& new_batch_size, Layer* new_layer) override
+
+    void initialize() override
     {
-        if (!new_layer)
-            return;
-
-        this->batch_size = new_batch_size;
-        this->layer = new_layer;
-
         auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
         const Index outputs_number = dense_layer->get_output_dimensions().back();
         const Index inputs_number = dense_layer->get_input_dimensions().back();
@@ -330,11 +321,13 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         }
     }
 
-    vector<TensorView*> get_gradient_views_device() const override
+
+    vector<TensorViewCuda*> get_tensor_views_device() const override
     {
+        /*
         auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
 
-        vector<TensorView*> views = {
+        vector<TensorViewCuda*> views = {
             {bias_deltas_device, dense_layer->get_output_dimensions().back()},
             {weight_deltas_device, dense_layer->get_input_dimensions().back() * dense_layer->get_output_dimensions().back()}
         };
@@ -344,28 +337,30 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
             views.push_back({bn_scale_deltas_device, dense_layer->get_output_dimensions().back()});
             views.push_back({bn_offset_deltas_device, dense_layer->get_output_dimensions().back()});
         }
-
+    */
+        vector<TensorViewCuda*> views;
         return views;
     }
 
     void free() override
     {
-        if (bias_deltas_device) cudaFree(bias_deltas_device);
-        if (weight_deltas_device) cudaFree(weight_deltas_device);
-        if (input_deltas) cudaFree(input_deltas);
+        if (bias_deltas_device.data) cudaFree(bias_deltas_device.data);
+        if (weight_deltas_device.data) cudaFree(weight_deltas_device.data);
+        if (input_deltas.data) cudaFree(input_deltas.data);
         if (ones) cudaFree(ones);
-        if (bn_scale_deltas_device) cudaFree(bn_scale_deltas_device);
-        if (bn_offset_deltas_device) cudaFree(bn_offset_deltas_device);
+        if (bn_scale_deltas_device.data) cudaFree(bn_scale_deltas_device.data);
+        if (bn_offset_deltas_device.data) cudaFree(bn_offset_deltas_device.data);
         cudnnDestroyTensorDescriptor(deltas_tensor_descriptor);
     }
 
-    float* bias_deltas_device = nullptr;
-    float* weight_deltas_device = nullptr;
-    //float* input_deltas = nullptr;
+    TensorViewCuda bias_deltas_device = nullptr;
+    TensorViewCuda weight_deltas_device = nullptr;
+
     float* ones = nullptr;
+
+    TensorViewCuda bn_scale_deltas_device = nullptr;
+    TensorViewCuda bn_offset_deltas_device = nullptr;
     cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
-    float* bn_scale_deltas_device = nullptr;
-    float* bn_offset_deltas_device = nullptr;
 };
 
 #endif
@@ -936,6 +931,19 @@ public:
 
 public:
 
+    vector<TensorViewCuda*> get_parameter_views_device() override
+    {
+        vector<TensorViewCuda*> views_device = { &biases_device, &weights_device };
+
+        if (batch_normalization)
+        {
+            views_device.push_back(&bn_scale_device);
+            views_device.push_back(&bn_offset_device);
+        }
+
+        return views_device;
+    }
+
     void allocate_parameters_device()
     {
         const Index inputs_number = get_inputs_number();
@@ -948,10 +956,10 @@ public:
 
         if (batch_normalization)
         {
-            CHECK_CUDA(cudaMalloc(&bn_scale_device, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_scale_device.data, outputs_number * sizeof(float)));
             //CUDA_MALLOC_AND_REPORT(bn_scale_device, outputs_number * sizeof(float));
 
-            CHECK_CUDA(cudaMalloc(&bn_offset_device, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&bn_offset_device.data, outputs_number * sizeof(float)));
             //CUDA_MALLOC_AND_REPORT(bn_offset_device, outputs_number * sizeof(float));
 
             CHECK_CUDA(cudaMalloc(&bn_running_mean_device, outputs_number * sizeof(float)));
@@ -973,8 +981,8 @@ public:
 
         if (batch_normalization)
         {
-            CHECK_CUDA(cudaMemcpy(bn_scale_device, scales.data, scales.size() * sizeof(type), cudaMemcpyHostToDevice));
-            CHECK_CUDA(cudaMemcpy(bn_offset_device, offsets.data, offsets.size() * sizeof(type), cudaMemcpyHostToDevice));
+            CHECK_CUDA(cudaMemcpy(bn_scale_device.data, scales.data, scales.size() * sizeof(type), cudaMemcpyHostToDevice));
+            CHECK_CUDA(cudaMemcpy(bn_offset_device.data, offsets.data, offsets.size() * sizeof(type), cudaMemcpyHostToDevice));
             CHECK_CUDA(cudaMemcpy(bn_running_mean_device, moving_means.data(), moving_means.size() * sizeof(type), cudaMemcpyHostToDevice));
             Tensor1 moving_variances = moving_standard_deviations.square();
             CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
@@ -1002,7 +1010,7 @@ public:
     }
 
 
-    void forward_propagate_cuda(const vector<float*>& inputs_device,
+    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                 unique_ptr<LayerForwardPropagationCuda>& fp_cuda,
                                 const bool& is_training)
     {
@@ -1148,8 +1156,8 @@ public:
     }
 
 
-    void back_propagate_cuda(const vector<float*>& inputs_device,
-                             const vector<float*>& deltas_device,
+    void back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+                             const vector<TensorViewCuda>& deltas_device,
                              unique_ptr<LayerForwardPropagationCuda>& fp_cuda,
                              unique_ptr<LayerBackPropagationCuda>& bp_cuda) const
     {
@@ -1316,20 +1324,6 @@ public:
     }
 
 
-    vector<TensorViewCuda*> get_parameter_views_device()
-    {
-        vector<TensorViewCuda*> parameter_views = {&biases_device, &weights_device};
-
-        if (batch_normalization)
-        {
-            parameter_views.push_back(&bn_scale_device);
-            parameter_views.push_back(&bn_offset_device);
-        }
-
-        return parameter_views;
-    }
-
-
     void free_parameters_device()
     {
         cudaFree(biases_device.data);
@@ -1340,13 +1334,13 @@ public:
 
         if (batch_normalization)
         {
-            cudaFree(bn_scale_device);
-            cudaFree(bn_offset_device);
+            cudaFree(bn_scale_device.data);
+            cudaFree(bn_offset_device.data);
             cudaFree(bn_running_mean_device);
             cudaFree(bn_running_variance_device);
 
-            bn_scale_device = nullptr;
-            bn_offset_device = nullptr;
+            bn_scale_device.data = nullptr;
+            bn_offset_device.data = nullptr;
             bn_running_mean_device = nullptr;
             bn_running_variance_device = nullptr;
 
@@ -1359,17 +1353,12 @@ public:
 
 private:
 
-    //float* biases_device = nullptr;
-    //float* weights_device = nullptr;
-
     TensorViewCuda biases_device;
     TensorViewCuda weights_device;
 
     cudnnActivationDescriptor_t activation_descriptor = nullptr;
 
     // Batch Normalization
-    //float* bn_scale_device = nullptr;
-    //float* bn_offset_device = nullptr;
     TensorViewCuda bn_scale_device;
     TensorViewCuda bn_offset_device;
     float* bn_running_mean_device = nullptr;

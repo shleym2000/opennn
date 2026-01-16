@@ -315,14 +315,12 @@ REGISTER(LayerForwardPropagation, BoundingForwardPropagation, "Bounding")
 
 #ifdef OPENNN_CUDA
 
-void Bounding::forward_propagate_cuda(const vector<float*>& inputs_device,
+void Bounding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                       const bool&)
 {
     BoundingForwardPropagationCuda* this_forward_propagation =
         static_cast<BoundingForwardPropagationCuda*>(forward_propagation_cuda.get());
-
-    const size_t size = get_outputs_number() * this_forward_propagation->batch_size * sizeof(float);
 
     // @todo Implement bounding in CUDA
 }
@@ -335,16 +333,15 @@ BoundingForwardPropagationCuda::BoundingForwardPropagationCuda(const Index& new_
 }
 
 
-void BoundingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void BoundingForwardPropagationCuda::initialize()
 {
-    if (!new_layer) return;
+    // @todo
+}
 
-    layer = new_layer;
-    batch_size = new_batch_size;
 
-    const size_t size = layer->get_outputs_number() * batch_size;
-
-    //cudaMalloc(&outputs, size * sizeof(float));
+vector<TensorViewCuda*> BoundingForwardPropagationCuda::get_tensor_views_device()
+{
+    return { &outputs };
 }
 
 
