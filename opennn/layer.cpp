@@ -128,6 +128,79 @@ type* LayerBackPropagation::link_workspace(type* ptr)
 }
 
 
+#ifdef OPENNN_CUDA
+
+void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+{
+    if (!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+Index LayerForwardPropagationCuda::get_workspace_size()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_bytes = 0;
+
+    // @todo
+
+    return total_bytes;
+}
+
+
+type* LayerForwardPropagationCuda::link_workspace(type* ptr)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    // @todo
+
+    return ptr;
+}
+
+
+void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+{
+    if (!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+Index LayerBackPropagationCuda::get_workspace_size()
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_size = 0;
+
+    // @todo
+
+    return total_size;
+}
+
+
+type* LayerBackPropagationCuda::link_workspace(type* ptr)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    // @todo
+
+    return ptr;
+}
+
+#endif
+
 Layer::Layer()
 {
     const unsigned int threads_number = thread::hardware_concurrency();
@@ -190,7 +263,7 @@ void Layer::set_parameters_glorot()
 
     const vector<TensorView*> parameter_views = get_parameter_views();
 
-    for (const auto& view : parameter_views)
+    for (const TensorView* view : parameter_views)
     {
         TensorMap1 this_parameters(view->data, view->size());
 
@@ -472,9 +545,35 @@ cudnnHandle_t Layer::get_cudnn_handle()
 }
 
 
-vector<ParameterView> Layer::get_parameter_views_device() const
+float* Layer::link_parameters_device(float* ptr)
 {
-    return vector<ParameterView>();
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    vector<TensorView*> cpu_views = get_parameter_views();
+    vector<TensorViewCuda*> cuda_views = get_parameter_views_device();
+
+    if (cpu_views.size() != cuda_views.size())
+        throw runtime_error("Layer::link_parameters_device: Mismatch between CPU and CUDA parameter views count.");
+
+    for (size_t i = 0; i < cpu_views.size(); ++i)
+    {
+        TensorView* cpu_view = cpu_views[i];
+        TensorViewCuda* cuda_view = cuda_views[i];
+
+        if (!cpu_view || !cuda_view) continue;
+
+        const Index size = cpu_view->size();
+
+        if (size > 0)
+        {
+            cuda_view->data = ptr;
+            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            ptr += padded_size;
+        }
+    }
+
+    return ptr;
 }
 
 #endif

@@ -109,16 +109,16 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<float*>&,
+    void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
                                 const bool&) override;
 
-    void back_propagate_cuda(const vector<float*>&,
-                             const vector<float*>&,
+    void back_propagate_cuda(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>&,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
-    vector<ParameterView> get_parameter_views_device() const override;
+    vector<TensorViewCuda*> get_parameter_views_device() override;
 
     void copy_parameters_host();
 
@@ -132,15 +132,13 @@ public:
 
 protected:
 
-    float* biases_device = nullptr;
-    float* weights_device = nullptr;
-
-    cudnnTensorDescriptor_t biases_tensor_descriptor = nullptr;
+    TensorViewCuda biases_device;
+    TensorViewCuda weights_device;
 
     // Batch Normalization
 
-    float* bn_scale_device = nullptr;
-    float* bn_offset_device = nullptr;
+    TensorViewCuda bn_scale_device;
+    TensorViewCuda bn_offset_device;
     float* bn_running_mean_device = nullptr;
     float* bn_running_variance_device = nullptr;
 
@@ -173,8 +171,8 @@ private:
 
     bool batch_normalization = false;
 
-    TensorView moving_means;
-    TensorView moving_standard_deviations;
+    Tensor1 moving_means;
+    Tensor1 moving_standard_deviations;
 
     type momentum = type(0.9);
 
@@ -202,9 +200,9 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 {
     ConvolutionalBackPropagation(const Index& = 0, Layer* = nullptr);
 
-    vector<TensorView*> get_tensor_views() override;
-
     void initialize() override;
+
+    vector<TensorView*> get_tensor_views() override;
 
     void print() const override;
 
@@ -225,7 +223,7 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 {
     ConvolutionalForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    void initialize() override;
 
     void print() const override;
 
@@ -233,7 +231,8 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
     int output_batch_size, output_channels, output_height, output_width = 0;
 
-    float* convolutions = nullptr;
+    float* reordered_inputs_device;
+    TensorViewCuda convolutions;
 
     cudnnTensorDescriptor_t input_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t biases_tensor_descriptor = nullptr;
@@ -249,8 +248,6 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
     bool is_first_layer = false;
 
-    float* reordered_inputs_device = nullptr;
-
     // Batch Normalizarion
     float* bn_saved_mean = nullptr;
     float* bn_saved_inv_variance = nullptr;
@@ -261,16 +258,16 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 {
     ConvolutionalBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    vector<ParameterView> get_gradient_views_device() const override;
+    void initialize() override;
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    vector<TensorViewCuda*> get_tensor_views_device() override;
 
     void print() const override;
 
     void free() override;
 
-    type* bias_deltas_device = nullptr;
-    type* weight_deltas_device = nullptr;
+    TensorViewCuda bias_deltas_device;
+    TensorViewCuda weight_deltas_device;
 
     void* backward_data_workspace = nullptr;
     void* backward_filter_workspace = nullptr;
@@ -286,8 +283,8 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
     // Batch Normalizarion
-    float* bn_scale_deltas_device = nullptr;
-    float* bn_offset_deltas_device = nullptr;
+    TensorViewCuda bn_scale_deltas_device;
+    TensorViewCuda bn_offset_deltas_device;
 };
 
 #endif

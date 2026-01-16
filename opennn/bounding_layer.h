@@ -57,7 +57,7 @@ public:
                            const bool&) override;
 
 #ifdef OPENNN_CUDA
-    void forward_propagate_cuda(const vector<float*>&,
+    void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
                                 const bool&) override;
 #endif
@@ -90,6 +90,8 @@ struct BoundingForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
+    vector<TensorView*> get_tensor_views() override;
+
     void print() const override;
 };
 
@@ -100,7 +102,9 @@ struct BoundingForwardPropagationCuda final : public LayerForwardPropagationCuda
 {
     BoundingForwardPropagationCuda(const Index & = 0, Layer* = nullptr);
 
-    void set(const Index & = 0, Layer* = nullptr) override;
+    void initialize() override;
+
+    vector<TensorViewCuda*> get_tensor_views_device() override;
 
     void print() const override;
 

@@ -75,7 +75,7 @@ class SimpleResNet : public NeuralNetwork
 public:
 
     SimpleResNet(const dimensions& input_dimensions,
-                 const std::vector<Index>& blocks_per_stage,
+                 const vector<Index>& blocks_per_stage,
                  const dimensions& initial_filters,
                  const dimensions& output_dimensions);
 };

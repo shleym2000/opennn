@@ -639,6 +639,7 @@ struct Batch
     unique_ptr<ThreadPoolDevice> device = nullptr;
 };
 
+
 #ifdef OPENNN_CUDA
 
 struct BatchCuda
@@ -682,7 +683,7 @@ struct BatchCuda
 
     dimensions input_dimensions;
     dimensions decoder_dimensions;
-    dimensions target_dimensions;
+    dimensions target_dimensions;        
 
     float* inputs_host = nullptr;
     float* decoder_host = nullptr;
@@ -691,6 +692,8 @@ struct BatchCuda
     float* inputs_device = nullptr;
     float* decoder_device = nullptr;
     float* targets_device = nullptr;
+
+    TensorViewCuda inputs;
 };
 
 #endif

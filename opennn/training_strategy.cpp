@@ -139,7 +139,7 @@ void TrainingStrategy::set_default()
     {
         const unique_ptr<Layer>& layer = neural_network->get_layer(i);
 
-        if(layer->get_name() == "Dense")
+        if(layer->get_name() == "Dense2d")
         {
             const Dense<2>* dense_layer = static_cast<const Dense<2>*>(layer.get());
             output_activation = dense_layer->get_activation_function();

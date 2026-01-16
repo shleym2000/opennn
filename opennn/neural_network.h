@@ -35,7 +35,7 @@ struct ForwardPropagation
 
     void compile();
 
-    TensorView get_last_trainable_layer_outputs_pair() const;
+    TensorView get_last_trainable_layer_outputs_view() const;
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
 
@@ -54,6 +54,34 @@ struct ForwardPropagation
 
     Tensor1 workspace;
 };
+
+
+#ifdef OPENNN_CUDA
+
+struct ForwardPropagationCuda
+{
+    ForwardPropagationCuda(const Index & = 0, NeuralNetwork* = nullptr);
+
+    ~ForwardPropagationCuda() { free(); }
+
+    void set(const Index & = 0, NeuralNetwork* = nullptr);
+
+    float* get_last_trainable_layer_outputs_device() const;
+
+    vector<vector<float*>> get_layer_inputs_device(const vector<float*>&, const bool&) const;
+
+    void print();
+
+    void free();
+
+    Index samples_number = 0;
+
+    NeuralNetwork* neural_network = nullptr;
+
+    vector<unique_ptr<LayerForwardPropagationCuda>> layers;
+};
+
+#endif
 
 
 class NeuralNetwork
@@ -181,7 +209,6 @@ public:
         const Index batch_size = inputs.dimension(0);
 
         ForwardPropagation forward_propagation(batch_size, this);
-
         forward_propagation.compile();
 
         dimensions input_dimensions;
@@ -195,7 +222,7 @@ public:
         forward_propagate({input_view}, forward_propagation, false);
 
         const TensorView& output_view = forward_propagation.layers.back()->get_outputs();
-
+ 
         if constexpr (output_rank == 2)
            return tensor_map<2>(output_view);
         else if constexpr (output_rank == 3)
@@ -274,6 +301,8 @@ protected:
 
     cublasHandle_t cublas_handle;
     cudnnHandle_t cudnn_handle;
+
+    float* parameters_device = nullptr;
 
 #endif
 
@@ -355,6 +384,8 @@ struct NeuralNetworkBackPropagationLM
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     const vector<unique_ptr<LayerBackPropagationLM>>& get_layers() const
     {
         return layers;
@@ -365,56 +396,16 @@ struct NeuralNetworkBackPropagationLM
         return neural_network;
     }
 
-
-    void print()
-    {
-        const Index layers_number = layers.size();
-
-        cout << "Layers number: " << layers_number << endl;
-
-        for(Index i = 0; i < layers_number; i++)
-        {
-            cout << "Layer " << i + 1 << endl;
-
-            layers[i]->print();
-        }
-    }
+    void print();
 
     Index batch_size = 0;
 
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerBackPropagationLM>> layers;
+
+    Tensor1 workspace;
 };
-
-
-#ifdef OPENNN_CUDA
-
-struct ForwardPropagationCuda
-{
-    ForwardPropagationCuda(const Index& = 0, NeuralNetwork* = nullptr);
-
-    ~ForwardPropagationCuda() { free(); }
-
-    void set(const Index& = 0, NeuralNetwork* = nullptr);
-
-    float* get_last_trainable_layer_outputs_device() const;
-
-    vector<vector<float*>> get_layer_inputs_device(const vector<float*>&, const bool&) const;
-
-    void print();
-
-    void free();
-
-    Index samples_number = 0;
-
-    NeuralNetwork* neural_network = nullptr;
-
-    vector<unique_ptr<LayerForwardPropagationCuda>> layers;
-};
-
-#endif
-
 
 }
 

@@ -192,13 +192,10 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
 
     const Index outputs_number = get_outputs_number();
 
-    UnscalingForwardPropagation* this_forward_propagation =
-        static_cast<UnscalingForwardPropagation*>(forward_propagation.get());
-
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    outputs = inputs;
-/*
+    outputs.device(*device) = inputs;
+
     for(Index i = 0; i < outputs_number; i++)
     {
         const string& scaler = scalers[i];
@@ -223,7 +220,6 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
         else
             throw runtime_error("Unknown scaling method\n");
     }
-*/
 }
 
 
@@ -324,6 +320,12 @@ void UnscalingForwardPropagation::initialize()
 }
 
 
+vector<TensorView*> UnscalingForwardPropagation::get_tensor_views()
+{
+    return { &outputs };
+}
+
+
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
@@ -336,14 +338,12 @@ REGISTER(LayerForwardPropagation, UnscalingForwardPropagation, "Unscaling")
 
 #ifdef OPENNN_CUDA
 
-void Unscaling::forward_propagate_cuda(const vector<float*>& inputs_device,
+void Unscaling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                        const bool&)
 {
     UnscalingForwardPropagationCuda* this_forward_propagation =
         static_cast<UnscalingForwardPropagationCuda*>(forward_propagation_cuda.get());
-
-    const size_t size = get_outputs_number() * this_forward_propagation->batch_size * sizeof(float);
 
     // @todo: implement unscaling on GPU
 }
@@ -356,16 +356,15 @@ UnscalingForwardPropagationCuda::UnscalingForwardPropagationCuda(const Index& ne
 }
 
 
-void UnscalingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void UnscalingForwardPropagationCuda::initialize()
 {
-    if (!new_layer) return;
+    // @todo
+}
 
-    layer = new_layer;
-    batch_size = new_batch_size;
 
-    const size_t size = layer->get_outputs_number() * batch_size;
-
-    //cudaMalloc(&outputs, size * sizeof(float));
+vector<TensorViewCuda*> UnscalingForwardPropagationCuda::get_tensor_views_device()
+{
+    return { &outputs };
 }
 
 
@@ -374,14 +373,14 @@ void UnscalingForwardPropagationCuda::print() const
     const Index outputs_number = layer->get_outputs_number();
 
     cout << "Unscaling CUDA Outputs (pass-through):" << endl
-        << matrix_from_device(outputs, batch_size, outputs_number) << endl;
+        << matrix_from_device(outputs.data, batch_size, outputs_number) << endl;
 }
 
 
 void UnscalingForwardPropagationCuda::free()
 {
-    cudaFree(outputs);
-    outputs = nullptr;
+    cudaFree(outputs.data);
+    outputs.data = nullptr;
 }
 
 

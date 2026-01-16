@@ -341,8 +341,8 @@ void FlattenForwardPropagationCuda<Rank>::set(const Index& new_batch_size, Layer
 template<int Rank>
 void FlattenForwardPropagationCuda<Rank>::free()
 {
-    if (outputs) cudaFree(outputs);
-    outputs = nullptr;
+    if (outputs.data) cudaFree(outputs.data);
+    outputs.data = nullptr;
 
     if (reordered_inputs) cudaFree(reordered_inputs);
     reordered_inputs = nullptr;

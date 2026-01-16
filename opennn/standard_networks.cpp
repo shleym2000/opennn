@@ -42,7 +42,7 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
     for (Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{ complexity_dimensions[i] },
-                                       "RectifiedLinear",
+                                       "HyperbolicTangent",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
 
@@ -57,6 +57,7 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
     add_layer(make_unique<Bounding>(output_dimensions));
 
     this->compile();
+    this->set_parameters_glorot();
 
     const Index features_number = get_features_number();
     feature_names.resize(features_number);
@@ -73,14 +74,14 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
     const Index complexity_size = complexity_dimensions.size();
 
     add_layer(make_unique<Scaling<2>>(input_dimensions));
-    /*
+
     for (Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{complexity_dimensions[i]},
                                        "HyperbolicTangent",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
-    */
+
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,
                                    output_dimensions[0] == 1 ? "Logistic" : "Softmax",
@@ -179,7 +180,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
     add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     const Index complexity_size = complexity_dimensions.size();
-
+    /*
     for (Index i = 0; i < complexity_size; i++)
     {
         const dimensions kernel_dimensions = { 3, 3, get_output_dimensions()[2], complexity_dimensions[i] };
@@ -204,7 +205,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                        "MaxPooling",
                                        "pooling_layer_" + to_string(i + 1)));
     }
-
+    */
     add_layer(make_unique<Flatten<4>>(get_output_dimensions()));
 
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),

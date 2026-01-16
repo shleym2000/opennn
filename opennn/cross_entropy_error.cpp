@@ -47,7 +47,7 @@ void CrossEntropyError2d::calculate_binary_error(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -78,7 +78,7 @@ void CrossEntropyError2d::calculate_multiple_error(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -118,7 +118,7 @@ void CrossEntropyError2d::calculate_binary_output_delta(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -149,7 +149,7 @@ void CrossEntropyError2d::calculate_multiple_output_delta(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -226,6 +226,8 @@ void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cud
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
+    constexpr type epsilon = numeric_limits<type>::epsilon();
+
     calculate_binary_cross_entropy_cuda(size, errors, targets, outputs, epsilon);
 
     cudnnReduceTensor(cudnn_handle,
@@ -273,6 +275,8 @@ void CrossEntropyError2d::calculate_multiple_error_cuda(const BatchCuda& batch_c
     const cudnnReduceTensorDescriptor_t& reduce_tensor_descriptor = back_propagation_cuda.reduce_tensor_descriptor;
     void* workspace = back_propagation_cuda.workspace;
     size_t workspaceSize = back_propagation_cuda.workspaceSize;
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     calculate_multiple_cross_entropy_cuda(size, errors, targets, outputs, epsilon);
 
@@ -329,6 +333,8 @@ void CrossEntropyError2d::calculate_binary_output_delta_cuda(const BatchCuda& ba
     float* output_deltas = back_propagation_cuda.get_output_deltas_device();
 
     const type scaling_factor = 1.0f / static_cast<type>(samples_number);
+
+    constexpr type epsilon = numeric_limits<type>::epsilon();
 
     calculate_binary_cross_entropy_delta_cuda(size, output_deltas, targets, outputs, epsilon, scaling_factor);
 }

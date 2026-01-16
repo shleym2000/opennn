@@ -110,7 +110,7 @@ void LossIndex::calculate_errors_lm(const Batch& batch,
                                     BackPropagationLM & back_propagation) const
 {
     const TensorView outputs_view
-        = forward_propagation.get_last_trainable_layer_outputs_pair();
+        = forward_propagation.get_last_trainable_layer_outputs_view();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -217,11 +217,7 @@ void LossIndex::back_propagate_lm(const Batch& batch,
 
     calculate_error_hessian_lm(batch, back_propagation_lm);
 
-    // Loss
-
     back_propagation_lm.loss = back_propagation_lm.error();
-
-    // Regularization
 
     add_regularization_lm(back_propagation_lm);
 }
@@ -587,11 +583,13 @@ type LossIndex::calculate_numerical_error() const
     batch.fill(training_indices, input_indices, target_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     neural_network->forward_propagate(batch.get_input_views(),
                                       forward_propagation);
 
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     calculate_error(batch, forward_propagation, back_propagation);
 
@@ -611,11 +609,15 @@ Tensor1 LossIndex::calculate_gradient()
     const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
 
     Batch batch(samples_number, dataset);
-
     // batch.fill(sample_indices, input_variable_indices, decoder_variable_indices, target_variable_indices);
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
+
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
+
     const Tensor1& parameters = neural_network->get_parameters();
 
     neural_network->forward_propagate(batch.get_input_views(),
@@ -641,7 +643,10 @@ Tensor1 LossIndex::calculate_numerical_gradient()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
+
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -704,7 +709,10 @@ Tensor1 LossIndex::calculate_numerical_gradient_lm()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
+
     BackPropagationLM back_propagation_lm(samples_number, this);
+    back_propagation_lm.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -781,8 +789,10 @@ Tensor1 LossIndex::calculate_numerical_input_deltas()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     type h;
 
@@ -836,10 +846,13 @@ Tensor2 LossIndex::calculate_numerical_jacobian()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
+    back_propagation_lm.neural_network.compile();
 
     BackPropagation back_propagation(samples_number, this);
+    back_propagation.neural_network.compile();
 
     Tensor1 parameters = neural_network->get_parameters();
 
@@ -915,8 +928,10 @@ Tensor2 LossIndex::calculate_numerical_hessian()
     batch.fill(sample_indices, input_variable_indices, target_variable_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
+    forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
+    back_propagation_lm.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -1195,30 +1210,35 @@ vector<vector<TensorView>> BackPropagationLM::get_layer_delta_pairs() const
 
     const vector<unique_ptr<LayerBackPropagationLM>>& layer_back_propagations = neural_network.get_layers();
 
-    vector<TensorView> input_derivative_pairs;
-
     vector<vector<TensorView>> layer_delta_pairs(layers_number);
 
     const Index first_trainable_layer_index = neural_network_ptr->get_first_trainable_layer_index();
     const Index last_trainable_layer_index = neural_network_ptr->get_last_trainable_layer_index();
 
-    for (Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
+    for(Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
     {
-        if (i == last_trainable_layer_index)
+        if(i == last_trainable_layer_index)
         {
             layer_delta_pairs[i].push_back(get_output_deltas_tensor_view());
-
             continue;
         }
 
-        for (Index j = 0; j < Index(layer_input_indices[i].size()); j++)
+        for(Index j = 0; j < Index(layer_output_indices[i].size()); j++)
         {
-            const Index output_index = layer_output_indices[i][j];
-            const Index input_index = neural_network_ptr->find_input_index(layer_input_indices[output_index], i);
+            const Index output_layer_index = layer_output_indices[i][j];
 
-            input_derivative_pairs = layer_back_propagations[output_index]->get_input_deltas();
+            if(output_layer_index == -1) continue;
 
-            layer_delta_pairs[i].push_back(input_derivative_pairs[input_index]);
+            if(!layer_back_propagations[output_layer_index]) continue;
+
+            const Index input_port_index = neural_network_ptr->find_input_index(layer_input_indices[output_layer_index], i);
+
+            if(input_port_index == -1)
+                throw runtime_error("Layer indices consistency error.");
+
+            vector<TensorView> input_derivative_pairs = layer_back_propagations[output_layer_index]->get_input_deltas();
+
+            layer_delta_pairs[i].push_back(input_derivative_pairs[input_port_index]);
         }
     }
 
@@ -1333,10 +1353,10 @@ void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda
     const Index first_trainable_layer_index = neural_network->get_first_trainable_layer_index();
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
-    const vector<vector<float*>> layer_input_pairs
+    const vector<vector<TensorViewCuda>> layer_input_pairs
         = forward_propagation_cuda.get_layer_inputs_device(batch_cuda.get_input_device(), true);
 
-    const vector<vector<float*>> layer_delta_pairs
+    const vector<vector<TensorViewCuda>> layer_delta_pairs
         = back_propagation_cuda.get_layer_deltas_device();
 
     calculate_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
@@ -1375,8 +1395,8 @@ void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation_cu
 
         LayerBackPropagationCuda* layer_back_prop_cuda = back_propagation_cuda.neural_network.layers[layer_index].get();
 
-        const vector<ParameterView>& parameter_device_pairs = layer->get_parameter_views_device();
-        const vector<ParameterView>& delta_device_pairs = layer_back_prop_cuda->get_gradient_views_device();
+        const vector<TensorView>& parameter_device_pairs = layer->get_parameter_views_device();
+        const vector<TensorView>& delta_device_pairs = layer_back_prop_cuda->get_gradient_views_device();
 
         for (Index param_index = 0; param_index < Index(parameter_device_pairs.size()); ++param_index)
         {

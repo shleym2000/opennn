@@ -56,7 +56,7 @@ public:
 
         Tensor1 minimums(outputs_number);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
             minimums[i] = descriptives[i].minimum;
 
@@ -69,7 +69,7 @@ public:
 
         Tensor1 maximums(outputs_number);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
             maximums[i] = descriptives[i].maximum;
 
@@ -82,7 +82,7 @@ public:
 
         Tensor1 means(outputs_number);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
             means[i] = descriptives[i].mean;
 
@@ -187,11 +187,8 @@ public:
         const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
         TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
-/*
-        ScalingForwardPropagation<Rank>* scaling_layer_forward_propagation =
-            static_cast<ScalingForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
-        outputs = inputs;
+        outputs.device(*device) = inputs;
 
         for(Index i = 0; i < outputs_number; i++)
         {
@@ -212,10 +209,7 @@ public:
             else
                 throw runtime_error("Unknown scaling method.\n");
         }
-*/
     }
-
-    //void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>& );
 
     string write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
@@ -339,44 +333,25 @@ public:
 
         const Index neurons_number = read_xml_index(scaling_layer_element, "NeuronsNumber");
         
-        // This part needs to reconstruct dimensions if possible, or we just set flat dimensions if that's what XML has.
-        // The original 2D code called set({neurons_number}). 
-        // For Rank 2, it's fine. For Rank 3, {neurons_number} has size 1, but we need size 2.
-        // XML serialization in 2D layer purely saved NeuronsNumber (total size).
-        // It lost the shape information? "Scaling" element in 2D code only saved NeuronsNumber.
-        // If we want to support higher ranks properly we might need to change XML format or assume 1D input if not specified.
-        // However, user asked to "refactor" based on 2D pattern. 
-        // For now, I will assume we can only restore as flat 1D input unless XML has InputDimensions.
-        // But wait, set() will THROW if size != Rank-1.
-        
-        // If I am Scaling<3>, Rank=3, I need 2 dimensions. 
-        // Existing "Scaling" XML does NOT seem to store dimensions.
-        // This implies existing Scaling was only used for 1D inputs?
-        // Or I should look at `flatten_layer` how it deserializes.
-        // Flatten layer explicitly saves InputHeight, InputWidth.
-        
-        // Use a heuristic: If we don't have dimensions in XML, we might fail for Rank > 2.
-        // But for this task I will try to read dimensions if they exist, otherwise fallback to flat?
-        // But flat fallback will fail set() check for Rank > 2.
-        // Let's assume for now we construct with {neurons_number} which is size 1.
+        // @todo
         
         if constexpr (Rank == 2)
         {
-             set({ neurons_number });
+            set({ neurons_number });
         }
         else
         {
-             // Try to read generic InputDimensions if we were to add them. 
-             // But following 2D code strictly, it only reads NeuronsNumber.
-             // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
-             // However, to make it compile for Rank > 2, I need to pass correct size.
-             // If XML doesn't validation dims, we can't fully restore shape.
-             // I will implement a dummy reshape for now to satisfy Rank:
-             // [neurons_number, 1, 1...] 
-             
-             dimensions dims(Rank-1, 1);
-             dims[0] = neurons_number;
-             set(dims);
+            // Try to read generic InputDimensions if we were to add them.
+            // But following 2D code strictly, it only reads NeuronsNumber.
+            // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
+            // However, to make it compile for Rank > 2, I need to pass correct size.
+            // If XML doesn't validation dims, we can't fully restore shape.
+            // I will implement a dummy reshape for now to satisfy Rank:
+            // [neurons_number, 1, 1...]
+
+            dimensions dims(Rank-1, 1);
+            dims[0] = neurons_number;
+            set(dims);
         }
 
         const XMLElement* start_element = scaling_layer_element->FirstChildElement("NeuronsNumber");
@@ -437,7 +412,7 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void forward_propagate_cuda(const vector<float*>& inputs_device,
+    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                 const bool&) override
     {
@@ -448,7 +423,7 @@ public:
         const size_t size = outputs_number * scaling_forward_propagation->batch_size;
 
         scale_2d_cuda(size, scaling_forward_propagation->batch_size, outputs_number,
-                      inputs_device[0], scaling_forward_propagation->outputs,
+                      inputs_device[0].data, scaling_forward_propagation->outputs.data,
                       scaling_forward_propagation->scalers_device,
                       scaling_forward_propagation->minimums_device,
                       scaling_forward_propagation->maximums_device,
@@ -495,6 +470,11 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         outputs.dims = {batch_size, outputs_number};
     }
 
+    vector<TensorView*> get_tensor_views() override
+    {
+        return { &outputs };
+    }
+
     void print() const override
     {
         cout << "Outputs:" << endl
@@ -514,19 +494,15 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         set(new_batch_size, new_layer);
     }
 
-    void set(const Index & new_batch_size = 0, Layer* new_layer = nullptr)
+    void initialize() override
     {
-        if (!new_layer) return;
-
-        layer = new_layer;
-        batch_size = new_batch_size;
-
         const Scaling<Rank>* scaling_layer = static_cast<Scaling<Rank>*>(layer);
+
         const Index outputs_number = scaling_layer->get_outputs_number();
         const size_t size = batch_size * outputs_number;
 
-        CHECK_CUDA(cudaMalloc(&outputs, size * sizeof(float)));
-        
+        CHECK_CUDA(cudaMalloc(&outputs.data, size * sizeof(float)));
+
         const Tensor1 minimums_host = scaling_layer->get_minimums();
         const Tensor1 maximums_host = scaling_layer->get_maximums();
         const Tensor1 means_host = scaling_layer->get_means();
@@ -567,24 +543,29 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         CHECK_CUDA(cudaMemcpy(scalers_device, scalers_host_tensor.data(), outputs_number * sizeof(int), cudaMemcpyHostToDevice));
     }
 
+    vector<TensorViewCuda*> get_tensor_views_device() override
+    {
+        return { &outputs };
+    }
+
     void print() const override
     {
         const Index outputs_number = layer->get_outputs_number();
 
         cout << "Scaling CUDA Outputs:" << endl
-            << matrix_from_device(outputs, batch_size, outputs_number) << endl;
+            << matrix_from_device(outputs.data, batch_size, outputs_number) << endl;
     }
 
     void free() override
     {
-        cudaFree(outputs);
+        cudaFree(outputs.data);
         cudaFree(scalers_device);
         cudaFree(minimums_device);
         cudaFree(maximums_device);
         cudaFree(means_device);
         cudaFree(standard_deviations_device);
 
-        outputs = nullptr;
+        outputs.data = nullptr;
         scalers_device = nullptr;
         minimums_device = nullptr;
         maximums_device = nullptr;

@@ -183,7 +183,7 @@ void WeightedSquaredError::calculate_error(const Batch& batch,
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_pair();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation

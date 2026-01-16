@@ -5,17 +5,6 @@
 
 namespace opennn
 {
-/*
-struct ParameterView
-{
-    type* data = nullptr;
-    Index size;
-
-    ParameterView() noexcept = default;
-    ParameterView(type* new_data, Index new_size) noexcept : data(new_data), size(new_size)
-    {}
-};
-*/
 
 struct TensorView
 {
@@ -493,6 +482,21 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
 
     return true;
 }
+
+#ifdef OPENNN_CUDA
+
+struct TensorViewCuda
+{
+    float* data = nullptr;
+    cudnnTensorDescriptor_t descriptor = nullptr;
+
+    TensorViewCuda() = default;
+
+    TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
+        : data(new_data), descriptor(new_descriptor) {}
+};
+
+#endif
 
 }
 

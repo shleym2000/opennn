@@ -82,6 +82,24 @@ void NeuralNetwork::compile()
 
     for (unique_ptr<Layer>& layer : layers)
         current_ptr = layer->link_parameters(current_ptr);
+
+#ifdef OPENNN_CUDA
+
+    if (parameters_device)
+    {
+        cudaFree(parameters_device);
+        parameters_device = nullptr;
+    }
+
+    CHECK_CUDA(cudaMalloc((void**)&parameters_device, total_parameters_size * sizeof(float)));
+    cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
+
+    float* current_ptr_device = parameters_device;
+
+    for (unique_ptr<Layer>& layer : layers)
+        current_ptr_device = layer->link_parameters_device(current_ptr_device);
+
+#endif
 }
 
 
@@ -433,6 +451,11 @@ vector<Index> NeuralNetwork::get_layer_parameter_numbers() const
 void NeuralNetwork::set_parameters(const Tensor1& new_parameters)
 {
     parameters = new_parameters;
+
+    type* current_ptr = parameters.data();
+
+    for (unique_ptr<Layer>& layer : layers)
+        current_ptr = layer->link_parameters(current_ptr);
 }
 
 
@@ -565,7 +588,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
                                       const Tensor1& new_parameters,
                                       ForwardPropagation& forward_propagation)
 {
-    const Tensor1& original_parameters = get_parameters();
+    const Tensor1 original_parameters = get_parameters();
 
     set_parameters(new_parameters);
 
@@ -1306,26 +1329,22 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
 void NeuralNetworkBackPropagation::compile()
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
     Index total_workspace_size = 0;
 
-    for (const auto& layer_backpropagation : layers)
+    for (const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             total_workspace_size += layer_backpropagation->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
     workspace.resize(total_workspace_size);
-    workspace.setConstant(std::numeric_limits<type>::quiet_NaN());
+    workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for (auto& layer_backpropagation : layers)
+    for (unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             current_ptr = layer_backpropagation->link_workspace(current_ptr);
-
 }
 
 
@@ -1391,22 +1410,22 @@ void ForwardPropagation::compile()
 {
     Index total_workspace_size = 0;
 
-    for (const auto& layer_prop : layers)
+    for (const unique_ptr<LayerForwardPropagation>& layer_prop : layers)
         total_workspace_size += layer_prop->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
     workspace.resize(total_workspace_size);
-    workspace.setConstant(std::numeric_limits<type>::quiet_NaN());
+    workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for (auto& layer_prop : layers)
+    for (unique_ptr<LayerForwardPropagation>& layer_prop : layers)
         current_ptr = layer_prop->link_workspace(current_ptr);
 }
 
 
-TensorView ForwardPropagation::get_last_trainable_layer_outputs_pair() const
+TensorView ForwardPropagation::get_last_trainable_layer_outputs_view() const
 {
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
@@ -1483,11 +1502,56 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
     layers.resize(layers_number);
-    /*
+
+    const Index first_trainable = neural_network->get_first_trainable_layer_index();
+    const Index last_trainable = neural_network->get_last_trainable_layer_index();
+
+    for (Index i = first_trainable; i <= last_trainable; i++)
+    {
+        const string layer_name = neural_network_layers[i]->get_name();
+
+        if (layer_name == "Dense2d")
+            layers[i] = make_unique<DenseBackPropagationLM<2>>(batch_size, neural_network_layers[i].get());
+        else if (layer_name == "Dense3d")
+            layers[i] = make_unique<DenseBackPropagationLM<3>>(batch_size, neural_network_layers[i].get());
+    }
+}
+
+
+void NeuralNetworkBackPropagationLM::compile()
+{
+    Index total_workspace_size = 0;
+
+    for(const unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
+        if(layer_bp_lm)
+            total_workspace_size += layer_bp_lm->get_workspace_size();
+
+    if(total_workspace_size == 0)
+        return;
+
+    workspace.resize(total_workspace_size);
+    workspace.setZero();
+
+    type* current_ptr = workspace.data();
+
+    for(unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
+        if(layer_bp_lm)
+            current_ptr = layer_bp_lm->link_workspace(current_ptr);
+}
+
+
+void NeuralNetworkBackPropagationLM::print()
+{
+    const Index layers_number = layers.size();
+
+    cout << "Layers number: " << layers_number << endl;
+
     for(Index i = 0; i < layers_number; i++)
-        if(neural_network_layers[i]->get_name() == "Dense")
-            layers[i] = make_unique<Dense2dBackPropagationLM>(batch_size, neural_network_layers[i].get());
-    */
+    {
+        cout << "Layer " << i + 1 << endl;
+
+        layers[i]->print();
+    }
 }
 
 
@@ -1702,7 +1766,7 @@ vector<vector<float*>> ForwardPropagationCuda::get_layer_inputs_device(const vec
                 layer_input_device[i] = batch_input_device;
                 continue;
             }
-        };
+        }
 
         const Index this_layer_inputs_number = this_layer_input_indices.size();
 

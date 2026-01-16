@@ -322,7 +322,7 @@ void EmbeddingBackPropagation::print() const
 
 #ifdef OPENNN_CUDA
 
-void Embedding::forward_propagate_cuda(const vector<float*>& inputs_device,
+void Embedding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                        const bool& is_training)
 {
@@ -330,8 +330,8 @@ void Embedding::forward_propagate_cuda(const vector<float*>& inputs_device,
 }
 
 
-void Embedding::back_propagate_cuda(const vector<float*>&,
-                                    const vector<float*>&,
+void Embedding::back_propagate_cuda(const vector<TensorViewCuda>&,
+                                    const vector<TensorViewCuda>&,
                                     unique_ptr<LayerForwardPropagationCuda>&,
                                     unique_ptr<LayerBackPropagationCuda>&) const
 {
@@ -339,9 +339,10 @@ void Embedding::back_propagate_cuda(const vector<float*>&,
 }
 
 
-vector<ParameterView> Embedding::get_parameter_views_device() const
+vector<TensorViewCuda> Embedding::get_parameter_views_device() const
 {
-    return vector<ParameterView>();
+    throw runtime_error("Embedding::get_parameter_views_device is not yet implemented. Please check back in a future version.");
+    return vector<TensorViewCuda>();
 }
 
 
@@ -408,9 +409,9 @@ EmbeddingBackPropagationCuda::EmbeddingBackPropagationCuda(const Index& new_batc
 }
 
 
-vector<ParameterView> EmbeddingBackPropagationCuda::get_gradient_views_device() const
+vector<TensorView> EmbeddingBackPropagationCuda::get_gradient_views_device() const
 {
-    return vector<ParameterView>();
+    return vector<TensorView>();
 }
 
 
