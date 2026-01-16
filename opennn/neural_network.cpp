@@ -1311,23 +1311,20 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
 void NeuralNetworkBackPropagation::compile()
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
     Index total_workspace_size = 0;
 
-    for (const auto& layer_backpropagation : layers)
+    for (const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             total_workspace_size += layer_backpropagation->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
     workspace.resize(total_workspace_size);
-    workspace.setConstant(std::numeric_limits<type>::quiet_NaN());
+    workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for (auto& layer_backpropagation : layers)
+    for (unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             current_ptr = layer_backpropagation->link_workspace(current_ptr);
 
@@ -1396,17 +1393,17 @@ void ForwardPropagation::compile()
 {
     Index total_workspace_size = 0;
 
-    for (const auto& layer_prop : layers)
+    for (const unique_ptr<LayerForwardPropagation>& layer_prop : layers)
         total_workspace_size += layer_prop->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
     workspace.resize(total_workspace_size);
-    workspace.setConstant(std::numeric_limits<type>::quiet_NaN());
+    workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for (auto& layer_prop : layers)
+    for (unique_ptr<LayerForwardPropagation>& layer_prop : layers)
         current_ptr = layer_prop->link_workspace(current_ptr);
 }
 

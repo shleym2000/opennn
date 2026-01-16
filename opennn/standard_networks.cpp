@@ -58,6 +58,8 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
 
     this->compile();
 
+    this->set_parameters_glorot();
+
     const Index features_number = get_features_number();
     feature_names.resize(features_number);
 

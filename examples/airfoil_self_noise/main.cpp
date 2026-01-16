@@ -13,9 +13,8 @@
 #include "../../opennn/registry.h"
 #include "../../opennn/dataset.h"
 #include "../../opennn/standard_networks.h"
-#include "../../opennn/dense_layer.h"
-#include "../../opennn/scaling_layer.h"
 #include "../../opennn/neural_network.h"
+#include "../../opennn/bounding_layer.h"
 #include "../../opennn/training_strategy.h"
 #include "../../opennn/testing_analysis.h"
 #include "../../opennn/model_selection.h"
@@ -50,8 +49,10 @@ int main()
 
         ApproximationNetwork approximation_network(dataset.get_input_dimensions(), {neurons_number}, dataset.get_target_dimensions());
 
-        reference_scaling_layer();
-        reference_dense_layer();
+        Bounding* bounding_layer = (Bounding*)approximation_network.get_first("Bounding");
+
+        if(bounding_layer)
+            bounding_layer->set_bounding_method("NoBounding");
 
         // Training strategy
 

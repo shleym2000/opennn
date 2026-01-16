@@ -190,7 +190,7 @@ void Layer::set_parameters_glorot()
 
     const vector<TensorView*> parameter_views = get_parameter_views();
 
-    for (const auto& view : parameter_views)
+    for (const TensorView* view : parameter_views)
     {
         TensorMap1 this_parameters(view->data, view->size());
 

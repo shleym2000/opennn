@@ -17,6 +17,7 @@
 #include "../../opennn/training_strategy.h"
 #include "../../opennn/optimization_algorithm.h"
 #include "../../opennn/adaptive_moment_estimation.h"
+#include "../../opennn/weighted_squared_error.h"
 
 using namespace opennn;
 
@@ -37,6 +38,9 @@ int main()
         ClassificationNetwork classification_network(dataset.get_input_dimensions(), { neurons_number}, dataset.get_target_dimensions());
 
         // Training Strategy
+
+        WeightedSquaredError loss(&classification_network, &dataset);
+        loss.set_regularization_method("L1");
 
         TrainingStrategy training_strategy(&classification_network, &dataset);
 
