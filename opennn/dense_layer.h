@@ -492,6 +492,63 @@ public:
     }
 
 
+    void set_parameters_glorot() override
+    {
+        const type limit = sqrt(6.0 / (get_inputs_number() + get_outputs_number()));
+
+        if(biases.size() > 0)
+        {
+            TensorMap1 biases_map(biases.data, biases.size());
+            biases_map.setZero();
+        }
+
+        if(weights.size() > 0)
+        {
+            TensorMap1 weights_map(weights.data, weights.size());
+            set_random(weights_map, -limit, limit);
+        }
+
+        if(batch_normalization)
+        {
+            if(scales.size() > 0)
+            {
+                TensorMap1 scales_map(scales.data, scales.size());
+                scales_map.setConstant(1.0);
+            }
+            if(offsets.size() > 0)
+            {
+                TensorMap1 offsets_map(offsets.data, offsets.size());
+                offsets_map.setZero();
+            }
+        }
+    }
+
+
+    void set_parameters_random() override
+    {
+        if(biases.size() > 0)
+        {
+            TensorMap1 biases_map(biases.data, biases.size());
+            biases_map.setZero();
+        }
+
+        if(weights.size() > 0)
+        {
+            TensorMap1 weights_map(weights.data, weights.size());
+            set_random(weights_map);
+        }
+
+        if (batch_normalization)
+        {
+            if(scales.size() > 0)
+                TensorMap1(scales.data, scales.size()).setConstant(1.0);
+
+            if(offsets.size() > 0)
+                TensorMap1(offsets.data, offsets.size()).setZero();
+        }
+    }
+
+
     void set_input_dimensions(const dimensions& new_input_dimensions) override
     {
         const Index inputs_number = new_input_dimensions[0];
@@ -729,10 +786,9 @@ public:
         bias_deltas.device(*device) = deltas.sum(array_1(0));
 
         weight_deltas.device(*device) = inputs.contract(deltas, axes(0,0));
-/*
+
         if (!is_first_layer)
-            input_deltas.device(*device) = deltas.contract(weights, axes(1,1));
-*/
+            input_deltas.device(*device) = deltas.contract(tensor_map<2>(weights), axes(1,1));
     }
 
 
