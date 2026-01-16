@@ -149,48 +149,50 @@ struct DenseBackPropagation final : LayerBackPropagation
 };
 
 
-struct Dense2dBackPropagationLM final : LayerBackPropagationLM
+template<int Rank>
+struct DenseBackPropagationLM final : LayerBackPropagationLM
 {
-    Dense2dBackPropagationLM(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    DenseBackPropagationLM(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
     {
         set(new_batch_size, new_layer);
     }
 
-
     void set(const Index& new_samples_number = 0, Layer* new_layer = nullptr) override
     {
         layer = new_layer;
-
         batch_size = new_samples_number;
 
-        const Index inputs_number = layer->get_input_dimensions()[0];
         const Index parameters_number = layer->get_parameters_number();
+        const dimensions layer_input_dims = layer->get_input_dimensions();
 
-        squared_errors_Jacobian.resize(batch_size, parameters_number);
+        dimensions input_dims_vec = {batch_size};
+        input_dims_vec.insert(input_dims_vec.end(), layer_input_dims.begin(), layer_input_dims.end());
 
-        input_deltas.resize(batch_size, inputs_number);
+        input_deltas.dims = input_dims_vec;
+
+        squared_errors_Jacobian.dims = {batch_size, parameters_number};
     }
-
 
     vector<TensorView> get_input_deltas() const override
     {
-        const Index inputs_number = layer->get_input_dimensions()[0];
-
-        return {{(type*)(input_deltas.data()), {batch_size, inputs_number}}};
+        return { input_deltas };
     }
 
+    vector<TensorView*> get_tensor_views() override
+    {
+        return { &input_deltas, &squared_errors_Jacobian };
+    }
 
     void print() const override
     {
-        cout << "Squared errors Jacobian: " << endl
-             << squared_errors_Jacobian << endl;
-        cout << "Input derivatives: " << endl
-             << input_deltas << endl;
+        cout << "Squared errors Jacobian: " << endl;
+        squared_errors_Jacobian.print();
+        cout << "Input derivatives: " << endl;
+        input_deltas.print();
     }
 
-    Tensor2 input_deltas;
-
-    Tensor2 squared_errors_Jacobian;
+    TensorView input_deltas;
+    TensorView squared_errors_Jacobian;
 };
 
 
@@ -797,61 +799,58 @@ public:
                            unique_ptr<LayerForwardPropagation>& forward_propagation,
                            unique_ptr<LayerBackPropagationLM>& back_propagation) const override
     {
-        const TensorMap2 inputs = tensor_map<2>(input_views[0]);
-        TensorMap2 deltas = tensor_map<2>(delta_views[0]);
+        const auto inputs = tensor_map<Rank>(input_views[0]);
+        auto deltas = tensor_map<Rank>(delta_views[0]);
 
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();
-/*
         const Index biases_number = biases.size();
+        const Index samples_number = inputs.dimension(0);
 
-        // Forward propagation
+        const DenseForwardPropagation<Rank>* dense2d_layer_forward_propagation =
+            static_cast<DenseForwardPropagation<Rank>*>(forward_propagation.get());
 
-        const DenseForwardPropagation<2>* dense2d_layer_forward_propagation =
-            static_cast<DenseForwardPropagation<2>*>(forward_propagation.get());
+        const auto activation_derivatives
+            = tensor_map<Rank>(dense2d_layer_forward_propagation->activation_derivatives);
 
-        const Tensor2& activation_derivatives
-            = dense2d_layer_forward_propagation->activation_derivatives;
+        DenseBackPropagationLM<Rank>* dense_lm =
+            static_cast<DenseBackPropagationLM<Rank>*>(back_propagation.get());
 
-        // Back propagation
+        TensorMap2 squared_errors_Jacobian = tensor_map<2>(dense_lm->squared_errors_Jacobian);
 
-        Dense2dBackPropagationLM* dense_layer_back_propagation_lm =
-            static_cast<Dense2dBackPropagationLM*>(back_propagation.get());
+        auto input_deltas = tensor_map<Rank>(dense_lm->input_deltas);
 
-        Tensor2& squared_errors_Jacobian = dense_layer_back_propagation_lm->squared_errors_Jacobian;
+        const bool& is_first_layer = dense_lm->is_first_layer;
 
-        const bool& is_first_layer = dense_layer_back_propagation_lm->is_first_layer;
+        if(activation_function != "Softmax")
+            deltas.device(*device) = deltas * activation_derivatives;
 
-        Tensor2& input_deltas = dense_layer_back_propagation_lm->input_deltas;
+        if constexpr(Rank == 2)
+            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{samples_number, biases_number})
+                .device(*device) = deltas;
+        else
+            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{samples_number, biases_number})
+                .device(*device) = deltas.sum(array<Index, Rank-2>{1});
 
-        deltas.device(*device) = deltas * activation_derivatives;
-
-        squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{deltas.dimension(0), biases_number})
-            .device(*device) = deltas;
-
-        for (Index j = 0; j < outputs_number; j++)
+        for(Index j = 0; j < outputs_number; j++)
         {
-            const Tensor1 delta_j = deltas.chip(j, 1);
+            const auto delta_j = deltas.chip(j, Rank - 1);
 
-            for (Index i = 0; i < inputs_number; i++)
+            for(Index i = 0; i < inputs_number; i++)
             {
-                const Tensor1 input_i = inputs.chip(i, 1);
-
-                const Tensor1 derivative = delta_j * input_i;
-
+                const auto input_i = inputs.chip(i, Rank - 1);
+                const auto derivative = delta_j * input_i;
                 const Index weight_column_index = biases_number + (j * inputs_number) + i;
 
-                squared_errors_Jacobian.chip(weight_column_index, 1)
-                    .device(*device) = derivative;
+                if constexpr(Rank == 2)
+                    squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative;
+                else
+                    squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative.sum(array<Index, Rank-2>{1});
             }
         }
 
-        if (!is_first_layer)
-        {
-            const Tensor2 weights_transposed = weights.shuffle(array<int, 2>{1, 0});
-            input_deltas.device(*device) = deltas.contract(weights_transposed, axes(1, 0));
-        }
-*/
+        if(!is_first_layer)
+            input_deltas.device(*device) = deltas.contract(tensor_map<2>(weights), axes(Rank - 1, 1));
     }
 
 
@@ -859,19 +858,21 @@ public:
                                            const Index& index,
                                            Tensor2& squared_errors_Jacobian) const override
     {
-        /*
-        const Index parameters_number = get_parameters_number();
+        Index parameters_number = biases.size() + weights.size();
+
+        if (batch_normalization)
+            parameters_number += scales.size() + offsets.size();
+
         const Index batch_size = back_propagation->batch_size;
 
-        Dense2dBackPropagationLM* dense_layer_back_propagation_lm =
-            static_cast<Dense2dBackPropagationLM*>(back_propagation.get());
+        DenseBackPropagationLM<Rank>* dense_layer_back_propagation_lm =
+            static_cast<DenseBackPropagationLM<Rank>*>(back_propagation.get());
 
-        type* this_squared_errors_Jacobian_data = dense_layer_back_propagation_lm->squared_errors_Jacobian.data();
+        type* this_squared_errors_Jacobian_data = dense_layer_back_propagation_lm->squared_errors_Jacobian.data;
 
         memcpy(squared_errors_Jacobian.data() + index,
                this_squared_errors_Jacobian_data,
                parameters_number * batch_size * sizeof(type));
-        */
     }
 
 
