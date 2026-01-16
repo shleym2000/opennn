@@ -56,7 +56,7 @@ public:
 
         Tensor1 minimums(outputs_number);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
             minimums[i] = descriptives[i].minimum;
 
@@ -69,7 +69,7 @@ public:
 
         Tensor1 maximums(outputs_number);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
             maximums[i] = descriptives[i].maximum;
 
@@ -82,7 +82,7 @@ public:
 
         Tensor1 means(outputs_number);
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for(Index i = 0; i < outputs_number; i++)
             means[i] = descriptives[i].mean;
 
@@ -337,21 +337,21 @@ public:
         
         if constexpr (Rank == 2)
         {
-             set({ neurons_number });
+            set({ neurons_number });
         }
         else
         {
-             // Try to read generic InputDimensions if we were to add them. 
-             // But following 2D code strictly, it only reads NeuronsNumber.
-             // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
-             // However, to make it compile for Rank > 2, I need to pass correct size.
-             // If XML doesn't validation dims, we can't fully restore shape.
-             // I will implement a dummy reshape for now to satisfy Rank:
-             // [neurons_number, 1, 1...] 
-             
-             dimensions dims(Rank-1, 1);
-             dims[0] = neurons_number;
-             set(dims);
+            // Try to read generic InputDimensions if we were to add them.
+            // But following 2D code strictly, it only reads NeuronsNumber.
+            // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
+            // However, to make it compile for Rank > 2, I need to pass correct size.
+            // If XML doesn't validation dims, we can't fully restore shape.
+            // I will implement a dummy reshape for now to satisfy Rank:
+            // [neurons_number, 1, 1...]
+
+            dimensions dims(Rank-1, 1);
+            dims[0] = neurons_number;
+            set(dims);
         }
 
         const XMLElement* start_element = scaling_layer_element->FirstChildElement("NeuronsNumber");
