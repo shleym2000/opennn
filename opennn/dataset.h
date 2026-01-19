@@ -604,17 +604,17 @@ struct Batch
 {
     Batch(const Index& = 0, const Dataset* = nullptr);
 
-    vector<TensorView> get_input_views() const;
-    TensorView get_target_view() const;
-
-    Index get_samples_number() const;
-
     void set(const Index& = 0, const Dataset* = nullptr);
 
     void fill(const vector<Index>&,
               const vector<Index>&,
               // const vector<Index>&,
               const vector<Index>& = vector<Index>());
+
+    vector<TensorView> get_input_views() const;
+    TensorView get_target_view() const;
+
+    Index get_samples_number() const;
 
     Tensor2 perform_augmentation(const Tensor2&);
 
@@ -648,11 +648,18 @@ struct BatchCuda
 
     ~BatchCuda() { free(); }
 
-    BatchCuda(const BatchCuda&) = delete;
-    BatchCuda& operator=(const BatchCuda&) = delete;
+    void set(const Index&, Dataset*);
 
-    vector<float*> get_input_device() const;
-    TensorView get_target_pair_device() const;
+    void fill(const vector<Index>&,
+              const vector<Index>&,
+              //const vector<Index>&,
+              const vector<Index> & = vector<Index>());
+
+    //BatchCuda(const BatchCuda&) = delete;
+    //BatchCuda& operator=(const BatchCuda&) = delete;
+
+    vector<TensorViewCuda> get_input_views_device() const;
+    TensorViewCuda get_target_view_device() const;
 
     Index get_samples_number() const;
 
@@ -660,16 +667,9 @@ struct BatchCuda
     Tensor2 get_decoder_device() const;
     Tensor2 get_targets_device() const;
 
-    void set(const Index&, Dataset*);
-
     void copy_device(const Index&);
 
     void free();
-
-    void fill(const vector<Index>&,
-              const vector<Index>&,
-              //const vector<Index>&,
-              const vector<Index> & = vector<Index>());
 
     void print() const;
 
@@ -693,7 +693,7 @@ struct BatchCuda
     float* decoder_device = nullptr;
     float* targets_device = nullptr;
 
-    TensorViewCuda inputs;
+    cudnnTensorDescriptor_t input_descriptor;
 };
 
 #endif

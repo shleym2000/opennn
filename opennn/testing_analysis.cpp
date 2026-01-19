@@ -2241,11 +2241,11 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
                                 //decoder_variable_indices,
                                 target_variable_indices);
 
-        neural_network->forward_propagate_cuda(testing_batch_cuda.get_input_device(),
+        neural_network->forward_propagate_cuda(testing_batch_cuda.get_input_views_device(),
                                                testing_forward_propagation_cuda,
                                                false);
 
-        const float* outputs_device = testing_forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+        const float* outputs_device = testing_forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
         Tensor2 batch_outputs(current_batch_size, outputs_number);
         cudaMemcpy(batch_outputs.data(), outputs_device, current_batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToHost);

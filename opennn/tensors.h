@@ -482,6 +482,19 @@ struct TensorViewCuda
 
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
+
+    Index size() const
+    {
+//        if (dims.empty()) return 0;
+
+//        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
+
+        //descriptor.
+
+        return 0;
+    }
+
+
 };
 
 #endif

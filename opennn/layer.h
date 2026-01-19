@@ -498,11 +498,14 @@ struct LayerForwardPropagationCuda
 
     type* link_workspace(type*);
 
+    virtual TensorViewCuda get_outputs_view_device()
+    {
+        return outputs;
+    }
+
     virtual void print() const {}
 
     virtual void free() {}
-
-    virtual TensorViewCuda get_outputs_views_device() { return outputs; }
 
     Index batch_size = 0;
 
@@ -529,6 +532,11 @@ struct LayerBackPropagationCuda
 
     type* link_workspace(type*);
 
+    vector<TensorViewCuda> get_input_deltas() const
+    {
+        return input_deltas;
+    }
+
     virtual void print() const {}
 
     virtual void free() {}
@@ -539,7 +547,7 @@ struct LayerBackPropagationCuda
 
     bool is_first_layer = false;
 
-    TensorViewCuda input_deltas;
+     vector<TensorViewCuda> input_deltas;
 };
 
 #endif

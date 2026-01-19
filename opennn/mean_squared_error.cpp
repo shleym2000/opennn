@@ -171,7 +171,7 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     // Forward propagation
 
-    const type* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+    const type* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagatioin
 
@@ -223,7 +223,7 @@ void MeanSquaredError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
 
     type* errors_device = back_propagation_cuda.errors;
 
-    float* output_deltas_device = back_propagation_cuda.get_output_deltas_device();
+    float* output_deltas_device = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
 
     const type coefficient = type(2.0) / type(outputs_number * samples_number);
 

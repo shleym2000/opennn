@@ -339,10 +339,10 @@ void Embedding::back_propagate_cuda(const vector<TensorViewCuda>&,
 }
 
 
-vector<TensorViewCuda> Embedding::get_parameter_views_device() const
+vector<TensorViewCuda*> Embedding::get_parameter_views_device()
 {
     throw runtime_error("Embedding::get_parameter_views_device is not yet implemented. Please check back in a future version.");
-    return vector<TensorViewCuda>();
+    return vector<TensorViewCuda*>();
 }
 
 
@@ -351,33 +351,33 @@ void Embedding::allocate_parameters_device()
     const Index inputs_number = get_inputs_number();
     const Index outputs_number = get_outputs_number();
 
-    CHECK_CUDA(cudaMalloc(&weights_device, inputs_number * outputs_number * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&weights_device.data, inputs_number * outputs_number * sizeof(float)));
 }
 
 
 void Embedding::free_parameters_device()
 {
-    cudaFree(weights_device);
+    cudaFree(weights_device.data);
 
-    weights_device = nullptr;
+    weights_device.data = nullptr;
 }
 
 
 void Embedding::copy_parameters_device()
 {
-    if (!weights_device)
+    if (!weights_device.data)
         cout << "Weights device is null" << endl;
 
-    CHECK_CUDA(cudaMemcpy(weights_device, weights.data(), weights.size() * sizeof(type), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(weights_device.data, weights.data, weights.size() * sizeof(type), cudaMemcpyHostToDevice));
 }
 
 
 void Embedding::copy_parameters_host()
 {
-    if (!weights_device)
+    if (!weights_device.data)
         cout << "Synaptic weights is null" << endl;
 
-    CHECK_CUDA(cudaMemcpy(weights.data(), weights_device, weights.size() * sizeof(type), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(weights.data, weights_device.data, weights.size() * sizeof(type), cudaMemcpyDeviceToHost));
 }
 
 
@@ -388,11 +388,9 @@ EmbeddingForwardPropagationCuda::EmbeddingForwardPropagationCuda(const Index& ne
 }
 
 
-void EmbeddingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void EmbeddingForwardPropagationCuda::initialize()
 {
-    if (!new_layer) return;
-
-    throw runtime_error("EmbeddingForwardPropagationCuda::set is not yet implemented. Please check back in a future version.");
+    throw runtime_error("EmbeddingForwardPropagationCuda::initialize is not yet implemented. Please check back in a future version.");
 }
 
 
@@ -409,17 +407,9 @@ EmbeddingBackPropagationCuda::EmbeddingBackPropagationCuda(const Index& new_batc
 }
 
 
-vector<TensorView> EmbeddingBackPropagationCuda::get_gradient_views_device() const
+void EmbeddingBackPropagationCuda::initialize()
 {
-    return vector<TensorView>();
-}
-
-
-void EmbeddingBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
-{
-    if (!new_layer) return;
-
-    throw runtime_error("EmbeddingBackPropagationCuda::set is not yet implemented. Please check back in a future version.");
+    throw runtime_error("EmbeddingBackPropagationCuda::initialize is not yet implemented. Please check back in a future version.");
 }
 
 

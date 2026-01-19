@@ -632,7 +632,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
             // Neural network
 
-            neural_network->forward_propagate_cuda(training_batch_cuda.get_input_device(),
+            neural_network->forward_propagate_cuda(training_batch_cuda.get_input_views_device(),
                                                    training_forward_propagation_cuda,
                                                    is_training);
 
@@ -679,7 +679,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
                 // Neural network
 
-                neural_network->forward_propagate_cuda(selection_batch_cuda->get_input_device(),
+                neural_network->forward_propagate_cuda(selection_batch_cuda->get_input_views_device(),
                                                        *selection_forward_propagation_cuda,
                                                        is_training);
 
@@ -768,6 +768,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back_propagation_cuda,
                                                        SGDOptimizationDataCuda& optimization_data_cuda) const
 {
+    /*
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
     const Index layers_number = neural_network->get_layers_number();
 
@@ -781,7 +782,7 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
         if (!layer->get_is_trainable())
             continue;
 
-        const vector<TensorView*> parameter_views = layer->get_parameter_views_device();
+        const vector<TensorView> parameter_views = layer->get_parameter_views_device();
         LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
         const vector<TensorView> delta_views = layer_back_prop->get_gradient_views_device();
 
@@ -803,6 +804,7 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
                 );
         }
     }
+    */
 }
 
 
@@ -826,14 +828,15 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
         Layer* layer = neural_network->get_layer(i).get();
         if (!layer->get_is_trainable()) continue;
 
-        const auto parameter_views = layer->get_parameter_views_device();
+        const auto parameter_views = layer->get_parameter_views();
+        //const auto parameter_views_device = layer->get_parameter_views_device();
         const size_t param_blocks_count = parameter_views.size();
 
         velocity[i].resize(param_blocks_count, nullptr);
 
         for (Index j = 0; j < Index(param_blocks_count); ++j)
         {
-            const Index param_size = parameter_views[j].size;
+            const Index param_size = parameter_views[j]->size();
             if (param_size > 0)
             {
                 const size_t memory_size_bytes = param_size * sizeof(float);
@@ -864,6 +867,7 @@ void SGDOptimizationDataCuda::free()
 
 void SGDOptimizationDataCuda::print() const
 {
+    /*
     cout << "--- SGD Optimization Data (CUDA) ---" << endl;
     NeuralNetwork* neural_network = stochastic_gradient_descent->get_loss_index()->get_neural_network();
     const Index layers_number = neural_network->get_layers_number();
@@ -888,6 +892,7 @@ void SGDOptimizationDataCuda::print() const
         }
     }
     cout << "------------------------------------" << endl;
+    */
 }
 
 #endif

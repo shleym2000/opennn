@@ -559,7 +559,7 @@ void PoolingBackPropagation::print() const
 
 #ifdef OPENNN_CUDA
 
-void Pooling::forward_propagate_cuda(const vector<float*>& inputs_device,
+void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                      const bool& is_training)
 {
@@ -570,10 +570,10 @@ void Pooling::forward_propagate_cuda(const vector<float*>& inputs_device,
 
 //    const Index batch_size = pooling_layer_forward_propagation_cuda->batch_size;
 
-    type* outputs = pooling_layer_forward_propagation_cuda->outputs;
+    type* outputs = pooling_layer_forward_propagation_cuda->outputs.data;
 
     cudnnTensorDescriptor_t& input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
-    cudnnTensorDescriptor_t& output_tensor_descriptor = pooling_layer_forward_propagation_cuda->output_tensor_descriptor;
+    cudnnTensorDescriptor_t& output_tensor_descriptor = pooling_layer_forward_propagation_cuda->outputs.descriptor;
 
     // Pooling
 
@@ -581,7 +581,7 @@ void Pooling::forward_propagate_cuda(const vector<float*>& inputs_device,
                                                pooling_descriptor,
                                                &alpha,
                                                input_tensor_descriptor,
-                                               inputs_device[0],
+                                               inputs_device[0].data,
                                                &beta,
                                                output_tensor_descriptor,
                                                outputs);
@@ -591,8 +591,8 @@ void Pooling::forward_propagate_cuda(const vector<float*>& inputs_device,
 }
 
 
-void Pooling::back_propagate_cuda(const vector<float*>& inputs_device,
-                                  const vector<float*>& deltas_device,
+void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+                                  const vector<TensorViewCuda>& deltas_device,
                                   unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                   unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
 {
@@ -601,19 +601,17 @@ void Pooling::back_propagate_cuda(const vector<float*>& inputs_device,
     PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
         = static_cast<PoolingForwardPropagationCuda*>(forward_propagation_cuda.get());
 
-//    const Index batch_size = pooling_layer_forward_propagation_cuda->batch_size;
-
-    const type* outputs = pooling_layer_forward_propagation_cuda->outputs;
+    const type* outputs = pooling_layer_forward_propagation_cuda->outputs.data;
 
     cudnnTensorDescriptor_t& input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
-    cudnnTensorDescriptor_t& output_tensor_descriptor = pooling_layer_forward_propagation_cuda->output_tensor_descriptor;
+    cudnnTensorDescriptor_t& output_tensor_descriptor = pooling_layer_forward_propagation_cuda->outputs.descriptor;
 
     // Back propagation
 
     PoolingBackPropagationCuda* pooling_layer_back_propagation_cuda
         = static_cast<PoolingBackPropagationCuda*>(back_propagation_cuda.get());
 
-    type* input_deltas = pooling_layer_back_propagation_cuda->input_deltas;
+    type* input_deltas = pooling_layer_back_propagation_cuda->get_input_deltas()[0].data;
 
     // Pooling
 
@@ -623,9 +621,9 @@ void Pooling::back_propagate_cuda(const vector<float*>& inputs_device,
                                                 output_tensor_descriptor,
                                                 outputs,
                                                 output_tensor_descriptor,
-                                                deltas_device[0],
+                                                deltas_device[0].data,
                                                 input_tensor_descriptor,
-                                                inputs_device[0],
+                                                inputs_device[0].data,
                                                 &beta,
                                                 input_tensor_descriptor,
                                                 input_deltas);
@@ -642,13 +640,8 @@ PoolingForwardPropagationCuda::PoolingForwardPropagationCuda(const Index& new_ba
 }
 
 
-void PoolingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void PoolingForwardPropagationCuda::initialize()
 {
-    if (!new_layer) return;
-
-    batch_size = new_batch_size;
-    layer = new_layer;
-
     Pooling* pooling_layer = static_cast<Pooling*>(layer);
 
     const Index input_height = pooling_layer->get_input_height();
@@ -676,12 +669,12 @@ void PoolingForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_
 
     // Outputs
 
-    CHECK_CUDA(cudaMalloc(&outputs, batch_size * output_height * output_width * channels * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(outputs, batch_size * output_height * output_width * channels * sizeof(float));
+    CHECK_CUDA(cudaMalloc(&outputs.data, batch_size * output_height * output_width * channels * sizeof(float)));
+    //CUDA_MALLOC_AND_REPORT(outputs.data, batch_size * output_height * output_width * channels * sizeof(float));
 
-    cudnnCreateTensorDescriptor(&output_tensor_descriptor);
+    cudnnCreateTensorDescriptor(&outputs.descriptor);
 
-    cudnnSetTensor4dDescriptor(output_tensor_descriptor,
+    cudnnSetTensor4dDescriptor(outputs.descriptor,
                                CUDNN_TENSOR_NCHW,
                                CUDNN_DATA_FLOAT,
                                batch_size,
@@ -702,18 +695,17 @@ void PoolingForwardPropagationCuda::print() const
 
     cout << "Pooling layer forward propagation CUDA" << endl
          << "Outputs:" << endl
-         << matrix_4d_from_device(outputs, batch_size, output_height, output_width, channels) << endl;
+         << matrix_4d_from_device(outputs.data, batch_size, output_height, output_width, channels) << endl;
 }
 
 
 void PoolingForwardPropagationCuda::free()
 {
-    cudaFree(outputs);
-
-    outputs = nullptr;
+    cudaFree(outputs.data);
+    outputs.data = nullptr;
 
     cudnnDestroyTensorDescriptor(input_tensor_descriptor);
-    cudnnDestroyTensorDescriptor(output_tensor_descriptor);
+    cudnnDestroyTensorDescriptor(outputs.descriptor);
 }
 
 
@@ -724,13 +716,8 @@ PoolingBackPropagationCuda::PoolingBackPropagationCuda(const Index& new_batch_si
 }
 
 
-void PoolingBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
+void PoolingBackPropagationCuda::initialize()
 {
-    if (!new_layer) return;
-
-    batch_size = new_batch_size;
-    layer = new_layer;
-
     const Pooling* pooling_layer = static_cast<Pooling*>(layer);
 
     const Index input_height = pooling_layer->get_input_height();
@@ -739,8 +726,8 @@ void PoolingBackPropagationCuda::set(const Index& new_batch_size, Layer* new_lay
 
     // Input derivatives
 
-    CHECK_CUDA(cudaMalloc(&input_deltas, batch_size * input_height * input_width * channels * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(input_deltas, batch_size * input_height * input_width * channels * sizeof(float));
+    CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * input_height * input_width * channels * sizeof(float)));
+    //CUDA_MALLOC_AND_REPORT(input_deltas.data, batch_size * input_height * input_width * channels * sizeof(float));
 }
 
 
@@ -754,15 +741,14 @@ void PoolingBackPropagationCuda::print() const
 
     cout << "Pooling layer back propagation CUDA" << endl;
     cout << "Input deltas:" << endl
-         << matrix_4d_from_device(input_deltas, batch_size, input_height, input_width, channels) << endl;
+         << matrix_4d_from_device(input_deltas[0].data, batch_size, input_height, input_width, channels) << endl;
 }
 
 
 void PoolingBackPropagationCuda::free()
 {
-    cudaFree(input_deltas);
-
-    input_deltas = nullptr;
+    cudaFree(input_deltas[0].data);
+    input_deltas[0].data = nullptr;
 }
 
 

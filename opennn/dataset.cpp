@@ -4646,20 +4646,17 @@ Tensor2 BatchCuda::get_targets_device() const
 }
 
 
-vector<float*> BatchCuda::get_input_device() const
+vector<TensorViewCuda> BatchCuda::get_input_views_device() const
 {
-    vector<float*> inputs = { inputs_device };
+    vector<TensorViewCuda> input_views = {{inputs_device, input_descriptor}};
 
-    if (!decoder_dimensions.empty())
-        inputs.insert(inputs.begin(), decoder_device );
-
-    return inputs;
+    return input_views;
 }
 
 
-TensorView BatchCuda::get_target_pair_device() const
+TensorViewCuda BatchCuda::get_target_view_device() const
 {
-    TensorView target_pair = {targets_device , target_dimensions};
+    TensorViewCuda target_pair = {targets_device , nullptr};
 
     return target_pair;
 }

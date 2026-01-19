@@ -206,7 +206,7 @@ void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cud
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagation
 
@@ -259,7 +259,7 @@ void CrossEntropyError2d::calculate_multiple_error_cuda(const BatchCuda& batch_c
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagation
 
@@ -324,13 +324,13 @@ void CrossEntropyError2d::calculate_binary_output_delta_cuda(const BatchCuda& ba
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
     const size_t size = samples_number * forward_propagation_cuda.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
 
     // Back propagation
 
-    float* output_deltas = back_propagation_cuda.get_output_deltas_device();
+    float* output_deltas = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
 
     const type scaling_factor = 1.0f / static_cast<type>(samples_number);
 
@@ -352,11 +352,11 @@ void CrossEntropyError2d::calculate_multiple_output_delta_cuda(const BatchCuda& 
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagation
 
-    float* output_deltas = back_propagation_cuda.get_output_deltas_device();
+    float* output_deltas = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
 
     const size_t size = samples_number * forward_propagation_cuda.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
 

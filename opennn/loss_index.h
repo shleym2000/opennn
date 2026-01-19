@@ -230,7 +230,7 @@ struct BackPropagationLM
 
     TensorView get_output_deltas_tensor_view() const;
 
-    vector<vector<TensorView>> get_layer_delta_pairs() const;
+    vector<vector<TensorView>> get_layer_delta_views() const;
 
     Index samples_number = 0;
 
@@ -264,7 +264,7 @@ struct BackPropagation
 
     void set(const Index& = 0, const LossIndex* = nullptr);
 
-    vector<vector<TensorView>> get_layer_delta_pairs() const;
+    vector<vector<TensorView>> get_layer_delta_views() const;
 
     TensorView get_output_deltas_tensor_view() const;
 
@@ -303,9 +303,9 @@ struct BackPropagationCuda
 
     void set(const Index& = 0, LossIndex* = nullptr);
 
-    vector<vector<float*>> get_layer_deltas_device() const;
+    vector<vector<TensorViewCuda>> get_layer_delta_views_device() const;
 
-    float* get_output_deltas_device() const;
+    TensorViewCuda get_output_deltas_tensor_view_device() const;
 
     void print() const;
 

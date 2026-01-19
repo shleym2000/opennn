@@ -633,7 +633,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
             // Neural network
 
-            neural_network->forward_propagate_cuda(training_batch_cuda.get_input_device(),
+            neural_network->forward_propagate_cuda(training_batch_cuda.get_input_views_device(),
                                                    training_forward_propagation_cuda,
                                                    is_training);
 
@@ -679,7 +679,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
                 // Neural network
 
-                neural_network->forward_propagate_cuda(selection_batch_cuda->get_input_device(),
+                neural_network->forward_propagate_cuda(selection_batch_cuda->get_input_views_device(),
                                                        *selection_forward_propagation_cuda,
                                                        is_training);
 

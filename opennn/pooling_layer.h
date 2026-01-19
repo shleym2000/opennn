@@ -104,12 +104,12 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<float*>&,
+    void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
                                 const bool&) override;
 
-    void back_propagate_cuda(const vector<float*>&,
-                             const vector<float*>&,
+    void back_propagate_cuda(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>&,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
@@ -176,7 +176,7 @@ struct PoolingForwardPropagationCuda : public LayerForwardPropagationCuda
 {
     PoolingForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    void initialize() override;
 
     void print() const override;
 
@@ -192,7 +192,7 @@ struct PoolingBackPropagationCuda : public LayerBackPropagationCuda
 {
     PoolingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
 
-    void set(const Index& = 0, Layer* = nullptr) override;
+    void initialize() override;
 
     void print() const override;
 
