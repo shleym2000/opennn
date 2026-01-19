@@ -7,13 +7,13 @@
 //   artelnics@artelnics.com
 
 #include "dataset.h"
-#include "image_dataset.h"
 #include "time_series_dataset.h"
 #include "statistics.h"
 #include "scaling.h"
 #include "correlations.h"
 #include "tensors.h"
 #include "strings_utilities.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -306,9 +306,6 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
 {
     if (!shuffle) return split_samples(sample_indices, batch_size);
 
-    random_device rng;
-    mt19937 urng(rng());
-
     const Index samples_number = sample_indices.size();
 
     const Index batches_number = (samples_number + batch_size - 1) / batch_size;
@@ -317,7 +314,7 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
 
     vector<Index> samples_copy(sample_indices);
 
-    std::shuffle(samples_copy.begin(), samples_copy.end(), urng);
+    shuffle_vector(samples_copy);
 
 #pragma omp parallel for
     for (Index i = 0; i < batches_number; i++)
@@ -400,9 +397,6 @@ void Dataset::split_samples_random(const type& training_samples_ratio,
                                    const type& selection_samples_ratio,
                                    const type& testing_samples_ratio)
 {
-    random_device rng;
-    mt19937 urng(rng());
-
     const Index used_samples_number = get_used_samples_number();
 
     if (used_samples_number == 0) return;
@@ -424,7 +418,7 @@ void Dataset::split_samples_random(const type& training_samples_ratio,
     vector<Index> indices(samples_number);
     iota(indices.begin(), indices.end(), 0);
 
-    std::shuffle(indices.data(), indices.data() + indices.size(), urng);
+    shuffle_vector(indices);
 
     auto assign_sample_role = [this, &indices](string role, Index count, Index& i)
     {
@@ -2611,12 +2605,12 @@ void Dataset::set_data_constant(const type& new_value)
 
 void Dataset::set_data_random()
 {
-    set_random(data);
+    set_random_uniform(data);
 }
 
 void Dataset::set_data_integer(const Index& vocabulary_size)
 {
-    set_random_integers(data, 0, vocabulary_size - 1);
+    set_random_integer(data, 0, vocabulary_size - 1);
 }
 
 
@@ -3380,7 +3374,7 @@ void Dataset::set_data_binary_classification()
 
 #pragma omp parallel for
     for (Index i = 0; i < samples_number; i++)
-        data(i, variables_number - 1) = type(get_random_bool());
+        data(i, variables_number - 1) = type(random_bool());
 }
 
 
@@ -3692,10 +3686,7 @@ void Dataset::infer_column_types(const vector<vector<string>>& sample_rows)
     vector<size_t> row_indices(total_rows);
     iota(row_indices.begin(), row_indices.end(), 0);
 
-    random_device rd;
-    mt19937 g(rd());
-
-    shuffle(row_indices.begin(), row_indices.end(), g);
+    shuffle_vector(row_indices);
 
     const size_t rows_to_check = min(size_t(100), total_rows);
 

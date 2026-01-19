@@ -14,6 +14,7 @@
 #include "scaling_layer.h"
 #include "training_strategy.h"
 #include "genetic_algorithm.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -232,8 +233,6 @@ void GeneticAlgorithm::initialize_population()
 
 void GeneticAlgorithm::initialize_population_random()
 {
-    mt19937 gen(rd());
-
     const Index individuals_number = get_individuals_number();
     const Index genes_number = get_genes_number();
 
@@ -245,11 +244,11 @@ void GeneticAlgorithm::initialize_population_random()
     {
         individual_genes.setConstant(false);
 
-        const Index true_count = get_random_index(minimum_inputs_number, maximum_inputs_number);
+        const Index true_count = random_integer(minimum_inputs_number, maximum_inputs_number);
 
         fill_n(individual_genes.data(), true_count, true);
 
-        shuffle(individual_genes.data(), individual_genes.data() + genes_number, gen);
+        shuffle_tensor(individual_genes);
 
         population.chip(i, 0) = individual_genes;
     }
@@ -260,8 +259,6 @@ void GeneticAlgorithm::initialize_population_correlations()
 {
     if (minimum_inputs_number > maximum_inputs_number)
         throw runtime_error("GeneticAlgorithm: Minimum inputs number cannot be greater than maximum inputs number.");
-
-    mt19937 gen(rd());
 
     const Dataset* dataset = training_strategy->get_dataset();
 
@@ -285,11 +282,11 @@ void GeneticAlgorithm::initialize_population_correlations()
     {        
         individual_genes.setConstant(false);
 
-        const Index true_count = get_random_index(minimum_inputs_number, maximum_inputs_number);
+        const Index true_count = random_integer(minimum_inputs_number, maximum_inputs_number);
 
         while (count(individual_genes.data(), individual_genes.data() + genes_number, true) < true_count)
         {   
-            const type arrow = get_random_type(0, correlations_sum());
+            const type arrow = random_uniform(0, correlations_sum());
 
             const Index j = static_cast<Index>(upper_bound(begin, end, arrow) - begin);
 
@@ -427,7 +424,7 @@ void GeneticAlgorithm::perform_selection()
 
     while (get_selected_individuals_number() < individuals_to_be_selected)
     {
-        const type arrow = get_random_type(type(0), fitness_sum());
+        const type arrow = random_uniform(type(0), fitness_sum());
 
         const Index i = static_cast<Index>(upper_bound(begin, end, arrow) - begin);
 
@@ -463,7 +460,6 @@ Tensor<bool, 1> GeneticAlgorithm::cross(const Tensor<bool, 1>& parent_1, const T
     const Index genes_number = get_genes_number();
     Tensor<bool, 1> descendent(genes_number);
     descendent.setConstant(false);
-    mt19937 gen(rd());
 
     vector<Index> intersection, difference;
     for (Index i = 0; i < genes_number; ++i)
@@ -479,7 +475,8 @@ Tensor<bool, 1> GeneticAlgorithm::cross(const Tensor<bool, 1>& parent_1, const T
 
     if (current_size > maximum_inputs_number) 
     {
-        shuffle(intersection.begin(), intersection.end(), gen);
+        shuffle_vector(intersection);
+
         descendent.setConstant(false);
         for(Index i = 0; i < maximum_inputs_number; ++i)
             descendent(intersection[i]) = true;
@@ -487,9 +484,9 @@ Tensor<bool, 1> GeneticAlgorithm::cross(const Tensor<bool, 1>& parent_1, const T
         return descendent;
     }
 
-    Index target_size = get_random_index(max(minimum_inputs_number, current_size), maximum_inputs_number);
+    const Index target_size = random_integer(max(minimum_inputs_number, current_size), maximum_inputs_number);
 
-    shuffle(difference.begin(), difference.end(), gen);
+    shuffle_vector(difference);
     Index genes_to_add = target_size - current_size;
     
     for (Index i = 0; i < genes_to_add && i < difference.size(); ++i)
@@ -503,7 +500,7 @@ Tensor<bool, 1> GeneticAlgorithm::cross(const Tensor<bool, 1>& parent_1, const T
             if(!parent_1(i) && !parent_2(i))
                 never_true_indices.push_back(i);
 
-        shuffle(never_true_indices.begin(), never_true_indices.end(), gen);
+        shuffle_vector(never_true_indices);
         Index genes_needed = minimum_inputs_number - final_count;
         for(Index i = 0; i < genes_needed && i < never_true_indices.size(); ++i) {
             descendent(never_true_indices[i]) = true;
@@ -525,8 +522,6 @@ void GeneticAlgorithm::perform_crossover()
     Tensor<bool, 1> parent_1_genes;
     Tensor<bool, 1> parent_2_genes;
 
-    mt19937 g(rd());
-
     const Index selected_individuals_number = get_selected_individuals_number();
 
     vector<Index> selected_individual_indices = get_selected_individual_indices();
@@ -536,7 +531,7 @@ void GeneticAlgorithm::perform_crossover()
 
     const vector<Index> parent_1_indices = selected_individual_indices;
     vector<Index> parent_2_indices = selected_individual_indices;
-    shuffle(parent_2_indices.begin(), parent_2_indices.end(), g);
+    shuffle_vector(parent_2_indices);
 
     Index descendent_index = 0;
 
@@ -576,7 +571,6 @@ void GeneticAlgorithm::perform_mutation()
 
     const Index individuals_number = get_individuals_number();
     const Index genes_number = get_genes_number();
-    mt19937 gen(rd());
 
     for (Index i = 0; i < individuals_number; ++i)
     {
@@ -587,14 +581,14 @@ void GeneticAlgorithm::perform_mutation()
         vector<Index> to_false_mutations;
 
         for (Index j = 0; j < genes_number; ++j)
-            if (get_random_type(0.0, 1.0) < mutation_rate)
+            if (random_uniform(0.0, 1.0) < mutation_rate)
                 if (individual(j))
                     to_false_mutations.push_back(j);
                 else
                     to_true_mutations.push_back(j);
 
-        shuffle(to_true_mutations.begin(), to_true_mutations.end(), gen);
-        shuffle(to_false_mutations.begin(), to_false_mutations.end(), gen);
+        shuffle_vector(to_true_mutations);
+        shuffle_vector(to_false_mutations);
 
         Index swap_count = std::min(to_true_mutations.size(), to_false_mutations.size());
         for (Index k = 0; k < swap_count; ++k)

@@ -10,6 +10,7 @@
 #define DENSELAYER_H
 
 #include "layer.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -235,7 +236,6 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_dropout_rate() > 0)
         {
-            std::random_device rd;
             dropout_seed = rd();
             cudnnCreateDropoutDescriptor(&dropout_descriptor);
             cudnnDropoutGetStatesSize(dense_layer->get_cudnn_handle(), &dropout_states_size);
@@ -506,7 +506,7 @@ public:
         if(weights.size() > 0)
         {
             TensorMap1 weights_map(weights.data, weights.size());
-            set_random(weights_map, -limit, limit);
+            set_random_uniform(weights_map, -limit, limit);
         }
 
         if(batch_normalization)
@@ -536,7 +536,7 @@ public:
         if(weights.size() > 0)
         {
             TensorMap1 weights_map(weights.data, weights.size());
-            set_random(weights_map);
+            set_random_uniform(weights_map);
         }
 
         if (batch_normalization)

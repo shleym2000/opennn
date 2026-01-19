@@ -10,6 +10,7 @@
 #include "images.h"
 #include "tensors.h"
 #include "strings_utilities.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -139,7 +140,7 @@ void ImageDataset::set_data_random()
         for (Index i = 0; i < samples_number; i++)
         {
             for (Index j = 0; j < inputs_number; j++)
-                data(i, j) = rand() % 255;
+                data(i, j) = random_integer(0, 255);
 
             data(i, inputs_number) = (i < half_samples) ? 0 : 1;
         }
@@ -167,7 +168,7 @@ void ImageDataset::set_data_random()
             for (Index i = 0; i < images_number[k]; i++)
             {
                 for (Index j = 0; j < inputs_number; j++)
-                    data(current_sample, j) = rand() % 255;
+                    data(current_sample, j) = random_integer(0, 255);
 
                 data(current_sample, k + inputs_number) = 1;
 
