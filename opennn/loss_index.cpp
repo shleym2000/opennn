@@ -217,11 +217,7 @@ void LossIndex::back_propagate_lm(const Batch& batch,
 
     calculate_error_hessian_lm(batch, back_propagation_lm);
 
-    // Loss
-
     back_propagation_lm.loss = back_propagation_lm.error();
-
-    // Regularization
 
     add_regularization_lm(back_propagation_lm);
 }
@@ -716,7 +712,7 @@ Tensor1 LossIndex::calculate_numerical_gradient_lm()
     forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
-    //back_propagation_lm.neural_network.compile();
+    back_propagation_lm.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -853,7 +849,7 @@ Tensor2 LossIndex::calculate_numerical_jacobian()
     forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
-    //back_propagation_lm.neural_network.compile();
+    back_propagation_lm.neural_network.compile();
 
     BackPropagation back_propagation(samples_number, this);
     back_propagation.neural_network.compile();
@@ -935,7 +931,7 @@ Tensor2 LossIndex::calculate_numerical_hessian()
     forward_propagation.compile();
 
     BackPropagationLM back_propagation_lm(samples_number, this);
-    //back_propagation_lm.neural_network.compile();
+    back_propagation_lm.neural_network.compile();
 
     Tensor1& parameters = neural_network->get_parameters();
 
@@ -1221,23 +1217,31 @@ vector<vector<TensorView>> BackPropagationLM::get_layer_delta_views() const
     const Index first_trainable_layer_index = neural_network_ptr->get_first_trainable_layer_index();
     const Index last_trainable_layer_index = neural_network_ptr->get_last_trainable_layer_index();
 
-    for (Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
+    for(Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
     {
-        if (i == last_trainable_layer_index)
+        if(i == last_trainable_layer_index)
         {
             layer_delta_views[i].push_back(get_output_deltas_tensor_view());
 
             continue;
         }
 
-        for (Index j = 0; j < Index(layer_input_indices[i].size()); j++)
+        for(Index j = 0; j < Index(layer_output_indices[i].size()); j++)
         {
-            const Index output_index = layer_output_indices[i][j];
-            const Index input_index = neural_network_ptr->find_input_index(layer_input_indices[output_index], i);
+            const Index output_layer_index = layer_output_indices[i][j];
 
-            input_derivative_views = layer_back_propagations[output_index]->get_input_deltas();
+            if(output_layer_index == -1) continue;
 
-            layer_delta_views[i].push_back(input_derivative_views[input_index]);
+            if(!layer_back_propagations[output_layer_index]) continue;
+
+            const Index input_port_index = neural_network_ptr->find_input_index(layer_input_indices[output_layer_index], i);
+
+            if(input_port_index == -1)
+                throw runtime_error("Layer indices consistency error.");
+
+            vector<TensorView> input_derivative_pairs = layer_back_propagations[output_layer_index]->get_input_deltas();
+
+            layer_delta_views[i].push_back(input_derivative_pairs[input_port_index]);
         }
     }
 

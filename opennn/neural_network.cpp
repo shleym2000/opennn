@@ -1345,7 +1345,6 @@ void NeuralNetworkBackPropagation::compile()
     for (unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             current_ptr = layer_backpropagation->link_workspace(current_ptr);
-
 }
 
 
@@ -1503,11 +1502,56 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
     layers.resize(layers_number);
-    /*
+
+    const Index first_trainable = neural_network->get_first_trainable_layer_index();
+    const Index last_trainable = neural_network->get_last_trainable_layer_index();
+
+    for (Index i = first_trainable; i <= last_trainable; i++)
+    {
+        const string layer_name = neural_network_layers[i]->get_name();
+
+        if (layer_name == "Dense2d")
+            layers[i] = make_unique<DenseBackPropagationLM<2>>(batch_size, neural_network_layers[i].get());
+        else if (layer_name == "Dense3d")
+            layers[i] = make_unique<DenseBackPropagationLM<3>>(batch_size, neural_network_layers[i].get());
+    }
+}
+
+
+void NeuralNetworkBackPropagationLM::compile()
+{
+    Index total_workspace_size = 0;
+
+    for(const unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
+        if(layer_bp_lm)
+            total_workspace_size += layer_bp_lm->get_workspace_size();
+
+    if(total_workspace_size == 0)
+        return;
+
+    workspace.resize(total_workspace_size);
+    workspace.setZero();
+
+    type* current_ptr = workspace.data();
+
+    for(unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
+        if(layer_bp_lm)
+            current_ptr = layer_bp_lm->link_workspace(current_ptr);
+}
+
+
+void NeuralNetworkBackPropagationLM::print()
+{
+    const Index layers_number = layers.size();
+
+    cout << "Layers number: " << layers_number << endl;
+
     for(Index i = 0; i < layers_number; i++)
-        if(neural_network_layers[i]->get_name() == "Dense")
-            layers[i] = make_unique<Dense2dBackPropagationLM>(batch_size, neural_network_layers[i].get());
-    */
+    {
+        cout << "Layer " << i + 1 << endl;
+
+        layers[i]->print();
+    }
 }
 
 

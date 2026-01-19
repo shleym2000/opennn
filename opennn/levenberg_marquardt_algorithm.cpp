@@ -215,6 +215,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
     ForwardPropagation selection_forward_propagation(selection_samples_number, neural_network);
 
     training_forward_propagation.compile();
+    selection_forward_propagation.compile();
 
     // Loss index
 
@@ -224,6 +225,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
     BackPropagation selection_back_propagation(selection_samples_number, loss_index);
 
     training_back_propagation.neural_network.compile();
+    selection_back_propagation.neural_network.compile();
 
     type old_loss = type(0);
     type loss_decrease = numeric_limits<type>::max();
@@ -231,6 +233,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
     Index selection_failures = 0;
 
     BackPropagationLM training_back_propagation_lm(training_samples_number, loss_index);
+    training_back_propagation_lm.neural_network.compile();
 
     // Training strategy stuff
 
@@ -262,7 +265,6 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
         loss_index->back_propagate_lm(training_batch,
                                       training_forward_propagation,
                                       training_back_propagation_lm);
-
 
         loss_index->calculate_error(training_batch, training_forward_propagation, training_back_propagation);
 

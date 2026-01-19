@@ -393,6 +393,8 @@ struct NeuralNetworkBackPropagationLM
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     const vector<unique_ptr<LayerBackPropagationLM>>& get_layers() const
     {
         return layers;
@@ -403,26 +405,15 @@ struct NeuralNetworkBackPropagationLM
         return neural_network;
     }
 
-
-    void print()
-    {
-        const Index layers_number = layers.size();
-
-        cout << "Layers number: " << layers_number << endl;
-
-        for(Index i = 0; i < layers_number; i++)
-        {
-            cout << "Layer " << i + 1 << endl;
-
-            layers[i]->print();
-        }
-    }
+    void print();
 
     Index batch_size = 0;
 
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerBackPropagationLM>> layers;
+
+    Tensor1 workspace;
 };
 
 }

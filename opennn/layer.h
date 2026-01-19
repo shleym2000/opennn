@@ -469,6 +469,42 @@ struct LayerBackPropagationLM
 
     virtual void set(const Index& = 0, Layer* = nullptr) = 0;
 
+    Index get_workspace_size()
+    {
+        constexpr Index ALIGNMENT = 16;
+        constexpr Index MASK = ~(ALIGNMENT - 1);
+        Index total_size = 0;
+
+        for (TensorView* view : get_tensor_views())
+        {
+            if (view && view->size() > 0)
+            {
+                Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
+                total_size += padded_size;
+            }
+        }
+        return total_size;
+    }
+
+    type* link_workspace(type* ptr)
+    {
+        constexpr Index ALIGNMENT = 16;
+        constexpr Index MASK = ~(ALIGNMENT - 1);
+
+        for (TensorView* view : get_tensor_views())
+        {
+            if (view && view->size() > 0)
+            {
+                view->data = ptr;
+                Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
+                ptr += padded_size;
+            }
+        }
+        return ptr;
+    }
+
+    virtual vector<TensorView*> get_tensor_views() = 0;
+
     virtual void print() const {}
 
     Index batch_size = 0;
