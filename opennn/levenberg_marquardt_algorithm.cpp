@@ -454,7 +454,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
         }
     }
 
-    //neural_network->set_parameters(parameters);
+    neural_network->set_parameters(parameters);
 }
 
 

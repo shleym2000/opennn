@@ -188,13 +188,11 @@ void LossIndex::add_regularization_lm(BackPropagationLM& back_propagation_lm) co
     }
     else if(regularization_method == "L2")
     {
-        Tensor<type, 0> norm = parameters.square().sum().sqrt();
+        const Tensor<type, 0> squared_norm = parameters.square().sum();
 
-        if(norm(0) < NUMERIC_LIMITS_MIN) return;
-
-        loss += regularization_weight*norm(0);
-        gradient += parameters*(regularization_weight/norm(0));
-        hessian += self_kronecker_product(device.get(), parameters)/(norm(0)*norm(0)*norm(0));
+        loss += type(0.5) * regularization_weight * squared_norm(0);
+        gradient.device(*device) += parameters * regularization_weight;
+        sum_diagonal(hessian, regularization_weight);
     }
     else
         throw runtime_error("Unknown regularization method: " + regularization_method);
@@ -231,6 +229,8 @@ void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
 
     if (layers_number == 0) return;
 
+    back_propagation_lm.squared_errors_jacobian.setZero();
+
     const vector<unique_ptr<Layer>>& layers = neural_network->get_layers();
 
     const Index first_trainable_layer_index = neural_network->get_first_trainable_layer_index();
@@ -252,7 +252,8 @@ void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
 
     const vector<Index> layer_parameter_numbers = neural_network->get_layer_parameter_numbers();
 
-    const Index samples_number = batch.get_samples_number();
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
 
     Index index = 0;
 
@@ -262,7 +263,15 @@ void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
                                                      index,
                                                      back_propagation_lm.squared_errors_jacobian);
 
-        index += layer_parameter_numbers[i] * samples_number;
+        const vector<TensorView*> parameter_views = layers[i]->get_parameter_views();
+
+        for(const TensorView* tensor_view : parameter_views)
+        {
+            const Index view_size = tensor_view->size();
+
+            if(view_size > 0)
+                index += (view_size + ALIGNMENT - 1) & MASK;
+        }
     }
 
 }
@@ -276,7 +285,7 @@ void LossIndex::calculate_error_gradient_lm(const Batch&,
 
     Tensor1& gradient = back_propagation_lm.gradient;
 
-    gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(1,0));
+    gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(0,0));
 }
 
 

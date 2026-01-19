@@ -56,12 +56,10 @@ int main()
 
         // Training strategy
 
-        NormalizedSquaredError loss(&approximation_network, &dataset);
-        loss.set_regularization_method("L1");
-        loss.set_regularization_weight(regularization_weight);
-
         TrainingStrategy training_strategy(&approximation_network, &dataset);
         training_strategy.set_optimization_algorithm("QuasiNewtonMethod");
+        training_strategy.get_loss_index()->set_regularization_method("L2");
+        training_strategy.get_loss_index()->set_regularization_weight(0.0001);
 
         TrainingResults training_results = training_strategy.train();
 

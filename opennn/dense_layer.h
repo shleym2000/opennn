@@ -839,7 +839,8 @@ public:
             {
                 const auto input_i = inputs.chip(i, Rank - 1);
                 const auto derivative = delta_j * input_i;
-                const Index weight_column_index = biases_number + (j * inputs_number) + i;
+
+                const Index weight_column_index = biases_number + (i * outputs_number) + j;
 
                 if constexpr(Rank == 2)
                     squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative;
@@ -854,24 +855,71 @@ public:
 
 
     void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
-                                           const Index& index,
-                                           Tensor2& squared_errors_Jacobian) const override
+                                           const Index& start_column_index,
+                                           Tensor2& global_jacobian) const override
     {
-        Index parameters_number = biases.size() + weights.size();
-
-        if (batch_normalization)
-            parameters_number += scales.size() + offsets.size();
-
-        const Index batch_size = back_propagation->batch_size;
-
-        DenseBackPropagationLM<Rank>* dense_layer_back_propagation_lm =
+        DenseBackPropagationLM<Rank>* dense_lm =
             static_cast<DenseBackPropagationLM<Rank>*>(back_propagation.get());
 
-        type* this_squared_errors_Jacobian_data = dense_layer_back_propagation_lm->squared_errors_Jacobian.data;
+        const Index batch_size = dense_lm->batch_size;
+        constexpr Index ALIGNMENT = 16;
+        constexpr Index MASK = ~(ALIGNMENT - 1);
 
-        memcpy(squared_errors_Jacobian.data() + index,
-               this_squared_errors_Jacobian_data,
-               parameters_number * batch_size * sizeof(type));
+        Index global_offset = start_column_index;
+        Index local_offset = 0;
+
+        if(biases.size() > 0)
+        {
+            const Index size = biases.size();
+
+            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, size})
+                .device(*device) =
+                tensor_map<2>(dense_lm->squared_errors_Jacobian)
+                    .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, size});
+
+            local_offset += size;
+            global_offset += (size + ALIGNMENT - 1) & MASK;
+        }
+
+        if(weights.size() > 0)
+        {
+            const Index size = weights.size();
+
+            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, size})
+                .device(*device) =
+                tensor_map<2>(dense_lm->squared_errors_Jacobian)
+                    .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, size});
+
+            local_offset += size;
+            global_offset += (size + ALIGNMENT - 1) & MASK;
+        }
+
+        if(batch_normalization)
+        {
+            if(scales.size() > 0)
+            {
+                const Index size = scales.size();
+
+                global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, size})
+                    .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
+                          .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, size});
+
+                local_offset += size;
+                global_offset += (size + ALIGNMENT - 1) & MASK;
+            }
+
+            if(offsets.size() > 0)
+            {
+                const Index size = offsets.size();
+
+                global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, size})
+                    .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
+                          .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, size});
+
+                local_offset += size;
+                global_offset += (size + ALIGNMENT - 1) & MASK;
+            }
+        }
     }
 
 
