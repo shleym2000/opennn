@@ -27,8 +27,6 @@ struct DenseForwardPropagation final : LayerForwardPropagation
 
     virtual ~DenseForwardPropagation() = default;
 
-    vector<TensorView*> get_workspace_views();
-
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
