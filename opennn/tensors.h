@@ -100,78 +100,6 @@ inline array<Index, 5> array_5(const Index& a, const Index& b, const Index& c, c
     return array<Index, 5>({a, b, c, d, e});
 }
 
-
-Index get_random_index(const Index&, const Index&);
-
-type get_random_type(const type& = type(-1), const type& = type(1));
-
-bool get_random_bool();
-
-Index get_random_element(const vector<Index>&);
-
-template<int rank>
-void set_random(Tensor<type, rank>& tensor, const type& minimum = -0.1, const type& maximum = 0.1)
-{
-    random_device rd;
-    mt19937 gen(rd());
-
-    uniform_real_distribution<type> distribution(minimum, maximum);
-
-    for (Index i = 0; i < tensor.size(); ++i)
-        tensor(i) = distribution(gen);
-}
-
-
-template<int rank>
-void set_random(TensorMap<Tensor<type, rank>, Aligned16>& tensor, const type& minimum = -0.1, const type& maximum = 0.1)
-{
-    random_device rd;
-    mt19937 gen(rd());
-
-    uniform_real_distribution<type> distribution(minimum, maximum);
-
-    for (Index i = 0; i < tensor.size(); ++i)
-        tensor(i) = distribution(gen);
-}
-
-
-template<int rank>
-void set_random(TensorMap<Tensor<type, rank>>& tensor, const type& minimum = -0.1, const type& maximum = 0.1)
-{
-    random_device rd;
-    mt19937 gen(rd());
-
-    uniform_real_distribution<type> distribution(minimum, maximum);
-
-    for (Index i = 0; i < tensor.size(); ++i)
-        tensor(i) = distribution(gen);
-}
-
-
-template<int rank>
-void set_random_integers(Tensor<type, rank>& tensor, const Index& minimum, const Index& maximum)
-{
-    random_device rd;
-    mt19937 gen(rd());
-
-    uniform_int_distribution<Index> distribution(minimum, maximum);
-
-    for (Index i = 0; i < tensor.size(); ++i)
-        tensor(i) = static_cast<type>(distribution(gen));
-}
-
-template<int rank>
-void set_random_integers(TensorMap<Tensor<type, rank>>& tensor, const Index& minimum, const Index& maximum)
-{
-    random_device rd;
-    mt19937 gen(rd());
-
-    uniform_int_distribution<Index> distribution(minimum, maximum);
-
-    for (Index i = 0; i < tensor.size(); ++i)
-        tensor(i) = static_cast<type>(distribution(gen));
-}
-
 type bound(const type& value, const type& minimum, const type& maximum);
 
 void set_row(Tensor2&, const Tensor1&, const Index&);
@@ -348,7 +276,7 @@ TensorMap3 tensor_map(const Tensor4&, const Index&);
 TensorMap2 tensor_map(const Tensor4&, const Index&, const Index&);
 
 TensorMap3 tensor_map_(const TensorMap4&, const Index&);
-TensorMap1 tensor_map_(const TensorMap2&, const Index&);
+//TensorMap1 tensor_map_(const TensorMap2&, const Index&);
 
 template <Index rank>
 TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_view)
@@ -475,9 +403,8 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
         {
             if (tensor_1(i) != tensor_2(i))
                 return false;
-            else
-                if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
-                    return false;
+            else if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
+                return false;
         }
 
     return true;
@@ -494,6 +421,14 @@ struct TensorViewCuda
 
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
+
+    Index size() const
+    {
+        throw runtime_error ("Not implemented yet");
+        // use descriptor to return size.
+
+        return 0;
+    }
 };
 
 #endif

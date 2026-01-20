@@ -18,46 +18,6 @@ type bound(const type& value, const type& minimum, const type& maximum)
 }
 
 
-Index get_random_index(const Index& min, const Index& max)
-{
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_int_distribution<> dis(min, max);
-    return dis(gen);
-}
-
-
-type get_random_type(const type& minimum, const type& maximum)
-{
-    random_device rd;
-    mt19937 gen(rd());
-
-    uniform_real_distribution<type> dis(minimum, maximum);
-
-    return dis(gen);
-}
-
-
-bool get_random_bool()
-{
-    static mt19937 gen(random_device{}());
-
-    static bernoulli_distribution dist(0.5);
-
-    return dist(gen);
-}
-
-
-Index get_random_element(const vector<Index>& values)
-{
-    static mt19937 gen(random_device{}());
-
-    uniform_int_distribution<Index> dist(0, values.size() - 1);
-
-    return values[dist(gen)];
-}
-
-
 void multiply_matrices(const ThreadPoolDevice* device,
                        Tensor3& tensor,
                        const Tensor1& vector)
@@ -659,13 +619,13 @@ TensorMap1 tensor_map(const Tensor2& tensor, const Index& index_1)
                                       tensor.dimension(0));
 }
 
-
+/*
 TensorMap1 tensor_map_(const TensorMap2& tensor, const Index& index_1)
 {
     return TensorMap1((type*)tensor.data() + tensor.dimension(0) * index_1,
                                       tensor.dimension(0));
 }
-
+*/
 
 TensorMap2 tensor_map(const Tensor3& tensor, const Index& index_2)
 {

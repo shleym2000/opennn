@@ -134,8 +134,6 @@ private:
     Index elitism_size;
 
     string initialization_method;
-
-    random_device rd;
 };
 
 }

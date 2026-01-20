@@ -12,6 +12,7 @@
 #include "bounding_layer.h"
 #include "dataset.h"
 #include "neural_network.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -546,7 +547,7 @@ Tensor2 ResponseOptimization::calculate_inputs() const
             if(raw_variable_type == Dataset::RawVariableType::Numeric
             || raw_variable_type == Dataset::RawVariableType::Constant)
             {
-                inputs(i, current_feature_index ) = get_random_type(input_minimums[current_feature_index ], input_maximums[current_feature_index ]);
+                inputs(i, current_feature_index ) = random_uniform(input_minimums[current_feature_index ], input_maximums[current_feature_index ]);
                 ++current_feature_index ;
             }
             else if(raw_variable_type == Dataset::RawVariableType::Binary)
@@ -611,7 +612,7 @@ Tensor2 ResponseOptimization::calculate_inputs() const
             }
             else
             {
-                inputs(i, current_feature_index ) = get_random_type(input_minimums[current_feature_index ], input_maximums[current_feature_index ]);
+                inputs(i, current_feature_index ) = random_uniform(input_minimums[current_feature_index ], input_maximums[current_feature_index ]);
 
                 ++current_feature_index ;
             }

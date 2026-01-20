@@ -11,6 +11,7 @@
 
 #include "tinyxml2.h"
 #include "tensors.h"
+#include "random_utilities.h"
 
 using namespace tinyxml2;
 
@@ -302,12 +303,8 @@ protected:
 
         #pragma omp parallel
         {
-            mt19937 gen(random_device{}() + omp_get_thread_num());  // thread-local RNG
-            uniform_real_distribution<float> dis(0.0f, 1.0f);
-
-            #pragma omp for
             for (Index i = 0; i < tensor.size(); i++)
-                tensor(i) = (dis(gen) < dropout_rate)
+                tensor(i) = (random_uniform(0, 1) < dropout_rate)
                                 ? 0
                                 : tensor(i) * scaling_factor;
         }
@@ -400,17 +397,11 @@ struct LayerForwardPropagation
 
     Index get_workspace_size();
 
-    virtual vector<TensorView*> get_tensor_views()
-    {
-        return vector<TensorView*>();
-    }
+    virtual vector<TensorView *> get_tensor_views();
 
     type* link_workspace(type*);
 
-    TensorView get_outputs() const
-    {
-        return outputs;
-    }
+    TensorView get_outputs() const;
 
     virtual void print() const {}
 
@@ -534,11 +525,14 @@ struct LayerForwardPropagationCuda
 
     type* link_workspace(type*);
 
+    virtual TensorViewCuda get_outputs_view_device()
+    {
+        return outputs;
+    }
+
     virtual void print() const {}
 
     virtual void free() {}
-
-    virtual TensorViewCuda get_outputs_views_device() { return outputs; }
 
     Index batch_size = 0;
 
@@ -565,6 +559,11 @@ struct LayerBackPropagationCuda
 
     type* link_workspace(type*);
 
+    vector<TensorViewCuda> get_input_deltas() const
+    {
+        return input_deltas;
+    }
+
     virtual void print() const {}
 
     virtual void free() {}
@@ -575,7 +574,7 @@ struct LayerBackPropagationCuda
 
     bool is_first_layer = false;
 
-    TensorViewCuda input_deltas;
+    vector<TensorViewCuda> input_deltas;
 };
 
 #endif

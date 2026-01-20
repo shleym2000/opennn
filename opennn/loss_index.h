@@ -230,7 +230,7 @@ struct BackPropagationLM
 
     TensorView get_output_deltas_tensor_view() const;
 
-    vector<vector<TensorView>> get_layer_delta_pairs() const;
+    vector<vector<TensorView>> get_layer_delta_views() const;
 
     Index samples_number = 0;
 
@@ -264,7 +264,7 @@ struct BackPropagation
 
     void set(const Index& = 0, const LossIndex* = nullptr);
 
-    vector<vector<TensorView>> get_layer_delta_pairs() const;
+    vector<vector<TensorView>> get_layer_delta_views() const;
 
     TensorView get_output_deltas_tensor_view() const;
 
@@ -277,9 +277,9 @@ struct BackPropagation
     NeuralNetworkBackPropagation neural_network;
 
     Tensor<type,0> error;
-    Tensor2 errors;         // Tensor2
-    Tensor2 errors_weights; // Tensor2
-    Tensor1 output_deltas;  // Tensor1
+    Tensor2 errors;
+    Tensor2 errors_weights;
+    Tensor1 output_deltas;
     dimensions output_deltas_dimensions;
 
     Tensor<type, 0> accuracy;
@@ -303,9 +303,9 @@ struct BackPropagationCuda
 
     void set(const Index& = 0, LossIndex* = nullptr);
 
-    vector<vector<float*>> get_layer_deltas_device() const;
+    vector<vector<TensorViewCuda>> get_layer_delta_views_device() const;
 
-    float* get_output_deltas_device() const;
+    TensorViewCuda get_output_deltas_tensor_view_device() const;
 
     void print() const;
 
@@ -327,7 +327,7 @@ struct BackPropagationCuda
 
     cudnnReduceTensorDescriptor_t reduce_tensor_descriptor;
     void* workspace = nullptr;
-    size_t workspaceSize = 0;
+    size_t workspace_size = 0;
 
     cudnnTensorDescriptor_t output_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t output_reduce_tensor_descriptor = nullptr;

@@ -102,13 +102,16 @@ void MeanSquaredError::calculate_output_delta_lm(const Batch&,
                                                  BackPropagationLM& back_propagation) const
 {
     const Tensor2& errors = back_propagation.errors;
-    const Tensor1& squared_errors = back_propagation.squared_errors;
+    Tensor1& squared_errors = back_propagation.squared_errors;
 
     const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
-
     TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
 
     output_deltas.device(*device) = errors;
+
+    const type epsilon = 1.0e-12;
+    squared_errors.device(*device) = squared_errors + epsilon;
+
     divide_columns(device.get(), output_deltas, squared_errors);
 }
 
@@ -171,7 +174,7 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     // Forward propagation
 
-    const type* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_device();
+    const type* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagatioin
 
@@ -179,9 +182,9 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     Tensor<type,0>& error = back_propagation_cuda.error;
 
-    const cudnnTensorDescriptor_t& output_tensor_descriptor = back_propagation_cuda.output_tensor_descriptor;
+    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation_cuda.output_tensor_descriptor;
 
-    const cudnnOpTensorDescriptor_t& operator_sum_descriptor = back_propagation_cuda.operator_sum_descriptor;
+    const cudnnOpTensorDescriptor_t operator_sum_descriptor = back_propagation_cuda.operator_sum_descriptor;
 
     float alpha = 1.0f;
     float alpha_minus_one = -1.0f;
@@ -223,7 +226,7 @@ void MeanSquaredError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
 
     type* errors_device = back_propagation_cuda.errors;
 
-    float* output_deltas_device = back_propagation_cuda.get_output_deltas_device();
+    float* output_deltas_device = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
 
     const type coefficient = type(2.0) / type(outputs_number * samples_number);
 

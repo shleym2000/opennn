@@ -8,6 +8,7 @@
 
 #include "language_dataset.h"
 #include "strings_utilities.h"
+#include "random_utilities.h"
 #include "tensors.h"
 #include "tinyxml2.h"
 
@@ -55,18 +56,14 @@ LanguageDataset::LanguageDataset(const Index& samples_number,
     sample_roles.resize(samples_number);
     split_samples_random();
 
-    default_random_engine generator;
-    uniform_int_distribution<int> dist_main(0, input_vocabulary_size - 1);
-    uniform_int_distribution<int> dist_binary(0, 1);
-
     const Index target_column_index = data.dimension(1) - 1;
 
     for (Index i = 0; i < data.dimension(0); ++i)
     {
         for (Index j = 0; j < target_column_index; ++j)
-            data(i, j) = static_cast<type>(dist_main(generator));
+            data(i, j) = random_integer(0, input_vocabulary_size - 1);
 
-        data(i, target_column_index) = static_cast<type>(dist_binary(generator));
+        data(i, target_column_index) = random_integer(0, 1);
     }
 
     input_vocabulary.resize(input_vocabulary_size + reserved_tokens.size());

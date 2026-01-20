@@ -66,9 +66,16 @@ struct ForwardPropagationCuda
 
     void set(const Index & = 0, NeuralNetwork* = nullptr);
 
-    float* get_last_trainable_layer_outputs_device() const;
+    void compile();
 
-    vector<vector<float*>> get_layer_inputs_device(const vector<float*>&, const bool&) const;
+    TensorViewCuda get_last_trainable_layer_outputs_view_device() const;
+
+    vector<vector<TensorViewCuda>> get_layer_input_views_device(const vector<TensorViewCuda>&, const bool&) const;
+
+    TensorViewCuda get_outputs()
+    {
+        return layers.back()->get_outputs_view_device();
+    }
 
     void print();
 
@@ -79,6 +86,8 @@ struct ForwardPropagationCuda
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerForwardPropagationCuda>> layers;
+
+    float* workspace;
 };
 
 #endif
@@ -291,11 +300,11 @@ public:
     void copy_parameters_device();
     void copy_parameters_host();
 
-    void forward_propagate_cuda(const vector<float*>&,
+    void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                 ForwardPropagationCuda&,
                                 const bool& = false) const;
 
-    float* calculate_outputs_cuda(float*, const Index&);
+    TensorViewCuda calculate_outputs_cuda(TensorViewCuda, const Index&);
 
 protected:
 
@@ -359,6 +368,8 @@ struct NeuralNetworkBackPropagationCuda
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     const vector<unique_ptr<LayerBackPropagationCuda>>& get_layers() const;
 
     void print();
@@ -370,6 +381,8 @@ struct NeuralNetworkBackPropagationCuda
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerBackPropagationCuda>> layers;
+
+    float* workspace;
 };
 
 #endif

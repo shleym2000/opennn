@@ -174,7 +174,7 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<float*>& inputs_device,
+    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                 const bool&)
     {
@@ -191,20 +191,20 @@ public:
             const Index channels = get_input_channels();
 
             type* reordered_inputs = fp_cuda->reordered_inputs;
-            type* outputs_device = fp_cuda->outputs;
+            type* outputs_device = fp_cuda->outputs.data;
 
-            invert_reorder_inputs_cuda(inputs_device[0], reordered_inputs, batch_size, channels, height, width);
+            invert_reorder_inputs_cuda(inputs_device[0].data, reordered_inputs, batch_size, channels, height, width);
 
             reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
-            //reorganize_inputs_cuda(inputs_device[0], outputs_device, batch_size, outputs_number);
+            //reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
         }
         else
-            CHECK_CUDA(cudaMemcpy(fp_cuda->outputs, inputs_device[0], batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice));
+            CHECK_CUDA(cudaMemcpy(fp_cuda->outputs.data, inputs_device[0].data, batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice));
     }
 
 
-    void back_propagate_cuda(const vector<float*>&,
-                             const vector<float*>& deltas_device,
+    void back_propagate_cuda(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>& deltas_device,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
     {
@@ -214,9 +214,9 @@ public:
         const Index batch_size = flatten_layer_back_propagation_cuda->batch_size;
         const Index outputs_number = get_outputs_number();
 
-        type* input_deltas = flatten_layer_back_propagation_cuda->input_deltas;
+        type* input_deltas = flatten_layer_back_propagation_cuda->input_deltas[0].data;
 
-        reorganize_deltas_cuda(deltas_device[0], input_deltas, batch_size, outputs_number);
+        reorganize_deltas_cuda(deltas_device[0].data, input_deltas, batch_size, outputs_number);
     }
 
 #endif
@@ -288,11 +288,34 @@ struct FlattenBackPropagation final : LayerBackPropagation
 template<int Rank>
 struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    FlattenForwardPropagationCuda(const Index & = 0, Layer* = nullptr);
+    FlattenForwardPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    {
+        set(new_batch_size, new_layer);
+    }
 
-    void set(const Index & = 0, Layer* = nullptr) override;
+    void initialize() override
+    {
+        const Index inputs_number = layer->get_inputs_number();
+        const Index outputs_number = layer->get_outputs_number();
 
-    void free() override;
+        if constexpr (Rank == 4)
+        {
+            CHECK_CUDA(cudaMalloc(&reordered_inputs, batch_size * inputs_number * sizeof(float)));
+            //CUDA_MALLOC_AND_REPORT(reordered_inputs, batch_size * inputs_number * sizeof(float));
+        }
+
+        CHECK_CUDA(cudaMalloc(&outputs.data, batch_size * outputs_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(outputs, batch_size * outputs_number * sizeof(float));
+    }
+
+    void free() override
+    {
+        if (outputs.data) cudaFree(outputs.data);
+        outputs.data = nullptr;
+
+        if (reordered_inputs) cudaFree(reordered_inputs);
+        reordered_inputs = nullptr;
+    }
 
     type* reordered_inputs = nullptr;
 };
@@ -301,82 +324,25 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 template<int Rank>
 struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
 {
-    FlattenBackPropagationCuda(const Index & = 0, Layer* = nullptr);
-
-    void set(const Index & = 0, Layer* = nullptr) override;
-
-    void free() override;
-};
-
-
-template<int Rank>
-FlattenForwardPropagationCuda<Rank>::FlattenForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
-{
-    set(new_batch_size, new_layer);
-}
-
-
-template<int Rank>
-void FlattenForwardPropagationCuda<Rank>::set(const Index& new_batch_size, Layer* new_layer)
-{
-    if (!new_layer) return;
-
-    layer = new_layer;
-    batch_size = new_batch_size;
-
-    const Index inputs_number = layer->get_inputs_number();
-    const Index outputs_number = layer->get_outputs_number();
-
-    if constexpr (Rank == 4)
+    FlattenBackPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
     {
-        CHECK_CUDA(cudaMalloc(&reordered_inputs, batch_size * inputs_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(reordered_inputs, batch_size * inputs_number * sizeof(float));
+        set(new_batch_size, new_layer);
     }
 
-    CHECK_CUDA(cudaMalloc(&outputs, batch_size * outputs_number * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(outputs, batch_size * outputs_number * sizeof(float));
-}
+    void initialize() override
+    {
+        const size_t inputs_number = layer->get_inputs_number();
 
+        CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * inputs_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(input_deltas.data, batch_size * inputs_number * sizeof(float));
+    }
 
-template<int Rank>
-void FlattenForwardPropagationCuda<Rank>::free()
-{
-    if (outputs.data) cudaFree(outputs.data);
-    outputs.data = nullptr;
-
-    if (reordered_inputs) cudaFree(reordered_inputs);
-    reordered_inputs = nullptr;
-}
-
-
-template<int Rank>
-FlattenBackPropagationCuda<Rank>::FlattenBackPropagationCuda(const Index& new_batch_size, Layer* new_layer)
-{
-    set(new_batch_size, new_layer);
-}
-
-
-template<int Rank>
-void FlattenBackPropagationCuda<Rank>::set(const Index& new_batch_size, Layer* new_layer)
-{
-    if (!new_layer) return;
-
-    layer = new_layer;
-    batch_size = new_batch_size;
-
-    const size_t inputs_number = layer->get_inputs_number();
-
-    CHECK_CUDA(cudaMalloc(&input_deltas, batch_size * inputs_number * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(input_deltas, batch_size * inputs_number * sizeof(float));
-}
-
-
-template<int Rank>
-void FlattenBackPropagationCuda<Rank>::free()
-{
-    if (input_deltas) cudaFree(input_deltas);
-    input_deltas = nullptr;
-}
+    void free() override
+    {
+        if (input_deltas[0].data) cudaFree(input_deltas[0].data);
+        input_deltas[0].data = nullptr;
+    }
+};
 
 #endif
 

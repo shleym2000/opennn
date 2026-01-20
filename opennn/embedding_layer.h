@@ -72,7 +72,7 @@ public:
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
-    vector<TensorViewCuda> get_parameter_views_device() override;
+    vector<TensorViewCuda*> get_parameter_views_device() override;
 
     void copy_parameters_host() override;
 
@@ -84,7 +84,7 @@ public:
 
 private:
 
-    float* weights_device = nullptr;
+    TensorViewCuda weights_device;
 
     float* positional_encoding_device = nullptr;
 
@@ -150,7 +150,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 
     void print() const override;
 
-    TensorView weight_deltas_device;
+    TensorViewCuda weight_deltas_device;
 };
 
 #endif
