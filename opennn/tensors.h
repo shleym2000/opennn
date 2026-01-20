@@ -412,11 +412,8 @@ struct TensorViewCuda
 
     Index size() const
     {
-//        if (dims.empty()) return 0;
-
-//        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
-
-        //descriptor.
+        throw runtime_error ("Not implemented yet");
+        // use descriptor to return size.
 
         return 0;
     }

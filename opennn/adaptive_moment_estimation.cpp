@@ -566,6 +566,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     ForwardPropagationCuda training_forward_propagation_cuda(training_batch_samples_number, neural_network);
     unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
 
+    training_forward_propagation_cuda.compile();
     neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
 
@@ -575,6 +576,8 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     BackPropagationCuda training_back_propagation_cuda(training_batch_samples_number, loss_index);
     unique_ptr<BackPropagationCuda> selection_back_propagation_cuda;
+
+    training_back_propagation_cuda.neural_network.compile();
 
     if (has_selection)
     {

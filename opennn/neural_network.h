@@ -368,6 +368,8 @@ struct NeuralNetworkBackPropagationCuda
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
+    void compile();
+
     const vector<unique_ptr<LayerBackPropagationCuda>>& get_layers() const;
 
     void print();
@@ -379,6 +381,8 @@ struct NeuralNetworkBackPropagationCuda
     NeuralNetwork* neural_network = nullptr;
 
     vector<unique_ptr<LayerBackPropagationCuda>> layers;
+
+    float* workspace;
 };
 
 #endif
