@@ -78,7 +78,7 @@ void NeuralNetwork::compile()
     parameters.resize(total_parameters_size);
     parameters.setZero();
 
-    type* current_ptr = parameters.data();
+    float* current_ptr = parameters.data();
 
     for (unique_ptr<Layer>& layer : layers)
         current_ptr = layer->link_parameters(current_ptr);
@@ -91,7 +91,7 @@ void NeuralNetwork::compile()
         parameters_device = nullptr;
     }
 
-    CHECK_CUDA(cudaMalloc((void**)&parameters_device, total_parameters_size * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&parameters_device, total_parameters_size * sizeof(float)));
     cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
 
     float* current_ptr_device = parameters_device;
@@ -1826,6 +1826,27 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
         layers[i] = Registry<LayerBackPropagationCuda>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(batch_size, neural_network_layers[i].get());
     }
+}
+
+
+void NeuralNetworkBackPropagationCuda::compile()
+{
+    Index total_workspace_size = 0;
+
+    for (const unique_ptr<LayerBackPropagationCuda>& layer_backpropagation : layers)
+        if (layer_backpropagation)
+            total_workspace_size += layer_backpropagation->get_workspace_size();
+
+    if (total_workspace_size == 0) return;
+
+    CHECK_CUDA(cudaMalloc((void**)&workspace, total_workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMemset(workspace, 0, total_workspace_size * sizeof(float)));
+
+    type* current_ptr = workspace;
+
+    for (unique_ptr<LayerBackPropagationCuda>& layer_backpropagation : layers)
+        if (layer_backpropagation)
+            current_ptr = layer_backpropagation->link_workspace(current_ptr);
 }
 
 

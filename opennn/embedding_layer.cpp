@@ -299,12 +299,6 @@ EmbeddingBackPropagation::EmbeddingBackPropagation(const Index& new_batch_size, 
 }
 
 
-vector<TensorView*> EmbeddingBackPropagation::get_tensor_views()
-{
-    return {&weight_deltas};
-}
-
-
 void EmbeddingBackPropagation::initialize()
 {
     const Embedding* embedding_layer = static_cast<Embedding*>(layer);
@@ -313,6 +307,12 @@ void EmbeddingBackPropagation::initialize()
     const Index vocabulary_size = embedding_layer->get_vocabulary_size();
 
     weight_deltas.dims = {vocabulary_size, embedding_dimension};
+}
+
+
+vector<TensorView*> EmbeddingBackPropagation::get_tensor_views()
+{
+    return {&weight_deltas};
 }
 
 
@@ -396,7 +396,7 @@ void EmbeddingForwardPropagationCuda::initialize()
 
 void EmbeddingForwardPropagationCuda::print() const
 {
-
+    throw runtime_error("EmbeddingForwardPropagationCuda::print is not yet implemented. Please check back in a future version.");
 }
 
 
@@ -413,9 +413,15 @@ void EmbeddingBackPropagationCuda::initialize()
 }
 
 
+vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_tensor_views_device()
+{
+    return {&weight_deltas_device};
+}
+
+
 void EmbeddingBackPropagationCuda::print() const
 {
-
+    throw runtime_error("EmbeddingBackPropagationCuda::print is not yet implemented. Please check back in a future version.");
 }
 
 REGISTER(LayerForwardPropagationCuda, EmbeddingForwardPropagationCuda, "Embedding")
