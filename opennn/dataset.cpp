@@ -316,7 +316,7 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
 
     shuffle_vector(samples_copy);
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for (Index i = 0; i < batches_number; i++)
     {
         const Index start_index = i * batch_size;
