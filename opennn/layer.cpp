@@ -579,7 +579,11 @@ float* Layer::link_parameters_device(float* ptr)
 
 #endif
 
+TensorView LayerForwardPropagation::get_outputs() const { return outputs; }
+std::vector<TensorView *> LayerForwardPropagation::get_tensor_views() {
+    return vector<TensorView *>();
 }
+} // namespace opennn
 
 // namespace opennn
 // OpenNN: Open Neural Networks Library.

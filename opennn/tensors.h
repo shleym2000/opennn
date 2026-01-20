@@ -276,7 +276,7 @@ TensorMap3 tensor_map(const Tensor4&, const Index&);
 TensorMap2 tensor_map(const Tensor4&, const Index&, const Index&);
 
 TensorMap3 tensor_map_(const TensorMap4&, const Index&);
-TensorMap1 tensor_map_(const TensorMap2&, const Index&);
+//TensorMap1 tensor_map_(const TensorMap2&, const Index&);
 
 template <Index rank>
 TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_view)
@@ -391,9 +391,8 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
         {
             if (tensor_1(i) != tensor_2(i))
                 return false;
-            else
-                if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
-                    return false;
+            else if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
+                return false;
         }
 
     return true;
@@ -421,8 +420,6 @@ struct TensorViewCuda
 
         return 0;
     }
-
-
 };
 
 #endif

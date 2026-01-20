@@ -72,9 +72,10 @@ public:
         const TensorMap<Tensor<type, Rank>, Aligned16> input_2 = tensor_map<Rank>(input_views[1]);
 
         TensorMap<Tensor<type, Rank>, Aligned16> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
-        outputs.device(*device) = input_1 + input_2;
 
+        outputs.device(*device) = input_1 + input_2;
     }
+
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>& delta_views,

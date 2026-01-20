@@ -14,6 +14,7 @@
 #include "tensors.h"
 #include "strings_utilities.h"
 #include "random_utilities.h"
+#include "image_dataset.h"
 
 namespace opennn
 {

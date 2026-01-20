@@ -563,21 +563,19 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                      const bool& is_training)
 {
+    type* outputs = forward_propagation_cuda->outputs.data;
+    const cudnnTensorDescriptor_t output_tensor_descriptor = forward_propagation_cuda->outputs.descriptor;
+
     // Forward propagation
 
     PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
         = static_cast<PoolingForwardPropagationCuda*>(forward_propagation_cuda.get());
 
-//    const Index batch_size = pooling_layer_forward_propagation_cuda->batch_size;
-
-    type* outputs = pooling_layer_forward_propagation_cuda->outputs.data;
-
-    cudnnTensorDescriptor_t& input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
-    cudnnTensorDescriptor_t& output_tensor_descriptor = pooling_layer_forward_propagation_cuda->outputs.descriptor;
+    const cudnnTensorDescriptor_t input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
 
     // Pooling
 
-    cudnnStatus_t status = cudnnPoolingForward(cudnn_handle,
+    const cudnnStatus_t status = cudnnPoolingForward(cudnn_handle,
                                                pooling_descriptor,
                                                &alpha,
                                                input_tensor_descriptor,
@@ -598,35 +596,31 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
 {
     // Forward propagation
 
-    PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
+    const TensorViewCuda& outputs_view = forward_propagation_cuda->outputs;
+
+    const PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
         = static_cast<PoolingForwardPropagationCuda*>(forward_propagation_cuda.get());
 
-    const type* outputs = pooling_layer_forward_propagation_cuda->outputs.data;
-
-    cudnnTensorDescriptor_t& input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
-    cudnnTensorDescriptor_t& output_tensor_descriptor = pooling_layer_forward_propagation_cuda->outputs.descriptor;
+    const cudnnTensorDescriptor_t input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
 
     // Back propagation
 
-    PoolingBackPropagationCuda* pooling_layer_back_propagation_cuda
-        = static_cast<PoolingBackPropagationCuda*>(back_propagation_cuda.get());
-
-    type* input_deltas = pooling_layer_back_propagation_cuda->get_input_deltas()[0].data;
+    type* input_deltas = back_propagation_cuda->get_input_deltas()[0].data;
 
     // Pooling
 
-    cudnnStatus_t status = cudnnPoolingBackward(cudnn_handle,
-                                                pooling_descriptor,
-                                                &alpha,
-                                                output_tensor_descriptor,
-                                                outputs,
-                                                output_tensor_descriptor,
-                                                deltas_device[0].data,
-                                                input_tensor_descriptor,
-                                                inputs_device[0].data,
-                                                &beta,
-                                                input_tensor_descriptor,
-                                                input_deltas);
+    const cudnnStatus_t status = cudnnPoolingBackward(cudnn_handle,
+                                                      pooling_descriptor,
+                                                      &alpha,
+                                                      outputs_view.descriptor,
+                                                      outputs_view.data,
+                                                      outputs_view.descriptor,
+                                                      deltas_device[0].data,
+                                                      input_tensor_descriptor,
+                                                      inputs_device[0].data,
+                                                      &beta,
+                                                      input_tensor_descriptor,
+                                                      input_deltas);
 
     if (status != CUDNN_STATUS_SUCCESS)
         cout << "cudnnPoolingBackward failed: " << cudnnGetErrorString(status) << endl;

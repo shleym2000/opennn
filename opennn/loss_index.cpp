@@ -1572,9 +1572,13 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
                                1,
                                1);
 
-    cudnnGetReductionWorkspaceSize(loss_index->get_cudnn_handle(), reduce_tensor_descriptor, output_tensor_descriptor, output_reduce_tensor_descriptor, &workspaceSize);
+    cudnnGetReductionWorkspaceSize(loss_index->get_cudnn_handle(),
+                                   reduce_tensor_descriptor,
+                                   output_tensor_descriptor,
+                                   output_reduce_tensor_descriptor,
+                                   &workspace_size);
 
-    CHECK_CUDA(cudaMalloc(&workspace, workspaceSize));
+    CHECK_CUDA(cudaMalloc(&workspace, workspace_size));
 
     // Sum
 

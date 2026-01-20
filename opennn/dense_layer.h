@@ -236,6 +236,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_dropout_rate() > 0)
         {
+            random_device rd;
             dropout_seed = rd();
             cudnnCreateDropoutDescriptor(&dropout_descriptor);
             cudnnDropoutGetStatesSize(dense_layer->get_cudnn_handle(), &dropout_states_size);
@@ -1132,11 +1133,11 @@ public:
         type* combinations = dense_layer_forward_propagation_cuda->combinations;
         type* outputs = dense_layer_forward_propagation_cuda->outputs.data;
 
-        const cudnnTensorDescriptor_t& output_tensor_descriptor = dense_layer_forward_propagation_cuda->outputs.descriptor;
-        const cudnnTensorDescriptor_t& output_softmax_tensor_descriptor = dense_layer_forward_propagation_cuda->output_softmax_tensor_descriptor;
+        const cudnnTensorDescriptor_t output_tensor_descriptor = dense_layer_forward_propagation_cuda->outputs.descriptor;
+        const cudnnTensorDescriptor_t output_softmax_tensor_descriptor = dense_layer_forward_propagation_cuda->output_softmax_tensor_descriptor;
 
-        const cudnnTensorDescriptor_t& biases_add_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_add_tensor_descriptor;
-        const cudnnTensorDescriptor_t& biases_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_tensor_descriptor;
+        const cudnnTensorDescriptor_t biases_add_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_add_tensor_descriptor;
+        const cudnnTensorDescriptor_t biases_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_tensor_descriptor;
 
         type* outputs_buffer = use_combinations ? combinations : outputs;
 
@@ -1155,12 +1156,12 @@ public:
                     batch_size);
 
         cudnnStatus_t status = cudnnAddTensor(cudnn_handle,
-                                                    &alpha,
-                                                    biases_tensor_descriptor,
-                                                    biases_device.data,
-                                                    &beta_add,
-                                                    biases_add_tensor_descriptor,
-                                                    outputs_buffer);
+                                              &alpha,
+                                              biases_tensor_descriptor,
+                                              biases_device.data,
+                                              &beta_add,
+                                              biases_add_tensor_descriptor,
+                                              outputs_buffer);
 
         if (status != CUDNN_STATUS_SUCCESS)
             cerr << "Dense CUDA: cudnnAddTensor failed. Error: " << cudnnGetErrorString(status) << endl;
@@ -1272,6 +1273,8 @@ public:
 
         // Forward propagation
 
+        const TensorViewCuda& outputs_view = fp_cuda->outputs;
+
         auto* dense_layer_forward_propagation_cuda = static_cast<DenseForwardPropagationCuda<Rank>*>(fp_cuda.get());
 
         Dense* dense_layer = static_cast<Dense*>(dense_layer_forward_propagation_cuda->layer);
@@ -1279,7 +1282,6 @@ public:
         const Index batch_size = dense_layer_forward_propagation_cuda->batch_size;
 
         type* combinations = dense_layer_forward_propagation_cuda->combinations;
-        type* outputs = dense_layer_forward_propagation_cuda->outputs.data;
 
         // Back propagation
 
@@ -1292,13 +1294,13 @@ public:
         float* bias_deltas = dense_layer_back_propagation->bias_deltas_device.data;
         float* weight_deltas = dense_layer_back_propagation->weight_deltas_device.data;
 
-        const cudnnTensorDescriptor_t& deltas_tensor_descriptor = dense_layer_back_propagation->deltas_tensor_descriptor;
+        const cudnnTensorDescriptor_t deltas_tensor_descriptor = dense_layer_back_propagation->deltas_tensor_descriptor;
 
         // Dropout
 
         if (get_dropout_rate() > type(0) && activation_function != "Softmax")
         {
-            cudnnStatus_t status = cudnnDropoutBackward(cudnn_handle,
+            const cudnnStatus_t status = cudnnDropoutBackward(cudnn_handle,
                                                         dense_layer_forward_propagation_cuda->dropout_descriptor,
                                                         deltas_tensor_descriptor,
                                                         deltas_device[0].data,
@@ -1317,11 +1319,11 @@ public:
         {
             if (use_combinations)
             {
-                cudnnStatus_t status = cudnnActivationBackward(cudnn_handle,
+                const cudnnStatus_t status = cudnnActivationBackward(cudnn_handle,
                                                                activation_descriptor,
                                                                &alpha,
                                                                deltas_tensor_descriptor,
-                                                               outputs,
+                                                               outputs_view.data,
                                                                deltas_tensor_descriptor,
                                                                deltas_device[0].data,
                                                                deltas_tensor_descriptor,
@@ -1335,15 +1337,15 @@ public:
             }
             else
             {
-                cudnnStatus_t status = cudnnActivationBackward(cudnn_handle,
+                const cudnnStatus_t status = cudnnActivationBackward(cudnn_handle,
                                                                activation_descriptor,
                                                                &alpha,
                                                                deltas_tensor_descriptor,
-                                                               outputs,
+                                                               outputs_view.data,
                                                                deltas_tensor_descriptor,
                                                                deltas_device[0].data,
                                                                deltas_tensor_descriptor,
-                                                               outputs,
+                                                               outputs_view.data,
                                                                &beta,
                                                                deltas_tensor_descriptor,
                                                                deltas_device[0].data);
@@ -1358,13 +1360,13 @@ public:
 
         if (batch_normalization)
         {
-            cudnnStatus_t bn_status = cudnnBatchNormalizationBackward(
+            const cudnnStatus_t bn_status = cudnnBatchNormalizationBackward(
                 cudnn_handle,
                 CUDNN_BATCHNORM_PER_ACTIVATION,
                 &alpha, &beta,
                 &alpha, &beta,
                 dense_layer_forward_propagation_cuda->outputs.descriptor,
-                use_combinations ? combinations : outputs,
+                use_combinations ? combinations : outputs_view.data,
                 deltas_tensor_descriptor,
                 deltas_device[0].data,
                 deltas_tensor_descriptor,

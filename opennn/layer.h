@@ -397,17 +397,11 @@ struct LayerForwardPropagation
 
     Index get_workspace_size();
 
-    virtual vector<TensorView*> get_tensor_views()
-    {
-        return vector<TensorView*>();
-    }
+    virtual vector<TensorView *> get_tensor_views();
 
     type* link_workspace(type*);
 
-    TensorView get_outputs() const
-    {
-        return outputs;
-    }
+    TensorView get_outputs() const;
 
     virtual void print() const {}
 
@@ -580,7 +574,7 @@ struct LayerBackPropagationCuda
 
     bool is_first_layer = false;
 
-     vector<TensorViewCuda> input_deltas;
+    vector<TensorViewCuda> input_deltas;
 };
 
 #endif
