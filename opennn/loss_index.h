@@ -277,9 +277,9 @@ struct BackPropagation
     NeuralNetworkBackPropagation neural_network;
 
     Tensor<type,0> error;
-    Tensor2 errors;         // Tensor2
-    Tensor2 errors_weights; // Tensor2
-    Tensor1 output_deltas;  // Tensor1
+    Tensor2 errors;
+    Tensor2 errors_weights;
+    Tensor1 output_deltas;
     dimensions output_deltas_dimensions;
 
     Tensor<type, 0> accuracy;

@@ -6,9 +6,10 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#include "layer.h"
-#include "tensors.h"
 #include <vector>
+
+#include "layer.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -293,7 +294,7 @@ void Layer::set_parameters_random()
     {
         TensorMap1 this_parameters(view->data, view->size());
 
-        set_random(this_parameters);
+        set_random_uniform(this_parameters);
     }
 }
 
@@ -311,7 +312,7 @@ void Layer::set_parameters_glorot()
     {
         TensorMap1 this_parameters(view->data, view->size());
 
-        set_random(this_parameters, -limit, limit);
+        set_random_uniform(this_parameters, -limit, limit);
     }
 }
 

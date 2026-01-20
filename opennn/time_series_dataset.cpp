@@ -10,7 +10,7 @@
 #include "statistics.h"
 #include "correlations.h"
 #include "tensors.h"
-#include "strings_utilities.h"
+#include "random_utilities.h"
 
 namespace opennn
 {
@@ -725,9 +725,6 @@ vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample
 
     if (!shuffle) return split_samples(sample_indices, batch_size);
 
-    random_device rng;
-    mt19937 urng(rng());
-
     const Index samples_number = sample_indices.size();
 
     const Index batches_number = (samples_number + batch_size - 1) / batch_size;
@@ -736,7 +733,7 @@ vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample
 
     vector<Index> samples_copy(sample_indices);
 
-    std::shuffle(samples_copy.begin(), samples_copy.end(), urng);
+    shuffle_vector(samples_copy);
 
 #pragma omp parallel for
     for (Index i = 0; i < batches_number; i++)
