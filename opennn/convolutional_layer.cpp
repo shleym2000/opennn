@@ -792,12 +792,12 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
     // Forward propagation
 
+    const Index batch_size = forward_propagation_cuda->batch_size;
+
     ConvolutionalForwardPropagationCuda* convolutional_layer_forward_propagation_cuda
         = static_cast<ConvolutionalForwardPropagationCuda*>(forward_propagation_cuda.get());
 
     Convolutional* convolutional_layer = static_cast<Convolutional*>(convolutional_layer_forward_propagation_cuda->layer);
-
-    const Index batch_size = convolutional_layer_forward_propagation_cuda->batch_size;
 
     float* convolutions = convolutional_layer_forward_propagation_cuda->convolutions.data;
     float* outputs = convolutional_layer_forward_propagation_cuda->outputs.data;
