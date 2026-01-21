@@ -233,7 +233,6 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_dropout_rate() > 0)
         {
-            dropout_seed = rd();
             cudnnCreateDropoutDescriptor(&dropout_descriptor);
             cudnnDropoutGetStatesSize(dense_layer->get_cudnn_handle(), &dropout_states_size);
             CHECK_CUDA(cudaMalloc(&dropout_states, dropout_states_size));

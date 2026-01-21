@@ -7,6 +7,7 @@
 //   artelnics@artelnics.com
 
 #include "dataset.h"
+#include "image_dataset.h"
 #include "time_series_dataset.h"
 #include "statistics.h"
 #include "scaling.h"
