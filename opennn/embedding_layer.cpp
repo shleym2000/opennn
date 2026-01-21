@@ -109,7 +109,7 @@ void Embedding::set_parameters_random()
 
     TensorMap2 weights_map = tensor_map<2>(weights);
 
-    const type scale = 0.05;
+    const type scale = 0.05F;
 
     weights_map.setRandom();
     weights_map.device(*device) = weights_map * scale;

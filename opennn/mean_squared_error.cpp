@@ -109,7 +109,7 @@ void MeanSquaredError::calculate_output_delta_lm(const Batch&,
 
     output_deltas.device(*device) = errors;
 
-    const type epsilon = 1.0e-12;
+    const type epsilon = 1.0e-12F;
     squared_errors.device(*device) = squared_errors + epsilon;
 
     divide_columns(device.get(), output_deltas, squared_errors);
