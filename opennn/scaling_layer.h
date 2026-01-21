@@ -420,10 +420,10 @@ public:
             static_cast<ScalingForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
 
         const Index outputs_number = get_outputs_number();
-        const size_t size = outputs_number * scaling_forward_propagation->batch_size;
+        const size_t size = outputs_number * forward_propagation_cuda->batch_size;
 
-        scale_2d_cuda(size, scaling_forward_propagation->batch_size, outputs_number,
-                      inputs_device[0].data, scaling_forward_propagation->outputs.data,
+        scale_2d_cuda(size, forward_propagation_cuda->batch_size, outputs_number,
+                      inputs_device[0].data, forward_propagation_cuda->outputs.data,
                       scaling_forward_propagation->scalers_device,
                       scaling_forward_propagation->minimums_device,
                       scaling_forward_propagation->maximums_device,
@@ -559,17 +559,21 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
     void free() override
     {
         cudaFree(outputs.data);
-        cudaFree(scalers_device);
-        cudaFree(minimums_device);
-        cudaFree(maximums_device);
-        cudaFree(means_device);
-        cudaFree(standard_deviations_device);
-
         outputs.data = nullptr;
+
+        cudaFree(scalers_device);
         scalers_device = nullptr;
+
+        cudaFree(minimums_device);
         minimums_device = nullptr;
+
+        cudaFree(maximums_device);
         maximums_device = nullptr;
+
+        cudaFree(means_device);
         means_device = nullptr;
+
+        cudaFree(standard_deviations_device);
         standard_deviations_device = nullptr;
     }
 

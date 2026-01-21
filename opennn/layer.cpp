@@ -120,7 +120,7 @@ type* LayerBackPropagation::link_workspace(type* ptr)
         if (size > 0)
         {
             view->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            const Index padded_size = (size + ALIGNMENT - 1) & MASK;
             ptr += padded_size;
         }
     }
@@ -155,8 +155,8 @@ Index LayerForwardPropagationCuda::get_workspace_size()
     {
         if (view_cuda && view_cuda->size() > 0)
         {
-            Index size = view_cuda->size();
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            const Index size = view_cuda->size();
+            const Index padded_size = (size + ALIGNMENT - 1) & MASK;
             total_bytes += padded_size;
         }
     }
@@ -176,12 +176,11 @@ type* LayerForwardPropagationCuda::link_workspace(type* ptr)
     {
         const Index size = view_cuda->size();
 
-        if (size > 0)
-        {
-            view_cuda->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
+        if (size == 0) continue;
+
+        view_cuda->data = ptr;
+        const Index padded_size = (size + ALIGNMENT - 1) & MASK;
+        ptr += padded_size;
     }
 
     return ptr;
@@ -212,8 +211,8 @@ Index LayerBackPropagationCuda::get_workspace_size()
     {
         if (view_cuda && view_cuda->size() > 0)
         {
-            Index size = view_cuda->size();
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
+            const Index size = view_cuda->size();
+            const Index padded_size = (size + ALIGNMENT - 1) & MASK;
             total_size += padded_size;
         }
     }
@@ -233,12 +232,11 @@ type* LayerBackPropagationCuda::link_workspace(type* ptr)
     {
         const Index size = view_cuda->size();
 
-        if (size > 0)
-        {
-            view_cuda->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
+        if (size == 0) continue;
+
+        view_cuda->data = ptr;
+        const Index padded_size = (size + ALIGNMENT - 1) & MASK;
+        ptr += padded_size;
     }
 
     return ptr;
@@ -642,22 +640,24 @@ float* Layer::link_parameters_device(float* ptr)
     constexpr Index ALIGNMENT = 16;
     constexpr Index MASK = ~(ALIGNMENT - 1);
 
-    vector<TensorView*> cpu_views = get_parameter_views();
+    const vector<TensorView*> cpu_views = get_parameter_views();
+
     vector<TensorViewCuda*> cuda_views = get_parameter_views_device();
 
     for (size_t i = 0; i < cpu_views.size(); ++i)
     {
-        TensorView* cpu_view = cpu_views[i];
-        TensorViewCuda* cuda_view = cuda_views[i];
+        const TensorView* cpu_view = cpu_views[i];
 
         const Index size = cpu_view->size();
 
-        if (size > 0)
-        {
-            cuda_view->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
+        if (size == 0)
+            continue;
+
+        TensorViewCuda* cuda_view = cuda_views[i];
+
+        cuda_view->data = ptr;
+        const Index padded_size = (size + ALIGNMENT - 1) & MASK;
+        ptr += padded_size;
     }
 
     return ptr;
@@ -665,10 +665,16 @@ float* Layer::link_parameters_device(float* ptr)
 
 #endif
 
-TensorView LayerForwardPropagation::get_outputs() const { return outputs; }
-std::vector<TensorView *> LayerForwardPropagation::get_tensor_views() {
+TensorView LayerForwardPropagation::get_outputs() const
+{
+    return outputs;
+}
+
+vector<TensorView *> LayerForwardPropagation::get_tensor_views()
+{
     return vector<TensorView *>();
 }
+
 } // namespace opennn
 
 // namespace opennn

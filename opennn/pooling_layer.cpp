@@ -645,10 +645,6 @@ void PoolingForwardPropagationCuda::initialize()
     const Index output_height = pooling_layer->get_output_height();
     const Index output_width = pooling_layer->get_output_width();
 
-    pooling_mode = (pooling_layer->get_pooling_method() == "MaxPooling")
-                       ? CUDNN_POOLING_MAX
-                       : CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
-
     // Inputs
 
     cudnnCreateTensorDescriptor(&input_tensor_descriptor);
@@ -699,7 +695,6 @@ void PoolingForwardPropagationCuda::free()
     outputs.data = nullptr;
 
     cudnnDestroyTensorDescriptor(input_tensor_descriptor);
-    cudnnDestroyTensorDescriptor(outputs.descriptor);
 }
 
 
@@ -733,8 +728,8 @@ void PoolingBackPropagationCuda::print() const
     const Index input_width = pooling_layer->get_input_width();
     const Index channels = pooling_layer->get_channels_number();
 
-    cout << "Pooling layer back propagation CUDA" << endl;
-    cout << "Input deltas:" << endl
+    cout << "Pooling layer back propagation CUDA" << endl
+         << "Input deltas:" << endl
          << matrix_4d_from_device(input_deltas[0].data, batch_size, input_height, input_width, channels) << endl;
 }
 

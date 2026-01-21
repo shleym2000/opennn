@@ -1659,19 +1659,22 @@ void BackPropagationCuda::print() const
 void BackPropagationCuda::free()
 {
     cudaFree(error_device);
-    cudaFree(errors);
-    cudaFree(output_deltas);
-    cudaFree(workspace);
-    //cudaFree(predictions);
-    //cudaFree(matches);
-    //cudaFree(mask);
-
     error_device = nullptr;
+
+    cudaFree(errors);
     errors = nullptr;
+
+    cudaFree(output_deltas);
     output_deltas = nullptr;
+
+    cudaFree(workspace);
     workspace = nullptr;
+
+    //cudaFree(predictions);
     //predictions = nullptr;
+    //cudaFree(matches);
     //matches = nullptr;
+    //cudaFree(mask);
     //mask = nullptr;
 
     cudnnDestroyReduceTensorDescriptor(reduce_tensor_descriptor);

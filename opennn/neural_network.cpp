@@ -85,11 +85,8 @@ void NeuralNetwork::compile()
 
 #ifdef OPENNN_CUDA
 
-    if (parameters_device)
-    {
-        cudaFree(parameters_device);
-        parameters_device = nullptr;
-    }
+    cudaFree(parameters_device);
+    parameters_device = nullptr;
 
     CHECK_CUDA(cudaMalloc(&parameters_device, total_parameters_size * sizeof(float)));
     cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
@@ -1573,6 +1570,8 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1584,27 +1583,21 @@ void NeuralNetwork::allocate_parameters_device()
 
     for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->allocate_parameters_device();
+*/
 }
 
 
 void NeuralNetwork::free_parameters_device()
 {
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->free_parameters_device();
+    cudaFree(parameters_device);
+    parameters_device = nullptr;
 }
 
 
 void NeuralNetwork::copy_parameters_device()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1616,11 +1609,14 @@ void NeuralNetwork::copy_parameters_device()
 
     for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_device();
+*/
 }
 
 
 void NeuralNetwork::copy_parameters_host()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1632,6 +1628,7 @@ void NeuralNetwork::copy_parameters_host()
 
     for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_host();
+*/
 }
 
 
