@@ -124,16 +124,17 @@ void shuffle_vector(vector<T>& vec)
     shuffle(vec.begin(), vec.end(), get_generator());
 }
 
+template void shuffle_vector<Index>(vector<Index>&);
+template void shuffle_vector<size_t>(vector<size_t>&);
+
 
 template<typename T>
 void shuffle_tensor(Tensor<T, 1>& vec)
 {
-    shuffle(vec.begin(), vec.end(), get_generator());
+    std::shuffle(vec.data(), vec.data() + vec.size(), get_generator());
 }
 
-
-template void shuffle_vector<Index>(vector<Index>&);
-template void shuffle_vector<size_t>(vector<size_t>&);
+template void shuffle_tensor<bool>(Tensor<bool, 1>&);
 
 
 Index get_random_element(const vector<Index> &values)

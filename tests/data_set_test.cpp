@@ -133,7 +133,7 @@ TEST(Dataset, FilterData_MixedFiltering) {
     // Test
     {
         Dataset dataset(2, { 1 }, { 1 });
-        Eigen::Tensor2 data(2, 2);
+        Tensor2 data(2, 2);
         data.setValues({ { type(1), type(2) }, { type(3), type(4) } });
         dataset.set_data(data);
 

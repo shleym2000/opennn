@@ -30,10 +30,10 @@ TEST(NormalizedSquaredErrorTest, GeneralConstructor)
 
 TEST(NormalizedSquaredErrorTest, BackPropagate)
 {
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index targets_number = get_random_index(1, 10);
-    const Index neurons_number = get_random_index(1, 10);
+    const Index samples_number = random_integer(2, 10);
+    const Index inputs_number = random_integer(1, 10);
+    const Index targets_number = random_integer(1, 10);
+    const Index neurons_number = random_integer(1, 10);
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random();
@@ -56,10 +56,10 @@ TEST(NormalizedSquaredErrorTest, BackPropagate)
 TEST(NormalizedSquaredErrorTest, BackPropagateLM)
 {
 
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index outputs_number = get_random_index(1, 10);
-    const Index neurons_number = get_random_index(1, 10);
+    const Index samples_number = random_integer(2, 10);
+    const Index inputs_number = random_integer(1, 10);
+    const Index outputs_number = random_integer(1, 10);
+    const Index neurons_number = random_integer(1, 10);
     bool is_training = true;
 
     Dataset dataset(samples_number, {inputs_number}, {outputs_number});

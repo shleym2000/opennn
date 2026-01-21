@@ -52,7 +52,7 @@ TEST(BoundingTest, ForwardPropagate)
     bounding_layer.forward_propagate(input_views, forward_propagation, false);
 
     const TensorMap2 outputs =
-        tensor_map<2>(forward_propagation->get_output_view());
+        tensor_map<2>(forward_propagation->get_outputs());
 
     EXPECT_EQ(outputs.dimension(0), rows_number);
     EXPECT_EQ(outputs.dimension(1), columns_number);

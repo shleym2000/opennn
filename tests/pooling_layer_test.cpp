@@ -164,7 +164,7 @@ TEST_P(PoolingLayerTest, ForwardPropagate)
 
     pooling_layer.forward_propagate({ input_view }, forward_propagation, false);
 
-    TensorView output_pair = forward_propagation->get_output_view();
+    TensorView output_pair = forward_propagation->get_outputs();
 
     EXPECT_EQ(output_pair.dims[0], batch_size);
     EXPECT_EQ(output_pair.dims[1], parameters.expected_output.dimension(1));
@@ -221,11 +221,11 @@ TEST_P(PoolingLayerTest, BackPropagate) {
 
     pooling_layer.forward_propagate({ input_view }, forward_propagation, true);
 
-    TensorView output_pair = forward_propagation->get_output_view();
+    TensorView output_pair = forward_propagation->get_outputs();
 
     pooling_layer.back_propagate({ input_view }, { output_pair }, forward_propagation, back_propagation);
 
-    vector<TensorView> input_derivatives_pair = back_propagation.get()->get_input_derivative_views();
+    vector<TensorView> input_derivatives_pair = back_propagation.get()->get_input_deltas();
 
     EXPECT_EQ(input_derivatives_pair[0].dims[0], batch_size);
     EXPECT_EQ(input_derivatives_pair[0].dims[1], parameters.input_data.dimension(1));
