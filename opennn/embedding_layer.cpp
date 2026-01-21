@@ -109,8 +109,12 @@ void Embedding::set_parameters_random()
 
     TensorMap2 weights_map = tensor_map<2>(weights);
 
+    const type scale = 0.05;
+
     weights_map.setRandom();
-    weights_map.chip(0, 0).setZero(); // First row is padding
+    weights_map.device(*device) = weights_map * scale;
+
+    weights_map.chip(0, 0).setZero();
 }
 
 
@@ -118,12 +122,17 @@ void Embedding::set_parameters_glorot()
 {
     if(weights.size() == 0) return;
 
-    // @todo
+    const Index vocabulary_size = weights.dims[0];
+    const Index embedding_dimension = weights.dims[1];
+
+    const type limit = sqrt(type(6.0) / (vocabulary_size + embedding_dimension));
 
     TensorMap2 weights_map = tensor_map<2>(weights);
 
     weights_map.setRandom();
-    weights_map.chip(0, 0).setZero(); // First row is padding
+    weights_map.device(*device) = weights_map * limit;
+
+    weights_map.chip(0, 0).setZero();
 }
 
 

@@ -427,13 +427,9 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
     square_gradient_exponential_decay.device(*device)
         = square_gradient_exponential_decay * beta_2 + gradient.square() * (type(1) - beta_2);
 
-    // @todo can we avoid these two tensors?
-
-    const Tensor1 corrected_gradient_exponential_decay = gradient_exponential_decay / bias_correction_1;
-    const Tensor1 corrected_square_gradient_exponential_decay = square_gradient_exponential_decay / bias_correction_2;
-
     parameters.device(*device)
-        -= learning_rate * corrected_gradient_exponential_decay / (corrected_square_gradient_exponential_decay.sqrt() + numeric_limits<type>::epsilon());
+        -= learning_rate * (gradient_exponential_decay / bias_correction_1) /
+           ((square_gradient_exponential_decay / bias_correction_2).sqrt() + numeric_limits<type>::epsilon());
 }
 
 
