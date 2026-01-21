@@ -297,8 +297,6 @@ TrainingResults StochasticGradientDescent::train()
                                        training_forward_propagation,
                                        training_back_propagation);
 
-            loss_index->add_regularization_to_deltas(training_back_propagation);
-
             results.training_error_history(epoch) = training_back_propagation.error();
 
             training_error += training_back_propagation.error();
