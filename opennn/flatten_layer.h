@@ -208,13 +208,11 @@ public:
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
     {
-        FlattenBackPropagationCuda<Rank>* flatten_layer_back_propagation_cuda =
-            static_cast<FlattenBackPropagationCuda<Rank>*>(back_propagation_cuda.get());
+        const Index batch_size = back_propagation_cuda->batch_size;
 
-        const Index batch_size = flatten_layer_back_propagation_cuda->batch_size;
+        type* input_deltas = back_propagation_cuda->input_deltas[0].data;
+
         const Index outputs_number = get_outputs_number();
-
-        type* input_deltas = flatten_layer_back_propagation_cuda->input_deltas[0].data;
 
         reorganize_deltas_cuda(deltas_device[0].data, input_deltas, batch_size, outputs_number);
     }

@@ -278,7 +278,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
     cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;
-    cudnnFilterDescriptor_t weight_deltas_tensor_descriptor = nullptr;
+    cudnnFilterDescriptor_t weight_deltas_filter_descriptor = nullptr;
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 

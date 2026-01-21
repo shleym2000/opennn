@@ -453,17 +453,29 @@ void Layer::softmax(TensorMap2 y) const
     const Index rows_number = y.dimension(0);
     const Index columns_number = y.dimension(1);
 
-    y.device(*device) = y - y.maximum(array_1(1))
-                                            .eval()
-                                            .reshape(array_2(rows_number, 1))
-                                            .broadcast(array_2(1, columns_number));
+    #pragma omp parallel for
+    for(Index i = 0; i < rows_number; i++)
+    {
+        type max_value = -numeric_limits<type>::infinity();
+        for(Index j = 0; j < columns_number; j++)
+            if(y(i, j) > max_value)
+                max_value = y(i, j);
 
-    y.device(*device) = y.exp();
+        type sum = 0.0;
+        for(Index j = 0; j < columns_number; j++)
+        {
+            y(i, j) = exp(y(i, j) - max_value);
+            sum += y(i, j);
+        }
 
-    y.device(*device) = y / y.sum(array<Index, 1>({1}))
-                                            .eval()
-                                            .reshape(array_2(rows_number, 1))
-                                            .broadcast(array_2(1, columns_number));
+        if(sum > 0.0)
+        {
+            const type inv_sum = type(1.0) / sum;
+
+            for (Index j = 0; j < columns_number; j++)
+                y(i, j) *= inv_sum;
+        }
+    }
 }
 
 
@@ -473,38 +485,73 @@ void Layer::softmax(TensorMap3 y) const
     const Index columns_number = y.dimension(1);
     const Index channels = y.dimension(2);
 
-    y.device(*device) = y - y.maximum(array<Index, 1>({2}))
-                                            .eval()
-                                            .reshape(array<Index, 3>({rows_number, columns_number, 1}))
-                                            .broadcast(array<Index, 3>({1, 1, channels}));
+    #pragma omp parallel for collapse(2)
+    for(Index i = 0; i < rows_number; i++)
+    {
+        for(Index j = 0; j < columns_number; j++)
+        {
+            type max_value = -numeric_limits<type>::infinity();
 
-    y.device(*device) = y.exp();
+            for(Index k = 0; k < channels; k++)
+                if(y(i, j, k) > max_value)
+                    max_value = y(i, j, k);
 
-    y.device(*device) = y / y.sum(array<Index, 1>({2}))
-                                            .eval()
-                                            .reshape(array<Index, 3>({rows_number, columns_number, 1}))
-                                            .broadcast(array<Index, 3>({1, 1, channels}));
+            type sum = 0.0;
+            for(Index k = 0; k < channels; k++)
+            {
+                y(i, j, k) = exp(y(i, j, k) - max_value);
+                sum += y(i, j, k);
+            }
+
+            if(sum > 0.0)
+            {
+                const type inv_sum = type(1.0) / sum;
+
+                for(Index k = 0; k < channels; k++)
+                    y(i, j, k) *= inv_sum;
+            }
+        }
+    }
 }
 
 
 void Layer::softmax(TensorMap4 y) const
 {
-    const Index rows_number    = y.dimension(0);
+    const Index rows_number = y.dimension(0);
     const Index columns_number = y.dimension(1);
-    const Index channels       = y.dimension(2);
-    const Index blocks_number  = y.dimension(3);
+    const Index channels = y.dimension(2);
+    const Index blocks_number = y.dimension(3);
 
-    y.device(*device) =
-        y - y.maximum(array_1(3)).eval()
-                .reshape(array_4(rows_number, columns_number, channels, 1))
-                .broadcast(array_4(1, 1, 1, blocks_number));
+    #pragma omp parallel for collapse(3)
+    for(Index i = 0; i < rows_number; i++)
+    {
+        for(Index j = 0; j < columns_number; j++)
+        {
+            for(Index k = 0; k < channels; k++)
+            {
+                type max_value = -std::numeric_limits<type>::infinity();
 
-    y.device(*device) = y.exp();
+                for(Index l = 0; l < blocks_number; l++)
+                    if(y(i, j, k, l) > max_value)
+                        max_value = y(i, j, k, l);
 
-    y.device(*device) =
-        y / y.sum(array_1(3)).eval()
-                .reshape(array_4(rows_number, columns_number, channels, 1))
-                .broadcast(array_4(1, 1, 1, blocks_number));
+                type sum = 0.0;
+                for(Index l = 0; l < blocks_number; l++)
+                {
+                    y(i, j, k, l) = exp(y(i, j, k, l) - max_value);
+                    sum += y(i, j, k, l);
+                }
+
+                if(sum > 0.0)
+                {
+                    const type inv_sum = type(1.0) / sum;
+
+                    for(Index l = 0; l < blocks_number; l++)
+                        y(i, j, k, l) *= inv_sum;
+                }
+            }
+        }
+    }
 }
 
 
@@ -618,7 +665,11 @@ float* Layer::link_parameters_device(float* ptr)
 
 #endif
 
+TensorView LayerForwardPropagation::get_outputs() const { return outputs; }
+std::vector<TensorView *> LayerForwardPropagation::get_tensor_views() {
+    return vector<TensorView *>();
 }
+} // namespace opennn
 
 // namespace opennn
 // OpenNN: Open Neural Networks Library.

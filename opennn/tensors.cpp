@@ -619,13 +619,13 @@ TensorMap1 tensor_map(const Tensor2& tensor, const Index& index_1)
                                       tensor.dimension(0));
 }
 
-
+/*
 TensorMap1 tensor_map_(const TensorMap2& tensor, const Index& index_1)
 {
     return TensorMap1((type*)tensor.data() + tensor.dimension(0) * index_1,
                                       tensor.dimension(0));
 }
-
+*/
 
 TensorMap2 tensor_map(const Tensor3& tensor, const Index& index_2)
 {
