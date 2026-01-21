@@ -295,7 +295,6 @@ string LossIndex::get_name() const
 }
 
 
-// @todo parallelize
 type LossIndex::calculate_regularization(const Tensor1& parameters) const
 {
     if(regularization_method == "None")
@@ -304,13 +303,17 @@ type LossIndex::calculate_regularization(const Tensor1& parameters) const
     }
     else if(regularization_method == "L1")
     {
-        const Tensor<type, 0> norm = parameters.abs().sum();
+        Tensor<type, 0> norm;
 
-        return regularization_weight*norm(0);
+        norm.device(*device) = parameters.abs().sum();
+
+        return regularization_weight * norm(0);
     }
     else if(regularization_method == "L2")
     {
-        const Tensor<type, 0> squared_norm = parameters.square().sum();
+        Tensor<type, 0> squared_norm;
+
+        squared_norm.device(*device) = parameters.square().sum();
 
         return type(0.5) * regularization_weight * squared_norm(0);
     }

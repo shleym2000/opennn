@@ -207,7 +207,9 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
 
     void print() const override
     {
-        // @todo
+        cout << "Addition Forward Propagation:" << endl;
+        cout << "Outputs dimensions: " << outputs.dims << endl;
+        cout << "Outputs data:" << endl << outputs.data << endl;
     }
 };
 
@@ -235,7 +237,19 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
     void print() const override
     {
+        cout << "Addition Back Propagation:" << endl;
 
+        if(input_deltas.size() >= 1)
+        {
+            cout << "Input 1 Deltas dimensions: " << input_deltas[0].dims << endl;
+            cout << input_deltas[0].data << endl;
+        }
+
+        if(input_deltas.size() >= 2)
+        {
+            cout << "Input 2 Deltas dimensions: " << input_deltas[1].dims << endl;
+            cout << input_deltas[1].data << endl;
+        }
     }
 
 };

@@ -1329,20 +1329,34 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
 void NeuralNetworkBackPropagation::compile()
 {
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
     Index total_workspace_size = 0;
 
-    for (const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            total_workspace_size += layer_backpropagation->get_workspace_size();
+    for(const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
+    {
+        if(layer_backpropagation)
+        {
+            Index raw_size = layer_backpropagation->get_workspace_size();
 
-    if (total_workspace_size == 0) return;
+            if (raw_size > 0)
+            {
+                Index padded_size = (raw_size + ALIGNMENT - 1) & MASK;
+                total_workspace_size += padded_size;
+            }
+        }
+    }
+
+    if(total_workspace_size == 0)
+        return;
 
     workspace.resize(total_workspace_size);
     workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for (unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
+    for(unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             current_ptr = layer_backpropagation->link_workspace(current_ptr);
 }

@@ -7,6 +7,7 @@
 //   artelnics@artelnics.com
 
 #include "dataset.h"
+#include "image_dataset.h"
 #include "time_series_dataset.h"
 #include "statistics.h"
 #include "scaling.h"
@@ -3376,23 +3377,6 @@ void Dataset::set_data_binary_classification()
 #pragma omp parallel for
     for (Index i = 0; i < samples_number; i++)
         data(i, variables_number - 1) = type(random_bool());
-}
-
-
-void Dataset::set_data_ascending() //@todo only for testing, delete after
-{
-    const vector<Index> input_indices = get_variable_indices("Input");
-
-    const Index samples_number = get_samples_number();
-
-    type new_value = 1;
-
-    for (Index i = 0; i < samples_number; ++i)
-        for (Index index : input_indices)
-        {
-            data(i, index) = new_value;
-            new_value++;
-        }
 }
 
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "../opennn/neural_network.h"
-#include "../opennn/scaling_layer_2d.h"
+#include "../opennn/scaling_layer.h"
 #include "../opennn/statistics.h"
 
 using namespace opennn;
@@ -53,7 +53,7 @@ TEST(Scaling2dTest, ForwardPropagate)
 
     scaling_layer_2d.forward_propagate({ input_pairs }, forward_propagation, is_training);
 
-    TensorView output_pair = forward_propagation->get_output_view();
+    TensorView output_pair = forward_propagation->get_outputs();
 
     outputs = tensor_map<2>(output_pair);
 
@@ -86,7 +86,7 @@ TEST(Scaling2dTest, ForwardPropagate)
                                           forward_propagation,
                                           is_training);
 
-    output_pair = forward_propagation->get_output_view();
+    output_pair = forward_propagation->get_outputs();
 
     outputs = tensor_map<2>(output_pair);
 
@@ -125,7 +125,7 @@ TEST(Scaling2dTest, ForwardPropagate)
                                          forward_propagation,
                                          is_training);
 
-    output_pair = forward_propagation->get_output_view();
+    output_pair = forward_propagation->get_outputs();
 
     outputs = tensor_map<2>(output_pair);
 
@@ -165,7 +165,7 @@ TEST(Scaling2dTest, ForwardPropagate)
                                          forward_propagation,
                                          is_training);
 
-    output_pair = forward_propagation->get_output_view();
+    output_pair = forward_propagation->get_outputs();
 
     outputs = tensor_map<2>(output_pair);
 
@@ -200,7 +200,7 @@ TEST(Scaling2dTest, ForwardPropagate)
                                          forward_propagation,
                                          is_training); 
 
-    output_pair = forward_propagation->get_output_view();
+    output_pair = forward_propagation->get_outputs();
 
     outputs = tensor_map<2>(output_pair);
 
@@ -240,7 +240,7 @@ TEST(Scaling2dTest, ForwardPropagate)
                                        forward_propagation,
                                        is_training);
 
-    output_pair = forward_propagation->get_output_view();
+    output_pair = forward_propagation->get_outputs();
 
     outputs = tensor_map<2>(output_pair);
 

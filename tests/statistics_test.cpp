@@ -1,8 +1,8 @@
 #include "pch.h"
 
 #include "../opennn/statistics.h"
-#include "../opennn/tensors.h"
 #include "../opennn/strings_utilities.h"
+#include "../opennn/random_utilities.h"
 
 using namespace opennn;
 
@@ -1035,7 +1035,7 @@ TEST(StatisticsTest, MaximalIndices)
 TEST(StatisticsTest, BoxPlot)
 {
     
-    const Index size = get_random_index(1, 10);
+    const Index size = random_integer(1, 10);
 
     Tensor1 vector(size);
 

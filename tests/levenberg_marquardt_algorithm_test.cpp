@@ -27,9 +27,9 @@ TEST(LevenbergMarquardtAlgorithmTest, GeneralConstructor)
 TEST(LevenbergMarquardtAlgorithmTest, Train)
 {
 
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index outputs_number = get_random_index(1, 10);
+    const Index samples_number = random_integer(2, 10);
+    const Index inputs_number = random_integer(1, 10);
+    const Index outputs_number = random_integer(1, 10);
 
     Dataset dataset(1, { 1 }, { 1 });
     //dataset.set_data_constant(type(1));
@@ -42,7 +42,7 @@ TEST(LevenbergMarquardtAlgorithmTest, Train)
 
     NeuralNetwork neural_network;
 
-    neural_network.add_layer(make_unique<Dense>(dimensions{ 1 },
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 1 },
         dimensions{ 1 },
         "Linear"));
 

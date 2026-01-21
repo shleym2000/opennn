@@ -39,17 +39,17 @@ TEST(MeanSquaredErrorTest, GeneralConstructor)
 
 TEST(MeanSquaredErrorTest, BackPropagateDense2d)
 {
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index targets_number = get_random_index(1, 10);
-    const Index neurons_number = get_random_index(1, 10);
+    const Index samples_number = random_integer(2, 10);
+    const Index inputs_number = random_integer(1, 10);
+    const Index targets_number = random_integer(1, 10);
+    const Index neurons_number = random_integer(1, 10);
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random(); 
     dataset.set_sample_roles("Training"); 
 
     NeuralNetwork neural_network; 
-    neural_network.add_layer(make_unique<Dense>(dimensions{ inputs_number }, dimensions{ dataset.get_target_dimensions()}));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ inputs_number }, dimensions{ dataset.get_target_dimensions()}));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -65,10 +65,10 @@ TEST(MeanSquaredErrorTest, BackPropagateDense2d)
 
 TEST(MeanSquaredErrorTest, BackPropagateRecurrent)
 {
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index targets_number = get_random_index(3, 10);
-    const Index time_steps = get_random_index(1, 10);
+    const Index samples_number = random_integer(2, 10);
+    const Index inputs_number = random_integer(1, 10);
+    const Index targets_number = random_integer(3, 10);
+    const Index time_steps = random_integer(1, 10);
 
     Dataset dataset(samples_number, { time_steps, inputs_number }, { targets_number });
     dataset.set_data_random();
@@ -106,7 +106,7 @@ TEST(MeanSquaredErrorTest, BackPropagateConvolutional)
     const dimensions flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_dimensions();
     neural_network.add_layer(make_unique<Flatten<4>>(dimensions{ flatten_layer_input_dimensions }));
     const dimensions dense_layer_input_dimensions = neural_network.get_layer(1).get()->get_output_dimensions();
-    neural_network.add_layer(make_unique<Dense>(dimensions{ dense_layer_input_dimensions }, dimensions{ dataset.get_target_dimensions() }));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ dense_layer_input_dimensions }, dimensions{ dataset.get_target_dimensions() }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -140,7 +140,7 @@ TEST(MeanSquaredErrorTest, BackPropagatePooling)
     const dimensions pool_output_dimensions = neural_network.get_layer(1)->get_output_dimensions();
     neural_network.add_layer(make_unique<Flatten<4>>(pool_output_dimensions));
     const dimensions flatten_output_dimensions = neural_network.get_layer(2)->get_output_dimensions();
-    neural_network.add_layer(make_unique<Dense>(flatten_output_dimensions, dataset.get_target_dimensions()));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(flatten_output_dimensions, dataset.get_target_dimensions()));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -156,12 +156,12 @@ TEST(MeanSquaredErrorTest, BackPropagatePooling)
 
 TEST(MeanSquaredErrorTest, BackPropagateEmbedding)
 {
-    const Index samples_number = get_random_index(5, 10); 
-    const Index inputs_number = get_random_index(10, 20); 
-    const Index targets_number = get_random_index(3, 10);
+    const Index samples_number = random_integer(5, 10); 
+    const Index inputs_number = random_integer(10, 20); 
+    const Index targets_number = random_integer(3, 10);
 
     const Index embeding_dim = inputs_number;
-    const Index sequence_length = get_random_index(1, 10);
+    const Index sequence_length = random_integer(1, 10);
     const Index flattened_size = sequence_length * embeding_dim;
 
     Dataset dataset(samples_number, { sequence_length }, { targets_number });
@@ -173,7 +173,7 @@ TEST(MeanSquaredErrorTest, BackPropagateEmbedding)
     neural_network.add_layer(make_unique<Embedding>(dimensions{ inputs_number, sequence_length }, embeding_dim));
     const dimensions flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_dimensions();
     neural_network.add_layer(make_unique<Flatten<3>>(dimensions{ flatten_layer_input_dimensions }));
-    neural_network.add_layer(make_unique<Dense>(dimensions{ flattened_size }, dimensions{ targets_number }));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ flattened_size }, dimensions{ targets_number }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -189,10 +189,10 @@ TEST(MeanSquaredErrorTest, BackPropagateEmbedding)
 
 TEST(MeanSquaredErrorTest, BackPropagateMultiheadAttention)
 {
-    const Index batch_size = get_random_index(1, 10);
-    const Index sequence_length = get_random_index(3, 10);
-    const Index heads_number = get_random_index(1, 10);
-    const Index head_dimension = get_random_index(1, 10);
+    const Index batch_size = random_integer(1, 10);
+    const Index sequence_length = random_integer(3, 10);
+    const Index heads_number = random_integer(1, 10);
+    const Index head_dimension = random_integer(1, 10);
     const Index embedding_dimension = heads_number * head_dimension;
 
     const dimensions sample_input_dimensions = { sequence_length, embedding_dimension };
@@ -219,10 +219,10 @@ TEST(MeanSquaredErrorTest, BackPropagateMultiheadAttention)
 
 TEST(MeanSquaredErrorTest, BackPropagateLm)
 {
-    const Index samples_number = get_random_index(2, 10);
-    const Index inputs_number = get_random_index(1, 10);
-    const Index targets_number = get_random_index(1, 10);
-    const Index neurons_number = get_random_index(1, 10);
+    const Index samples_number = random_integer(2, 10);
+    const Index inputs_number = random_integer(1, 10);
+    const Index targets_number = random_integer(1, 10);
+    const Index neurons_number = random_integer(1, 10);
 
     Dataset dataset(samples_number, { inputs_number }, { targets_number });
     dataset.set_data_random();

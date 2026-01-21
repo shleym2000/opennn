@@ -20,9 +20,9 @@ TEST(MultiHeadAttention, DefaultConstructorSelfAttention)
 
 TEST(MultiHeadAttention, GeneralConstructorSelfAttention)
 {
-    const Index sequence_length = get_random_index(1, 10);
-    const Index heads_number = get_random_index(1, 10);
-    const Index head_dimension = get_random_index(1, 10);
+    const Index sequence_length = random_integer(1, 10);
+    const Index heads_number = random_integer(1, 10);
+    const Index head_dimension = random_integer(1, 10);
     const Index embedding_dimension = heads_number * head_dimension;
 
     MultiHeadAttention multihead_attention_layer({sequence_length, embedding_dimension}, heads_number);
@@ -36,10 +36,10 @@ TEST(MultiHeadAttention, GeneralConstructorSelfAttention)
 
 TEST(MultiHeadAttention, ForwardPropagateSelfAttention)
 {
-    const Index batch_size = get_random_index(1, 10);
-    const Index sequence_length = get_random_index(1, 10);
-    const Index heads_number = get_random_index(1, 10);
-    const Index head_dimension = get_random_index(1, 10);
+    const Index batch_size = random_integer(1, 10);
+    const Index sequence_length = random_integer(1, 10);
+    const Index heads_number = random_integer(1, 10);
+    const Index head_dimension = random_integer(1, 10);
     const Index embedding_dimension = heads_number * head_dimension;
 
     NeuralNetwork neural_network;

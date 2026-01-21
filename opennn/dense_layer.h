@@ -231,8 +231,6 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_dropout_rate() > 0)
         {
-            random_device rd;
-            dropout_seed = rd();
             cudnnCreateDropoutDescriptor(&dropout_descriptor);
             cudnnDropoutGetStatesSize(dense_layer->get_cudnn_handle(), &dropout_states_size);
             CHECK_CUDA(cudaMalloc(&dropout_states, dropout_states_size));
@@ -1094,27 +1092,25 @@ public:
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();
 
+        const Index batch_size = fp_cuda->batch_size;
+
+        TensorViewCuda& outputs = fp_cuda->outputs;
+
+        //type* outputs = fp_cuda->outputs.data;
+        //const cudnnTensorDescriptor_t output_tensor_descriptor = fp_cuda->outputs.descriptor;
+
         // Forward propagation
 
         auto* dense_layer_forward_propagation_cuda = static_cast<DenseForwardPropagationCuda<Rank>*>(fp_cuda.get());
 
-        const Index batch_size = dense_layer_forward_propagation_cuda->batch_size;
-
         type* combinations = dense_layer_forward_propagation_cuda->combinations;
-        type* outputs = dense_layer_forward_propagation_cuda->outputs.data;
 
-        const cudnnTensorDescriptor_t output_tensor_descriptor = dense_layer_forward_propagation_cuda->outputs.descriptor;
         const cudnnTensorDescriptor_t output_softmax_tensor_descriptor = dense_layer_forward_propagation_cuda->output_softmax_tensor_descriptor;
 
-<<<<<<< HEAD
-        const cudnnTensorDescriptor_t biases_add_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_add_tensor_descriptor;
-        const cudnnTensorDescriptor_t biases_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_tensor_descriptor;
-=======
         const cudnnTensorDescriptor_t& biases_add_tensor_descriptor = dense_layer_forward_propagation_cuda->biases_add_tensor_descriptor;
         const cudnnTensorDescriptor_t& biases_tensor_descriptor = biases_device.descriptor;
->>>>>>> 5b185e6bd24f06bd2b49023bb43c75c1aef6a5d2
 
-        type* outputs_buffer = use_combinations ? combinations : outputs;
+        type* outputs_buffer = use_combinations ? combinations : outputs.data;
 
         // Combinations
 
@@ -1154,9 +1150,9 @@ public:
                     cudnn_handle,
                     CUDNN_BATCHNORM_PER_ACTIVATION,
                     &alpha, &beta_add,
-                    output_tensor_descriptor,
+                    outputs.descriptor,
                     outputs_buffer,
-                    output_tensor_descriptor,
+                    outputs.descriptor,
                     outputs_buffer,
                     bn_tensor_descriptor,
                     bn_scale_device.data,
@@ -1177,9 +1173,9 @@ public:
                     cudnn_handle,
                     CUDNN_BATCHNORM_PER_ACTIVATION,
                     &alpha, &beta_add,
-                    output_tensor_descriptor,
+                    outputs.descriptor,
                     outputs_buffer,
-                    output_tensor_descriptor,
+                    outputs.descriptor,
                     outputs_buffer,
                     bn_tensor_descriptor,
                     bn_scale_device.data,
@@ -1196,7 +1192,7 @@ public:
         // Activations
 
         if (activation_function == "Linear")
-            cudaMemcpy(outputs, combinations, batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice);
+            cudaMemcpy(outputs.data, combinations, batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice);
         else if (activation_function == "Softmax")
             cudnnSoftmaxForward(cudnn_handle,
                                 CUDNN_SOFTMAX_ACCURATE,
@@ -1206,16 +1202,16 @@ public:
                                 combinations,
                                 &beta,
                                 output_softmax_tensor_descriptor,
-                                outputs);
+                                outputs.data);
         else
             cudnnActivationForward(cudnn_handle,
                                    activation_descriptor,
                                    &alpha,
-                                   output_tensor_descriptor,
+                                   outputs.descriptor,
                                    outputs_buffer,
                                    &beta,
-                                   output_tensor_descriptor,
-                                   outputs);
+                                   outputs.descriptor,
+                                   outputs.data);
 
         // Droput
 
@@ -1223,10 +1219,10 @@ public:
         {
             status = cudnnDropoutForward(cudnn_handle,
                                          dense_layer_forward_propagation_cuda->dropout_descriptor,
-                                         output_tensor_descriptor,
-                                         outputs,
-                                         output_tensor_descriptor,
-                                         outputs,
+                                         outputs.descriptor,
+                                         outputs.data,
+                                         outputs.descriptor,
+                                         outputs.data,
                                          dense_layer_forward_propagation_cuda->dropout_reserve_space,
                                          dense_layer_forward_propagation_cuda->dropout_reserve_space_size);
 
@@ -1248,13 +1244,14 @@ public:
 
         // Forward propagation
 
+        const Index batch_size = fp_cuda->batch_size;
+
         const TensorViewCuda& outputs_view = fp_cuda->outputs;
 
         auto* dense_layer_forward_propagation_cuda = static_cast<DenseForwardPropagationCuda<Rank>*>(fp_cuda.get());
 
         Dense* dense_layer = static_cast<Dense*>(dense_layer_forward_propagation_cuda->layer);
 
-        const Index batch_size = dense_layer_forward_propagation_cuda->batch_size;
 
         type* combinations = dense_layer_forward_propagation_cuda->combinations;
 
