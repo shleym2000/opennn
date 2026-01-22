@@ -319,7 +319,7 @@ void EmbeddingBackPropagation::initialize()
 }
 
 
-vector<TensorView*> EmbeddingBackPropagation::get_tensor_views()
+vector<TensorView*> EmbeddingBackPropagation::get_workspace_views()
 {
     return {&weight_deltas};
 }

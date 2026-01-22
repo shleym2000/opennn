@@ -434,9 +434,9 @@ TensorView LayerForwardPropagation::get_outputs() const
     return outputs;
 }
 
-vector<TensorView*> LayerForwardPropagation::get_tensor_views()
+vector<TensorView*> LayerForwardPropagation::get_workspace_views()
 {
-    return vector<TensorView*>();
+    return {&outputs};
 }
 
 } // namespace opennn

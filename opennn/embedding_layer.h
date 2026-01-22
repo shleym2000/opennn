@@ -114,7 +114,7 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     void initialize() override;
 
-    vector<TensorView*> get_tensor_views() override;
+    vector<TensorView*> get_workspace_views() override;
 
     void print() const override;
 

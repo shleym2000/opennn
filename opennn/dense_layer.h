@@ -47,7 +47,7 @@ struct DenseForwardPropagation final : LayerForwardPropagation
         }
     }
 
-    vector<TensorView*> get_tensor_views() override
+    vector<TensorView*> get_workspace_views() override
     {
         vector<TensorView*> views = { &outputs, &activation_derivatives };
 
@@ -60,7 +60,6 @@ struct DenseForwardPropagation final : LayerForwardPropagation
 
         return views;
     }
-
 
     void print() const override
     {
@@ -113,7 +112,7 @@ struct DenseBackPropagation final : LayerBackPropagation
     }
 
 
-    vector<TensorView*> get_tensor_views() override
+    vector<TensorView*> get_workspace_views() override
     {
         vector<TensorView*> views = {&bias_deltas, &weight_deltas, &input_deltas[0]};
 
@@ -174,7 +173,7 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         return { input_deltas };
     }
 
-    vector<TensorView*> get_tensor_views() override
+    vector<TensorView*> get_workspace_views() override
     {
         return { &input_deltas, &squared_errors_Jacobian };
     }

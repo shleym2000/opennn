@@ -1324,7 +1324,7 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
     for(const unique_ptr<LayerBackPropagation>& layer_bp : layers)
         if (layer_bp)
-            workspace_size += get_size(layer_bp->get_tensor_views());
+            workspace_size += get_size(layer_bp->get_workspace_views());
 
     if (workspace_size == 0) return;
 
@@ -1335,7 +1335,7 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
     for(unique_ptr<LayerBackPropagation>& layer_bp : layers)
         if (layer_bp)
-            current_ptr = link(current_ptr, layer_bp->get_tensor_views());
+            current_ptr = link(current_ptr, layer_bp->get_workspace_views());
 }
 
 
@@ -1399,7 +1399,7 @@ void ForwardPropagation::set(const Index& new_samples_number, NeuralNetwork* new
 
     for(const unique_ptr<LayerForwardPropagation>& layer_fp : layers)
         if (layer_fp)
-            workspace_size += get_size(layer_fp->get_tensor_views());
+            workspace_size += get_size(layer_fp->get_workspace_views());
 
     if (workspace_size == 0) return;
 
@@ -1410,7 +1410,7 @@ void ForwardPropagation::set(const Index& new_samples_number, NeuralNetwork* new
 
     for(unique_ptr<LayerForwardPropagation>& layer_fp : layers)
         if (layer_fp)
-            current_ptr = link(current_ptr, layer_fp->get_tensor_views());
+            current_ptr = link(current_ptr, layer_fp->get_workspace_views());
 }
 
 
@@ -1509,7 +1509,7 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
 
     for(const unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
         if(layer_bp_lm)
-            workspace_size += get_size(layer_bp_lm->get_tensor_views());
+            workspace_size += get_size(layer_bp_lm->get_workspace_views());
 
     if(workspace_size == 0)
         return;
@@ -1521,7 +1521,7 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
 
     for(unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
         if(layer_bp_lm)
-            current_ptr = link(current_ptr, layer_bp_lm->get_tensor_views());
+            current_ptr = link(current_ptr, layer_bp_lm->get_workspace_views());
 }
 
 
@@ -1694,7 +1694,7 @@ void ForwardPropagationCuda::set(const Index& new_samples_number, NeuralNetwork*
 
     for(const unique_ptr<LayerForwardPropagationCuda>& layer_fp : layers)
         if (layer_fp)
-            workspace_size += get_size(layer_fp->get_tensor_views());
+            workspace_size += get_size(layer_fp->get_workspace_views());
 
     if (workspace_size == 0) return;
 
@@ -1814,7 +1814,7 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
 
     for(const unique_ptr<LayerBackPropagationCuda>& layer_bp : layers)
         if (layer_bp)
-            workspace_size += get_size(layer_bp->get_tensor_views());
+            workspace_size += get_size(layer_bp->get_workspace_views());
 
     if (workspace_size == 0) return;
 

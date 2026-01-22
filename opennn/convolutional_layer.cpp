@@ -754,7 +754,7 @@ void ConvolutionalBackPropagation::initialize()
 }
 
 
-vector<TensorView*> ConvolutionalBackPropagation::get_tensor_views()
+vector<TensorView*> ConvolutionalBackPropagation::get_workspace_views()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 

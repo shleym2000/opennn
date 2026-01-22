@@ -219,6 +219,7 @@ private:
     dimensions input_dimensions;
 };
 
+
 template<int Rank>
 struct FlattenForwardPropagation final : LayerForwardPropagation
 {
@@ -231,11 +232,6 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
         outputs.dims = {batch_size, output_dimensions[0]};
-    }
-
-    vector<TensorView*> get_tensor_views() override
-    {
-        return { &outputs };
     }
 
     void print() const override
@@ -253,7 +249,7 @@ struct FlattenBackPropagation final : LayerBackPropagation
         set(new_batch_size, new_layer);
     }
 
-    void initialize()
+    void initialize() override
     {
         const Flatten<Rank>* layer_ptr = static_cast<const Flatten<Rank>*>(layer);
         const dimensions input_dimensions = layer_ptr->get_input_dimensions();
@@ -263,11 +259,6 @@ struct FlattenBackPropagation final : LayerBackPropagation
 
         input_deltas.resize(1);
         input_deltas[0].dims = full_dims;
-    }
-
-    vector<TensorView*> get_tensor_views() override
-    {
-        return { &input_deltas[0] };
     }
 
     void print() const override

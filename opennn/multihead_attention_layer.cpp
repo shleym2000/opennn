@@ -563,7 +563,7 @@ MultiHeadAttentionBackPropagation::MultiHeadAttentionBackPropagation(const Index
 }
 
 
-vector<TensorView*> MultiHeadAttentionBackPropagation::get_tensor_views()
+vector<TensorView*> MultiHeadAttentionBackPropagation::get_workspace_views()
 {
     return {&query_weight_deltas, &query_bias_deltas,
             &key_weight_deltas, &key_bias_deltas,

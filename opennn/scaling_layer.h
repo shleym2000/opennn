@@ -470,11 +470,6 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         outputs.dims = {batch_size, outputs_number};
     }
 
-    vector<TensorView*> get_tensor_views() override
-    {
-        return { &outputs };
-    }
-
     void print() const override
     {
         cout << "Outputs:" << endl

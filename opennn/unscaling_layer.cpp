@@ -320,12 +320,6 @@ void UnscalingForwardPropagation::initialize()
 }
 
 
-vector<TensorView*> UnscalingForwardPropagation::get_tensor_views()
-{
-    return { &outputs };
-}
-
-
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl

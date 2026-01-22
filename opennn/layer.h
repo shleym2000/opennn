@@ -385,7 +385,7 @@ struct LayerForwardPropagation
     void set(const Index& = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_tensor_views();
+    virtual vector<TensorView*> get_workspace_views();
 
     TensorView get_outputs() const;
 
@@ -409,9 +409,14 @@ struct LayerBackPropagation
     void set(const Index& = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_tensor_views()
+    virtual vector<TensorView*> get_workspace_views()
     {
-        return vector<TensorView*>();
+        vector<TensorView*> input_deltas_ptrs(input_deltas.size());
+
+        for (auto& tv : input_deltas)
+            input_deltas_ptrs.push_back(&tv);
+
+        return input_deltas_ptrs;
     }
 
     vector<TensorView> get_input_deltas() const
@@ -442,7 +447,7 @@ struct LayerBackPropagationLM
 
     virtual void set(const Index& = 0, Layer* = nullptr) = 0;
 
-    virtual vector<TensorView*> get_tensor_views() = 0;
+    virtual vector<TensorView*> get_workspace_views() = 0;
 
     virtual void print() const {}
 
