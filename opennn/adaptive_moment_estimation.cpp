@@ -567,7 +567,6 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
 
     training_forward_propagation_cuda.compile();
-    neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
 
     // Loss Index

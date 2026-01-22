@@ -368,6 +368,8 @@ void Convolutional::set(const dimensions& new_input_dimensions,
     const Index kernel_channels = new_kernel_dimensions[2];
     const Index kernels_number = new_kernel_dimensions[3];
 
+    const Index channels_number = get_input_channels();
+
     set_row_stride(new_stride_dimensions[0]);
     set_column_stride(new_stride_dimensions[1]);
 
@@ -397,6 +399,14 @@ void Convolutional::set(const dimensions& new_input_dimensions,
     set_label(new_label);
 
 #ifdef OPENNN_CUDA
+
+    cudnnCreateTensorDescriptor(&biases_tensor_descriptor);
+
+    cudnnSetTensor4dDescriptor(biases_tensor_descriptor,
+                               CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+                               1, kernels_number, 1, 1);
+
+    biases_device.descriptor = biases_tensor_descriptor;
 
     if (batch_normalization)
     {
@@ -809,9 +819,9 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
     const cudnnTensorDescriptor_t input_tensor_descriptor = convolutional_layer_forward_propagation_cuda->input_tensor_descriptor;
     const cudnnTensorDescriptor_t output_tensor_descriptor = convolutional_layer_forward_propagation_cuda->outputs.descriptor;
-    const cudnnTensorDescriptor_t biases_tensor_descriptor = convolutional_layer_forward_propagation_cuda->biases_tensor_descriptor;
 
     const cudnnFilterDescriptor_t kernel_descriptor = convolutional_layer_forward_propagation_cuda->kernel_descriptor;
+
     const cudnnConvolutionDescriptor_t convolution_descriptor = convolutional_layer_forward_propagation_cuda->convolution_descriptor;
     const cudnnConvolutionFwdAlgo_t convolution_algorithm = convolutional_layer_forward_propagation_cuda->convolution_algorithm;
 
@@ -1110,14 +1120,6 @@ void Convolutional::allocate_parameters_device()
         //CUDA_MALLOC_AND_REPORT(bn_running_mean_device, K * sizeof(float));
         //CUDA_MALLOC_AND_REPORT(bn_running_variance_device, K * sizeof(float));
     }
-
-    CHECK_CUDA(cudaMalloc(&biases_device.data, K * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(biases_device, K * sizeof(float));
-
-    const size_t weights_size = static_cast<size_t>(R) * S * C * K;
-
-    CHECK_CUDA(cudaMalloc(&weights_device.data, weights_size * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(weights_device, weights_size * sizeof(float));
 }
 
 
@@ -1260,6 +1262,14 @@ void ConvolutionalForwardPropagationCuda::initialize()
         //CUDA_MALLOC_AND_REPORT(reordered_inputs_device, batch_size * input_height * input_width * channels * sizeof(float));
     }
 
+    // Kernels
+
+    cudnnCreateFilterDescriptor(&kernel_descriptor);
+
+    cudnnSetFilter4dDescriptor(kernel_descriptor,
+                               CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW,
+                               kernels_number, channels, kernel_height, kernel_width );
+
     // Inputs
 
     cudnnCreateTensorDescriptor(&input_tensor_descriptor);
@@ -1268,22 +1278,6 @@ void ConvolutionalForwardPropagationCuda::initialize()
                                CUDNN_TENSOR_NCHW,
                                CUDNN_DATA_FLOAT,
                                batch_size, channels, input_height, input_width );
-
-    // Biases
-
-    cudnnCreateTensorDescriptor(&biases_tensor_descriptor);
-
-    cudnnSetTensor4dDescriptor(biases_tensor_descriptor,
-                               CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
-                               1, kernels_number, 1, 1);
-
-    // Kernels
-
-    cudnnCreateFilterDescriptor(&kernel_descriptor);
-
-    cudnnSetFilter4dDescriptor(kernel_descriptor,
-                               CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW,
-                               kernels_number, channels, kernel_height, kernel_width );
 
     // Convolution
 
@@ -1366,7 +1360,6 @@ void ConvolutionalForwardPropagationCuda::free()
 
     cudnnDestroyTensorDescriptor(input_tensor_descriptor);
     cudnnDestroyTensorDescriptor(outputs.descriptor);
-    cudnnDestroyTensorDescriptor(biases_tensor_descriptor);
     cudnnDestroyFilterDescriptor(kernel_descriptor);
     cudnnDestroyConvolutionDescriptor(convolution_descriptor);
 

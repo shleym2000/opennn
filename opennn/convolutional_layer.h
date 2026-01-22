@@ -135,6 +135,8 @@ protected:
     TensorViewCuda biases_device;
     TensorViewCuda weights_device;
 
+    cudnnTensorDescriptor_t biases_tensor_descriptor = nullptr;
+
     // Batch Normalization
 
     TensorViewCuda bn_scale_device;
@@ -235,10 +237,10 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
     TensorViewCuda convolutions;
 
     cudnnTensorDescriptor_t input_tensor_descriptor = nullptr;
-    cudnnTensorDescriptor_t biases_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t inputs_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;
+
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
     cudnnConvolutionFwdAlgo_t convolution_algorithm;

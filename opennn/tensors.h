@@ -412,10 +412,33 @@ struct TensorViewCuda
 
     Index size() const
     {
-        throw runtime_error ("Not implemented yet");
-        // use descriptor to return size.
+        if (descriptor == nullptr)
+            throw runtime_error("TensorViewCuda::size(): Descriptor is nullptr. Cannot calculate size.");
 
-        return 0;
+        constexpr int REQUESTED_DIMS = CUDNN_DIM_MAX;
+
+        cudnnDataType_t dataType;
+        int nbDims = 0;
+        int dimA[REQUESTED_DIMS];
+        int strideA[REQUESTED_DIMS];
+
+        cudnnStatus_t status = cudnnGetTensorNdDescriptor(
+            descriptor,
+            REQUESTED_DIMS,
+            &dataType,
+            &nbDims,
+            dimA,
+            strideA
+        );
+
+        if (status != CUDNN_STATUS_SUCCESS)
+            throw runtime_error(string("TensorViewCuda::size(): Failed to get descriptor info. Error: ") + cudnnGetErrorString(status));
+
+        Index total_elements = 1;
+        for (int i = 0; i < nbDims; ++i)
+            total_elements *= static_cast<Index>(dimA[i]);
+
+        return total_elements;
     }
 };
 

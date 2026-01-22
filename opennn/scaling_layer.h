@@ -499,9 +499,11 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         const Scaling<Rank>* scaling_layer = static_cast<Scaling<Rank>*>(layer);
 
         const Index outputs_number = scaling_layer->get_outputs_number();
-        const size_t size = batch_size * outputs_number;
 
-        CHECK_CUDA(cudaMalloc(&outputs.data, size * sizeof(float)));
+        cudnnCreateTensorDescriptor(&outputs.descriptor);
+        cudnnSetTensor4dDescriptor(outputs.descriptor,
+                                   CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+                                   static_cast<int>(batch_size), static_cast<int>(outputs_number), 1, 1);
 
         const Tensor1 minimums_host = scaling_layer->get_minimums();
         const Tensor1 maximums_host = scaling_layer->get_maximums();
@@ -571,6 +573,12 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         maximums_device = nullptr;
         means_device = nullptr;
         standard_deviations_device = nullptr;
+
+        if (outputs.descriptor)
+        {
+            cudnnDestroyTensorDescriptor(outputs.descriptor);
+            outputs.descriptor = nullptr;
+        }
     }
 
     int* scalers_device = nullptr;

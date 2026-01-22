@@ -1413,6 +1413,8 @@ void ForwardPropagation::compile()
     for (const unique_ptr<LayerForwardPropagation>& layer_prop : layers)
         total_workspace_size += layer_prop->get_workspace_size();
 
+    //cout << "total_workspace_size: " << total_workspace_size << endl;
+
     if (total_workspace_size == 0) return;
 
     workspace.resize(total_workspace_size);
@@ -1713,6 +1715,8 @@ void ForwardPropagationCuda::compile()
 
     for (const unique_ptr<LayerForwardPropagationCuda>& layer_prop : layers)
         total_workspace_size += layer_prop->get_workspace_size();
+
+    cout << "total_workspace_size: " << total_workspace_size << endl;
 
     if (total_workspace_size == 0) return;
 
