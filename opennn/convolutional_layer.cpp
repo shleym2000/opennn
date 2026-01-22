@@ -748,8 +748,8 @@ void ConvolutionalBackPropagation::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        bn_scale_deltas.dims = {kernels_number};
-        bn_offset_deltas.dims = {kernels_number};
+        scales_deltas.dims = {kernels_number};
+        offsets_deltas.dims = {kernels_number};
     }
 }
 
@@ -762,8 +762,8 @@ vector<TensorView*> ConvolutionalBackPropagation::get_tensor_views()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        gradient_views.push_back(&bn_scale_deltas);
-        gradient_views.push_back(&bn_offset_deltas);
+        gradient_views.push_back(&scales_deltas);
+        gradient_views.push_back(&offsets_deltas);
     }
 
     return gradient_views;
@@ -1026,8 +1026,8 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
             deltas_device[0].data,
             scales_device.descriptor,
             scales_device.data,
-            convolutional_layer_back_propagation_cuda->scale_deltas_device.data,
-            convolutional_layer_back_propagation_cuda->offset_deltas_device.data,
+            convolutional_layer_back_propagation_cuda->scales_deltas_device.data,
+            convolutional_layer_back_propagation_cuda->offsets_deltas_device.data,
             CUDNN_BN_MIN_EPSILON,
             convolutional_layer_forward_propagation_cuda->bn_saved_mean,
             convolutional_layer_forward_propagation_cuda->bn_saved_inv_variance
@@ -1446,10 +1446,10 @@ void ConvolutionalBackPropagationCuda::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        CHECK_CUDA(cudaMalloc(&scale_deltas_device.data, kernels_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(scale_deltas_device, kernels_number * sizeof(float));
-        CHECK_CUDA(cudaMalloc(&offset_deltas_device.data, kernels_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(offset_deltas_device, kernels_number * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&scales_deltas_device.data, kernels_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(scales_deltas_device, kernels_number * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&offsets_deltas_device.data, kernels_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(offsets_deltas_device, kernels_number * sizeof(float));
     }
 }
 
@@ -1466,8 +1466,8 @@ vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_tensor_views_devic
 
     if (convolutional_layer->get_batch_normalization())
     {
-        delta_views_device.push_back({ scale_deltas_device.data, scale_deltas_device.descriptor });
-        delta_views_device.push_back({ offset_deltas_device.data, offset_deltas_device.descriptor });
+        delta_views_device.push_back({ scales_deltas_device.data, scales_deltas_device.descriptor });
+        delta_views_device.push_back({ offsets_deltas_device.data, offsets_deltas_device.descriptor });
     }
     */
     vector<TensorViewCuda*> views;
@@ -1513,11 +1513,11 @@ void ConvolutionalBackPropagationCuda::free()
     cudnnDestroyFilterDescriptor(weight_deltas_filter_descriptor);
     cudnnDestroyConvolutionDescriptor(convolution_descriptor);
 
-    cudaFree(scale_deltas_device.data);
-    cudaFree(offset_deltas_device.data);
+    cudaFree(scales_deltas_device.data);
+    cudaFree(offsets_deltas_device.data);
 
-    scale_deltas_device.data = nullptr;
-    offset_deltas_device.data = nullptr;
+    scales_deltas_device.data = nullptr;
+    offsets_deltas_device.data = nullptr;
 }
 
 REGISTER(LayerForwardPropagationCuda, ConvolutionalForwardPropagationCuda, "Convolutional")

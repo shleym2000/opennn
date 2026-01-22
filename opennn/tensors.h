@@ -441,45 +441,13 @@ struct TensorViewCuda
             descriptor = nullptr;
         }
     }
-/*
-    TensorViewCuda(const TensorViewCuda&) = delete;
 
-    TensorViewCuda& operator=(const TensorViewCuda&) = delete;
-
-    TensorViewCuda(TensorViewCuda&& other) noexcept
-        : data(other.data), descriptor(other.descriptor)
-    {
-        other.data = nullptr;
-        other.descriptor = nullptr;
-    }
-
-    TensorViewCuda& operator=(TensorViewCuda&& other) noexcept
-    {
-        if (this != &other)
-        {
-            if (descriptor) cudnnDestroyTensorDescriptor(descriptor);
-
-            data = other.data;
-            descriptor = other.descriptor;
-
-            other.data = nullptr;
-            other.descriptor = nullptr;
-        }
-        return *this;
-    }
-*/
     void set_descriptor(const dimensions& dims)
     {
-        // 1. Create the descriptor if it doesn't exist yet
         if (descriptor == nullptr)
-        {
             if (cudnnCreateTensorDescriptor(&descriptor) != CUDNN_STATUS_SUCCESS)
                 throw runtime_error("TensorViewCuda: Failed to create descriptor.");
-        }
 
-        // 2. Map variable dimensions to 4D (N, C, H, W)
-        // Defaults are 1. This handles cases like 2D Dense tensors [Batch, Size]
-        // becoming [Batch, Size, 1, 1].
         int n = 1, c = 1, h = 1, w = 1;
 
         if (dims.size() > 0) n = static_cast<int>(dims[0]);
@@ -487,8 +455,6 @@ struct TensorViewCuda
         if (dims.size() > 2) h = static_cast<int>(dims[2]);
         if (dims.size() > 3) w = static_cast<int>(dims[3]);
 
-        // 3. Configure the descriptor
-        // Assuming Standard Layout (NCHW) and Float type based on your codebase
         cudnnStatus_t status = cudnnSetTensor4dDescriptor(
             descriptor,
             CUDNN_TENSOR_NCHW,

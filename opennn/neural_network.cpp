@@ -1326,36 +1326,22 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
 void NeuralNetworkBackPropagation::compile()
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
     Index total_workspace_size = 0;
 
-    for(const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
-    {
-        if(layer_backpropagation)
-        {
-            Index raw_size = layer_backpropagation->get_workspace_size();
+    for (const unique_ptr<LayerBackPropagation>& layer_bp : layers)
+        if (layer_bp)
+            total_workspace_size += layer_bp->get_workspace_size();
 
-            if (raw_size > 0)
-            {
-                Index padded_size = (raw_size + ALIGNMENT - 1) & MASK;
-                total_workspace_size += padded_size;
-            }
-        }
-    }
-
-    if(total_workspace_size == 0)
-        return;
+    if (total_workspace_size == 0) return;
 
     workspace.resize(total_workspace_size);
     workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for(unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            current_ptr = layer_backpropagation->link_workspace(current_ptr);
+    for (unique_ptr<LayerBackPropagation>& layer_bp : layers)
+        if (layer_bp)
+            current_ptr = layer_bp->link_workspace(current_ptr);
 }
 
 
@@ -1421,10 +1407,9 @@ void ForwardPropagation::compile()
 {
     Index total_workspace_size = 0;
 
-    for (const unique_ptr<LayerForwardPropagation>& layer_prop : layers)
-        total_workspace_size += layer_prop->get_workspace_size();
-
-    //cout << "total_workspace_size: " << total_workspace_size << endl;
+    for (const unique_ptr<LayerForwardPropagation>& layer_fp : layers)
+        if (layer_fp)
+            total_workspace_size += layer_fp->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
@@ -1433,8 +1418,9 @@ void ForwardPropagation::compile()
 
     type* current_ptr = workspace.data();
 
-    for (unique_ptr<LayerForwardPropagation>& layer_prop : layers)
-        current_ptr = layer_prop->link_workspace(current_ptr);
+    for (unique_ptr<LayerForwardPropagation>& layer_fp : layers)
+        if (layer_fp)
+            current_ptr = layer_fp->link_workspace(current_ptr);
 }
 
 
@@ -1724,10 +1710,9 @@ void ForwardPropagationCuda::compile()
 {
     Index total_workspace_size = 0;
 
-    for (const unique_ptr<LayerForwardPropagationCuda>& layer_prop : layers)
-        total_workspace_size += layer_prop->get_workspace_size();
-
-    cout << "total_workspace_size: " << total_workspace_size << endl;
+    for (const unique_ptr<LayerForwardPropagationCuda>& layer_fp : layers)
+        if (layer_fp)
+            total_workspace_size += layer_fp->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
@@ -1736,8 +1721,9 @@ void ForwardPropagationCuda::compile()
 
     type* current_ptr = workspace;
 
-    for (unique_ptr<LayerForwardPropagationCuda>& layer_prop : layers)
-        current_ptr = layer_prop->link_workspace(current_ptr);
+    for (unique_ptr<LayerForwardPropagationCuda>& layer_fp : layers)
+        if (layer_fp)
+            current_ptr = layer_fp->link_workspace(current_ptr);
 }
 
 
@@ -1848,9 +1834,9 @@ void NeuralNetworkBackPropagationCuda::compile()
 {
     Index total_workspace_size = 0;
 
-    for (const unique_ptr<LayerBackPropagationCuda>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            total_workspace_size += layer_backpropagation->get_workspace_size();
+    for (const unique_ptr<LayerBackPropagationCuda>& layer_bp : layers)
+        if (layer_bp)
+            total_workspace_size += layer_bp->get_workspace_size();
 
     if (total_workspace_size == 0) return;
 
@@ -1859,9 +1845,9 @@ void NeuralNetworkBackPropagationCuda::compile()
 
     type* current_ptr = workspace;
 
-    for (unique_ptr<LayerBackPropagationCuda>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            current_ptr = layer_backpropagation->link_workspace(current_ptr);
+    for (unique_ptr<LayerBackPropagationCuda>& layer_bp : layers)
+        if (layer_bp)
+            current_ptr = layer_bp->link_workspace(current_ptr);
 }
 
 

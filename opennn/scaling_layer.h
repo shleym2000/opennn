@@ -500,10 +500,7 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
 
         const Index outputs_number = scaling_layer->get_outputs_number();
 
-        cudnnCreateTensorDescriptor(&outputs.descriptor);
-        cudnnSetTensor4dDescriptor(outputs.descriptor,
-                                   CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
-                                   static_cast<int>(batch_size), static_cast<int>(outputs_number), 1, 1);
+        outputs.set_descriptor({static_cast<int>(batch_size), static_cast<int>(outputs_number), 1, 1});
 
         const Tensor1 minimums_host = scaling_layer->get_minimums();
         const Tensor1 maximums_host = scaling_layer->get_maximums();
@@ -560,7 +557,6 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        cudaFree(outputs.data);
         outputs.data = nullptr;
 
         cudaFree(scalers_device);

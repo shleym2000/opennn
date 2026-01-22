@@ -208,8 +208,8 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
     TensorView bias_deltas;
     TensorView weight_deltas;
 
-    TensorView bn_scale_deltas;
-    TensorView bn_offset_deltas;
+    TensorView scales_deltas;
+    TensorView offsets_deltas;
 
     Tensor4 rotated_weights;
 
@@ -281,8 +281,8 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
-    TensorViewCuda scale_deltas_device;
-    TensorViewCuda offset_deltas_device;
+    TensorViewCuda scales_deltas_device;
+    TensorViewCuda offsets_deltas_device;
 };
 
 #endif

@@ -791,9 +791,9 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     const float bias_correction_2 = 1.0f - powf(beta_2, static_cast<float>(iteration));
 
     constexpr type epsilon = numeric_limits<type>::epsilon();
-
-    assert(parameter_views.size() == delta_views.size());
 /*
+    assert(parameter_views.size() == delta_views.size());
+
     for (Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
     {
         float* params_d = parameter_views_device[parameter_index]->data;

@@ -11,8 +11,6 @@
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 
-#define EIGEN_MAX_ALIGN_BYTES 64
-
 #include <algorithm>
 #include <string>
 #include <cassert>
