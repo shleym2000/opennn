@@ -16,14 +16,14 @@ TEST(Transformer, DefaultConstructor)
 TEST(Transformer, GeneralConstructor)
 {
 
-    const Index input_length = get_random_index(1, 10);
-    const Index context_length = get_random_index(1, 10);
-    const Index input_dimensions = get_random_index(1, 10);
-    const Index context_dimension = get_random_index(1, 10);
-    const Index embedding_depth = get_random_index(1, 10);
-    const Index dense_depth = get_random_index(1, 10);
-    const Index heads_number = get_random_index(1, 10);
-    const Index layers_number = get_random_index(1, 10);
+    const Index input_length = random_integer(1, 10);
+    const Index context_length = random_integer(1, 10);
+    const Index input_dimensions = random_integer(1, 10);
+    const Index context_dimension = random_integer(1, 10);
+    const Index embedding_depth = random_integer(1, 10);
+    const Index dense_depth = random_integer(1, 10);
+    const Index heads_number = random_integer(1, 10);
+    const Index layers_number = random_integer(1, 10);
 /*
     Transformer transformer(input_length, 
                             context_length, 

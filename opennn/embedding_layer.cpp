@@ -109,8 +109,12 @@ void Embedding::set_parameters_random()
 
     TensorMap2 weights_map = tensor_map<2>(weights);
 
+    const type scale = 0.05;
+
     weights_map.setRandom();
-    weights_map.chip(0, 0).setZero(); // First row is padding
+    weights_map.device(*device) = weights_map * scale;
+
+    weights_map.chip(0, 0).setZero();
 }
 
 
@@ -118,12 +122,17 @@ void Embedding::set_parameters_glorot()
 {
     if(weights.size() == 0) return;
 
-    // @todo
+    const Index vocabulary_size = weights.dims[0];
+    const Index embedding_dimension = weights.dims[1];
+
+    const type limit = sqrt(type(6.0) / (vocabulary_size + embedding_dimension));
 
     TensorMap2 weights_map = tensor_map<2>(weights);
 
     weights_map.setRandom();
-    weights_map.chip(0, 0).setZero(); // First row is padding
+    weights_map.device(*device) = weights_map * limit;
+
+    weights_map.chip(0, 0).setZero();
 }
 
 
@@ -343,41 +352,6 @@ vector<TensorViewCuda*> Embedding::get_parameter_views_device()
 {
     throw runtime_error("Embedding::get_parameter_views_device is not yet implemented. Please check back in a future version.");
     return vector<TensorViewCuda*>();
-}
-
-
-void Embedding::allocate_parameters_device()
-{
-    const Index inputs_number = get_inputs_number();
-    const Index outputs_number = get_outputs_number();
-
-    CHECK_CUDA(cudaMalloc(&weights_device.data, inputs_number * outputs_number * sizeof(float)));
-}
-
-
-void Embedding::free_parameters_device()
-{
-    cudaFree(weights_device.data);
-
-    weights_device.data = nullptr;
-}
-
-
-void Embedding::copy_parameters_device()
-{
-    if (!weights_device.data)
-        cout << "Weights device is null" << endl;
-
-    CHECK_CUDA(cudaMemcpy(weights_device.data, weights.data, weights.size() * sizeof(type), cudaMemcpyHostToDevice));
-}
-
-
-void Embedding::copy_parameters_host()
-{
-    if (!weights_device.data)
-        cout << "Synaptic weights is null" << endl;
-
-    CHECK_CUDA(cudaMemcpy(weights.data, weights_device.data, weights.size() * sizeof(type), cudaMemcpyDeviceToHost));
 }
 
 

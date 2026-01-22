@@ -45,7 +45,7 @@ TEST_F(FlattenLayerTest, ForwardPropagate)
 
     flatten_layer->forward_propagate({ input_view }, forward_propagation, false);
 
-    const TensorView output_pair = forward_propagation->get_output_view();
+    const TensorView output_pair = forward_propagation->get_outputs();
     const dimensions& output_dims = output_pair.dims;
 
     ASSERT_EQ(output_dims.size(), 2) << "Flatten<4> should produce a 2D tensor (batch, features).";
@@ -76,7 +76,7 @@ TEST_F(FlattenLayerTest, BackPropagate)
     
     flatten_layer->back_propagate({ input_view }, { output_derivatives_view }, forward_propagation, back_propagation);
     
-    const vector<TensorView> input_derivative_views = back_propagation->get_input_derivative_views();
+    const vector<TensorView> input_derivative_views = back_propagation->get_input_deltas();
 
     ASSERT_EQ(input_derivative_views.size(), 1) << "Flatten layer should have one input derivative.";
 

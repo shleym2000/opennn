@@ -120,13 +120,11 @@ public:
 
     vector<TensorViewCuda*> get_parameter_views_device() override;
 
-    void copy_parameters_host();
-
     void copy_parameters_device();
 
     void allocate_parameters_device();
 
-    void free_parameters_device();
+    void free();
 
     bool use_convolutions = true;
 
@@ -139,12 +137,11 @@ protected:
 
     // Batch Normalization
 
-    TensorViewCuda bn_scale_device;
-    TensorViewCuda bn_offset_device;
+    TensorViewCuda scales_device;
+    TensorViewCuda offsets_device;
+
     float* bn_running_mean_device = nullptr;
     float* bn_running_variance_device = nullptr;
-
-    cudnnTensorDescriptor_t bn_tensor_descriptor = nullptr;
 
     // Activations
 
@@ -234,6 +231,7 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
     int output_batch_size, output_channels, output_height, output_width = 0;
 
     float* reordered_inputs_device;
+
     TensorViewCuda convolutions;
 
     cudnnTensorDescriptor_t input_tensor_descriptor = nullptr;
@@ -250,7 +248,6 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
     bool is_first_layer = false;
 
-    // Batch Normalizarion
     float* bn_saved_mean = nullptr;
     float* bn_saved_inv_variance = nullptr;
 };
@@ -284,9 +281,8 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
-    // Batch Normalizarion
-    TensorViewCuda bn_scale_deltas_device;
-    TensorViewCuda bn_offset_deltas_device;
+    TensorViewCuda scale_deltas_device;
+    TensorViewCuda offset_deltas_device;
 };
 
 #endif

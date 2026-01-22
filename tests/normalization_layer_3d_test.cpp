@@ -19,8 +19,8 @@ TEST(Normalization3dTest, DefaultConstructor)
 
 TEST(Normalization3dTest, GeneralConstructor)
 {
-    const Index sequence_length = get_random_index(1,10);
-    const Index embedding_dimension = get_random_index(1,10);
+    const Index sequence_length = random_integer(1,10);
+    const Index embedding_dimension = random_integer(1,10);
 
     Normalization3d normalization_3d(dimensions({sequence_length, embedding_dimension}));
 
@@ -32,9 +32,9 @@ TEST(Normalization3dTest, GeneralConstructor)
 
 TEST(Normalization3dTest, ForwardPropagate)
 {
-    const Index batch_size = get_random_index(1,10);
-    const Index sequence_length = get_random_index(1,10);
-    const Index embedding_dimension = get_random_index(1,10);
+    const Index batch_size = random_integer(1,10);
+    const Index sequence_length = random_integer(1,10);
+    const Index embedding_dimension = random_integer(1,10);
 /*
     NeuralNetwork neural_network;
     neural_network.add_layer(make_unique<Normalization3d>(dimensions({sequence_length, embedding_dimension})));

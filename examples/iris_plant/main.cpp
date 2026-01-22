@@ -31,7 +31,7 @@ int main()
 
         // Neural network
 
-        const Index neurons_number = 6;
+        const Index neurons_number = 16;
 
         ClassificationNetwork classification_network({inputs_number}, {neurons_number}, {targets_number});
 
@@ -49,7 +49,19 @@ int main()
 
         // Deployment
 
+        Tensor<type, 2> input_tensor(1, 4);
+        input_tensor.setValues({{5.1, 3.5, 1.4, 0.2}});
 
+        Tensor<type, 2> output_tensor = classification_network.calculate_outputs<2, 2>(input_tensor);
+
+        Tensor<type, 1> single_output = output_tensor.chip(0, 0);
+
+        Index predicted_class = 0;
+        for (Index i = 1; i < single_output.size(); ++i)
+            if (single_output(i) > single_output(predicted_class))
+                predicted_class = i;
+
+        cout << "Predicted class: " << predicted_class << endl;
 
         cout << "Bye!" << endl;
 

@@ -8,24 +8,15 @@
 
 #include <iostream>
 #include <string>
-#include <time.h>
 
-#include "../../opennn/registry.h"
 #include "../../opennn/dataset.h"
 #include "../../opennn/standard_networks.h"
-#include "../../opennn/neural_network.h"
 #include "../../opennn/bounding_layer.h"
 #include "../../opennn/training_strategy.h"
 #include "../../opennn/testing_analysis.h"
 #include "../../opennn/model_selection.h"
 #include "../../opennn/testing_analysis.h"
-#include "../../opennn/model_expression.h"
 #include "../../opennn/optimization_algorithm.h"
-#include "../../opennn/normalized_squared_error.h"
-#include "../../opennn/mean_squared_error.h"
-#include "../../opennn/adaptive_moment_estimation.h"
-#include "../../opennn/quasi_newton_method.h"
-#include "../../opennn/levenberg_marquardt_algorithm.h"
 #include "../../opennn/stochastic_gradient_descent.h"
 
 using namespace opennn;
@@ -57,9 +48,17 @@ int main()
         // Training strategy
 
         TrainingStrategy training_strategy(&approximation_network, &dataset);
-        training_strategy.set_optimization_algorithm("QuasiNewtonMethod");
+        training_strategy.set_optimization_algorithm("StochasticGradientDescent");
+
+        StochasticGradientDescent* sgd = (StochasticGradientDescent*)training_strategy.get_optimization_algorithm();
+        sgd->set_batch_size(32);
+        sgd->set_initial_learning_rate(0.01);
+        sgd->set_momentum(0.9);
+        sgd->set_nesterov(true);
+        sgd->set_initial_decay(0.00001);
+
         training_strategy.get_loss_index()->set_regularization_method("L2");
-        training_strategy.get_loss_index()->set_regularization_weight(0.0001);
+        training_strategy.get_loss_index()->set_regularization_weight(regularization_weight);
 
         TrainingResults training_results = training_strategy.train();
 

@@ -85,11 +85,8 @@ void NeuralNetwork::compile()
 
 #ifdef OPENNN_CUDA
 
-    if (parameters_device)
-    {
-        cudaFree(parameters_device);
-        parameters_device = nullptr;
-    }
+    cudaFree(parameters_device);
+    parameters_device = nullptr;
 
     CHECK_CUDA(cudaMalloc(&parameters_device, total_parameters_size * sizeof(float)));
     cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
@@ -1329,20 +1326,34 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
 void NeuralNetworkBackPropagation::compile()
 {
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
     Index total_workspace_size = 0;
 
-    for (const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            total_workspace_size += layer_backpropagation->get_workspace_size();
+    for(const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
+    {
+        if(layer_backpropagation)
+        {
+            Index raw_size = layer_backpropagation->get_workspace_size();
 
-    if (total_workspace_size == 0) return;
+            if (raw_size > 0)
+            {
+                Index padded_size = (raw_size + ALIGNMENT - 1) & MASK;
+                total_workspace_size += padded_size;
+            }
+        }
+    }
+
+    if(total_workspace_size == 0)
+        return;
 
     workspace.resize(total_workspace_size);
     workspace.setZero();
 
     type* current_ptr = workspace.data();
 
-    for (unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
+    for(unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
         if (layer_backpropagation)
             current_ptr = layer_backpropagation->link_workspace(current_ptr);
 }
@@ -1561,6 +1572,8 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1572,27 +1585,21 @@ void NeuralNetwork::allocate_parameters_device()
 
     for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->allocate_parameters_device();
+*/
 }
 
 
 void NeuralNetwork::free_parameters_device()
 {
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->free_parameters_device();
+    cudaFree(parameters_device);
+    parameters_device = nullptr;
 }
 
 
 void NeuralNetwork::copy_parameters_device()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1604,11 +1611,14 @@ void NeuralNetwork::copy_parameters_device()
 
     for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_device();
+*/
 }
 
 
 void NeuralNetwork::copy_parameters_host()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1620,6 +1630,7 @@ void NeuralNetwork::copy_parameters_host()
 
     for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_host();
+*/
 }
 
 

@@ -3,7 +3,7 @@
 #include "../opennn/tensors.h"
 #include "../opennn/cross_entropy_error_3d.h"
 #include "../opennn/embedding_layer.h"
-#include "../opennn/dense_layer_3d.h"
+#include "../opennn/dense_layer.h"
 #include "../opennn/language_dataset.h"
 #include "gtest/gtest.h"
 
@@ -26,10 +26,10 @@ TEST(CrossEntropyError3DTest, DefaultConstructor)
 TEST(CrossEntropyError3DTest, BackPropagateZero)
 {
     /*
-    const Index samples_number = get_random_index(1, 10);
-    const Index vocabulary_size = get_random_index(2, 10);
-    const Index sequence_length = get_random_index(1, 10);
-    const Index embedding_dimension = get_random_index(1, 10);
+    const Index samples_number = random_integer(1, 10);
+    const Index vocabulary_size = random_integer(2, 10);
+    const Index sequence_length = random_integer(1, 10);
+    const Index embedding_dimension = random_integer(1, 10);
 
     const Index inputs_number = vocabulary_size * sequence_length;
     const Index depth = embedding_dimension;

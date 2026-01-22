@@ -358,13 +358,7 @@ public:
 
     type* link_parameters_device(type*);
 
-    virtual void copy_parameters_host() {}
-
-    virtual void copy_parameters_device() {}
-
-    virtual void allocate_parameters_device() {}
-
-    virtual void free_parameters_device() {}
+    virtual void free() {}
 
     virtual void print_parameters_cuda() {}
 
@@ -470,10 +464,11 @@ struct LayerBackPropagationLM
         {
             if (view && view->size() > 0)
             {
-                Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
+                const Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
                 total_size += padded_size;
             }
         }
+
         return total_size;
     }
 
@@ -487,10 +482,11 @@ struct LayerBackPropagationLM
             if (view && view->size() > 0)
             {
                 view->data = ptr;
-                Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
+                const Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
                 ptr += padded_size;
             }
         }
+
         return ptr;
     }
 
@@ -527,7 +523,9 @@ struct LayerForwardPropagationCuda
 
     virtual TensorViewCuda get_outputs_view_device()
     {
-        return outputs;
+        return TensorViewCuda();
+
+        //return outputs;
     }
 
     virtual void print() const {}
@@ -545,6 +543,7 @@ struct LayerForwardPropagationCuda
 struct LayerBackPropagationCuda
 {
     LayerBackPropagationCuda() {}
+
     virtual ~LayerBackPropagationCuda() {}
 
     void set(const Index& = 0, Layer* = nullptr);

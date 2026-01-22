@@ -2,11 +2,11 @@
 
 #include "../opennn/tensors.h"
 #include "../opennn/language_dataset.h"
+#include "../opennn/dense_layer.h"
 #include "../opennn/embedding_layer.h"
 #include "../opennn/flatten_layer.h"
-#include "../opennn/dense_layer.h"
 #include "../opennn/neural_network.h"
-#include "../opennn/mean_squared_error.h"
+#include "../opennn/random_utilities.h"
 
 using namespace opennn;
 
@@ -39,10 +39,10 @@ TEST(Embedding, GeneralConstructor)
 
 TEST(Embedding, ForwardPropagate)
 {
-    const Index samples_number = get_random_index(1, 10);
-    const Index vocabulary_size = get_random_index(1, 10);
-    const Index sequence_length = get_random_index(1, 10);
-    const Index embedding_dimension = get_random_index(1, 10);
+    const Index samples_number = random_integer(1, 10);
+    const Index vocabulary_size = random_integer(1, 10);
+    const Index sequence_length = random_integer(1, 10);
+    const Index embedding_dimension = random_integer(1, 10);
 
     NeuralNetwork neural_network;
     neural_network.add_layer(make_unique<Embedding>(dimensions{vocabulary_size, sequence_length}, embedding_dimension));
@@ -61,28 +61,28 @@ TEST(Embedding, ForwardPropagate)
 }
 
 
- TEST(EmbeddingForwardPropagationTest, GetOutputPairReturnsCorrectDataAndShape)
- {
-     const Index batch_size = 2;
-     const Index vocabulary_size = 15;
-     const Index sequence_length = 5;
-     const Index embedding_dimension = 6;
+TEST(EmbeddingForwardPropagationTest, GetOutputPairReturnsCorrectDataAndShape)
+{
+    const Index batch_size = 2;
+    const Index vocabulary_size = 15;
+    const Index sequence_length = 5;
+    const Index embedding_dimension = 6;
 
-     Embedding layer({sequence_length}, embedding_dimension, "test_embedding");
-     layer.set(vocabulary_size, sequence_length, embedding_dimension, "test_embedding");
+    Embedding layer({sequence_length}, embedding_dimension, "test_embedding");
+    layer.set(vocabulary_size, sequence_length, embedding_dimension, "test_embedding");
 
-     EmbeddingForwardPropagation forward(batch_size, &layer);
+    EmbeddingForwardPropagation forward(batch_size, &layer);
 
-     const TensorView output_view = forward.get_output_view();
+    const TensorView output_view = forward.get_outputs();
 
-     const TensorMap3 out = tensor_map<3>(output_view);
+    const TensorMap3 out = tensor_map<3>(output_view);
 
-     EXPECT_EQ(output_view.data, forward.outputs.data());
-     ASSERT_EQ(output_view.dims.size(), 3);
-     EXPECT_EQ(output_view.dims[0], batch_size);
-     EXPECT_EQ(output_view.dims[1], sequence_length);
-     EXPECT_EQ(output_view.dims[2], embedding_dimension);
- }
+    EXPECT_EQ(output_view.data, forward.outputs.data);
+    ASSERT_EQ(output_view.dims.size(), 3);
+    EXPECT_EQ(output_view.dims[0], batch_size);
+    EXPECT_EQ(output_view.dims[1], sequence_length);
+    EXPECT_EQ(output_view.dims[2], embedding_dimension);
+}
 
 
 TEST(Embedding, BackPropagate)
@@ -90,7 +90,7 @@ TEST(Embedding, BackPropagate)
     LanguageDataset language_dataset("../examples/amazon_reviews/data/amazon_cells_labelled.txt");
     language_dataset.set_sample_roles("Training");
 
-    const Index embedding_dimension = get_random_index(1,10);
+    const Index embedding_dimension = random_integer(1,10);
     const Index vocabulary_size = language_dataset.get_input_vocabulary_size();
     const Index sequence_length = language_dataset.get_maximum_input_sequence_length();
 
@@ -100,7 +100,7 @@ TEST(Embedding, BackPropagate)
 
     neural_network.add_layer(make_unique<Embedding>(input_dimensions, embedding_dimension));
     neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_dimensions()));
-    neural_network.add_layer(make_unique<Dense>(neural_network.get_output_dimensions(), language_dataset.get_target_dimensions(), "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<3>>(neural_network.get_output_dimensions(), language_dataset.get_target_dimensions(), "Logistic"));
 
     Tensor2 inputs  = language_dataset.get_data_variables("Input");
     const Index batch_size = inputs.dimension(0);
@@ -115,7 +115,7 @@ TEST(Embedding, BackPropagate)
 
     first_layer->forward_propagate({ input_view }, forward_propagation, false);
 
-    const TensorView embedding_output_view = forward_propagation->get_output_view();
+    const TensorView embedding_output_view = forward_propagation->get_outputs();
 
     ASSERT_EQ(embedding_output_view.dims.size(), 3);
     EXPECT_EQ(embedding_output_view.dims[0], batch_size); 

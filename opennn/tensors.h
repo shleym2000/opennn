@@ -400,6 +400,27 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
 
 #ifdef OPENNN_CUDA
 
+struct TensorCuda
+{
+    float* data = nullptr;
+    cudnnTensorDescriptor_t descriptor = nullptr;
+
+    TensorCuda() = default;
+
+    TensorCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
+        : data(new_data), descriptor(new_descriptor) {}
+
+    Index size() const
+    {
+        throw runtime_error ("Not implemented yet");
+        // use descriptor to return size.
+
+        return 0;
+    }
+};
+
+
+
 struct TensorViewCuda
 {
     float* data = nullptr;
@@ -409,6 +430,75 @@ struct TensorViewCuda
 
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
+
+    ~TensorViewCuda()
+    {
+        data = nullptr;
+
+        if (descriptor)
+        {
+            cudnnDestroyTensorDescriptor(descriptor);
+            descriptor = nullptr;
+        }
+    }
+/*
+    TensorViewCuda(const TensorViewCuda&) = delete;
+
+    TensorViewCuda& operator=(const TensorViewCuda&) = delete;
+
+    TensorViewCuda(TensorViewCuda&& other) noexcept
+        : data(other.data), descriptor(other.descriptor)
+    {
+        other.data = nullptr;
+        other.descriptor = nullptr;
+    }
+
+    TensorViewCuda& operator=(TensorViewCuda&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (descriptor) cudnnDestroyTensorDescriptor(descriptor);
+
+            data = other.data;
+            descriptor = other.descriptor;
+
+            other.data = nullptr;
+            other.descriptor = nullptr;
+        }
+        return *this;
+    }
+*/
+    void set_descriptor(const dimensions& dims)
+    {
+        // 1. Create the descriptor if it doesn't exist yet
+        if (descriptor == nullptr)
+        {
+            if (cudnnCreateTensorDescriptor(&descriptor) != CUDNN_STATUS_SUCCESS)
+                throw runtime_error("TensorViewCuda: Failed to create descriptor.");
+        }
+
+        // 2. Map variable dimensions to 4D (N, C, H, W)
+        // Defaults are 1. This handles cases like 2D Dense tensors [Batch, Size]
+        // becoming [Batch, Size, 1, 1].
+        int n = 1, c = 1, h = 1, w = 1;
+
+        if (dims.size() > 0) n = static_cast<int>(dims[0]);
+        if (dims.size() > 1) c = static_cast<int>(dims[1]);
+        if (dims.size() > 2) h = static_cast<int>(dims[2]);
+        if (dims.size() > 3) w = static_cast<int>(dims[3]);
+
+        // 3. Configure the descriptor
+        // Assuming Standard Layout (NCHW) and Float type based on your codebase
+        cudnnStatus_t status = cudnnSetTensor4dDescriptor(
+            descriptor,
+            CUDNN_TENSOR_NCHW,
+            CUDNN_DATA_FLOAT,
+            n, c, h, w
+            );
+
+        if (status != CUDNN_STATUS_SUCCESS)
+            throw runtime_error("TensorViewCuda: Failed to set 4D descriptor.");
+    }
 
     Index size() const
     {

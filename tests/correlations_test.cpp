@@ -8,7 +8,7 @@
 #include "../opennn/dataset.h"
 #include "../opennn/neural_network.h"
 #include "../opennn/training_strategy.h"
-#include "../opennn/scaling_layer_2d.h"
+#include "../opennn/scaling_layer.h"
 #include "../opennn/dense_layer.h"
 #include "../opennn/strings_utilities.h"
 

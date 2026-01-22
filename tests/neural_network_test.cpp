@@ -131,40 +131,38 @@ TEST(NeuralNetworkTest, ForwardPropagate)
                dataset.get_variable_indices("Input"),
                // dataset.get_variable_indices("Decoder"),
                dataset.get_variable_indices("Target"));
-    
-    // Test Logistic
 
     ApproximationNetwork neural_network_aproximation({inputs_number}, {neurons_number}, {outputs_number});
 
-    ForwardPropagation forward_propagation(dataset.get_samples_number(), &neural_network_aproximation);
+    ForwardPropagation forward_propagation(samples_number, &neural_network_aproximation);
+
+    forward_propagation.compile();
 
     neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
     DenseForwardPropagation<2>* dense_layer_forward_propagation
         = static_cast<DenseForwardPropagation<2>*>(forward_propagation.layers[1].get());
 
-    Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
+    TensorView dense_activations = dense_layer_forward_propagation->outputs;
 
-    EXPECT_EQ(dense_activations.dimension(0), 5);
+    EXPECT_EQ(dense_activations.dims[0], 5);
 
-    // Test Softmax
-    
     ClassificationNetwork neural_network_classification({inputs_number}, {neurons_number}, {outputs_number});
 
-    Dense* dense_layer =static_cast<Dense*>(neural_network_classification.get_first("Dense"));
+    opennn::Dense<2>* dense_layer = static_cast<opennn::Dense<2>*>(neural_network_classification.get_layer(1).get());
     dense_layer->set_activation_function("Softmax");
 
-    ForwardPropagation forward_propagation_0(dataset.get_samples_number(), &neural_network_classification);
+    ForwardPropagation forward_propagation_0(samples_number, &neural_network_classification);
+    forward_propagation_0.compile();
 
     neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
-/*
-    DenseForwardPropagation<2>* dense_layer_forward_propagation
-        = static_cast<DenseForwardPropagation<2>*>(forward_propagation_0.layers[2].get());
 
-    Tensor <type, 2> dense_activations = dense_layer_forward_propagation->outputs;
+    DenseForwardPropagation<2>* dense_layer_forward_propagation_0
+        = static_cast<DenseForwardPropagation<2>*>(forward_propagation_0.layers[1].get());
 
-    EXPECT_EQ(dense_activations.dimension(0), 5);
-*/
+    TensorView dense_activations_0 = dense_layer_forward_propagation_0->outputs;
+
+    EXPECT_EQ(dense_activations_0.dims[0], 5);
 }
 
 

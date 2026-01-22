@@ -308,10 +308,10 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        if (outputs.data) cudaFree(outputs.data);
+        cudaFree(outputs.data);
         outputs.data = nullptr;
 
-        if (reordered_inputs) cudaFree(reordered_inputs);
+        cudaFree(reordered_inputs);
         reordered_inputs = nullptr;
     }
 
@@ -337,7 +337,7 @@ struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
 
     void free() override
     {
-        if (input_deltas[0].data) cudaFree(input_deltas[0].data);
+        cudaFree(input_deltas[0].data);
         input_deltas[0].data = nullptr;
     }
 };

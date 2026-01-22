@@ -3380,23 +3380,6 @@ void Dataset::set_data_binary_classification()
 }
 
 
-void Dataset::set_data_ascending() //@todo only for testing, delete after
-{
-    const vector<Index> input_indices = get_variable_indices("Input");
-
-    const Index samples_number = get_samples_number();
-
-    type new_value = 1;
-
-    for (Index i = 0; i < samples_number; ++i)
-        for (Index index : input_indices)
-        {
-            data(i, index) = new_value;
-            new_value++;
-        }
-}
-
-
 Tensor<Index, 1> Dataset::filter_data(const Tensor1& minimums,
                                       const Tensor1& maximums)
 {
