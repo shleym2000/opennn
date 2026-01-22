@@ -227,16 +227,12 @@ TrainingResults StochasticGradientDescent::train()
     ForwardPropagation training_forward_propagation(training_batch_samples_number, neural_network);
     ForwardPropagation selection_forward_propagation(selection_batch_samples_number, neural_network);
 
-    training_forward_propagation.compile();
-
     // Loss index
 
     loss_index->set_normalization_coefficient();
 
     BackPropagation training_back_propagation(training_batch_samples_number, loss_index);
     BackPropagation selection_back_propagation(selection_batch_samples_number, loss_index);
-
-    training_back_propagation.neural_network.compile();
 
     //type training_loss = type(0);
     type training_error = type(0);

@@ -33,8 +33,6 @@ struct ForwardPropagation
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
-    void compile();
-
     TensorView get_last_trainable_layer_outputs_view() const;
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
@@ -65,8 +63,6 @@ struct ForwardPropagationCuda
     ~ForwardPropagationCuda() { free(); }
 
     void set(const Index & = 0, NeuralNetwork* = nullptr);
-
-    void compile();
 
     TensorViewCuda get_last_trainable_layer_outputs_view_device() const;
 
@@ -218,7 +214,6 @@ public:
         const Index batch_size = inputs.dimension(0);
 
         ForwardPropagation forward_propagation(batch_size, this);
-        forward_propagation.compile();
 
         dimensions input_dimensions;
         input_dimensions.reserve(input_rank);
@@ -342,8 +337,6 @@ struct NeuralNetworkBackPropagation
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
-    void compile();
-
     const vector<unique_ptr<LayerBackPropagation>>& get_layers() const;
 
     void print() const;
@@ -367,8 +360,6 @@ struct NeuralNetworkBackPropagationCuda
     NeuralNetworkBackPropagationCuda(const Index& = 0, NeuralNetwork* = nullptr);
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
-
-    void compile();
 
     const vector<unique_ptr<LayerBackPropagationCuda>>& get_layers() const;
 
@@ -396,8 +387,6 @@ struct NeuralNetworkBackPropagationLM
     }
 
     void set(const Index& = 0, NeuralNetwork* = nullptr);
-
-    void compile();
 
     const vector<unique_ptr<LayerBackPropagationLM>>& get_layers() const
     {

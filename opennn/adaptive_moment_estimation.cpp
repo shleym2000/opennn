@@ -177,8 +177,6 @@ TrainingResults AdaptiveMomentEstimation::train()
     ForwardPropagation training_forward_propagation(training_batch_samples_number, neural_network);
     unique_ptr<ForwardPropagation> selection_forward_propagation;
 
-    training_forward_propagation.compile();
-
     // Loss index
 
     loss_index->set_normalization_coefficient();
@@ -186,15 +184,11 @@ TrainingResults AdaptiveMomentEstimation::train()
     BackPropagation training_back_propagation(training_batch_samples_number, loss_index);
     unique_ptr<BackPropagation> selection_back_propagation;
 
-    training_back_propagation.neural_network.compile();
-
     if (has_selection)
     {
         selection_batch = make_unique<Batch>(selection_batch_samples_number, dataset);
         selection_forward_propagation = make_unique<ForwardPropagation>(selection_batch_samples_number, neural_network);
-        selection_forward_propagation->compile();
         selection_back_propagation = make_unique<BackPropagation>(selection_batch_samples_number, loss_index);
-        selection_back_propagation->neural_network.compile();
     }
 
     type training_error = type(0);
@@ -562,7 +556,6 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     ForwardPropagationCuda training_forward_propagation_cuda(training_batch_samples_number, neural_network);
     unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
 
-    training_forward_propagation_cuda.compile();
     neural_network->copy_parameters_device();
 
     // Loss Index
@@ -571,8 +564,6 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     BackPropagationCuda training_back_propagation_cuda(training_batch_samples_number, loss_index);
     unique_ptr<BackPropagationCuda> selection_back_propagation_cuda;
-
-    training_back_propagation_cuda.neural_network.compile();
 
     if (has_selection)
     {

@@ -1394,20 +1394,16 @@ void ForwardPropagation::set(const Index& new_samples_number, NeuralNetwork* new
         layers[i] = Registry<LayerForwardPropagation>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(samples_number, neural_network_layers[i].get());
     }
-}
 
-
-void ForwardPropagation::compile()
-{
-    Index total_workspace_size = 0;
+    Index workspace_size = 0;
 
     for(const unique_ptr<LayerForwardPropagation>& layer_fp : layers)
         if (layer_fp)
-            total_workspace_size += get_size(layer_fp->get_tensor_views());
+            workspace_size += get_size(layer_fp->get_tensor_views());
 
-    if (total_workspace_size == 0) return;
+    if (workspace_size == 0) return;
 
-    workspace.resize(total_workspace_size);
+    workspace.resize(workspace_size);
     workspace.setZero();
 
     type* current_ptr = workspace.data();
@@ -1508,21 +1504,17 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
         else if (layer_name == "Dense3d")
             layers[i] = make_unique<DenseBackPropagationLM<3>>(batch_size, neural_network_layers[i].get());
     }
-}
 
-
-void NeuralNetworkBackPropagationLM::compile()
-{
-    Index total_workspace_size = 0;
+    Index workspace_size = 0;
 
     for(const unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
         if(layer_bp_lm)
-            total_workspace_size += get_size(layer_bp_lm->get_tensor_views());
+            workspace_size += get_size(layer_bp_lm->get_tensor_views());
 
-    if(total_workspace_size == 0)
+    if(workspace_size == 0)
         return;
 
-    workspace.resize(total_workspace_size);
+    workspace.resize(workspace_size);
     workspace.setZero();
 
     type* current_ptr = workspace.data();
@@ -1697,21 +1689,17 @@ void ForwardPropagationCuda::set(const Index& new_samples_number, NeuralNetwork*
         layers[i] = Registry<LayerForwardPropagationCuda>::instance().create(current_layer->get_name());
         layers[i]->set(samples_number, current_layer.get());
     }
-}
 
-
-void ForwardPropagationCuda::compile()
-{
-    Index total_workspace_size = 0;
+    Index workspace_size = 0;
 
     for(const unique_ptr<LayerForwardPropagationCuda>& layer_fp : layers)
         if (layer_fp)
-            total_workspace_size += get_size(layer_fp->get_tensor_views());
+            workspace_size += get_size(layer_fp->get_tensor_views());
 
-    if (total_workspace_size == 0) return;
+    if (workspace_size == 0) return;
 
-    CHECK_CUDA(cudaMalloc((void**)&workspace, total_workspace_size * sizeof(float)));
-    CHECK_CUDA(cudaMemset(workspace, 0, total_workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMalloc((void**)&workspace, workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMemset(workspace, 0, workspace_size * sizeof(float)));
 
     type* current_ptr = workspace;
 
@@ -1821,21 +1809,17 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
         layers[i] = Registry<LayerBackPropagationCuda>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(batch_size, neural_network_layers[i].get());
     }
-}
 
-
-void NeuralNetworkBackPropagationCuda::compile()
-{
-    Index total_workspace_size = 0;
+    Index workspace_size = 0;
 
     for(const unique_ptr<LayerBackPropagationCuda>& layer_bp : layers)
         if (layer_bp)
-            total_workspace_size += get_size(layer_bp->get_tensor_views());
+            workspace_size += get_size(layer_bp->get_tensor_views());
 
-    if (total_workspace_size == 0) return;
+    if (workspace_size == 0) return;
 
-    CHECK_CUDA(cudaMalloc((void**)&workspace, total_workspace_size * sizeof(float)));
-    CHECK_CUDA(cudaMemset(workspace, 0, total_workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMalloc((void**)&workspace, workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMemset(workspace, 0, workspace_size * sizeof(float)));
 
     type* current_ptr = workspace;
 
