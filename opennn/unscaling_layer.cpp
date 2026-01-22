@@ -276,7 +276,7 @@ void Unscaling::from_XML(const XMLDocument& document)
 
     for(Index i = 0; i < neurons_number; i++) {
         const XMLElement* unscaling_neuron_element = start_element->NextSiblingElement("UnscalingNeuron");
-        if (!unscaling_neuron_element) {
+        if(!unscaling_neuron_element) {
             throw runtime_error("Unscaling neuron " + to_string(i + 1) + " is nullptr.\n");
         }
 

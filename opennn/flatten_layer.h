@@ -133,7 +133,7 @@ public:
     {
 
         const XMLElement* element = document.FirstChildElement("Flatten");
-        if (!element) throw runtime_error("Flatten2d element is nullptr.\n");
+        if(!element) throw runtime_error("Flatten2d element is nullptr.\n");
 
         const Index input_height = read_xml_index(element, "InputHeight");
         const Index input_width = read_xml_index(element, "InputWidth");

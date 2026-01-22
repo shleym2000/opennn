@@ -387,14 +387,14 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
 {
     const XMLElement* image_dataset_element = data_set_document.FirstChildElement("ImageDataset");
 
-    if (!image_dataset_element)
+    if(!image_dataset_element)
         throw runtime_error("ImageDataset element is nullptr.\n");
 
     // Data Source
 
     const XMLElement* data_source_element = image_dataset_element->FirstChildElement("DataSource");
 
-    if (!data_source_element)
+    if(!data_source_element)
         throw runtime_error("Element is nullptr: DataSource");
 
     set_data_path(read_xml_string(data_source_element, "Path"));

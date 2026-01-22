@@ -23,7 +23,7 @@ Index count_non_empty_lines(const filesystem::path& data_path)
 {
     ifstream file(data_path);
 
-    if (!file.is_open())
+    if(!file.is_open())
         throw runtime_error("Cannot open file: " + data_path.string() + "\n");
 
     Index count = 0;
@@ -34,7 +34,7 @@ Index count_non_empty_lines(const filesystem::path& data_path)
     {
         prepare_line(line);
 
-        if (!line.empty())
+        if(!line.empty())
             count++;
     }
 
@@ -78,7 +78,7 @@ vector<string> tokenize(const string& document)
         }
         else
         {
-            if (!current_token.empty())
+            if(!current_token.empty())
             {
                 tokens.emplace_back(std::move(current_token));
                 current_token.clear();
@@ -89,11 +89,11 @@ vector<string> tokenize(const string& document)
         }
     }
 
-    if (!current_token.empty())
+    if(!current_token.empty())
         tokens.emplace_back(std::move(current_token));
 
     // @todo -> this is only for encoder-decoder
-    // if (!tokens.empty())
+    // if(!tokens.empty())
     // {
     //     tokens.insert(tokens.begin(), START_TOKEN);
     //     tokens.emplace_back(END_TOKEN);
@@ -896,7 +896,7 @@ vector<string> preprocess_language_document(const string& document, const bool& 
         else
         {
             // If the current token is not empty, add it to the tokens list
-            if (!currentToken.empty())
+            if(!currentToken.empty())
             {
                 tokens.push_back(currentToken);
                 currentToken.clear();
@@ -915,7 +915,7 @@ vector<string> preprocess_language_document(const string& document, const bool& 
     }
 
     // Add the last token if it's not empty
-    if (!currentToken.empty())
+    if(!currentToken.empty())
         tokens.push_back(currentToken);
 
     // Add [END] token
@@ -955,7 +955,7 @@ string formatNumber(type value, int precision)
     //     while (!str.empty() && str.back() == '0')
     //         str.pop_back();
 
-    //     if (!str.empty() && str.back() == '.')
+    //     if(!str.empty() && str.back() == '.')
     //         str.pop_back();
     // }
 

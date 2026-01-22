@@ -164,7 +164,7 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 
 TrainingResults StochasticGradientDescent::train()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number+1);
@@ -496,7 +496,7 @@ void StochasticGradientDescentData::set(StochasticGradientDescent* new_stochasti
 
 TrainingResults StochasticGradientDescent::train_cuda()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number + 1);
@@ -773,7 +773,7 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
     {
         Layer* layer = neural_network->get_layer(layer_index).get();
 
-        if (!layer->get_is_trainable())
+        if(!layer->get_is_trainable())
             continue;
 
         const vector<TensorView> parameter_views = layer->get_parameter_views_device();
@@ -820,7 +820,7 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
     for(Index i = 0; i < layers_number; ++i)
     {
         Layer* layer = neural_network->get_layer(i).get();
-        if (!layer->get_is_trainable()) continue;
+        if(!layer->get_is_trainable()) continue;
 
         const auto parameter_views = layer->get_parameter_views();
         //const auto parameter_views_device = layer->get_parameter_views_device();
@@ -869,7 +869,7 @@ void SGDOptimizationDataCuda::print() const
     for(Index i = 0; i < layers_number; ++i)
     {
         Layer* layer = neural_network->get_layer(i).get();
-        if (!layer->get_is_trainable()) continue;
+        if(!layer->get_is_trainable()) continue;
 
         cout << "Layer " << i << " (" << layer->get_name() << "):" << endl;
         const auto parameter_views = layer->get_parameter_views_device();

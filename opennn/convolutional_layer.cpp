@@ -551,15 +551,12 @@ Index Convolutional::get_input_width() const
 
 vector<TensorView*> Convolutional::get_parameter_views()
 {
-    vector<TensorView*> parameter_views = {&biases, &weights};
+    vector<TensorView*> views = {&biases, &weights};
 
     if (batch_normalization)
-    {
-        parameter_views.push_back(&scales);
-        parameter_views.push_back(&offsets);
-    }
+        views.insert(views.end(), {&scales, &offsets});
 
-    return parameter_views;
+    return views;
 }
 
 
@@ -615,7 +612,7 @@ void Convolutional::from_XML(const XMLDocument& document)
 {
     const XMLElement* convolutional_layer_element = document.FirstChildElement("Convolutional");
 
-    if (!convolutional_layer_element)
+    if(!convolutional_layer_element)
         throw runtime_error("Convolutional layer element is nullptr.\n");
 
     set_label(read_xml_string(convolutional_layer_element, "Label"));
@@ -758,15 +755,12 @@ vector<TensorView*> ConvolutionalBackPropagation::get_workspace_views()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 
-    vector<TensorView*> gradient_views = {&bias_deltas, &weight_deltas};
+    vector<TensorView*> views = {&bias_deltas, &weight_deltas};
 
     if (convolutional_layer->get_batch_normalization())
-    {
-        gradient_views.push_back(&scales_deltas);
-        gradient_views.push_back(&offsets_deltas);
-    }
+        views.insert(views.end(), {&scales_deltas, &offsets_deltas});
 
-    return gradient_views;
+    return views;
 }
 
 
@@ -1080,13 +1074,10 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
 
 vector<TensorViewCuda*> Convolutional::get_parameter_views_device()
 {
-    vector<TensorViewCuda*> views_device = { &biases_device, &weights_device };
+    vector<TensorViewCuda*> views = { &biases_device, &weights_device };
 
     if (batch_normalization)
-    {
-        views_device.push_back(&scales_device);
-        views_device.push_back(&offsets_device);
-    }
+        views.insert(views.end(), {&scales_device, &offsets_device});
 
     return views_device;
 }
@@ -1127,16 +1118,16 @@ void Convolutional::free()
 void Convolutional::copy_parameters_device()
 {
     /*
-    if (!biases_device.data)
+    if(!biases_device.data)
         cout << "Biases device pointer is null" << endl;
 
-    if (!weights_device.data)
+    if(!weights_device.data)
         cout << "Weights device pointer is null" << endl;
 
-    if (!biases.data())
+    if(!biases.data())
         cout << "CPU biases data is null" << endl;
 
-    if (!weights.data())
+    if(!weights.data())
         cout << "CPU weights data is null" << endl;
 
     CHECK_CUDA(cudaMemcpy(biases_device, biases.data(), biases.size() * sizeof(type), cudaMemcpyHostToDevice));
@@ -1197,7 +1188,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
     string layer_label = convolutional_layer->get_label();
 
-    if (!layer_label.empty() && layer_label.substr(layer_label.length() - 2) == "_1")
+    if(!layer_label.empty() && layer_label.substr(layer_label.length() - 2) == "_1")
         is_first_layer = true;
 
     if (is_first_layer)

@@ -298,12 +298,12 @@ void TrainingStrategy::to_XML(XMLPrinter& printer) const
 void TrainingStrategy::from_XML(const XMLDocument& document)
 {
     const XMLElement* root_element = document.FirstChildElement("TrainingStrategy");
-    if (!root_element) throw runtime_error("TrainingStrategy element is nullptr.\n");
+    if(!root_element) throw runtime_error("TrainingStrategy element is nullptr.\n");
 
     // Loss index
 
     const XMLElement* loss_index_element = root_element->FirstChildElement("LossIndex");
-    if (!loss_index_element) throw runtime_error("Loss index element is nullptr.\n");
+    if(!loss_index_element) throw runtime_error("Loss index element is nullptr.\n");
 
     // Loss method
 
@@ -324,7 +324,7 @@ void TrainingStrategy::from_XML(const XMLDocument& document)
     // Optimization algorithm
 
     const XMLElement* optimization_algorithm_element = root_element->FirstChildElement("OptimizationAlgorithm");
-    if (!optimization_algorithm_element) throw runtime_error("OptimizationAlgorithm element is nullptr.\n");
+    if(!optimization_algorithm_element) throw runtime_error("OptimizationAlgorithm element is nullptr.\n");
 
     // Optimization method
 
@@ -363,7 +363,7 @@ void TrainingStrategy::save(const filesystem::path& file_name) const
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     XMLPrinter printer;
@@ -389,16 +389,16 @@ void TrainingStrategy::load(const filesystem::path& file_name)
 
 TrainingResults TrainingStrategy::train_cuda()
 {
-    if (!has_neural_network())
+    if(!has_neural_network())
         throw runtime_error("Neural network is null.");
 
-    if (!has_dataset())
+    if(!has_dataset())
         throw runtime_error("Dataset is null.");
 
-    if (!loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index->has_neural_network() || !loss_index->has_dataset())
         throw runtime_error("Loss index is wrong.");
 
-    if (!optimization_algorithm->has_loss_index())
+    if(!optimization_algorithm->has_loss_index())
         throw runtime_error("Optimization algorithm is wrong.");
 
     neural_network->create_cuda();

@@ -908,7 +908,7 @@ string Transformer::calculate_outputs(const string& source)
         if (it == output_inverse_vocabulary_map.end())
             continue;
 
-        if (!result.empty())
+        if(!result.empty())
             result += " ";
 
         result += it->second;

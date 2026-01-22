@@ -25,7 +25,7 @@ struct DenseForwardPropagation final : LayerForwardPropagation
         set(new_batch_size, new_layer);
     }
 
-    virtual ~DenseForwardPropagation() = default;
+    ~DenseForwardPropagation() override = default;
 
     void initialize() override
     {
@@ -52,11 +52,7 @@ struct DenseForwardPropagation final : LayerForwardPropagation
         vector<TensorView*> views = { &outputs, &activation_derivatives };
 
         if (means.size() > 0)
-        {
-            views.push_back(&means);
-            views.push_back(&standard_deviations);
-            views.push_back(&normalized_outputs);
-        }
+            views.insert(views.end(), { &means, &standard_deviations, &normalized_outputs });
 
         return views;
     }
@@ -84,8 +80,7 @@ struct DenseBackPropagation final : LayerBackPropagation
         set(new_batch_size, new_layer);
     }
 
-    virtual ~DenseBackPropagation() = default;
-
+    ~DenseBackPropagation() override = default;
 
     void initialize() override
     {
@@ -98,6 +93,7 @@ struct DenseBackPropagation final : LayerBackPropagation
         weight_deltas.dims = {inputs_number, outputs_number};
 
         const dimensions input_dims = dense_layer->get_input_dimensions();
+
         dimensions full_input_dims = {batch_size};
         full_input_dims.insert(full_input_dims.end(), input_dims.begin(), input_dims.end());
 
@@ -119,10 +115,7 @@ struct DenseBackPropagation final : LayerBackPropagation
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
 
         if (dense_layer->get_batch_normalization())
-        {
-            views.push_back(&scales_deltas);
-            views.push_back(&offsets_deltas);
-        }
+            views.insert(views.end(), {&scales_deltas, &offsets_deltas});
 
         return views;
     }
@@ -335,13 +328,11 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         auto* dense_layer = static_cast<const Dense<Rank>*>(this->layer);
 
         if (dense_layer && dense_layer->get_batch_normalization())
-        {
-            views.push_back(&scales_deltas_device);
-            views.push_back(&offsets_deltas_device);
-        }
+            views.insert(views.end(), { &scales_deltas_device, &offsets_deltas_device});
 
         return views;
     }
+
 
     void free() override
     {
@@ -439,15 +430,12 @@ public:
 
     vector<TensorView*> get_parameter_views() override
     {
-        vector<TensorView*> parameter_views = {&biases, &weights};
+        vector<TensorView*> views = {&biases, &weights};
 
         if (batch_normalization)
-        {
-            parameter_views.push_back(&scales);
-            parameter_views.push_back(&offsets);
-        }
+            views.insert(views.end(), {&scales, &offsets});
 
-        return parameter_views;
+        return views;
     }
 
 
@@ -811,7 +799,7 @@ public:
 
         weight_deltas.device(*device) = inputs.contract(deltas, axes(0,0));
 
-        if (!is_first_layer)
+        if(!is_first_layer)
             input_deltas.device(*device) = deltas.contract(tensor_map<2>(weights), axes(1,1));
     }
 
@@ -1060,15 +1048,12 @@ public:
 
     vector<TensorViewCuda*> get_parameter_views_device() override
     {
-        vector<TensorViewCuda*> parameter_views_device = { &biases_device, &weights_device };
+        vector<TensorViewCuda*> views = { &biases_device, &weights_device };
 
         if (batch_normalization)
-        {
-            parameter_views_device.push_back(&scales_device);
-            parameter_views_device.push_back(&offsets_device);
-        }
+            views.insert(views.end(), { &scales_device, &offsets_device });
 
-        return parameter_views_device;
+        return views;
     }
 
     // @todo The following are not parameters

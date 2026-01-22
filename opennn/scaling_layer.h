@@ -358,7 +358,7 @@ public:
 
         for(Index i = 0; i < neurons_number; i++) {
             const XMLElement* scaling_neuron_element = start_element->NextSiblingElement("ScalingNeuron");
-            if (!scaling_neuron_element) {
+            if(!scaling_neuron_element) {
                 throw runtime_error("Scaling neuron " + to_string(i + 1) + " is nullptr.\n");
             }
 
@@ -370,7 +370,7 @@ public:
 
             const XMLElement* descriptives_element = scaling_neuron_element->FirstChildElement("Descriptives");
 
-            if (!descriptives_element)
+            if(!descriptives_element)
                 throw runtime_error("Descriptives element " + to_string(i + 1) + " is nullptr.\n");
 /*
             if (descriptives_element->GetText()) {

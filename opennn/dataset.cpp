@@ -306,7 +306,7 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
                                            const Index& batch_size,
                                            const bool& shuffle) const
 {
-    if (!shuffle) return split_samples(sample_indices, batch_size);
+    if(!shuffle) return split_samples(sample_indices, batch_size);
 
     const Index samples_number = sample_indices.size();
 
@@ -561,7 +561,7 @@ void Dataset::set_default_raw_variables_roles_forecasting()
             continue;
         }
 
-        if (!target)
+        if(!target)
         {
             raw_variables[i].set_role("Target");
 
@@ -611,7 +611,7 @@ vector<string> Dataset::get_variable_names(const string& variable_role) const
 
     for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
-        if (!((raw_variable.role == variable_role) ||
+        if(!((raw_variable.role == variable_role) ||
               ((variable_role == "Input" || variable_role == "Target") && raw_variable.role == "InputTarget")))
             continue;
 
@@ -778,7 +778,7 @@ vector<string> Dataset::get_raw_variable_names(const string& variable_role) cons
 
     for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
-        if (!((raw_variable.role == variable_role) ||
+        if(!((raw_variable.role == variable_role) ||
               ((variable_role == "Input" || variable_role == "Target") && raw_variable.role == "InputTarget")))
             continue;
 
@@ -1789,7 +1789,7 @@ vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correl
             if (i == j) continue;
 
             const type abs_r = abs(correlations(i, j).r);
-            if (!isnan(abs_r))
+            if(!isnan(abs_r))
             {
                 if (abs_r >= maximum_correlation)
                     high_corr_counts[i]++;
@@ -1809,7 +1809,7 @@ vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correl
             if (to_be_removed[i] || to_be_removed[j])
                 continue;
 
-            if (!isnan(correlations(i, j).r) && abs(correlations(i, j).r) >= maximum_correlation)
+            if(!isnan(correlations(i, j).r) && abs(correlations(i, j).r) >= maximum_correlation)
             {
                 Index index_to_flag_for_removal;
 
@@ -2717,7 +2717,7 @@ void Dataset::preview_data_to_XML(XMLPrinter &printer) const
 
 void Dataset::raw_variables_from_XML(const XMLElement *raw_variables_element)
 {
-    if (!raw_variables_element)
+    if(!raw_variables_element)
         throw runtime_error("RawVariables element is nullptr.\n");
 
     set_raw_variables_number(read_xml_index(raw_variables_element, "RawVariablesNumber"));
@@ -2755,7 +2755,7 @@ void Dataset::raw_variables_from_XML(const XMLElement *raw_variables_element)
 
 void Dataset::samples_from_XML(const XMLElement *samples_element)
 {
-    if (!samples_element)
+    if(!samples_element)
         throw runtime_error("Samples element is nullptr.\n");
 
     const Index samples_number = read_xml_index(samples_element, "SamplesNumber");
@@ -2783,7 +2783,7 @@ void Dataset::samples_from_XML(const XMLElement *samples_element)
 
 void Dataset::missing_values_from_XML(const XMLElement *missing_values_element)
 {
-    if (!missing_values_element)
+    if(!missing_values_element)
         throw runtime_error("Missing values element is nullptr.\n");
 
     missing_values_number = read_xml_index(missing_values_element, "MissingValuesNumber");
@@ -2799,7 +2799,7 @@ void Dataset::missing_values_from_XML(const XMLElement *missing_values_element)
         valid_numbers.reserve(tokens.size());
 
         for(const string& token : tokens)
-            if (!token.empty())
+            if(!token.empty())
                 valid_numbers.push_back(stoi(token));
 
         raw_variables_missing_values_number.resize(valid_numbers.size());
@@ -2812,12 +2812,12 @@ void Dataset::missing_values_from_XML(const XMLElement *missing_values_element)
 
 void Dataset::preview_data_from_XML(const XMLElement *preview_data_element)
 {
-    if (!preview_data_element)
+    if(!preview_data_element)
         throw runtime_error("Preview data element is nullptr.\n ");
 
     const XMLElement* preview_size_element = preview_data_element->FirstChildElement("PreviewSize");
 
-    if (!preview_size_element)
+    if(!preview_size_element)
         throw runtime_error("Preview size element is nullptr.\n ");
 
     Index preview_size = 0;
@@ -2845,13 +2845,13 @@ void Dataset::preview_data_from_XML(const XMLElement *preview_data_element)
 void Dataset::from_XML(const XMLDocument& data_set_document)
 {
     const XMLElement* data_set_element = data_set_document.FirstChildElement("Dataset");
-    if (!data_set_element)
+    if(!data_set_element)
         throw runtime_error("Dataset element is nullptr.\n");
 
     // Data Source
     const XMLElement* data_source_element = data_set_element->FirstChildElement("DataSource");
 
-    if (!data_source_element)
+    if(!data_source_element)
         throw runtime_error("Data source element is nullptr.\n");
 
     set_data_path(read_xml_string(data_source_element, "Path"));
@@ -2889,7 +2889,7 @@ void Dataset::from_XML(const XMLDocument& data_set_document)
 
 void Dataset::print() const
 {
-    if (!display) return;
+    if(!display) return;
 
     const Index variables_number = get_variables_number();
     const Index input_variables_number = get_variables_number("Input");
@@ -2922,7 +2922,7 @@ void Dataset::save(const filesystem::path& file_name) const
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     XMLPrinter document;
@@ -2961,7 +2961,7 @@ void Dataset::print_data() const
 
 void Dataset::print_data_preview() const
 {
-    if (!display) return;
+    if(!display) return;
 
     const Index samples_number = get_samples_number();
 
@@ -3003,7 +3003,7 @@ void Dataset::save_data() const
 {
     ofstream file(data_path.c_str());
 
-    if (!file.is_open())
+    if(!file.is_open())
         throw runtime_error("Cannot open matrix data file: " + data_path.string() + "\n");
 
     file.precision(20);
@@ -3052,7 +3052,7 @@ void Dataset::save_data_binary(const filesystem::path& binary_data_file_name) co
 {
     ofstream file(binary_data_file_name, ios::binary);
 
-    if (!file.is_open())
+    if(!file.is_open())
         throw runtime_error("Cannot open data binary file.");
 
     // Write data
@@ -3079,7 +3079,7 @@ void Dataset::load_data_binary()
 {
     ifstream file(data_path, ios::binary);
 
-    if (!file.is_open())
+    if(!file.is_open())
         throw runtime_error("Failed to open file: " + data_path.string());
 
     streamsize size = sizeof(Index);
@@ -3120,7 +3120,7 @@ Tensor<Index, 1> Dataset::calculate_target_distribution() const
         Index negatives = 0;
 
         for(Index sample_index = 0; sample_index < samples_number; sample_index++){
-            if (!isnan(data(sample_index, target_index)))
+            if(!isnan(data(sample_index, target_index)))
                 (data(sample_index, target_index) < type(0.5))
                     ? negatives++
                     : positives++;
@@ -3983,7 +3983,7 @@ void Dataset::read_csv()
                     const vector<string>& categories = raw_variable.categories;
                     if(token.empty() || token == missing_values_label)
                         data(sample_index, variable_indices[0]) = NAN;
-                    else if(categories.size() > 0 && token == categories[0])
+                    else if(!categories.empty() && token == categories[0])
                         data(sample_index, variable_indices[0]) = 0;
                     else if(categories.size() > 1 && token == categories[1])
                         data(sample_index, variable_indices[0]) = 1;
@@ -4237,7 +4237,7 @@ void Dataset::fix_repeated_names()
     for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
         auto result = raw_variables_count_map.insert(pair<string, Index>(raw_variable.name, 1));
-        if (!result.second)
+        if(!result.second)
             result.first->second++;
     }
 
@@ -4385,7 +4385,7 @@ Batch::Batch(const Index& new_samples_number, const Dataset* new_dataset)
 
 void Batch::set(const Index& new_samples_number, const Dataset* new_dataset)
 {
-    if (!new_dataset) return;
+    if(!new_dataset) return;
 
     samples_number = new_samples_number;
 
@@ -4395,7 +4395,7 @@ void Batch::set(const Index& new_samples_number, const Dataset* new_dataset)
 
     const dimensions& data_set_input_dimensions = dataset->get_dimensions("Input");
 
-    if (!data_set_input_dimensions.empty())
+    if(!data_set_input_dimensions.empty())
     {
         input_dimensions = prepend(samples_number, data_set_input_dimensions);
         input_tensor.resize(get_size(input_dimensions));
@@ -4405,7 +4405,7 @@ void Batch::set(const Index& new_samples_number, const Dataset* new_dataset)
 
     const dimensions& data_set_target_dimensions = dataset->get_dimensions("Target");
 
-    if (!data_set_target_dimensions.empty())
+    if(!data_set_target_dimensions.empty())
     {
         target_dimensions = prepend(samples_number, data_set_target_dimensions);
         target_tensor.resize(get_size(target_dimensions));
@@ -4415,7 +4415,7 @@ void Batch::set(const Index& new_samples_number, const Dataset* new_dataset)
 
     // const dimensions& data_set_decoder_dimensions = dataset->get_dimensions("Decoder");
 
-    // if (!data_set_decoder_dimensions.empty())
+    // if(!data_set_decoder_dimensions.empty())
     // {
     //     decoder_dimensions = prepend(samples_number, data_set_decoder_dimensions);
     //     decoder_tensor.resize(get_size(decoder_dimensions));
@@ -4477,7 +4477,7 @@ vector<TensorView> Batch::get_input_views() const
     vector<TensorView> input_views = {{(type*)input_tensor.data(), input_dimensions}};
 
     // @todo DECODER VARIABLES
-    // if (!decoder_dimensions.empty())
+    // if(!decoder_dimensions.empty())
     //     input_views.insert(input_views.begin(), {(type*)decoder_tensor.data(), decoder_dimensions});
 
     return input_views;
@@ -4522,7 +4522,7 @@ BatchCuda::BatchCuda(const Index& new_samples_number, Dataset* new_dataset)
 
 void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
 {
-    if (!new_dataset) return;
+    if(!new_dataset) return;
 
     samples_number = new_samples_number;
     dataset = new_dataset;
@@ -4531,7 +4531,7 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
     //const dimensions& data_set_decoder_dimensions = dataset->get_dimensions("Decoder");
     const dimensions& data_set_target_dimensions = dataset->get_dimensions("Target");
 
-    if (!data_set_input_dimensions.empty())
+    if(!data_set_input_dimensions.empty())
     {
         num_input_features = dataset->get_variables_number("Input");
         const Index input_size = samples_number * num_input_features;
@@ -4544,7 +4544,7 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
         //CUDA_MALLOC_AND_REPORT(inputs_device, input_size * sizeof(float));
     }
     /*
-    if (!data_set_decoder_dimensions.empty())
+    if(!data_set_decoder_dimensions.empty())
     {
         decoder_dimensions = { samples_number };
         decoder_dimensions.insert(decoder_dimensions.end(), data_set_decoder_dimensions.begin(), data_set_decoder_dimensions.end());
@@ -4555,7 +4555,7 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));
     }
     */
-    if (!data_set_target_dimensions.empty())
+    if(!data_set_target_dimensions.empty())
     {
         num_target_features = dataset->get_variables_number("Target");
         const Index target_size = samples_number * num_target_features;
@@ -4646,13 +4646,13 @@ Index BatchCuda::get_samples_number() const
 
 void BatchCuda::print() const
 {
-    if (!input_dimensions.empty())
+    if(!input_dimensions.empty())
         cout << "get_inputs_device:" << endl << get_inputs_device() << endl;
 
-    if (!decoder_dimensions.empty())
+    if(!decoder_dimensions.empty())
         cout << "get_decoder_device:" << endl << get_decoder_device() << endl;
 
-    if (!target_dimensions.empty())
+    if(!target_dimensions.empty())
         cout << "get_targets_device:" << endl << get_targets_device() << endl;
 }
 

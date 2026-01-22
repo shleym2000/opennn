@@ -102,14 +102,14 @@ void GeneticAlgorithm::set_default()
 {
     name = "GeneticAlgorithm";
 
-    if (!training_strategy || !training_strategy->has_neural_network())
+    if(!training_strategy || !training_strategy->has_neural_network())
         return;
 
     const Index individuals_number = 40;
 
     const Dataset* dataset = training_strategy->get_dataset();
 
-    if (!dataset)
+    if(!dataset)
         throw runtime_error("Dataset is null");
 
     original_input_raw_variable_indices = dataset->get_raw_variable_indices("Input");
@@ -176,7 +176,7 @@ void GeneticAlgorithm::set_maximum_epochs_number(const Index& new_maximum_epochs
 
 void GeneticAlgorithm::set_individuals_number(const Index& new_individuals_number)
 {
-    if (!training_strategy || !training_strategy->get_dataset())
+    if(!training_strategy || !training_strategy->get_dataset())
         throw runtime_error("Training strategy or dataset is null");
 
     const Index genes_number = get_genes_number();

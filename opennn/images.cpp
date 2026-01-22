@@ -26,7 +26,7 @@ uint8_t read_u8(ifstream& f, const string& file_path_str_for_error)
 {
     char val_char;
     f.read(&val_char, 1);
-    if (!f) throw runtime_error("BMP read error (uint8_t) in file: " + file_path_str_for_error);
+    if(!f) throw runtime_error("BMP read error (uint8_t) in file: " + file_path_str_for_error);
     return static_cast<uint8_t>(val_char);
 }
 
@@ -72,7 +72,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
 
     ifstream file(image_path_fs, ios::binary);
 
-    if (!file)
+    if(!file)
         throw runtime_error("Cannot open BMP file: " + image_path_str);
 
     const uint16_t bfType = read_u16_le(file, image_path_str);
@@ -152,7 +152,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
 
     file.seekg(bfOffBits, ios::beg);
 
-    if (!file)
+    if(!file)
         throw runtime_error("Failed to seek to pixel data offset (" + to_string(bfOffBits) + ") in BMP: " + image_path_str);
 
     const int bytes_per_pixel_in_file =

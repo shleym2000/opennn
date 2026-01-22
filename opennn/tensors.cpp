@@ -582,7 +582,7 @@ dimensions string_to_dimensions(const string& x, const string& separator)
     {
         try
         {
-            if (!token.empty())
+            if(!token.empty())
                 result.push_back(stoi(token));
         }
         catch (const invalid_argument&)

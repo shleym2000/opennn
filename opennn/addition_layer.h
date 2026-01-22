@@ -47,7 +47,7 @@ public:
 
     void set(const dimensions& new_input_dimensions, const string& new_label)
     {
-        if (!new_input_dimensions.empty() && new_input_dimensions.size() != Rank)
+        if(!new_input_dimensions.empty() && new_input_dimensions.size() != Rank)
             throw runtime_error("Input dimensions rank for AdditionLayer<" + to_string(Rank) + "> must be " + to_string(Rank));
 
         input_dimensions = new_input_dimensions;
@@ -97,7 +97,7 @@ public:
     void from_XML(const XMLDocument& document) override
     {
         const XMLElement* element = document.FirstChildElement("Addition");
-        if (!element) throw runtime_error(name + " element is nullptr.");
+        if(!element) throw runtime_error(name + " element is nullptr.");
 
         const string new_label = read_xml_string(element, "Label");
         const dimensions new_input_dimensions = string_to_dimensions(read_xml_string(element, "InputDimensions"));

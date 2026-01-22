@@ -31,6 +31,8 @@ struct ForwardPropagation
 
     ForwardPropagation(const Index& = 0, NeuralNetwork* = nullptr);
 
+    vector<vector<TensorView*>> get_layer_workspace_views();
+
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
     TensorView get_last_trainable_layer_outputs_view() const;
@@ -102,6 +104,18 @@ public:
 
     void add_layer(unique_ptr<Layer>,
                   const vector<Index>& = vector<Index>());
+
+    vector<vector<TensorView*>> get_layer_parameter_views()
+    {
+        const Index layers_number = get_layers_number();
+
+        vector<vector<TensorView*>> layer_parameter_views(layers_number);
+
+        for(Index i = 0; i < layers_number; i++)
+            layer_parameter_views[i] = layers[i]->get_parameter_views();
+
+        return layer_parameter_views;
+    }
 
     void compile();
 
@@ -339,6 +353,8 @@ struct NeuralNetworkBackPropagation
 
     const vector<unique_ptr<LayerBackPropagation>>& get_layers() const;
 
+    vector<vector<TensorView*>> get_layer_workspace_views();
+
     void print() const;
 
     NeuralNetwork* get_neural_network() const;
@@ -397,6 +413,8 @@ struct NeuralNetworkBackPropagationLM
     {
         return neural_network;
     }
+
+    vector<vector<TensorView*>> get_layer_workspace_views();
 
     void print();
 

@@ -17,7 +17,7 @@ namespace opennn
 
 void LayerForwardPropagation::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
@@ -28,7 +28,7 @@ void LayerForwardPropagation::set(const Index& new_batch_size, Layer* new_layer)
 
 void LayerBackPropagation::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
@@ -41,7 +41,7 @@ void LayerBackPropagation::set(const Index& new_batch_size, Layer* new_layer)
 
 void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
@@ -52,7 +52,7 @@ void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_la
 
 void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;

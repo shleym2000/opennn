@@ -882,7 +882,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
                     }
                 }
 
-                if(desc_idx == -1 && inputs_descriptives.size() > 0)
+                if(desc_idx == -1 && !inputs_descriptives.empty())
                 {
                     Index inputs_per_variable = inputs_number / inputs_descriptives.size();
                     if(inputs_per_variable < 1)
@@ -1519,7 +1519,7 @@ void ModelExpression::save_python(const filesystem::path& file_name, const vecto
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     file << get_expression_python(raw_variables);
@@ -1530,7 +1530,7 @@ void ModelExpression::save_c(const filesystem::path& file_name, const vector<Dat
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     file << get_expression_c(raw_variables);
@@ -1541,7 +1541,7 @@ void ModelExpression::save_javascript(const filesystem::path& file_name, const v
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     file << get_expression_javascript(raw_variables);
@@ -1552,7 +1552,7 @@ void ModelExpression::save_api(const filesystem::path& file_name, const vector<D
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
 

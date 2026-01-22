@@ -166,7 +166,7 @@ void LevenbergMarquardtAlgorithm::check() const
 
 TrainingResults LevenbergMarquardtAlgorithm::train()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     if(loss_index->get_name() == "MinkowskiError")

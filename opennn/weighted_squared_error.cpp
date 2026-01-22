@@ -84,7 +84,7 @@ void WeightedSquaredError::set_weights(const type& new_positives_weight, const t
 
 void WeightedSquaredError::set_weights()
 {
-    if (!dataset) return;
+    if(!dataset) return;
 
     const vector<Dataset::RawVariable>& target_raw_variables
         = dataset->get_raw_variables("Target");
@@ -125,7 +125,7 @@ void WeightedSquaredError::set_weights()
 
 void WeightedSquaredError::set_normalization_coefficient()
 {
-    if (!dataset)
+    if(!dataset)
     {
         normalization_coefficient = type(1);
         return;

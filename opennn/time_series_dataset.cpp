@@ -104,7 +104,7 @@ TimeSeriesDataset::TimeSeriesData TimeSeriesDataset::get_data() const
     TimeSeriesData ts_data;
 
     const vector<Index> input_variable_indices = get_variable_indices("Input");
-    if (!input_variable_indices.empty())
+    if(!input_variable_indices.empty())
     {
         const Index input_vars_number = input_variable_indices.size();
         ts_data.inputs.resize(total_samples, past_time_steps, input_vars_number);
@@ -113,7 +113,7 @@ TimeSeriesDataset::TimeSeriesData TimeSeriesDataset::get_data() const
     }
 
     const vector<Index> target_variable_indices = get_variable_indices("Target");
-    if (!target_variable_indices.empty())
+    if(!target_variable_indices.empty())
     {
         const Index target_vars_number = target_variable_indices.size();
         ts_data.targets.resize(total_samples, target_vars_number);
@@ -266,7 +266,7 @@ void TimeSeriesDataset::read_csv()
     {
         const vector<Index> target_indices = get_variable_indices("Target");
 
-        if (!target_indices.empty())
+        if(!target_indices.empty())
         {
             const Index raw_variable_target_index = get_raw_variable_index(target_indices[0]);
             set_raw_variable_role(raw_variable_target_index, "InputTarget");
@@ -723,7 +723,7 @@ vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample
 {
     // @todo copied from dataset
 
-    if (!shuffle) return split_samples(sample_indices, batch_size);
+    if(!shuffle) return split_samples(sample_indices, batch_size);
 
     const Index samples_number = sample_indices.size();
 

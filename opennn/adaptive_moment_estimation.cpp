@@ -114,7 +114,7 @@ void AdaptiveMomentEstimation::set_maximum_time(const type& new_maximum_time)
 
 TrainingResults AdaptiveMomentEstimation::train()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number + 1);
@@ -493,7 +493,7 @@ void AdaptiveMomentEstimationData::print() const
 
 TrainingResults AdaptiveMomentEstimation::train_cuda()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number + 1);
@@ -506,7 +506,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     Dataset* dataset = loss_index->get_dataset();
 
-    if (!dataset)
+    if(!dataset)
         throw runtime_error("Dataset is null.");
 
     const bool has_selection = dataset->has_selection();
@@ -832,7 +832,7 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
     {
         Layer* layer = neural_network->get_layer(i).get();
 
-        if (!layer->get_is_trainable())
+        if(!layer->get_is_trainable())
             continue;
 
         const auto parameter_views = layer->get_parameter_views();
@@ -904,7 +904,7 @@ void ADAMOptimizationDataCuda::print() const
     {
         Layer* layer = neural_network->get_layer(i).get();
 
-        if (!layer->get_is_trainable())
+        if(!layer->get_is_trainable())
             continue;
 
         cout << "Layer " << i << " (" << layer->get_name() << "):" << endl;

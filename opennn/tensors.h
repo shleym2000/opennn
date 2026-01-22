@@ -26,7 +26,7 @@ struct TensorView
 
     void print() const
     {
-        if (!data || dims.empty())
+        if(!data || dims.empty())
         {
             cout << "TensorView: Empty or Null" << endl;
             return;
@@ -61,7 +61,7 @@ type* link(type* pointer, vector<TensorView*> views)
 
     for(TensorView* view : views)
     {
-        if (!view || view->size() == 0)
+        if(!view || view->size() == 0)
             continue;
 
         view->data = pointer;
@@ -69,6 +69,13 @@ type* link(type* pointer, vector<TensorView*> views)
     }
 
     return pointer;
+}
+
+
+void link(type* pointer, vector<vector<TensorView*>> views)
+{
+    for(size_t i = 0; i < views.size(); i++)
+        pointer = link(pointer, views[i]);
 }
 
 
@@ -81,11 +88,22 @@ Index get_size(const vector<TensorView*> views)
 
     for(const TensorView* view : views)
     {
-        if (!view || view->size() == 0)
+        if(!view || view->size() == 0)
             continue;
 
         total_size += (view->size() + ALIGNMENT - 1) & MASK;
     }
+
+    return total_size;
+}
+
+
+Index get_size(vector<vector<TensorView*>> views)
+{
+    Index total_size = 0;
+
+    for(size_t i = 0; i < views.size(); i++)
+        total_size += get_size(views[i]);
 
     return total_size;
 }
@@ -184,7 +202,7 @@ bool is_constant(const Tensor<type, Rank>& tensor)
     const type first_not_nan_element = tensor(first_non_nan_index);
 
     for(Index i = first_non_nan_index + 1; i < size; ++i)
-        if (!isnan(tensor(i)) && abs(first_not_nan_element - tensor(i)) > numeric_limits<float>::min())
+        if(!isnan(tensor(i)) && abs(first_not_nan_element - tensor(i)) > numeric_limits<float>::min())
             return false;
 
     return true;
@@ -318,7 +336,7 @@ TensorMap3 tensor_map_(const TensorMap4&, const Index&);
 template <Index rank>
 TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_view)
 {
-    if (!tensor_view.data)
+    if(!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
 
     if (reinterpret_cast<uintptr_t>(tensor_view.data) % 16 != 0)
@@ -542,7 +560,7 @@ type* link(type* ptr, vector<TensorViewCuda*> views_cuda)
 
     for(TensorViewCuda* view_cuda : views_cuda)
     {
-        if (!view_cuda || view_cuda->size() == 0) continue;
+        if(!view_cuda || view_cuda->size() == 0) continue;
 
         view_cuda->data = ptr;
         ptr += (view_cuda->size() + ALIGNMENT - 1) & MASK;
@@ -561,7 +579,7 @@ Index get_size(const vector<TensorViewCuda*> views)
 
     for(const TensorView* view : views)
     {
-        if (!view || view->size() == 0)
+        if(!view || view->size() == 0)
             continue;
 
         total_size += (view->size() + ALIGNMENT - 1) & MASK;

@@ -257,7 +257,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
 TrainingResults QuasiNewtonMethod::train()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number + 1);
@@ -270,7 +270,7 @@ TrainingResults QuasiNewtonMethod::train()
 
     Dataset* dataset = loss_index->get_dataset();
 
-    if (!dataset)
+    if(!dataset)
         throw runtime_error("Dataset is null.");
 
     const bool has_selection = dataset->has_selection();
@@ -490,12 +490,12 @@ void QuasiNewtonMethod::from_XML(const XMLDocument& document)
 {
     const XMLElement* root_element = document.FirstChildElement("QuasiNewtonMethod");
 
-    if (!root_element)
+    if(!root_element)
         throw runtime_error("Quasi-Newton method element is nullptr.\n");
 
     /*const XMLElement* learning_rate_algorithm_element = root_element->FirstChildElement("LearningRateAlgorithm");
 
-    if (!learning_rate_algorithm_element)
+    if(!learning_rate_algorithm_element)
         throw runtime_error("Learning rate algorithm element is nullptr.\n");*/
 
     set_minimum_loss_decrease(read_xml_type(root_element, "MinimumLossDecrease"));

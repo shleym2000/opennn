@@ -91,7 +91,7 @@ void NeuronsSelection::set_training_strategy(TrainingStrategy* new_training_stra
 
 void NeuronsSelection::set_default()
 {
-    if (!(training_strategy && training_strategy->get_neural_network()))
+    if(!(training_strategy && training_strategy->get_neural_network()))
         return;
 
     const Index inputs_number = training_strategy->get_neural_network()->get_features_number();

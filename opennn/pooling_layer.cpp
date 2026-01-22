@@ -312,7 +312,7 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
                                               .maximum(array_2(1, 2))
                                               .reshape(array_4(batch_size, output_width, output_height, channels));
 
-    if (!is_training) return;
+    if(!is_training) return;
 
     // Maximal indices
 

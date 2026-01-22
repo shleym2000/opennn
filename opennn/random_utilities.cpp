@@ -45,7 +45,7 @@ void set_seed(Index seed)
 
 
 inline mt19937& get_generator() {
-    if (!is_initialized) initialize_generator();
+    if(!is_initialized) initialize_generator();
     return generator;
 }
 

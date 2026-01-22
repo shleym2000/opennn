@@ -1390,7 +1390,7 @@ void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation_cu
     {
         Layer* layer = neural_network->get_layer(layer_index).get();
 
-        if (!layer->get_is_trainable())
+        if(!layer->get_is_trainable())
             continue;
 
         LayerBackPropagationCuda* layer_back_prop_cuda = back_propagation_cuda.neural_network.layers[layer_index].get();
@@ -1494,7 +1494,7 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
     samples_number = new_samples_number;
     loss_index = new_loss_index;
 
-    if (!loss_index) return;
+    if(!loss_index) return;
 
     // Neural network
 

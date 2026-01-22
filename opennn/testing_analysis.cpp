@@ -782,7 +782,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_binary_classification(cons
             true_positive++;
         else if (is_target_positive && !is_output_positive)
             false_negative++;
-        else if (!is_target_positive && is_output_positive)
+        else if(!is_target_positive && is_output_positive)
             false_positive++;
         else  // !is_target_positive && !is_output_positive
             true_negative++;
@@ -2120,7 +2120,7 @@ void TestingAnalysis::save(const filesystem::path& file_name) const
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     XMLPrinter printer;
