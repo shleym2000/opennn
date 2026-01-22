@@ -70,7 +70,7 @@ vector<string> tokenize(const string& document)
     vector<string> tokens;
     string current_token;
 
-    for (char c : document)
+    for(char c : document)
     {
         if (isalnum(c))
         {
@@ -178,11 +178,11 @@ vector<string> convert_string_vector(const vector<vector<string>>& input_vector,
 
     vector<string> vector_result;
 
-    for (const auto& subvec : input_vector)
+    for(const auto& subvec : input_vector)
     {
         stringstream ss;
 
-        for (size_t i = 0; i < subvec.size(); ++i)
+        for(size_t i = 0; i < subvec.size(); ++i)
         {
             ss << subvec[i];
 
@@ -665,7 +665,7 @@ void replace_substring_in_string (vector<string>& tokens, string& expression, co
 {
     string::size_type previous_pos = 0;
 
-    for (const string& token : tokens)
+    for(const string& token : tokens)
     {
         const string to_replace(token);
 
@@ -833,7 +833,7 @@ void detokenize_whitespace(Tensor2& predictions, ostringstream& output_string)
     {
         if(predictions(i) == 2) break;
 
-        for (const auto& pair : output_vocabulary)
+        for(const auto& pair : output_vocabulary)
         {
             if (pair.second == Index(predictions(i)))
             {
@@ -849,7 +849,7 @@ void detokenize_whitespace(Tensor2& predictions, ostringstream& output_string)
 void detokenize_wordpiece(Tensor2& predictions, ostringstream& buffer)
 {
     /*
-    for (const auto& pair : output_vocabulary) {
+    for(const auto& pair : output_vocabulary) {
         if (pair.second == Index(predictions(1))) {
             buffer << pair.first;
             break;
@@ -863,7 +863,7 @@ void detokenize_wordpiece(Tensor2& predictions, ostringstream& buffer)
         if(predictions(i) == 3) // [END] token
             break;
 
-        for (const auto& pair : output_vocabulary) {
+        for(const auto& pair : output_vocabulary) {
             if (pair.second == Index(predictions(i))) {
                 current_prediction = pair.first;
                 break;
@@ -886,7 +886,7 @@ vector<string> preprocess_language_document(const string& document, const bool& 
 
     string currentToken;
 
-    for (char c : document)
+    for(char c : document)
     {
         if (isalnum(c))
         {

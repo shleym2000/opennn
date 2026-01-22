@@ -78,8 +78,8 @@ void Embedding::set(const Index& new_vocabulary_size,
 
 #pragma omp parallel for collapse(2)
 
-    for (Index i = 0; i < sequence_length; i++)
-        for (Index j = 0; j < new_embedding_dimension; j++)
+    for(Index i = 0; i < sequence_length; i++)
+        for(Index j = 0; j < new_embedding_dimension; j++)
             positional_encoding(i, j) = (j < Index(half_depth))
                 ? sin(i / pow(10000, j / half_depth))
                 : cos(i / pow(10000, (j - Index(half_depth)) / half_depth));
@@ -156,11 +156,11 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
     const TensorMap2 weights_map = tensor_map<2>(weights);
 
     #pragma omp parallel for
-    for (Index sample_index = 0; sample_index < batch_size; sample_index++)
+    for(Index sample_index = 0; sample_index < batch_size; sample_index++)
     {
         auto sample_output = outputs.chip(sample_index, 0);
 
-        for (Index word_index = 0; word_index < sequence_length; word_index++)
+        for(Index word_index = 0; word_index < sequence_length; word_index++)
         {
             const Index token_id = inputs(sample_index, word_index);
 

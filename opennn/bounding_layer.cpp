@@ -168,12 +168,12 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
     const Index columns_number = inputs.dimension(1);
 
 #pragma omp parallel for
-    for (Index j = 0; j < columns_number; j++)
+    for(Index j = 0; j < columns_number; j++)
     {
         const type& lower_bound = lower_bounds(j);
         const type& upper_bound = upper_bounds(j);
 
-        for (Index i = 0; i < rows_number; i++)
+        for(Index i = 0; i < rows_number; i++)
             outputs(i, j) = clamp(inputs(i, j), lower_bound, upper_bound);
     }
 }
@@ -234,7 +234,7 @@ void Bounding::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
 
-    for (Index i = 0; i < output_dimensions[0]; i++)
+    for(Index i = 0; i < output_dimensions[0]; i++)
     {
         printer.OpenElement("Item");
         printer.PushAttribute("Index", unsigned(i + 1));
@@ -264,7 +264,7 @@ void Bounding::from_XML(const XMLDocument& document)
 
     const auto* item_element = root_element->FirstChildElement("Item");
 
-    for (Index i = 0; i < neurons_number && item_element; i++)
+    for(Index i = 0; i < neurons_number && item_element; i++)
     {
         unsigned index = 0;
         item_element->QueryUnsignedAttribute("Index", &index);
@@ -297,7 +297,7 @@ void BoundingForwardPropagation::initialize()
 }
 
 
-vector<TensorView *> BoundingForwardPropagation::get_tensor_views()
+vector<TensorView*> BoundingForwardPropagation::get_tensor_views()
 {
     return { &outputs };
 }

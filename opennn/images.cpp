@@ -128,7 +128,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
         palette.resize(num_palette_colors);
         is_grayscale = true;
 
-        for (uint32_t i = 0; i < num_palette_colors; ++i)
+        for(uint32_t i = 0; i < num_palette_colors; ++i)
         {
             palette[i].blue = read_u8(file, image_path_str);
             palette[i].green = read_u8(file, image_path_str);
@@ -165,7 +165,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
     const long long row_stride_in_file = ((row_data_bytes + 3) / 4) * 4;
     vector<unsigned char> row_buffer(row_stride_in_file);
 
-    for (Index y_row = 0; y_row < tensor_height; ++y_row)
+    for(Index y_row = 0; y_row < tensor_height; ++y_row)
     {
         const Index tensor_y_coord = top_down ? y_row : (tensor_height - 1 - y_row);
 
@@ -185,7 +185,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
             throw runtime_error("Unexpected EOF while reading pixel rows. Reached row " + to_string(y_row + 1) +
                                 " of " + to_string(tensor_height) + " in BMP: " + image_path_str);
 
-        for (Index x_col = 0; x_col < tensor_width; ++x_col)
+        for(Index x_col = 0; x_col < tensor_width; ++x_col)
         {
             float r_val = 0.0f, g_val = 0.0f, b_val = 0.0f;
 
@@ -256,20 +256,20 @@ Tensor3 resize_image(const Tensor<float, 3>& input_image,
     const float scale_x = static_cast<float>(input_width) / output_width;
 
 #pragma omp parallel for
-    for (Index y = 0; y < output_height; ++y) {
+    for(Index y = 0; y < output_height; ++y) {
         const float in_y = y * scale_y;
         const Index y0 = static_cast<Index>(std::floor(in_y));
         const float y_weight = in_y - y0;
         const Index y1 = std::min<Index>(y0 + 1, input_height - 1);
 
 #pragma omp parallel for
-        for (Index x = 0; x < output_width; ++x) {
+        for(Index x = 0; x < output_width; ++x) {
             const float in_x = x * scale_x;
             const Index x0 = static_cast<Index>(std::floor(in_x));
             const float x_weight = in_x - x0;
             const Index x1 = std::min<Index>(x0 + 1, input_width - 1);
 
-            for (Index c = 0; c < channels; ++c) {
+            for(Index c = 0; c < channels; ++c) {
                 const float top = (1 - x_weight) * input_image(y0, x0, c)
                 + x_weight * input_image(y0, x1, c);
 
@@ -405,7 +405,7 @@ void translate_image_y(const ThreadPoolDevice* device,
     if (limit_src_rows <= 0)
         return;
 
-    for (Index r_src = 0; r_src < limit_src_rows; ++r_src)
+    for(Index r_src = 0; r_src < limit_src_rows; ++r_src)
     {
         const Index r_dest = r_src + shift;
 

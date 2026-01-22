@@ -395,7 +395,7 @@ void fill_tensor_data(const Tensor2& matrix,
     const type* matrix_data = matrix.data();
 
     // #pragma omp parallel for
-    for (Index j = 0; j < columns_number; j++)
+    for(Index j = 0; j < columns_number; j++)
     {
         const type* matrix_column = matrix_data + matrix.dimension(0) * column_indices[j];
 
@@ -405,7 +405,7 @@ void fill_tensor_data(const Tensor2& matrix,
 
         const Index* rows_indices_data = row_indices.data();
 
-        for (Index i = 0; i < rows_number; i++)
+        for(Index i = 0; i < rows_number; i++)
         {
             matrix_value = matrix_column + *rows_indices_data;
             rows_indices_data++;
@@ -429,11 +429,11 @@ void fill_tensor_data_row_major(const Tensor2& matrix,
 
 #pragma omp parallel for
 
-    for (Index i = 0; i < rows_number; i++)
+    for(Index i = 0; i < rows_number; i++)
     {
         const Index row_index = row_indices[i];
 
-        for (Index j = 0; j < columns_number; j++)
+        for(Index j = 0; j < columns_number; j++)
         {
             const Index column_index = column_indices[j];
             const type* matrix_value = matrix_data + row_index + matrix.dimension(0) * column_index;
@@ -463,13 +463,13 @@ void fill_tensor_sequence(const Tensor2& matrix,
 
     //#pragma omp parallel for collapse(3)
 
-    for (Index i = 0; i < batch_size; i++)
+    for(Index i = 0; i < batch_size; i++)
     {
-        for (Index j = 0; j < past_time_steps; j++)
+        for(Index j = 0; j < past_time_steps; j++)
         {
             const Index actual_row = i + j * batch_size;
 
-            for (Index k = 0; k < input_size; k++)
+            for(Index k = 0; k < input_size; k++)
                 batch(i, j, k) = matrix(actual_row, columns_indices[k]);
         }
     }

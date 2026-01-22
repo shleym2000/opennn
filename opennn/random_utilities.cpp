@@ -83,7 +83,7 @@ void set_random_uniform(Tensor1& tensor, type min, type max)
     uniform_real_distribution<type> distribution(min, max);
 
     #pragma omp parallel for
-    for (Index i = 0; i < tensor.size(); ++i)
+    for(Index i = 0; i < tensor.size(); ++i)
         tensor(i) = distribution(get_generator());
 }
 
@@ -93,7 +93,7 @@ void set_random_uniform(Tensor2& tensor, type min, type max)
     uniform_real_distribution<type> distribution(min, max);
 
     #pragma omp parallel for
-    for (Index i = 0; i < tensor.size(); ++i)
+    for(Index i = 0; i < tensor.size(); ++i)
         tensor(i) = distribution(get_generator());
 }
 
@@ -103,7 +103,7 @@ void set_random_uniform(TensorMap1 tensor, type min, type max)
     uniform_real_distribution<type> distribution(min, max);
 
     #pragma omp parallel for
-    for (Index i = 0; i < tensor.size(); ++i)
+    for(Index i = 0; i < tensor.size(); ++i)
         tensor(i) = distribution(get_generator());
 }
 
@@ -113,7 +113,7 @@ void set_random_uniform(TensorMap2 tensor, type min, type max)
     uniform_real_distribution<type> distribution(min, max);
 
     #pragma omp parallel for
-    for (Index i = 0; i < tensor.size(); ++i)
+    for(Index i = 0; i < tensor.size(); ++i)
         tensor(i) = distribution(get_generator());
 }
 
@@ -156,7 +156,7 @@ void set_random_integer(Tensor2& tensor, Index min, Index max)
     uniform_int_distribution<Index> distribution(min, max);
 
 #pragma omp parallel for
-    for (Index i = 0; i < tensor.size(); ++i)
+    for(Index i = 0; i < tensor.size(); ++i)
         tensor(i) = distribution(get_generator());
 }
 

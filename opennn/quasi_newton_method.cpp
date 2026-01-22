@@ -728,7 +728,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
 
     const type slope = optimization_data.training_slope(0);
 
-    for (int i = 0; i < 20; ++i)
+    for(int i = 0; i < 20; ++i)
     {
         potential_parameters.device(*device) = parameters + training_direction * alpha;
 

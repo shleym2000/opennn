@@ -471,7 +471,7 @@ Tensor1 calculate_spearman_ranks(const Tensor1 & x)
 
         const type average_rank = (static_cast<type>(i + 1) + static_cast<type>(j + 1)) / type(2.0);
 
-        for (Index k = i; k <= j; k++)
+        for(Index k = i; k <= j; k++)
             ranks(sorted_indices(k)) = average_rank;
 
         i = j + 1;

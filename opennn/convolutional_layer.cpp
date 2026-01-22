@@ -54,7 +54,7 @@ void Convolutional::calculate_convolutions(const Tensor4& inputs, Tensor4& convo
 //    const TensorMap2 weights_map = tensor_map<2>(weights);
 //    const TensorMap1 biases_map = tensor_map<1>(biases);
 
-    for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
+    for(Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
 /*
         const TensorMap3 kernel_weights = tensor_map(weights_map, kernel_index);
@@ -174,7 +174,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     bias_deltas.device(*device) = deltas.sum(array<Index, 3>({0, 1, 2}));
 
 #pragma omp parallel for
-    for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
+    for(Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
         const TensorMap3 kernel_convolution_deltas = tensor_map_(deltas, kernel_index);
 
@@ -190,32 +190,32 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 */
 
 #pragma omp parallel for //schedule(static)
-    for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
+    for(Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
     {
         const TensorMap3 kernel_rotated_weights = tensor_map(rotated_weights,kernel_index);
 
-        for (Index channel_index = 0; channel_index < input_channels; ++channel_index)
+        for(Index channel_index = 0; channel_index < input_channels; ++channel_index)
             precomputed_rotated_slices[kernel_index][channel_index] = kernel_rotated_weights.chip(channel_index, 2);
     }
 
     const array<Index, 2> convolution_dimensions_2d = {0, 1};
 
-    for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
+    for(Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
     {
         const TensorMap3 kernel_convolution_deltas = tensor_map_(deltas, kernel_index);
 
         #pragma omp parallel for
-        for (Index image_index = 0; image_index < batch_size; ++image_index)
+        for(Index image_index = 0; image_index < batch_size; ++image_index)
         {
             const Tensor2 image_kernel_convolutions_derivatives_padded = kernel_convolution_deltas.chip(image_index, 0).pad(paddings);
 
-            for (Index channel_index = 0; channel_index < input_channels; ++channel_index)
+            for(Index channel_index = 0; channel_index < input_channels; ++channel_index)
             {
                 const Tensor2 convolution_result = image_kernel_convolutions_derivatives_padded
                 .convolve(precomputed_rotated_slices[kernel_index][channel_index], convolution_dimensions_2d);
 
-                for (Index h = 0; h < input_height; ++h)
-                    for (Index w = 0; w < input_width; ++w)
+                for(Index h = 0; h < input_height; ++h)
+                    for(Index w = 0; w < input_width; ++w)
                         input_deltas(image_index, h, w, channel_index) += convolution_result(h, w);
             }
         }
@@ -1148,10 +1148,10 @@ void Convolutional::copy_parameters_device()
 
     Tensor4 weights_for_cudnn_layout(kernel_width, kernel_height, channels, kernels_number);
 
-    for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
-        for (Index channel_index = 0; channel_index < channels; ++channel_index)
-            for (Index kernel_height_index = 0; kernel_height_index < kernel_height; ++kernel_height_index)
-                for (Index kernel_width_index = 0; kernel_width_index < kernel_width; ++kernel_width_index)
+    for(Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
+        for(Index channel_index = 0; channel_index < channels; ++channel_index)
+            for(Index kernel_height_index = 0; kernel_height_index < kernel_height; ++kernel_height_index)
+                for(Index kernel_width_index = 0; kernel_width_index < kernel_width; ++kernel_width_index)
                     weights_for_cudnn_layout(kernel_width_index, kernel_height_index, channel_index, kernel_index)
                         = weights(kernel_height_index, kernel_width_index, channel_index, kernel_index);
 

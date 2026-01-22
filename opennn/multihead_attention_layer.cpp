@@ -190,7 +190,7 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
     const Index total_heads = batch_size * heads_number;
 
     #pragma omp parallel for
-    for (Index i = 0; i < total_heads; ++i)
+    for(Index i = 0; i < total_heads; ++i)
     {
         const auto q_mat = query.reshape(array_2(total_heads, query_sequence_length * head_dimension))
                                 .chip(i, 0)
@@ -217,7 +217,7 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
     softmax(attention_weights);
 
     #pragma omp parallel for
-    for (Index i = 0; i < total_heads; ++i)
+    for(Index i = 0; i < total_heads; ++i)
     {
         const auto w_mat = attention_weights.reshape(array_2(total_heads, query_sequence_length * source_sequence_length)).chip(i, 0).reshape(array_2(query_sequence_length, source_sequence_length));
         const auto v_mat = value.reshape(array_2(total_heads, source_sequence_length * head_dimension)).chip(i, 0).reshape(array_2(source_sequence_length, head_dimension));
@@ -311,9 +311,9 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     // @todo improve the following loops as before
 
     #pragma omp parallel for collapse(2)
-    for (Index b = 0; b < batch_size; ++b)
+    for(Index b = 0; b < batch_size; ++b)
     {
-        for (Index h = 0; h < heads_number; ++h)
+        for(Index h = 0; h < heads_number; ++h)
         {
             const auto w_slice = attention_weights.chip(b, 0).chip(h, 0); // [Lq, Ls]
             const auto do_slice = attention_output_deltas.chip(b, 0).chip(h, 0); // [Lq, Dh]
@@ -334,9 +334,9 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
         .broadcast(array_4(1, 1, 1, source_sequence_length)));
 
     #pragma omp parallel for collapse(2)
-    for (Index b = 0; b < batch_size; ++b)
+    for(Index b = 0; b < batch_size; ++b)
     {
-        for (Index h = 0; h < heads_number; ++h)
+        for(Index h = 0; h < heads_number; ++h)
         {
             const auto sd_slice = softmax_deltas.chip(b, 0).chip(h, 0); // [Lq, Ls]
             const auto q_slice = query.chip(b, 0).chip(h, 0); // [Lq, Dh]

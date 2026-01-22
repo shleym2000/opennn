@@ -1376,7 +1376,7 @@ string ModelExpression::replace_reserved_keywords(const string& s) const
     if(s[0] == '$')
         out = s;
 
-    for (char c : s)
+    for(char c : s)
     {
         if (c == ' ') out += "_";
         else if (c == '.') out += "_dot_";
@@ -1406,7 +1406,7 @@ string ModelExpression::replace_reserved_keywords(const string& s) const
         {"tanh", "ta_nh"}
     };
 
-    for (const auto& pair : special_words)
+    for(const auto& pair : special_words)
     {
         size_t position = 0;
 
@@ -1448,7 +1448,7 @@ vector<string> ModelExpression::fix_get_expression_outputs(const string& str,
     if (tokens.size() < num_outputs)
         return {};
 
-    for (size_t i = 0; i < num_outputs; ++i)
+    for(size_t i = 0; i < num_outputs; ++i)
     {
         string intermediate_var_line = tokens[tokens.size() - num_outputs + i];
         string intermediate_var_name = get_first_word(intermediate_var_line);
@@ -1505,7 +1505,7 @@ vector<string> ModelExpression::fix_output_names(const vector<string>& output_na
 
     vector<string> fixes_output_names(outputs_number);
 
-    for (Index i = 0; i < outputs_number; i++)
+    for(Index i = 0; i < outputs_number; i++)
         if (output_names[i].empty())
             fixes_output_names[i] = "output_" + to_string(i);
         else

@@ -2224,7 +2224,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
     neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
 
-    for (const auto& current_batch_indices : testing_batches)
+    for(const auto& current_batch_indices : testing_batches)
     {
         const Index current_batch_size = current_batch_indices.size();
         if (current_batch_size == 0) continue;

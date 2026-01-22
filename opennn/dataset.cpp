@@ -210,7 +210,7 @@ Tensor<Index, 1> Dataset::get_sample_role_numbers() const
 
     const Index samples_number = get_samples_number();
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         const string& role = sample_roles[i];
 
@@ -235,7 +235,7 @@ vector<Index> Dataset::get_sample_indices(const string& sample_role) const
 
     Index index = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (sample_roles[i] == sample_role)
             indices[index++] = i;
 
@@ -254,7 +254,7 @@ vector<Index> Dataset::get_used_sample_indices() const
 
     Index index = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (sample_roles[i] != "None")
             used_indices[index++] = i;
 
@@ -282,7 +282,7 @@ vector<Index> Dataset::get_sample_roles_vector() const
 
 #pragma omp parallel for
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         const string& role = sample_roles[i];
 
@@ -319,7 +319,7 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
     shuffle_vector(samples_copy);
 
     #pragma omp parallel for
-    for (Index i = 0; i < batches_number; i++)
+    for(Index i = 0; i < batches_number; i++)
     {
         const Index start_index = i * batch_size;
 
@@ -374,7 +374,7 @@ void Dataset::set_sample_roles(const vector<string>& new_roles)
 {
     const Index samples_number = new_roles.size();
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (new_roles[i] == "Training" || new_roles[i] == "0")
             sample_roles[i] = "Training";
         else if (new_roles[i] == "Selection" || new_roles[i] == "1")
@@ -390,7 +390,7 @@ void Dataset::set_sample_roles(const vector<string>& new_roles)
 
 void Dataset::set_sample_roles(const vector<Index>& indices, const string& sample_role)
 {
-    for (const auto& i : indices)
+    for(const auto& i : indices)
         set_sample_role(i, sample_role);
 }
 
@@ -510,7 +510,7 @@ void Dataset::set_default_raw_variables_roles()
 
     set_variable_roles("Input");
 
-    for (Index i = raw_variables_number - 1; i >= 0; i--)
+    for(Index i = raw_variables_number - 1; i >= 0; i--)
     {
         RawVariable& raw_variable = raw_variables[i];
         if (raw_variable.type == RawVariableType::Constant ||
@@ -545,7 +545,7 @@ void Dataset::set_default_raw_variables_roles_forecasting()
 
     set_variable_roles("Input");
 
-    for (Index i = raw_variables.size() - 1; i >= 0; i--)
+    for(Index i = raw_variables.size() - 1; i >= 0; i--)
     {
         if (raw_variables[i].type == RawVariableType::DateTime && !timeRawVariable)
         {
@@ -577,7 +577,7 @@ void Dataset::set_default_raw_variable_names()
 {
     const Index raw_variables_number = raw_variables.size();
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         raw_variables[i].name = "variable_" + to_string(1 + i);
 }
 
@@ -590,9 +590,9 @@ vector<string> Dataset::get_variable_names() const
 
     Index index = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
         if (raw_variable.type == RawVariableType::Categorical)
-            for (size_t j = 0; j < raw_variable.categories.size(); j++)
+            for(size_t j = 0; j < raw_variable.categories.size(); j++)
                 variable_names[index++] = raw_variable.categories[j];
         else
             variable_names[index++] = raw_variable.name;
@@ -609,14 +609,14 @@ vector<string> Dataset::get_variable_names(const string& variable_role) const
 
     Index index = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
         if (!((raw_variable.role == variable_role) ||
               ((variable_role == "Input" || variable_role == "Target") && raw_variable.role == "InputTarget")))
             continue;
 
         if (raw_variable.type == RawVariableType::Categorical)
-            for (Index j = 0; j < raw_variable.get_categories_number(); j++)
+            for(Index j = 0; j < raw_variable.get_categories_number(); j++)
                 variable_names[index++] = raw_variable.categories[j];
         else
             variable_names[index++] = raw_variable.name;
@@ -672,7 +672,7 @@ vector<Index> Dataset::get_variable_indices(const string& variable_role) const
     Index variable_index = 0;
     Index this_variable_index = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
         if (raw_variable.role.find(variable_role) == string::npos)
         {
@@ -684,7 +684,7 @@ vector<Index> Dataset::get_variable_indices(const string& variable_role) const
         }
 
         if (raw_variable.type == RawVariableType::Categorical)
-            for (Index j = 0; j < raw_variable.get_categories_number(); j++)
+            for(Index j = 0; j < raw_variable.get_categories_number(); j++)
                 this_variable_indices[this_variable_index++] = variable_index++;
         else
             this_variable_indices[this_variable_index++] = variable_index++;
@@ -704,7 +704,7 @@ vector<Index> Dataset::get_raw_variable_indices(const string& variable_role) con
 
     Index index = 0;
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         if (raw_variables[i].role.find(variable_role) != string::npos)
             indices[index++] = i;
 
@@ -722,7 +722,7 @@ vector<Index> Dataset::get_used_raw_variables_indices() const
 
     Index index = 0;
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         if (raw_variables[i].role == "Input"
             || raw_variables[i].role == "Target"
             || raw_variables[i].role == "Time"
@@ -744,9 +744,9 @@ vector<string> Dataset::get_variable_scalers(const string& variable_role) const
 
     Index index = 0;
 
-    for (Index i = 0; i < input_raw_variables_number; i++)
+    for(Index i = 0; i < input_raw_variables_number; i++)
         if (input_raw_variables[i].type == RawVariableType::Categorical)
-            for (Index j = 0; j < input_raw_variables[i].get_categories_number(); j++)
+            for(Index j = 0; j < input_raw_variables[i].get_categories_number(); j++)
                 input_variable_scalers[index++] = input_raw_variables[i].scaler;
         else
             input_variable_scalers[index++] = input_raw_variables[i].scaler;
@@ -761,7 +761,7 @@ vector<string> Dataset::get_raw_variable_names() const
 
     vector<string> raw_variable_names(raw_variables_number);
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         raw_variable_names[i] = raw_variables[i].name;
 
     return raw_variable_names;
@@ -776,7 +776,7 @@ vector<string> Dataset::get_raw_variable_names(const string& variable_role) cons
 
     Index index = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
         if (!((raw_variable.role == variable_role) ||
               ((variable_role == "Input" || variable_role == "Target") && raw_variable.role == "InputTarget")))
@@ -793,7 +793,7 @@ Index Dataset::get_raw_variables_number(const string& variable_role) const
 {
     Index count = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
         if (raw_variable.role.find(variable_role) != string::npos)
             count++;
 
@@ -823,7 +823,7 @@ vector<Dataset::RawVariable> Dataset::get_raw_variables(const string& variable_r
     vector<RawVariable> this_raw_variables(count);
     Index index = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
         if (raw_variable.role.find(variable_role) != string::npos)
             this_raw_variables[index++] = raw_variable;
 
@@ -844,7 +844,7 @@ Index Dataset::get_variables_number(const string& variable_role) const
 {
     Index count = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
         if (raw_variable.role.find(variable_role) != string::npos)
             count += (raw_variable.type == RawVariableType::Categorical)
                          ? raw_variable.get_categories_number()
@@ -875,7 +875,7 @@ vector<Index> Dataset::get_used_variable_indices() const
         }
 
         if(raw_variable.type == RawVariableType::Categorical)
-            for (Index j = 0; j < categories_number; j++)
+            for(Index j = 0; j < categories_number; j++)
                 used_variable_indices[used_variable_index++] = variable_index++;
         else
             used_variable_indices[used_variable_index++] = variable_index++;
@@ -893,7 +893,7 @@ void Dataset::set_raw_variable_roles(const vector<string>& new_raw_variables_rol
         throw runtime_error("Size of raw_variables uses (" + to_string(new_raw_variables_roles_size) + ") "
                                                                                                       "must be equal to raw_variables size (" + to_string(raw_variables.size()) + ").\n");
 
-    for (size_t i = 0; i < new_raw_variables_roles.size(); i++)
+    for(size_t i = 0; i < new_raw_variables_roles.size(); i++)
         raw_variables[i].set_role(new_raw_variables_roles[i]);
 }
 
@@ -902,7 +902,7 @@ void Dataset::set_raw_variables(const string& variable_role)
 {
     const Index raw_variables_number = get_raw_variables_number();
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         set_raw_variable_role(i, variable_role);
 }
 
@@ -941,7 +941,7 @@ void Dataset::set_input_raw_variables_unused()
 {
     const Index raw_variables_number = get_raw_variables_number();
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         if (raw_variables[i].role == "Input")
             set_raw_variable_role(i, "None");
 }
@@ -983,7 +983,7 @@ void Dataset::set_raw_variable_type(const string& name, const RawVariableType& n
 
 void Dataset::set_raw_variable_types(const RawVariableType& new_type)
 {
-    for (auto& raw_variable : raw_variables)
+    for(auto& raw_variable : raw_variables)
         raw_variable.type = new_type;
 }
 
@@ -992,9 +992,9 @@ void Dataset::set_variable_names(const vector<string>& new_variables_names)
 {
     Index index = 0;
 
-    for (Dataset::RawVariable& raw_variable : raw_variables)
+    for(Dataset::RawVariable& raw_variable : raw_variables)
         if (raw_variable.type == RawVariableType::Categorical)
-            for (Index j = 0; j < raw_variable.get_categories_number(); j++)
+            for(Index j = 0; j < raw_variable.get_categories_number(); j++)
                 raw_variable.categories[j] = new_variables_names[index++];
         else
             raw_variable.name = new_variables_names[index++];
@@ -1010,7 +1010,7 @@ void Dataset::set_raw_variable_names(const vector<string>& new_names)
         throw runtime_error("Size of names (" + to_string(new_names.size()) + ") "
                                                                               "is not equal to raw_variables number (" + to_string(raw_variables_number) + ").\n");
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         raw_variables[i].name = get_trimmed(new_names[i]);
 }
 
@@ -1019,7 +1019,7 @@ void Dataset::set_variable_roles(const string& variable_role)
 {
     const Index raw_variables_number = get_raw_variables_number();
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
     {
         if (raw_variables[i].type == RawVariableType::Constant || raw_variables[i].type == RawVariableType::DateTime)
             raw_variables[i].set_role("None");
@@ -1037,7 +1037,7 @@ void Dataset::set_raw_variables_number(const Index& new_raw_variables_number)
 
 void Dataset::set_raw_variable_scalers(const string& scalers)
 {
-    for (Dataset::RawVariable& raw_variable : raw_variables)
+    for(Dataset::RawVariable& raw_variable : raw_variables)
         raw_variable.scaler = scalers;
 }
 
@@ -1050,7 +1050,7 @@ void Dataset::set_raw_variable_scalers(const vector<string>& new_scalers)
         throw runtime_error("Size of raw_variable scalers(" + to_string(new_scalers.size()) + ") "
                                                                                               "has to be the same as raw_variables numbers(" + to_string(raw_variables_number) + ").\n");
 
-    for (size_t i = 0; i < raw_variables_number; i++)
+    for(size_t i = 0; i < raw_variables_number; i++)
         raw_variables[i].scaler = new_scalers[i];
 }
 
@@ -1061,7 +1061,7 @@ void Dataset::set_binary_raw_variables()
 
     const Index raw_variables_number = get_raw_variables_number();
 
-    for (Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
+    for(Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
     {
         RawVariable& raw_variable = raw_variables[raw_variable_index];
 
@@ -1093,7 +1093,7 @@ void Dataset::unuse_constant_raw_variables()
 
     const Index raw_variables_number = get_raw_variables_number();
 
-    for (Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
+    for(Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
     {
         RawVariable& raw_variable = raw_variables[raw_variable_index];
 
@@ -1324,7 +1324,7 @@ Tensor1 Dataset::get_sample_data(const Index& sample_index, const vector<Index>&
     Tensor<type, 1 > row(variables_number);
 
 #pragma omp parallel for
-    for (Index i = 0; i < variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
         row(i) = data(sample_index, variable_indices[i]);
 
     return row;
@@ -1339,7 +1339,7 @@ Tensor2 Dataset::get_sample_input_data(const Index& sample_index) const
 
     Tensor2 inputs(1, input_variables_number);
 
-    for (Index i = 0; i < input_variables_number; i++)
+    for(Index i = 0; i < input_variables_number; i++)
         inputs(0, i) = data(sample_index, input_variable_indices[i]);
 
     return inputs;
@@ -1362,7 +1362,7 @@ Index Dataset::get_raw_variable_index(const string& column_name) const
 {
     const Index raw_variables_number = get_raw_variables_number();
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         if (raw_variables[i].name == column_name)
             return i;
 
@@ -1376,7 +1376,7 @@ Index Dataset::get_raw_variable_index(const Index& variable_index) const
 
     Index total_variables_number = 0;
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
     {
         total_variables_number += (raw_variables[i].type == RawVariableType::Categorical)
         ? raw_variables[i].get_categories_number()
@@ -1396,7 +1396,7 @@ vector<vector<Index>> Dataset::get_variable_indices() const
 
     vector<vector<Index>> indices(raw_variables_number);
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
         indices[i] = get_variable_indices(i);
 
     return indices;
@@ -1407,7 +1407,7 @@ vector<Index> Dataset::get_variable_indices(const Index& raw_variable_index) con
 {
     Index index = 0;
 
-    for (Index i = 0; i < raw_variable_index; i++)
+    for(Index i = 0; i < raw_variable_index; i++)
         index += (raw_variables[i].type == RawVariableType::Categorical)
                      ? raw_variables[i].categories.size()
                      : 1;
@@ -1418,7 +1418,7 @@ vector<Index> Dataset::get_variable_indices(const Index& raw_variable_index) con
     {
         vector<Index> indices(raw_variable.categories.size());
 
-        for (size_t j = 0; j < raw_variable.categories.size(); j++)
+        for(size_t j = 0; j < raw_variable.categories.size(); j++)
             indices[j] = index + j;
 
         return indices;
@@ -1457,7 +1457,7 @@ string Dataset::get_sample_category(const Index& sample_index, const Index& colu
     if (raw_variables[column_index_start].type != RawVariableType::Categorical)
         throw runtime_error("The specified raw_variable is not of categorical type.");
 
-    for (size_t raw_variable_index = column_index_start; raw_variable_index < raw_variables.size(); raw_variable_index++)
+    for(size_t raw_variable_index = column_index_start; raw_variable_index < raw_variables.size(); raw_variable_index++)
         if (data(sample_index, raw_variable_index) == 1)
             return raw_variables[column_index_start].categories[raw_variable_index - column_index_start];
 
@@ -1553,7 +1553,7 @@ void Dataset::set(const Index& new_samples_number,
 
     set_default();
 
-    for (Index i = 0; i < new_variables_number; i++)
+    for(Index i = 0; i < new_variables_number; i++)
     {
         RawVariable& raw_variable = raw_variables[i];
 
@@ -1781,10 +1781,10 @@ vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correl
     vector<type> mean_abs_corr(input_raw_variables_number, 0.0);
     vector<bool> to_be_removed(input_raw_variables_number, false);
 
-    for (Index i = 0; i < input_raw_variables_number; ++i)
+    for(Index i = 0; i < input_raw_variables_number; ++i)
     {
         type sum_of_abs_corr = 0.0;
-        for (Index j = 0; j < input_raw_variables_number; ++j)
+        for(Index j = 0; j < input_raw_variables_number; ++j)
         {
             if (i == j) continue;
 
@@ -1801,9 +1801,9 @@ vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correl
             mean_abs_corr[i] = sum_of_abs_corr / (input_raw_variables_number - 1);
     }
 
-    for (Index i = 0; i < input_raw_variables_number; ++i)
+    for(Index i = 0; i < input_raw_variables_number; ++i)
     {
-        for (Index j = i + 1; j < input_raw_variables_number; ++j)
+        for(Index j = i + 1; j < input_raw_variables_number; ++j)
         {
 
             if (to_be_removed[i] || to_be_removed[j])
@@ -1830,7 +1830,7 @@ vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correl
     }
 
     vector<string> unused_raw_variables;
-    for (Index i = 0; i < input_raw_variables_number; ++i)
+    for(Index i = 0; i < input_raw_variables_number; ++i)
     {
         if (to_be_removed[i])
         {
@@ -1859,7 +1859,7 @@ vector<Histogram> Dataset::calculate_raw_variable_distributions(const Index& bin
     Index variable_index = 0;
     Index used_raw_variable_index = 0;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
         if (raw_variable.role == "None")
         {
@@ -1876,7 +1876,7 @@ vector<Histogram> Dataset::calculate_raw_variable_distributions(const Index& bin
         {
             Tensor1 raw_variable_data(used_samples_number);
 
-            for (Index j = 0; j < used_samples_number; j++)
+            for(Index j = 0; j < used_samples_number; j++)
                 raw_variable_data(j) = data(used_sample_indices[j], variable_index);
 
             histograms[used_raw_variable_index++] = histogram(raw_variable_data, bins_number);
@@ -1893,9 +1893,9 @@ vector<Histogram> Dataset::calculate_raw_variable_distributions(const Index& bin
             categories_frequencies.setZero();
             Tensor1 centers(categories_number);
 
-            for (Index j = 0; j < categories_number; j++)
+            for(Index j = 0; j < categories_number; j++)
             {
-                for (Index k = 0; k < used_samples_number; k++)
+                for(Index k = 0; k < used_samples_number; k++)
                     if (abs(data(used_sample_indices[k], variable_index) - type(1)) < NUMERIC_LIMITS_MIN)
                         categories_frequencies(j)++;
 
@@ -1916,7 +1916,7 @@ vector<Histogram> Dataset::calculate_raw_variable_distributions(const Index& bin
             Tensor<Index, 1> binary_frequencies(2);
             binary_frequencies.setZero();
 
-            for (Index j = 0; j < used_samples_number; j++)
+            for(Index j = 0; j < used_samples_number; j++)
                 binary_frequencies(abs(data(used_sample_indices[j], variable_index) - type(1)) < NUMERIC_LIMITS_MIN
                                        ? 1
                                        : 0)++;
@@ -1953,7 +1953,7 @@ vector<BoxPlot> Dataset::calculate_raw_variables_box_plots() const
 
     Index variable_index = 0;
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
     {
         const RawVariable& raw_variable = raw_variables[i];
 
@@ -1991,7 +1991,7 @@ Index Dataset::calculate_used_negatives(const Index& target_index)
 
     const Index used_samples_number = used_indices.size();
 
-    for (Index i = 0; i < used_samples_number; i++)
+    for(Index i = 0; i < used_samples_number; i++)
     {
         const Index training_index = used_indices[i];
 
@@ -2016,7 +2016,7 @@ Index Dataset::calculate_negatives(const Index& target_index, const string& samp
     const vector<Index> indices = get_sample_indices(sample_role);
     const Index samples_number = get_samples_number(sample_role);
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         const Index sample_index = indices[i];
         type sample_value = data(sample_index, target_index);
@@ -2061,14 +2061,14 @@ vector<Descriptives> Dataset::calculate_raw_variable_descriptives_positive_sampl
 
     Index positive_samples_number = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (abs(data(used_sample_indices[i], target_index) - type(1)) < NUMERIC_LIMITS_MIN)
             positive_samples_number++;
 
     vector<Index> positive_used_sample_indices(positive_samples_number);
     Index positive_sample_index = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         const Index sample_index = used_sample_indices[i];
 
@@ -2091,14 +2091,14 @@ vector<Descriptives> Dataset::calculate_raw_variable_descriptives_negative_sampl
 
     Index negative_samples_number = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (data(used_sample_indices[i], target_index) < NUMERIC_LIMITS_MIN)
             negative_samples_number++;
 
     vector<Index> negative_used_sample_indices(negative_samples_number);
     Index negative_sample_index = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         const Index sample_index = used_sample_indices[i];
 
@@ -2121,7 +2121,7 @@ vector<Descriptives> Dataset::calculate_raw_variable_descriptives_categories(con
 
     Index class_samples_number = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (abs(data(used_sample_indices[i], class_index) - type(1)) < NUMERIC_LIMITS_MIN)
             class_samples_number++;
 
@@ -2129,7 +2129,7 @@ vector<Descriptives> Dataset::calculate_raw_variable_descriptives_categories(con
 
     Index class_sample_index = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         const Index sample_index = used_sample_indices[i];
 
@@ -2205,12 +2205,12 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_raw_variable_pearson_corr
     Tensor<Correlation, 2> correlations(input_raw_variables_number, target_raw_variables_number);
 
     #pragma omp parallel for schedule(dynamic)
-    for (Index i = 0; i < input_raw_variables_number; i++)
+    for(Index i = 0; i < input_raw_variables_number; i++)
     {
         const Index input_raw_variable_index = input_raw_variable_indices[i];
         const Tensor2 input_raw_variable_data = get_raw_variable_data(input_raw_variable_index, used_sample_indices);
 
-        for (Index j = 0; j < target_raw_variables_number; j++)
+        for(Index j = 0; j < target_raw_variables_number; j++)
         {
             const Index target_raw_variable_index = target_raw_variable_indices[j];
             const Tensor2 target_raw_variable_data = get_raw_variable_data(target_raw_variable_index, used_sample_indices);
@@ -2237,12 +2237,12 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_raw_variable_spearman_cor
     Tensor<Correlation, 2> correlations(input_raw_variables_number, target_raw_variables_number);
 
     #pragma omp parallel for schedule(dynamic)
-    for (Index i = 0; i < input_raw_variables_number; i++)
+    for(Index i = 0; i < input_raw_variables_number; i++)
     {
         const Index input_index = input_raw_variable_indices[i];
         const Tensor2 input_raw_variable_data = get_raw_variable_data(input_index, used_sample_indices);
 
-        for (Index j = 0; j < target_raw_variables_number; j++)
+        for(Index j = 0; j < target_raw_variables_number; j++)
         {
             const Index target_index = target_raw_variable_indices[j];
             const Tensor2 target_raw_variable_data = get_raw_variable_data(target_index, used_sample_indices);
@@ -2258,7 +2258,7 @@ bool Dataset::has_nan() const
 {
     const Index rows_number = data.dimension(0);
 
-    for (Index i = 0; i < rows_number; i++)
+    for(Index i = 0; i < rows_number; i++)
         if (sample_roles[i] != "None")
             if (has_nan_row(i))
                 return true;
@@ -2271,7 +2271,7 @@ bool Dataset::has_nan_row(const Index& row_index) const
 {
     const Index variables_number = get_variables_number();
 
-    for (Index j = 0; j < variables_number; j++)
+    for(Index j = 0; j < variables_number; j++)
         if (isnan(data(row_index, j)))
             return true;
 
@@ -2302,8 +2302,8 @@ void Dataset::print_input_target_raw_variables_correlations() const
 
     const Tensor<Correlation, 2> correlations = calculate_input_target_raw_variable_pearson_correlations();
 
-    for (Index j = 0; j < targets_number; j++)
-        for (Index i = 0; i < inputs_number; i++)
+    for(Index j = 0; j < targets_number; j++)
+        for(Index i = 0; i < inputs_number; i++)
             cout << targets_name[j] << " - " << feature_names[i] << ": " << correlations(i, j).r << endl;
 }
 
@@ -2324,13 +2324,13 @@ void Dataset::print_top_input_target_raw_variables_correlations() const
 
     map<type, string> top_correlation;
 
-    for (Index i = 0; i < inputs_number; i++)
-        for (Index j = 0; j < targets_number; j++)
+    for(Index i = 0; i < inputs_number; i++)
+        for(Index j = 0; j < targets_number; j++)
             top_correlation.insert(pair<type, string>(correlations(i, j), feature_names[i] + " - " + targets_name[j]));
 
     map<type, string>::iterator it;
 
-    for (it = top_correlation.begin(); it != top_correlation.end(); it++)
+    for(it = top_correlation.begin(); it != top_correlation.end(); it++)
         if (display) cout << "Correlation: " << (*it).first << "  between  " << (*it).second << endl;
 }
 
@@ -2345,7 +2345,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_raw_variable_pearson_correlation
 
     Tensor<Correlation, 2> correlations_pearson(input_raw_variables_number, input_raw_variables_number);
 
-    for (Index i = 0; i < input_raw_variables_number; i++)
+    for(Index i = 0; i < input_raw_variables_number; i++)
     {
         if (display) cout << "Correlation " << i + 1<< " of " << input_raw_variables_number << endl;
 
@@ -2358,7 +2358,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_raw_variable_pearson_correlation
         correlations_pearson(i, i).set_perfect();
         correlations_pearson(i, i).method = Correlation::Method::Pearson;
 
-        for (Index j = i + 1; j < input_raw_variables_number; j++)
+        for(Index j = i + 1; j < input_raw_variables_number; j++)
         {
             const Index current_input_index_j = input_raw_variable_indices[j];
 
@@ -2386,7 +2386,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_raw_variable_spearman_correlatio
 
     Tensor<Correlation, 2> correlations_spearman(input_raw_variables_number, input_raw_variables_number);
 
-    for (Index i = 0; i < input_raw_variables_number; i++)
+    for(Index i = 0; i < input_raw_variables_number; i++)
     {
         if (display) cout << "Correlation " << i + 1 << " of " << input_raw_variables_number << endl;
 
@@ -2399,7 +2399,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_raw_variable_spearman_correlatio
         correlations_spearman(i, i).set_perfect();
         correlations_spearman(i, i).method = Correlation::Method::Spearman;
 
-        for (Index j = i + 1; j < input_raw_variables_number; j++)
+        for(Index j = i + 1; j < input_raw_variables_number; j++)
         {
             const Index input_raw_variable_index_j = input_raw_variable_indices[j];
 
@@ -2430,9 +2430,9 @@ void Dataset::print_data_file_preview() const
 {
     const Index size = data_file_preview.size();
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
     {
-        for (size_t j = 0; j < data_file_preview[i].size(); j++)
+        for(size_t j = 0; j < data_file_preview[i].size(); j++)
             cout << data_file_preview[i][j] << " ";
 
         cout << endl;
@@ -2454,9 +2454,9 @@ void Dataset::print_top_inputs_correlations() const
 
     map<type, string> top_correlation;
 
-    for (Index i = 0; i < variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
-        for (Index j = i; j < variables_number; j++)
+        for(Index j = i; j < variables_number; j++)
         {
             if (i == j) continue;
 
@@ -2466,7 +2466,7 @@ void Dataset::print_top_inputs_correlations() const
 
     map<type, string> ::iterator it;
 
-    for (it = top_correlation.begin(); it != top_correlation.end(); it++)
+    for(it = top_correlation.begin(); it != top_correlation.end(); it++)
         if (display) cout << "Correlation: " << (*it).first << "  between  " << (*it).second << endl;
 }
 
@@ -2480,7 +2480,7 @@ Tensor<Index, 1> Dataset::calculate_correlations_rank() const
 
     Tensor1 absolute_mean_correlations(absolute_correlations.dimension(0));
 
-    for (Index i = 0; i < absolute_correlations.dimension(0); i++)
+    for(Index i = 0; i < absolute_correlations.dimension(0); i++)
     {
         const Tensor1 row_correlations = absolute_correlations.chip(i, 0);
         absolute_mean_correlations(i) = mean(row_correlations);
@@ -2492,7 +2492,7 @@ Tensor<Index, 1> Dataset::calculate_correlations_rank() const
 
 void Dataset::set_default_raw_variables_scalers()
 {
-    for (Dataset::RawVariable& raw_variable : raw_variables)
+    for(Dataset::RawVariable& raw_variable : raw_variables)
         raw_variable.scaler = (raw_variable.type == RawVariableType::Numeric)
                                   ? "MeanStandardDeviation"
                                   : "MinimumMaximum";
@@ -2507,7 +2507,7 @@ vector<Descriptives> Dataset::scale_data()
 
     Index raw_variable_index;
 
-    for (Index i = 0; i < variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
         raw_variable_index = get_raw_variable_index(i);
 
@@ -2540,7 +2540,7 @@ vector<Descriptives> Dataset::scale_variables(const string& variable_role)
 
     const vector<Descriptives> input_variable_descriptives = calculate_variable_descriptives(variable_role);
 
-    for (Index i = 0; i < input_variables_number; i++)
+    for(Index i = 0; i < input_variables_number; i++)
     {
         const string& scaler = input_variable_scalers[i];
 
@@ -2571,7 +2571,7 @@ void Dataset::unscale_variables(const string& variable_role,
 
     const vector<string> variables_scalers = get_variable_scalers(variable_role);
 
-    for (Index i = 0; i < variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
         const string& scaler = variables_scalers[i];
 
@@ -2599,8 +2599,8 @@ void Dataset::set_data_constant(const type& new_value)
 
     const Index samples_number = get_samples_number();
 
-    for (Index i = 0; i < samples_number; ++i)
-        for (Index index : input_indices)
+    for(Index i = 0; i < samples_number; ++i)
+        for(Index index : input_indices)
             data(i, index) = new_value;
 }
 
@@ -2651,7 +2651,7 @@ void Dataset::raw_variables_to_XML(XMLPrinter &printer) const
     printer.OpenElement("RawVariables");
     add_xml_element(printer, "RawVariablesNumber", to_string(get_raw_variables_number()));
 
-    for (Index i = 0; i < get_raw_variables_number(); i++)
+    for(Index i = 0; i < get_raw_variables_number(); i++)
     {
         printer.OpenElement("RawVariable");
         printer.PushAttribute("Item", to_string(i + 1).c_str());
@@ -2724,7 +2724,7 @@ void Dataset::raw_variables_from_XML(const XMLElement *raw_variables_element)
 
     const XMLElement* start_element = raw_variables_element->FirstChildElement("RawVariablesNumber");
 
-    for (size_t i = 0; i < raw_variables.size(); i++)
+    for(size_t i = 0; i < raw_variables.size(); i++)
     {
         RawVariable& raw_variable = raw_variables[i];
         const XMLElement* raw_variable_element = start_element->NextSiblingElement("RawVariable");
@@ -2798,12 +2798,12 @@ void Dataset::missing_values_from_XML(const XMLElement *missing_values_element)
         vector<Index> valid_numbers;
         valid_numbers.reserve(tokens.size());
 
-        for (const string& token : tokens)
+        for(const string& token : tokens)
             if (!token.empty())
                 valid_numbers.push_back(stoi(token));
 
         raw_variables_missing_values_number.resize(valid_numbers.size());
-        for (size_t i = 0; i < valid_numbers.size(); ++i)
+        for(size_t i = 0; i < valid_numbers.size(); ++i)
             raw_variables_missing_values_number(i) = valid_numbers[i];
 
         rows_missing_values_number = read_xml_index(missing_values_element, "RowsMissingValuesNumber");
@@ -2829,7 +2829,7 @@ void Dataset::preview_data_from_XML(const XMLElement *preview_data_element)
     if(preview_size > 0){
         data_file_preview.resize(preview_size);
 
-        for (Index i = 0; i < preview_size; ++i) {
+        for(Index i = 0; i < preview_size; ++i) {
             const XMLElement* row_data = start_element->NextSiblingElement("Row");
             start_element = row_data;
 
@@ -2913,7 +2913,7 @@ void Dataset::print() const
          << "Number of testing samples: " << testing_samples_number << endl
          << "Number of unused samples: " << unused_samples_number << endl;
 
-    //for (const Dataset::RawVariable& raw_variable : raw_variables)
+    //for(const Dataset::RawVariable& raw_variable : raw_variables)
     //    raw_variable.print();
 }
 
@@ -2946,7 +2946,7 @@ void Dataset::load(const filesystem::path& file_name)
 
 void Dataset::print_raw_variables() const
 {
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
         raw_variable.print();
 
     cout << endl;
@@ -2971,7 +2971,7 @@ void Dataset::print_data_preview() const
 
         cout << "First sample: \n";
 
-        for (int i = 0; i < first_sample.dimension(0); i++)
+        for(int i = 0; i < first_sample.dimension(0); i++)
             cout << first_sample(i) << "  ";
     }
 
@@ -2981,7 +2981,7 @@ void Dataset::print_data_preview() const
 
         cout << "Second sample: \n";
 
-        for (int i = 0; i < second_sample.dimension(0); i++)
+        for(int i = 0; i < second_sample.dimension(0); i++)
             cout << second_sample(i) << "  ";
     }
 
@@ -2991,7 +2991,7 @@ void Dataset::print_data_preview() const
 
         cout << "Last sample: \n";
 
-        for (int i = 0; i < last_sample.dimension(0); i++)
+        for(int i = 0; i < last_sample.dimension(0); i++)
             cout << last_sample(i) << "  ";
     }
 
@@ -3018,7 +3018,7 @@ void Dataset::save_data() const
     if (has_sample_ids)
         file << "id" << separator_string;
 
-    for (Index j = 0; j < variables_number; j++)
+    for(Index j = 0; j < variables_number; j++)
     {
         file << variable_names[j];
 
@@ -3028,12 +3028,12 @@ void Dataset::save_data() const
 
     file << endl;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         if (has_sample_ids)
             file << sample_ids[i] << separator_string;
 
-        for (Index j = 0; j < variables_number; j++)
+        for(Index j = 0; j < variables_number; j++)
         {
             file << data(i, j);
 
@@ -3119,7 +3119,7 @@ Tensor<Index, 1> Dataset::calculate_target_distribution() const
         Index positives = 0;
         Index negatives = 0;
 
-        for (Index sample_index = 0; sample_index < samples_number; sample_index++){
+        for(Index sample_index = 0; sample_index < samples_number; sample_index++){
             if (!isnan(data(sample_index, target_index)))
                 (data(sample_index, target_index) < type(0.5))
                     ? negatives++
@@ -3135,12 +3135,12 @@ Tensor<Index, 1> Dataset::calculate_target_distribution() const
 
         class_distribution.setZero();
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             if (get_sample_role(i) == "None")
                 continue;
 
-            for (Index j = 0; j < targets_number; j++)
+            for(Index j = 0; j < targets_number; j++)
             {
                 if (isnan(data(i, target_variable_indices[j])))
                     continue;
@@ -3176,7 +3176,7 @@ vector<vector<Index>> Dataset::calculate_Tukey_outliers(const type& cleaning_par
 
     //#pragma omp parallel for
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
     {
         const RawVariable& raw_variable = raw_variables[i];
 
@@ -3218,7 +3218,7 @@ vector<vector<Index>> Dataset::calculate_Tukey_outliers(const type& cleaning_par
 
             Index raw_variables_outliers = 0;
 
-            for (Index j = 0; j < samples_number; j++)
+            for(Index j = 0; j < samples_number; j++)
             {
                 const Tensor1 sample = get_sample_data(sample_indices[Index(j)]);
 
@@ -3263,7 +3263,7 @@ vector<vector<Index>> Dataset::replace_Tukey_outliers_with_NaN(const type& clean
 
 #pragma omp parallel for
 
-    for (Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < raw_variables_number; i++)
     {
         const RawVariable& raw_variable = raw_variables[i];
 
@@ -3305,7 +3305,7 @@ vector<vector<Index>> Dataset::replace_Tukey_outliers_with_NaN(const type& clean
 
             Index raw_variables_outliers = 0;
 
-            for (Index j = 0; j < samples_number; j++)
+            for(Index j = 0; j < samples_number; j++)
             {
                 const Tensor1 sample = get_sample_data(sample_indices[Index(j)]);
 
@@ -3350,11 +3350,11 @@ void Dataset::set_data_rosenbrock()
 
 #pragma omp parallel for
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         type rosenbrock(0);
 
-        for (Index j = 0; j < variables_number - 1; j++)
+        for(Index j = 0; j < variables_number - 1; j++)
         {
             const type value = data(i, j);
             const type next_value = data(i, j + 1);
@@ -3375,7 +3375,7 @@ void Dataset::set_data_binary_classification()
     set_data_random();
 
 #pragma omp parallel for
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         data(i, variables_number - 1) = type(random_bool());
 }
 
@@ -3397,9 +3397,9 @@ Tensor<Index, 1> Dataset::filter_data(const Tensor1& minimums,
 
     Index sample_index = 0;
 
-    for (Index i = 0; i < used_variables_number; i++)
+    for(Index i = 0; i < used_variables_number; i++)
     {
-        for (Index j = 0; j < used_samples_number; j++)
+        for(Index j = 0; j < used_samples_number; j++)
         {
             sample_index = used_sample_indices[j];
 
@@ -3441,7 +3441,7 @@ Tensor<Index, 1> Dataset::filter_data(const Tensor1& minimums,
 
     Index index = 0;
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (filtered_indices(i) > type(0.5))
             filtered_samples_indices(index++) = i;
 
@@ -3455,7 +3455,7 @@ void Dataset::impute_missing_values_unuse()
 
 #pragma omp parallel for
 
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
         if (has_nan_row(i))
             set_sample_role(i, "None");
 }
@@ -3480,11 +3480,11 @@ void Dataset::impute_missing_values_mean()
     Index current_variable;
     Index current_sample;
 
-    for (Index j = 0; j < variables_number - target_variables_number; j++)
+    for(Index j = 0; j < variables_number - target_variables_number; j++)
     {
         current_variable = input_variable_indices[j];
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             current_sample = used_sample_indices[i];
 
@@ -3493,11 +3493,11 @@ void Dataset::impute_missing_values_mean()
         }
     }
 
-    for (Index j = 0; j < target_variables_number; j++)
+    for(Index j = 0; j < target_variables_number; j++)
     {
         current_variable = target_variable_indices[j];
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             current_sample = used_sample_indices[i];
 
@@ -3521,11 +3521,11 @@ void Dataset::impute_missing_values_median()
     const Index variables_number = used_variable_indices.size();
     const Index target_variables_number = target_variable_indices.size();
 
-    for (Index j = 0; j < variables_number - target_variables_number; j++)
+    for(Index j = 0; j < variables_number - target_variables_number; j++)
     {
         const Index current_variable = input_variable_indices[j];
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             const Index current_sample = used_sample_indices[i];
 
@@ -3534,11 +3534,11 @@ void Dataset::impute_missing_values_median()
         }
     }
 
-    for (Index j = 0; j < target_variables_number; j++)
+    for(Index j = 0; j < target_variables_number; j++)
     {
         const Index current_variable = target_variable_indices[j];
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             const Index current_sample = used_sample_indices[i];
 
@@ -3563,11 +3563,11 @@ void Dataset::impute_missing_values_interpolate()
     Index current_variable;
     Index current_sample;
 
-    for (Index j = 0; j < variables_number - target_variables_number; j++)
+    for(Index j = 0; j < variables_number - target_variables_number; j++)
     {
         current_variable = input_variable_indices[j];
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             current_sample = used_sample_indices[i];
 
@@ -3580,7 +3580,7 @@ void Dataset::impute_missing_values_interpolate()
                 type x = type(0);
                 type y = type(0);
 
-                for (Index k = i - 1; k >= 0; k--)
+                for(Index k = i - 1; k >= 0; k--)
                 {
                     if (isnan(data(used_sample_indices[k], current_variable))) continue;
 
@@ -3589,7 +3589,7 @@ void Dataset::impute_missing_values_interpolate()
                     break;
                 }
 
-                for (Index k = i + 1; k < samples_number; k++)
+                for(Index k = i + 1; k < samples_number; k++)
                 {
                     if (isnan(data(used_sample_indices[k], current_variable))) continue;
 
@@ -3613,11 +3613,11 @@ void Dataset::impute_missing_values_interpolate()
         }
     }
 
-    for (Index j = 0; j < target_variables_number; j++)
+    for(Index j = 0; j < target_variables_number; j++)
     {
         current_variable = target_variable_indices[j];
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
             current_sample = used_sample_indices[i];
 
@@ -4034,7 +4034,7 @@ void Dataset::read_data_file_preview(const vector<vector<string>>& all_rows)
 
     data_file_preview.clear();
 
-    for (Index i = 0; i < Index(min((size_t)num_first_rows_to_show, all_rows.size())); ++i)
+    for(Index i = 0; i < Index(min((size_t)num_first_rows_to_show, all_rows.size())); ++i)
         data_file_preview.push_back(all_rows[i]);
 
     if (all_rows.size() > num_first_rows_to_show)
@@ -4124,7 +4124,7 @@ bool Dataset::has_categorical_raw_variables() const
 
 bool Dataset::has_binary_or_categorical_raw_variables() const
 {
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
         if (raw_variable.type == RawVariableType::Binary || raw_variable.type == RawVariableType::Categorical)
             return true;
 
@@ -4147,7 +4147,7 @@ bool Dataset::has_selection() const
 
 bool Dataset::has_missing_values(const vector<string>& row) const
 {
-    for (size_t i = 0; i < row.size(); i++)
+    for(size_t i = 0; i < row.size(); i++)
         if (row[i].empty() || row[i] == missing_values_label)
             return true;
 
@@ -4164,13 +4164,13 @@ Tensor<Index, 1> Dataset::count_nans_per_raw_variable() const
     raw_variables_with_nan.setZero();
 
 #pragma omp parallel for
-    for (Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
+    for(Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
     {
         const Index current_variable_index = get_variable_indices(raw_variable_index)[0];
 
         Index counter = 0;
 
-        for (Index row_index = 0; row_index < rows_number; row_index++)
+        for(Index row_index = 0; row_index < rows_number; row_index++)
             if (isnan(data(row_index, current_variable_index)))
                 counter++;
 
@@ -4187,7 +4187,7 @@ Index Dataset::count_raw_variables_with_nan() const
 
     Index missing_raw_variables_number = 0;
 
-    for (Index i = 0; i < raw_variables_with_nan.dimension(0); i++)
+    for(Index i = 0; i < raw_variables_with_nan.dimension(0); i++)
         if (raw_variables_with_nan(i) > 0)
             missing_raw_variables_number++;
 
@@ -4204,11 +4204,11 @@ Index Dataset::count_rows_with_nan() const
 
     bool has_nan = true;
 
-    for (Index row_index = 0; row_index < rows_number; row_index++)
+    for(Index row_index = 0; row_index < rows_number; row_index++)
     {
         has_nan = false;
 
-        for (Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
+        for(Index raw_variable_index = 0; raw_variable_index < raw_variables_number; raw_variable_index++)
         {
             if (isnan(data(row_index, raw_variable_index)))
             {
@@ -4234,21 +4234,21 @@ void Dataset::fix_repeated_names()
 {
     map<string, Index> raw_variables_count_map;
 
-    for (const Dataset::RawVariable& raw_variable : raw_variables)
+    for(const Dataset::RawVariable& raw_variable : raw_variables)
     {
         auto result = raw_variables_count_map.insert(pair<string, Index>(raw_variable.name, 1));
         if (!result.second)
             result.first->second++;
     }
 
-    for (const auto& element : raw_variables_count_map)
+    for(const auto& element : raw_variables_count_map)
     {
         if (element.second > 1)
         {
             const string repeated_name = element.first;
             Index repeated_index = 1;
 
-            for (Dataset::RawVariable& raw_variable : raw_variables)
+            for(Dataset::RawVariable& raw_variable : raw_variables)
                 if (raw_variable.name == repeated_name)
                     raw_variable.name = raw_variable.name + "_" + to_string(repeated_index++);
         }
@@ -4260,16 +4260,16 @@ void Dataset::fix_repeated_names()
 
         map<string, Index> global_names_count;
 
-        for (const string& name : all_variable_names)
+        for(const string& name : all_variable_names)
             global_names_count[name]++;
 
-        for (Dataset::RawVariable& raw_variable : raw_variables)
+        for(Dataset::RawVariable& raw_variable : raw_variables)
         {
             bool needs_disambiguation = false;
 
             if (raw_variable.type == RawVariableType::Categorical)
             {
-                for (const string& category : raw_variable.categories)
+                for(const string& category : raw_variable.categories)
                 {
                     if (global_names_count[category] > 1)
                     {
@@ -4279,13 +4279,13 @@ void Dataset::fix_repeated_names()
                 }
 
                 if (needs_disambiguation)
-                    for (string& category : raw_variable.categories)
+                    for(string& category : raw_variable.categories)
                         category += "_" + raw_variable.name;
 
             }
             else if (raw_variable.type == RawVariableType::Binary)
             {
-                for (const string& category : raw_variable.categories)
+                for(const string& category : raw_variable.categories)
                 {
                     if (global_names_count[category] > 1)
                     {
@@ -4295,7 +4295,7 @@ void Dataset::fix_repeated_names()
                 }
 
                 if (needs_disambiguation)
-                    for (string& category : raw_variable.categories)
+                    for(string& category : raw_variable.categories)
                         category += "_" + raw_variable.name;
             }
         }
@@ -4320,7 +4320,7 @@ vector<vector<Index>> Dataset::split_samples(const vector<Index>& sample_indices
     vector<vector<Index>> batches(batches_number);
 
 #pragma omp parallel for
-    for (Index i = 0; i < batches_number; i++)
+    for(Index i = 0; i < batches_number; i++)
     {
         const Index start_index = i * batch_size;
         const Index end_index = min(start_index + batch_size, samples_number);

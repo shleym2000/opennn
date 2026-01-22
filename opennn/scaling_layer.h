@@ -173,7 +173,7 @@ public:
 
     void set_scalers(const string& new_scaler)
     {
-        for (string& scaler : scalers)
+        for(string& scaler : scalers)
             scaler = new_scaler;
     }
 
@@ -356,7 +356,7 @@ public:
 
         const XMLElement* start_element = scaling_layer_element->FirstChildElement("NeuronsNumber");
 
-        for (Index i = 0; i < neurons_number; i++) {
+        for(Index i = 0; i < neurons_number; i++) {
             const XMLElement* scaling_neuron_element = start_element->NextSiblingElement("ScalingNeuron");
             if (!scaling_neuron_element) {
                 throw runtime_error("Scaling neuron " + to_string(i + 1) + " is nullptr.\n");
@@ -397,7 +397,7 @@ public:
 
         const Index outputs_number = get_outputs_number();
 
-        for (Index i = 0; i < outputs_number; i++)
+        for(Index i = 0; i < outputs_number; i++)
         {
             printer.OpenElement("ScalingNeuron");
             printer.PushAttribute("Index", int(i + 1));
@@ -509,7 +509,7 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         const vector<string> scalers_host_vec = scaling_layer->get_scalers();
 
         Tensor<int, 1> scalers_host_tensor(outputs_number);
-        for (Index i = 0; i < outputs_number; ++i)
+        for(Index i = 0; i < outputs_number; ++i)
         {
             const string & scaler_str = scalers_host_vec[i];
 

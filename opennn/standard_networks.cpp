@@ -39,7 +39,7 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Scaling<2>>(input_dimensions));
 
-    for (Index i = 0; i < complexity_size; i++)
+    for(Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{ complexity_dimensions[i] },
                                        "HyperbolicTangent",
@@ -75,7 +75,7 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Scaling<2>>(input_dimensions));
 
-    for (Index i = 0; i < complexity_size; i++)
+    for(Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{complexity_dimensions[i]},
                                        "HyperbolicTangent",
@@ -181,7 +181,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
 
     const Index complexity_size = complexity_dimensions.size();
     /*
-    for (Index i = 0; i < complexity_size; i++)
+    for(Index i = 0; i < complexity_size; i++)
     {
         const dimensions kernel_dimensions = { 3, 3, get_output_dimensions()[2], complexity_dimensions[i] };
         const dimensions stride_dimensions = { 1, 1 };
@@ -264,9 +264,9 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
     last_layer_index = get_layers_number() - 1;
 
-    for (size_t stage = 0; stage < blocks_per_stage.size(); ++stage)
+    for(size_t stage = 0; stage < blocks_per_stage.size(); ++stage)
     {
-        for (Index block = 0; block < blocks_per_stage[stage]; ++block)
+        for(Index block = 0; block < blocks_per_stage[stage]; ++block)
         {
             const Index block_input_index = last_layer_index;
 

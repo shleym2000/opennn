@@ -278,7 +278,7 @@ void GeneticAlgorithm::initialize_population_correlations()
     const type* begin = correlations_cumsum.data();
     const type* end   = begin + genes_number;
 
-    for (Index i = 0; i < individuals_number; i++)
+    for(Index i = 0; i < individuals_number; i++)
     {        
         individual_genes.setConstant(false);
 
@@ -462,13 +462,13 @@ Tensor<bool, 1> GeneticAlgorithm::cross(const Tensor<bool, 1>& parent_1, const T
     descendent.setConstant(false);
 
     vector<Index> intersection, difference;
-    for (Index i = 0; i < genes_number; ++i)
+    for(Index i = 0; i < genes_number; ++i)
         if (parent_1(i) && parent_2(i)) 
             intersection.push_back(i);
         else if (parent_1(i) != parent_2(i))
             difference.push_back(i);
 
-    for (Index idx : intersection)
+    for(Index idx : intersection)
         descendent(idx) = true;
 
     Index current_size = intersection.size();
@@ -489,7 +489,7 @@ Tensor<bool, 1> GeneticAlgorithm::cross(const Tensor<bool, 1>& parent_1, const T
     shuffle_vector(difference);
     Index genes_to_add = target_size - current_size;
     
-    for (Index i = 0; i < genes_to_add && i < difference.size(); ++i)
+    for(Index i = 0; i < genes_to_add && i < difference.size(); ++i)
         descendent(difference[i]) = true;
     
     Index final_count = count(descendent.data(), descendent.data() + genes_number, true);
@@ -563,8 +563,8 @@ void GeneticAlgorithm::perform_mutation()
     const Index individuals_number = get_individuals_number();
     const Index genes_number = get_genes_number();
 
-    for (Index i = 0; i < individuals_number; i++)
-        for (Index j = 0; j < genes_number; j++)
+    for(Index i = 0; i < individuals_number; i++)
+        for(Index j = 0; j < genes_number; j++)
             if(get_random_type(0, 1) < mutation_rate)
                 population(i,j) = !population(i,j);
     */
@@ -572,7 +572,7 @@ void GeneticAlgorithm::perform_mutation()
     const Index individuals_number = get_individuals_number();
     const Index genes_number = get_genes_number();
 
-    for (Index i = 0; i < individuals_number; ++i)
+    for(Index i = 0; i < individuals_number; ++i)
     {
         Tensor<bool, 1> individual = population.chip(i, 0);
         Index current_inputs_number = count(individual.data(), individual.data() + genes_number, true);
@@ -580,7 +580,7 @@ void GeneticAlgorithm::perform_mutation()
         vector<Index> to_true_mutations; 
         vector<Index> to_false_mutations;
 
-        for (Index j = 0; j < genes_number; ++j)
+        for(Index j = 0; j < genes_number; ++j)
             if (random_uniform(0.0, 1.0) < mutation_rate)
                 if (individual(j))
                     to_false_mutations.push_back(j);
@@ -591,13 +591,13 @@ void GeneticAlgorithm::perform_mutation()
         shuffle_vector(to_false_mutations);
 
         Index swap_count = std::min(to_true_mutations.size(), to_false_mutations.size());
-        for (Index k = 0; k < swap_count; ++k)
+        for(Index k = 0; k < swap_count; ++k)
         {
             individual(to_true_mutations[k]) = true;
             individual(to_false_mutations[k]) = false;
         }
 
-        for (Index k = swap_count; k < to_true_mutations.size(); ++k)
+        for(Index k = swap_count; k < to_true_mutations.size(); ++k)
         {
             if (current_inputs_number < maximum_inputs_number)
             {
@@ -606,7 +606,7 @@ void GeneticAlgorithm::perform_mutation()
             }
         }
 
-        for (Index k = swap_count; k < to_false_mutations.size(); ++k)
+        for(Index k = swap_count; k < to_false_mutations.size(); ++k)
         {
             if (current_inputs_number > minimum_inputs_number)
             {
@@ -854,7 +854,7 @@ vector<Index> GeneticAlgorithm::get_raw_variable_indices(const Tensor<bool, 1>& 
     vector<Index> indices;
     indices.reserve(individual_raw_variables.size());
 
-    for (Index i = 0; i < individual_raw_variables.size(); ++i)
+    for(Index i = 0; i < individual_raw_variables.size(); ++i)
         if (individual_raw_variables(i))
             indices.push_back(original_input_raw_variable_indices[i]);
 

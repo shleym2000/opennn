@@ -33,7 +33,7 @@ struct TensorView
         }
 
         cout << "Dims: (";
-        for (size_t i = 0; i < dims.size(); ++i)
+        for(size_t i = 0; i < dims.size(); ++i)
             cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
 
         cout << ")" << endl;
@@ -41,7 +41,7 @@ struct TensorView
         const Index total_size = size();
         const Index last_dim_stride = dims.back();
 
-        for (Index i = 0; i < total_size; ++i)
+        for(Index i = 0; i < total_size; ++i)
         {
             cout << data[i] << " ";
 
@@ -52,6 +52,43 @@ struct TensorView
             cout << endl;
     }
 };
+
+
+type* link(type* pointer, vector<TensorView*> views)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    for(TensorView* view : views)
+    {
+        if (!view || view->size() == 0)
+            continue;
+
+        view->data = pointer;
+        pointer += (view->size() + ALIGNMENT - 1) & MASK;
+    }
+
+    return pointer;
+}
+
+
+Index get_size(const vector<TensorView*> views)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_size = 0;
+
+    for(const TensorView* view : views)
+    {
+        if (!view || view->size() == 0)
+            continue;
+
+        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+    }
+
+    return total_size;
+}
 
 
 template<typename T, size_t N>
@@ -122,7 +159,7 @@ bool is_binary(const Tensor<type, Rank>& tensor)
 {
     const Index size = tensor.size();
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (tensor(i) != type(0) && tensor(i) != type(1) && !isnan(tensor(i)))
             return false;
 
@@ -146,7 +183,7 @@ bool is_constant(const Tensor<type, Rank>& tensor)
 
     const type first_not_nan_element = tensor(first_non_nan_index);
 
-    for (Index i = first_non_nan_index + 1; i < size; ++i)
+    for(Index i = first_non_nan_index + 1; i < size; ++i)
         if (!isnan(tensor(i)) && abs(first_not_nan_element - tensor(i)) > numeric_limits<float>::min())
             return false;
 
@@ -212,7 +249,7 @@ void push_back(Tensor<T, 1>& tensor, const T& value)
 
     Tensor<T, 1> new_tensor(new_size);
 
-    for (int i = 0; i < tensor.dimension(0); i++)
+    for(int i = 0; i < tensor.dimension(0); i++)
         new_tensor(i) = tensor(i);
 
     new_tensor(new_size - 1) = value;
@@ -232,7 +269,7 @@ string vector_to_string(const vector<T>& x, const string& separator = " ")
 {
     ostringstream buffer;
 
-    for (size_t i = 0; i < x.size(); i++)
+    for(size_t i = 0; i < x.size(); i++)
     {
         buffer << x[i];
         if (i < x.size() - 1)
@@ -318,7 +355,7 @@ size_t get_maximum_size(const vector<vector<T>>& v)
 {
     size_t maximum_size = 0;
 
-    for (size_t i = 0; i < v.size(); i++)
+    for(size_t i = 0; i < v.size(); i++)
         if (v[i].size() > maximum_size)
             maximum_size = v[i].size();
 
@@ -331,7 +368,7 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 {
     os << "[ ";
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for(size_t i = 0; i < vec.size(); ++i)
     {
         os << vec[i];
         if (i + 1 < vec.size())
@@ -362,7 +399,7 @@ bool is_equal(const Tensor<Type, Rank>& tensor,
 {
     const Index size = tensor.size();
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if constexpr (is_same_v<Type, bool>)
         {
             if (tensor(i) != value)
@@ -386,7 +423,7 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
 
     const Index size = tensor_1.size();
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if constexpr (is_same_v<Type, bool>)
         {
             if (tensor_1(i) != tensor_2(i))
@@ -418,7 +455,6 @@ struct TensorCuda
         return 0;
     }
 };
-
 
 
 struct TensorViewCuda
@@ -491,12 +527,49 @@ struct TensorViewCuda
             throw runtime_error(string("TensorViewCuda::size(): Failed to get descriptor info. Error: ") + cudnnGetErrorString(status));
 
         Index total_elements = 1;
-        for (int i = 0; i < nbDims; ++i)
+        for(int i = 0; i < nbDims; ++i)
             total_elements *= static_cast<Index>(dimA[i]);
 
         return total_elements;
     }
 };
+
+
+type* link(type* ptr, vector<TensorViewCuda*> views_cuda)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    for(TensorViewCuda* view_cuda : views_cuda)
+    {
+        if (!view_cuda || view_cuda->size() == 0) continue;
+
+        view_cuda->data = ptr;
+        ptr += (view_cuda->size() + ALIGNMENT - 1) & MASK;
+    }
+
+    return ptr;
+}
+
+
+Index get_size(const vector<TensorViewCuda*> views)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_size = 0;
+
+    for(const TensorView* view : views)
+    {
+        if (!view || view->size() == 0)
+            continue;
+
+        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+    }
+
+    return total_size;
+}
+
 
 #endif
 

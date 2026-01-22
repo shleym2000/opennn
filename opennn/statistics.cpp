@@ -251,7 +251,7 @@ Tensor1 Histogram::calculate_minimal_centers() const
     }
 
     Index minimum_frequency = frequencies(0);
-    for (Index j = 1; j < frequencies.size(); j++) {
+    for(Index j = 1; j < frequencies.size(); j++) {
         if (frequencies(j - 1) > frequencies(j)) {
             minimum_frequency = frequencies(j);
         }
@@ -287,7 +287,7 @@ Tensor1 Histogram::calculate_maximal_centers() const
         return nan;
     }
 
-    for (Index i = 0; i < frequencies.size(); i++) {
+    for(Index i = 0; i < frequencies.size(); i++) {
         if (frequencies(i) == maximum_frequency) {
             maximal_indices_size++;
         }
@@ -296,7 +296,7 @@ Tensor1 Histogram::calculate_maximal_centers() const
     Tensor1 maximal_centers(maximal_indices_size);
     Index index = 0;
 
-    for (Index i = 0; i < frequencies.size(); i++)
+    for(Index i = 0; i < frequencies.size(); i++)
         if (frequencies(i) == maximum_frequency)
             maximal_centers(index++) = type(centers(i));            
 
@@ -314,7 +314,7 @@ Index Histogram::calculate_bin(const type& value) const
     const type max_center = centers(bins_number - 1);
     const type bin_width = (max_center - min_center) / (bins_number - 1);
 
-    for (Index i = 0; i < bins_number; ++i) {
+    for(Index i = 0; i < bins_number; ++i) {
         if (value < centers(i) + bin_width / 2) {
             return i;
         }
@@ -636,13 +636,13 @@ type median(const Tensor1& input_vector)
 
     Index new_size = 0;
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (!isnan(input_vector(i)))
             new_size++;
 
     vector<Index> sorted_vector;
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (!isnan(input_vector(i))) {
             sorted_vector.push_back(input_vector(i));
         }
@@ -676,13 +676,13 @@ Tensor1 quartiles(const Tensor1& input_vector)
 
     Index new_size = 0;
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (!isnan(input_vector(i)))
             new_size++;
 
     vector<type> sorted_vector;
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (!isnan(input_vector(i))) {
             sorted_vector.push_back(input_vector(i));
         }
@@ -695,7 +695,7 @@ Tensor1 quartiles(const Tensor1& input_vector)
 
     if (new_size % 2 == 0)
     {
-        for (Index i = 0; i < new_size / 2; i++)
+        for(Index i = 0; i < new_size / 2; i++)
         {
             first_sorted_vector.push_back(sorted_vector[i]);
             last_sorted_vector.push_back(sorted_vector[i+new_size/2]);
@@ -703,7 +703,7 @@ Tensor1 quartiles(const Tensor1& input_vector)
     }
     else
     {
-        for (Index i = 0; i < new_size / 2; i++)
+        for(Index i = 0; i < new_size / 2; i++)
         {
             first_sorted_vector.push_back(sorted_vector[i]);
             last_sorted_vector.push_back(sorted_vector[i + new_size / 2+1]);
@@ -943,7 +943,7 @@ Histogram histogram(const Tensor1& new_vector, const Index& bins_number)
         sort(unique_values.data(), unique_values.data() + unique_values.size(), less<type>());
 
         Tensor1 tensor_unique(unique_values.size());
-        for (Index i = 0; i < Index(unique_values.size()); ++i)
+        for(Index i = 0; i < Index(unique_values.size()); ++i)
             tensor_unique(i) = unique_values[i];
 
         centers = tensor_unique;
@@ -1162,7 +1162,7 @@ Descriptives vector_descriptives(const Tensor1& x)
     long double squared_sum = 0;
     Index count = 0;
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
     {
         if (isnan(x(i))) continue;
 
@@ -1203,7 +1203,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix)
     vector<Descriptives> descriptives(columns_number);
     Tensor1 column(rows_number);
 
-    for (Index i = 0; i < columns_number; i++)
+    for(Index i = 0; i < columns_number; i++)
     {
         column = matrix.chip(i, 1);
 
@@ -1241,7 +1241,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
     count.setZero();
 
     #pragma omp parallel for
-    for (Index j = 0; j < column_indices_size; j++)
+    for(Index j = 0; j < column_indices_size; j++)
     {
         const Index column_index = column_indices[j];
         type& current_min = minimums(j);
@@ -1251,7 +1251,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
         Index& cnt = count(j);
         bool first_iteration = true;
 
-        for (Index i = 0; i < row_indices_size; i++)
+        for(Index i = 0; i < row_indices_size; i++)
         {
             const Index row_index = row_indices[i];
             const type value = matrix(row_index, column_index);
@@ -1281,7 +1281,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
     if (row_indices_size > 1)
     {
         #pragma omp parallel for
-        for (Index i = 0; i < column_indices_size; i++)
+        for(Index i = 0; i < column_indices_size; i++)
         {
             const double numerator = squared_sums(i) - sums(i) * sums(i) / count(i);
             const double variance = numerator / (count(i) - 1);
@@ -1293,7 +1293,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
         standard_deviation.setZero();
     }
 
-    for (Index i = 0; i < column_indices_size; i++)
+    for(Index i = 0; i < column_indices_size; i++)
     {
         descriptives[i].set(minimums(i),
             maximums(i),
@@ -1575,7 +1575,7 @@ type median(const Tensor2& matrix, const Index& column_index)
 
     Index rows_number = 0;
 
-    for (Index i = 0; i < matrix.dimension(0); i++) {
+    for(Index i = 0; i < matrix.dimension(0); i++) {
         if (!isnan(matrix(i,column_index)))
         {
             sorted_column.push_back(matrix(i, column_index));
@@ -1726,7 +1726,7 @@ Index maximal_index(const Tensor1& vector)
 Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, const Index& number)
 {
     vector<type> vector_(input_vector.dimension(0));
-    for (Index i = 0; i < input_vector.dimension(0); i++) {
+    for(Index i = 0; i < input_vector.dimension(0); i++) {
         vector_[i] = input_vector(i);
     }
 
@@ -1734,18 +1734,18 @@ Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, const Index& numbe
     Tensor<Index, 1> minimal_indices(number);
 
     Index val_max=0;
-    for (Index i = 0; i < size; i++) {
+    for(Index i = 0; i < size; i++) {
         if (input_vector(i) > val_max) {
             val_max = input_vector(i);
         }
     }
 
-    for (Index j = 0; j < number; j++)
+    for(Index j = 0; j < number; j++)
     {
         Index minimal_index = 0;
         type minimum = vector_[0];
 
-        for (Index i = 0; i < size; i++)
+        for(Index i = 0; i < size; i++)
         {
             if (vector_[i] < minimum)
             {
@@ -1765,14 +1765,14 @@ Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, const Index& numbe
 Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, const Index& number)
 {
     vector<type> vector_(input_vector.dimension(0));
-    for (Index i = 0; i < input_vector.dimension(0); i++) {
+    for(Index i = 0; i < input_vector.dimension(0); i++) {
         vector_[i] = input_vector(i);
     }
 
     const Index size = vector_.size();
 
     Index val_min = 0;
-    for (Index i = 0; i < size; i++) {
+    for(Index i = 0; i < size; i++) {
         if (input_vector(i) < val_min) {
             val_min = input_vector(i);
         }
@@ -1780,12 +1780,12 @@ Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, const Index& numbe
 
     Tensor<Index, 1> maximal_indices(number);
 
-    for (Index j = 0; j < number; j++)
+    for(Index j = 0; j < number; j++)
     {
         Index maximal_index = 0;
         type maximal = vector_[0];
 
-        for (Index i = 0; i < size; i++)
+        for(Index i = 0; i < size; i++)
         {
             if (vector_[i] > maximal)
             {
@@ -1862,7 +1862,7 @@ Tensor1 percentiles(const Tensor1& input_vector)
 
     Index new_size = 0;
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (!isnan(input_vector(i)))
             new_size++;
 
@@ -1877,7 +1877,7 @@ Tensor1 percentiles(const Tensor1& input_vector)
     
     vector<type> new_vector(new_size);
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (!isnan(input_vector(i)))
             new_vector[index++] = input_vector(i);
 
@@ -1887,13 +1887,13 @@ Tensor1 percentiles(const Tensor1& input_vector)
 
     Tensor1 percentiles(10);
 
-    for (Index i = 0; i < 9; i++)
+    for(Index i = 0; i < 9; i++)
         percentiles[i] = (new_size * (i + 1) % 10 == 0)
         ? (sorted_vector[new_size * (i + 1) / 10 - 1] + sorted_vector[new_size * (i + 1) / 10]) / type(2.0)
         : type(sorted_vector[new_size * (i + 1) / 10]);
 
     Index val_max = 0;
-    for (Index i = 0; i < new_size; i++) {
+    for(Index i = 0; i < new_size; i++) {
         if (new_vector[i] > val_max) {
             val_max = new_vector[i];
         }

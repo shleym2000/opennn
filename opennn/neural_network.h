@@ -223,7 +223,7 @@ public:
         dimensions input_dimensions;
         input_dimensions.reserve(input_rank);
 
-        for (Index i = 0; i < input_rank; ++i)
+        for(Index i = 0; i < input_rank; ++i)
            input_dimensions.push_back(inputs.dimension(i));
 
         const TensorView input_view((type*)inputs.data(), input_dimensions);

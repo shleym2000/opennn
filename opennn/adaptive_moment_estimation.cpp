@@ -610,7 +610,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     optimization_data_cuda.iteration = 1;
 
-    for (Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
+    for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
     {
         if (display && epoch % display_period == 0) cout << "Epoch: " << epoch << endl;
 
@@ -620,7 +620,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
         if (is_classification_model) training_accuracy = type(0);
 
-        for (Index iteration = 0; iteration < training_batches_number; iteration++)
+        for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {
             // Dataset
 
@@ -666,7 +666,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
             selection_error = type(0);
             if (is_classification_model)    selection_accuracy = type(0);
 
-            for (Index iteration = 0; iteration < selection_batches_number; iteration++)
+            for(Index iteration = 0; iteration < selection_batches_number; iteration++)
             {
                 // Dataset
 
@@ -794,7 +794,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 /*
     assert(parameter_views.size() == delta_views.size());
 
-    for (Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
+    for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
     {
         float* params_d = parameter_views_device[parameter_index]->data;
         const Index param_size = parameter_views[parameter_index]->size();
@@ -837,7 +837,7 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
     gradient_exponential_decay.resize(layers_number);
     square_gradient_exponential_decay.resize(layers_number);
 
-    for (Index i = 0; i < layers_number; ++i)
+    for(Index i = 0; i < layers_number; ++i)
     {
         Layer* layer = neural_network->get_layer(i).get();
 
@@ -850,7 +850,7 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
         gradient_exponential_decay[i].resize(param_blocks_count, nullptr);
         square_gradient_exponential_decay[i].resize(param_blocks_count, nullptr);
 
-        for (Index j = 0; j < Index(param_blocks_count); ++j)
+        for(Index j = 0; j < Index(param_blocks_count); ++j)
         {
             const Index param_size = parameter_views[j]->size();
 
@@ -872,9 +872,9 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
 
 void ADAMOptimizationDataCuda::free()
 {
-    for (auto& layer_moments : gradient_exponential_decay)
+    for(auto& layer_moments : gradient_exponential_decay)
     {
-        for (float*& ptr : layer_moments)
+        for(float*& ptr : layer_moments)
         {
             if (ptr != nullptr)
             {
@@ -885,9 +885,9 @@ void ADAMOptimizationDataCuda::free()
     }
     gradient_exponential_decay.clear();
 
-    for (auto& layer_moments : square_gradient_exponential_decay)
+    for(auto& layer_moments : square_gradient_exponential_decay)
     {
-        for (float*& ptr : layer_moments)
+        for(float*& ptr : layer_moments)
         {
             if (ptr != nullptr)
             {
@@ -909,7 +909,7 @@ void ADAMOptimizationDataCuda::print() const
 
     const Index layers_number = neural_network->get_layers_number();
 
-    for (Index i = 0; i < layers_number; ++i)
+    for(Index i = 0; i < layers_number; ++i)
     {
         Layer* layer = neural_network->get_layer(i).get();
 
@@ -920,7 +920,7 @@ void ADAMOptimizationDataCuda::print() const
 
         const vector<TensorView*> parameter_views = layer->get_parameter_views();
 
-        for (Index j = 0; j < Index(parameter_views.size()); ++j)
+        for(Index j = 0; j < Index(parameter_views.size()); ++j)
         {
             const Index param_size = parameter_views[j]->size();
 

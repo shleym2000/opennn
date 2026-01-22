@@ -137,9 +137,9 @@ void ImageDataset::set_data_random()
     {
         const Index half_samples = samples_number / 2;
 
-        for (Index i = 0; i < samples_number; i++)
+        for(Index i = 0; i < samples_number; i++)
         {
-            for (Index j = 0; j < inputs_number; j++)
+            for(Index j = 0; j < inputs_number; j++)
                 data(i, j) = random_integer(0, 255);
 
             data(i, inputs_number) = (i < half_samples) ? 0 : 1;
@@ -153,7 +153,7 @@ void ImageDataset::set_data_random()
         const Index images_per_category = samples_number / targets_number;
         Index remainder = samples_number % targets_number;
 
-        for (Index i = 0; i < targets_number; i++)
+        for(Index i = 0; i < targets_number; i++)
         {
             images_number[i] = images_per_category + (remainder > 0 ? 1 : 0);
 
@@ -163,11 +163,11 @@ void ImageDataset::set_data_random()
 
         Index current_sample = 0;
 
-        for (Index k = 0; k < targets_number; k++)
+        for(Index k = 0; k < targets_number; k++)
         {
-            for (Index i = 0; i < images_number[k]; i++)
+            for(Index i = 0; i < images_number[k]; i++)
             {
-                for (Index j = 0; j < inputs_number; j++)
+                for(Index j = 0; j < inputs_number; j++)
                     data(current_sample, j) = random_integer(0, 255);
 
                 data(current_sample, k + inputs_number) = 1;
@@ -532,7 +532,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
     data.setZero();
 
     #pragma omp parallel for
-    for (Index i = 0; i < samples_number; i++)
+    for(Index i = 0; i < samples_number; i++)
     {
         Tensor3 image = read_bmp_image(image_path[i]);
 
@@ -547,7 +547,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
             image = resize_image(image, height, width);
 
         #pragma omp parallel for
-        for (Index j = 0; j < pixels_number; j++)
+        for(Index j = 0; j < pixels_number; j++)
             data(i, j) = image(j);
 
         if (targets_number == 1)
@@ -556,7 +556,7 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
         }
         else
         {
-            for (Index k = 0; k < targets_number; k++)
+            for(Index k = 0; k < targets_number; k++)
             {
                 if (i >= images_number(k) && i < images_number(k + 1))
                 {

@@ -196,7 +196,7 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
         dimensions full_dimensions(Rank+1);   // Rank+1 to include batch
         full_dimensions[0] = batch_size;
 
-        for (int i = 0; i < Rank; ++i)
+        for(int i = 0; i < Rank; ++i)
             full_dimensions[i+1] = output_dimensions[i];
 
         outputs.dims = full_dimensions;
