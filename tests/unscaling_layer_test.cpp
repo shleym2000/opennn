@@ -52,6 +52,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_unscale =
             make_unique<UnscalingForwardPropagation>(samples_number, &unscaling_layer_none);
+        fw_prop_unscale->initialize();
+        Tensor1 workspace(fw_prop_unscale->get_workspace_size());
+        fw_prop_unscale->link_workspace(workspace.data());
+
         TensorView input_pair_unscale = { data_to_unscale.data(), {{samples_number, inputs_number}} };
 
         unscaling_layer_none.forward_propagate({ input_pair_unscale }, fw_prop_unscale, is_training);
@@ -84,6 +88,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_scale =
             make_unique<ScalingForwardPropagation<2>>(samples_number, &helper_scaling_layer);
+        fw_prop_scale->initialize();
+        Tensor1 scale_workspace(fw_prop_scale->get_workspace_size());
+        fw_prop_scale->link_workspace(scale_workspace.data());
+
         TensorView input_pair_scale = { original_data.data(), {{samples_number, inputs_number}} };
         helper_scaling_layer.forward_propagate({ input_pair_scale }, fw_prop_scale, is_training);
         TensorView output_pair_scale = fw_prop_scale->get_outputs();
@@ -101,6 +109,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_unscale =
             make_unique<UnscalingForwardPropagation>(samples_number, &unscaling_layer_minmax);
+        fw_prop_unscale->initialize();
+        Tensor1 unscale_workspace(fw_prop_unscale->get_workspace_size());
+        fw_prop_unscale->link_workspace(unscale_workspace.data());
+
         TensorView input_pair_unscale = { scaled_data.data(), {{samples_number, inputs_number}} };
         unscaling_layer_minmax.forward_propagate({ input_pair_unscale }, fw_prop_unscale, is_training);
         TensorView output_pair_unscale = fw_prop_unscale->get_outputs();
@@ -134,6 +146,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_scale =
             make_unique<ScalingForwardPropagation<2>>(samples_number, &helper_scaling_layer);
+        fw_prop_scale->initialize();
+        Tensor1 scale_workspace(fw_prop_scale->get_workspace_size());
+        fw_prop_scale->link_workspace(scale_workspace.data());
+
         TensorView input_pair_scale = { original_data.data(), {{samples_number, inputs_number}} };
         helper_scaling_layer.forward_propagate({ input_pair_scale }, fw_prop_scale, is_training);
         TensorView output_pair_scale = fw_prop_scale->get_outputs();
@@ -144,6 +160,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_unscale =
             make_unique<UnscalingForwardPropagation>(samples_number, &unscaling_layer_msd);
+        fw_prop_unscale->initialize();
+        Tensor1 unscale_workspace(fw_prop_unscale->get_workspace_size());
+        fw_prop_unscale->link_workspace(unscale_workspace.data());
+
         TensorView input_pair_unscale = { scaled_data.data(), {{samples_number, inputs_number}} };
         unscaling_layer_msd.forward_propagate({ input_pair_unscale }, fw_prop_unscale, is_training);
         TensorView output_pair_unscale = fw_prop_unscale->get_outputs();
@@ -178,6 +198,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_scale =
             make_unique<ScalingForwardPropagation<2>>(samples_number, &helper_scaling_layer);
+        fw_prop_scale->initialize();
+        Tensor1 scale_workspace(fw_prop_scale->get_workspace_size());
+        fw_prop_scale->link_workspace(scale_workspace.data());
+
         TensorView input_pair_scale = { original_data.data(), {{samples_number, inputs_number}} };
         helper_scaling_layer.forward_propagate({ input_pair_scale }, fw_prop_scale, is_training);
         TensorView output_pair_scale = fw_prop_scale->get_outputs();
@@ -188,6 +212,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_unscale =
             make_unique<UnscalingForwardPropagation>(samples_number, &unscaling_layer_std);
+        fw_prop_unscale->initialize();
+        Tensor1 unscale_workspace(fw_prop_unscale->get_workspace_size());
+        fw_prop_unscale->link_workspace(unscale_workspace.data());
+
         TensorView input_pair_unscale = { scaled_data.data(), {{samples_number, inputs_number}} };
         unscaling_layer_std.forward_propagate({ input_pair_unscale }, fw_prop_unscale, is_training);
         TensorView output_pair_unscale = fw_prop_unscale->get_outputs();
@@ -218,6 +246,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_scale =
             make_unique<ScalingForwardPropagation<2>>(samples_number, &helper_scaling_layer);
+        fw_prop_scale->initialize();
+        Tensor1 scale_workspace(fw_prop_scale->get_workspace_size());
+        fw_prop_scale->link_workspace(scale_workspace.data());
+
         TensorView input_pair_scale = { original_data.data(), {{samples_number, inputs_number}} };
         helper_scaling_layer.forward_propagate({ input_pair_scale }, fw_prop_scale, is_training);
         TensorView output_pair_scale = fw_prop_scale->get_outputs();
@@ -232,6 +264,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_unscale =
             make_unique<UnscalingForwardPropagation>(samples_number, &unscaling_layer_log);
+        fw_prop_unscale->initialize();
+        Tensor1 unscale_workspace(fw_prop_unscale->get_workspace_size());
+        fw_prop_unscale->link_workspace(unscale_workspace.data());
+
         TensorView input_pair_unscale = { scaled_data.data(), {{samples_number, inputs_number}} };
         unscaling_layer_log.forward_propagate({ input_pair_unscale }, fw_prop_unscale, is_training);
         TensorView output_pair_unscale = fw_prop_unscale->get_outputs();
@@ -261,6 +297,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_scale =
             make_unique<ScalingForwardPropagation<2>>(samples_number, &helper_scaling_layer);
+        fw_prop_scale->initialize();
+        Tensor1 scale_workspace(fw_prop_scale->get_workspace_size());
+        fw_prop_scale->link_workspace(scale_workspace.data());
+
         TensorView input_pair_scale = { original_data.data(), {{samples_number, inputs_number}} };
         helper_scaling_layer.forward_propagate({ input_pair_scale }, fw_prop_scale, is_training);
         TensorView output_pair_scale = fw_prop_scale->get_outputs();
@@ -275,6 +315,10 @@ TEST(UnscalingTest, ForwardPropagate)
 
         unique_ptr<LayerForwardPropagation> fw_prop_unscale =
             make_unique<UnscalingForwardPropagation>(samples_number, &unscaling_layer_img);
+        fw_prop_unscale->initialize();
+        Tensor1 unscale_workspace(fw_prop_unscale->get_workspace_size());
+        fw_prop_unscale->link_workspace(unscale_workspace.data());
+
         TensorView input_pair_unscale = { scaled_data.data(), {{samples_number, inputs_number}} };
         unscaling_layer_img.forward_propagate({ input_pair_unscale }, fw_prop_unscale, is_training);
         TensorView output_pair_unscale = fw_prop_unscale->get_outputs();
