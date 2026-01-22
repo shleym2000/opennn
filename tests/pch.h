@@ -2,8 +2,17 @@
 // pch.h
 //
 
+#ifndef PCH_TESTS_H
+#define PCH_TESTS_H
+
+#define EIGEN_MAX_ALIGN_BYTES 64
 #define EIGEN_USE_THREADS
 
-#include "../eigen/unsupported/Eigen/CXX11/Tensor"
+#include <algorithm>
+#include <vector>
+#include <iostream>
 
+#include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "gtest/gtest.h"
+
+#endif
