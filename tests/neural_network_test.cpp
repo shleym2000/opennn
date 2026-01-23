@@ -136,8 +136,6 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     ForwardPropagation forward_propagation(samples_number, &neural_network_aproximation);
 
-    forward_propagation.compile();
-
     neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
 
     DenseForwardPropagation<2>* dense_layer_forward_propagation
@@ -153,7 +151,6 @@ TEST(NeuralNetworkTest, ForwardPropagate)
     dense_layer->set_activation_function("Softmax");
 
     ForwardPropagation forward_propagation_0(samples_number, &neural_network_classification);
-    forward_propagation_0.compile();
 
     neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
 

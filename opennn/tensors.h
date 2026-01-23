@@ -489,7 +489,6 @@ type* link(type*, vector<TensorViewCuda*>);
 
 Index get_size(const vector<TensorViewCuda*>);
 
-
 #endif
 
 }

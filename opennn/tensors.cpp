@@ -724,6 +724,62 @@ dimensions prepend(const Index &x, const dimensions &d)
     return result;
 }
 
+
+type *link(type *pointer, vector<TensorView *> views)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    for(TensorView* view : views)
+    {
+        if(!view || view->size() == 0)
+            continue;
+
+        view->data = pointer;
+        pointer += (view->size() + ALIGNMENT - 1) & MASK;
+    }
+
+    return pointer;
+}
+
+
+void link(type *pointer, vector<vector<TensorView *> > views)
+{
+    for(size_t i = 0; i < views.size(); i++)
+        pointer = link(pointer, views[i]);
+}
+
+
+Index get_size(const vector<TensorView *> views)
+{
+    constexpr Index ALIGNMENT = 16;
+    constexpr Index MASK = ~(ALIGNMENT - 1);
+
+    Index total_size = 0;
+
+    for(const TensorView* view : views)
+    {
+        if(!view || view->size() == 0)
+            continue;
+
+        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+    }
+
+    return total_size;
+}
+
+
+Index get_size(vector<vector<TensorView *> > views)
+{
+    Index total_size = 0;
+
+    for(size_t i = 0; i < views.size(); i++)
+        total_size += get_size(views[i]);
+
+    return total_size;
+}
+
+
 #ifdef OPENNN_CUDA
 
 type* link(type* ptr, vector<TensorViewCuda*> views_cuda)

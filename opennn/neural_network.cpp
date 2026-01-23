@@ -51,6 +51,19 @@ void NeuralNetwork::add_layer(unique_ptr<Layer> layer, const vector<Index>& inpu
 }
 
 
+vector<vector<TensorView*>> NeuralNetwork::get_layer_parameter_views()
+{
+    const Index layers_number = get_layers_number();
+
+    vector<vector<TensorView*>> layer_parameter_views(layers_number);
+
+    for(Index i = 0; i < layers_number; i++)
+        layer_parameter_views[i] = layers[i]->get_parameter_views();
+
+    return layer_parameter_views;
+}
+
+
 void NeuralNetwork::compile()
 {
     const vector<vector<TensorView*>> layer_parameter_views = get_layer_parameter_views();
@@ -1322,12 +1335,16 @@ const vector<unique_ptr<LayerBackPropagation>>& NeuralNetworkBackPropagation::ge
 
 vector<vector<TensorView *> > NeuralNetworkBackPropagation::get_layer_workspace_views()
 {
-    const Index layers_number = neural_network->get_layers_number();
+    vector<vector<TensorView*>> layer_workspace_views(layers.size());
+    Index i = 0;
 
-    vector<vector<TensorView*>> layer_workspace_views(layers_number);
+    for (const auto& layer_bp : layers)
+    {
+        if (layer_bp)
+            layer_workspace_views[i] = layer_bp->get_workspace_views();
 
-    for(Index i = 0; i < layers_number; i++)
-        layer_workspace_views[i] = layers[i]->get_workspace_views();
+        i++;
+    }
 
     return layer_workspace_views;
 }
@@ -1604,6 +1621,19 @@ void NeuralNetwork::copy_parameters_host()
     for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_host();
 */
+}
+
+
+vector<vector<TensorViewCuda*>> NeuralNetwork::get_layer_parameter_views_device()
+{
+    const Index layers_number = get_layers_number();
+
+    vector<vector<TensorViewCuda*>> layer_parameter_views(layers_number);
+
+    for(Index i = 0; i < layers_number; i++)
+        layer_parameter_views[i] = layers[i]->get_parameter_views_device();
+
+    return layer_parameter_views;
 }
 
 
