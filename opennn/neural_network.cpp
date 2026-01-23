@@ -1321,12 +1321,16 @@ const vector<unique_ptr<LayerBackPropagation>>& NeuralNetworkBackPropagation::ge
 
 vector<vector<TensorView *> > NeuralNetworkBackPropagation::get_layer_workspace_views()
 {
-    const Index layers_number = neural_network->get_layers_number();
+    vector<vector<TensorView*>> layer_workspace_views(layers.size());
+    Index i = 0;
 
-    vector<vector<TensorView*>> layer_workspace_views(layers_number);
+    for (const auto& layer_bp : layers)
+    {
+        if (layer_bp)
+            layer_workspace_views[i] = layer_bp->get_workspace_views();
 
-    for(Index i = 0; i < layers_number; i++)
-        layer_workspace_views[i] = layers[i]->get_workspace_views();
+        i++;
+    }
 
     return layer_workspace_views;
 }
