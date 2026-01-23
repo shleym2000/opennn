@@ -66,16 +66,17 @@ void NeuralNetwork::compile()
 
 #ifdef OPENNN_CUDA
 
+    const vector<vector<TensorView*>> layer_parameter_views_device = get_layer_parameter_views_device();
+
     cudaFree(parameters_device);
     parameters_device = nullptr;
 
-    CHECK_CUDA(cudaMalloc(&parameters_device, total_parameters_size * sizeof(float)));
-    cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
+    CHECK_CUDA(cudaMalloc(&parameters_device, parameters_size * sizeof(float)));
+    cudaMemset(parameters_device, 0, parameters_size * sizeof(float));
 
     float* current_ptr_device = parameters_device;
 
-    for(unique_ptr<Layer>& layer : layers)
-        current_ptr_device = link(current_ptr_device, layer->get_parameter_views_device());
+    link(parameters_device.data(), layer_parameter_views_device);
 
 #endif
 }

@@ -54,59 +54,11 @@ struct TensorView
 };
 
 
-type* link(type* pointer, vector<TensorView*> views)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+type* link(type*, vector<TensorView*>);
+void link(type*, vector<vector<TensorView*>>);
 
-    for(TensorView* view : views)
-    {
-        if(!view || view->size() == 0)
-            continue;
-
-        view->data = pointer;
-        pointer += (view->size() + ALIGNMENT - 1) & MASK;
-    }
-
-    return pointer;
-}
-
-
-void link(type* pointer, vector<vector<TensorView*>> views)
-{
-    for(size_t i = 0; i < views.size(); i++)
-        pointer = link(pointer, views[i]);
-}
-
-
-Index get_size(const vector<TensorView*> views)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_size = 0;
-
-    for(const TensorView* view : views)
-    {
-        if(!view || view->size() == 0)
-            continue;
-
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
-    }
-
-    return total_size;
-}
-
-
-Index get_size(vector<vector<TensorView*>> views)
-{
-    Index total_size = 0;
-
-    for(size_t i = 0; i < views.size(); i++)
-        total_size += get_size(views[i]);
-
-    return total_size;
-}
+Index get_size(const vector<TensorView*>);
+Index get_size(vector<vector<TensorView*>>);
 
 
 template<typename T, size_t N>
@@ -455,26 +407,6 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
 
 #ifdef OPENNN_CUDA
 
-struct TensorCuda
-{
-    float* data = nullptr;
-    cudnnTensorDescriptor_t descriptor = nullptr;
-
-    TensorCuda() = default;
-
-    TensorCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
-        : data(new_data), descriptor(new_descriptor) {}
-
-    Index size() const
-    {
-        throw runtime_error ("Not implemented yet");
-        // use descriptor to return size.
-
-        return 0;
-    }
-};
-
-
 struct TensorViewCuda
 {
     float* data = nullptr;
@@ -553,40 +485,9 @@ struct TensorViewCuda
 };
 
 
-type* link(type* ptr, vector<TensorViewCuda*> views_cuda)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+type* link(type*, vector<TensorViewCuda*>);
 
-    for(TensorViewCuda* view_cuda : views_cuda)
-    {
-        if(!view_cuda || view_cuda->size() == 0) continue;
-
-        view_cuda->data = ptr;
-        ptr += (view_cuda->size() + ALIGNMENT - 1) & MASK;
-    }
-
-    return ptr;
-}
-
-
-Index get_size(const vector<TensorViewCuda*> views)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_size = 0;
-
-    for(const TensorView* view : views)
-    {
-        if(!view || view->size() == 0)
-            continue;
-
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
-    }
-
-    return total_size;
-}
+Index get_size(const vector<TensorViewCuda*>);
 
 
 #endif

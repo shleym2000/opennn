@@ -304,6 +304,18 @@ public:
     void create_cuda() const;
     void destroy_cuda() const;
 
+    vector<vector<TensorViewCuda*>> get_layer_parameter_views_device()
+    {
+        const Index layers_number = get_layers_number();
+
+        vector<vector<TensorViewCuda*>> layer_parameter_views(layers_number);
+
+        for(Index i = 0; i < layers_number; i++)
+            layer_parameter_views[i] = layers[i]->get_parameter_views_device();
+
+        return layer_parameter_views;
+    }
+
     void allocate_parameters_device();
     void free_parameters_device();
     void copy_parameters_device();
