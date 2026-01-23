@@ -387,7 +387,7 @@ void EmbeddingBackPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_tensor_views_device()
+vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_workspace_views_device()
 {
     return {&weight_deltas_device};
 }

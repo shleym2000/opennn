@@ -37,6 +37,12 @@ void LayerBackPropagation::set(const Index& new_batch_size, Layer* new_layer)
 }
 
 
+vector<TensorView> LayerBackPropagation::get_input_deltas() const
+{
+    return input_deltas;
+}
+
+
 #ifdef OPENNN_CUDA
 
 void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
@@ -50,6 +56,18 @@ void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_la
 }
 
 
+TensorViewCuda LayerForwardPropagationCuda::get_outputs_device() const
+{
+    return outputs;
+}
+
+
+vector<TensorViewCuda*> LayerForwardPropagationCuda::get_workspace_views_device()
+{
+    return { &outputs };
+}
+
+
 void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
 {
     if(!new_layer) return;
@@ -58,6 +76,12 @@ void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer
     layer = new_layer;
 
     initialize();
+}
+
+
+vector<TensorViewCuda> LayerBackPropagationCuda::get_input_deltas_device() const
+{
+	return input_deltas;
 }
 
 #endif
@@ -437,6 +461,11 @@ TensorView LayerForwardPropagation::get_outputs() const
 vector<TensorView*> LayerForwardPropagation::get_workspace_views()
 {
     return {&outputs};
+}
+
+vector<TensorView> LayerBackPropagationLM::get_input_deltas() const
+{
+    return input_deltas;
 }
 
 } // namespace opennn

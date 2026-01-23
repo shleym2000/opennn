@@ -333,12 +333,6 @@ void BoundingForwardPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> BoundingForwardPropagationCuda::get_tensor_views_device()
-{
-    return { &outputs };
-}
-
-
 void BoundingForwardPropagationCuda::print() const
 {
     const Index outputs_number = layer->get_outputs_number();

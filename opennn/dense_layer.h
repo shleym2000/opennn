@@ -92,25 +92,29 @@ struct DenseBackPropagation final : LayerBackPropagation
         bias_deltas.dims = {outputs_number};
         weight_deltas.dims = {inputs_number, outputs_number};
 
-        const dimensions input_dims = dense_layer->get_input_dimensions();
-
-        dimensions full_input_dims = {batch_size};
-        full_input_dims.insert(full_input_dims.end(), input_dims.begin(), input_dims.end());
-
-        input_deltas.resize(1);
-        input_deltas[0].dims = full_input_dims;
-
         if (dense_layer->get_batch_normalization())
         {
             scales_deltas.dims = {outputs_number};
             offsets_deltas.dims = {outputs_number};
         }
+
+        const dimensions input_dims = dense_layer->get_input_dimensions();
+
+        dimensions full_input_dims = { batch_size };
+        full_input_dims.insert(full_input_dims.end(), input_dims.begin(), input_dims.end());
+
+        input_deltas_tensor.resize(full_input_dims);
+        input_deltas_tensor.setZero();
+
+        input_deltas.resize(1);
+        input_deltas[0].data = input_deltas_tensor.data();
+        input_deltas[0].dims = full_input_dims;
     }
 
 
     vector<TensorView*> get_workspace_views() override
     {
-        vector<TensorView*> views = {&bias_deltas, &weight_deltas, &input_deltas[0]};
+        vector<TensorView*> views = {&bias_deltas, &weight_deltas};
 
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
 
@@ -134,6 +138,8 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     TensorView scales_deltas;
     TensorView offsets_deltas;
+
+    Tensor<type, Rank> input_deltas_tensor;
 };
 
 
@@ -159,11 +165,6 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         input_deltas.dims = input_dims_vec;
 
         squared_errors_Jacobian.dims = {batch_size, parameters_number};
-    }
-
-    vector<TensorView> get_input_deltas() const override
-    {
-        return { input_deltas };
     }
 
     vector<TensorView*> get_workspace_views() override
@@ -234,11 +235,6 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         }
     }
 
-    vector<TensorViewCuda*> get_tensor_views_device() override
-    {
-        return { &outputs };
-    }
-
     void free() override
     {
         if (combinations) cudaFree(combinations);
@@ -269,12 +265,12 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
     float* bn_saved_mean = nullptr;
     float* bn_saved_inv_variance = nullptr;
 
-
     // Dropout
 
     void* dropout_states = nullptr;
     size_t dropout_states_size = 0;    
     unsigned long long dropout_seed;
+
     void* dropout_reserve_space = nullptr;
     size_t dropout_reserve_space_size = 0;
 };
@@ -303,11 +299,12 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         CHECK_CUDA(cudaMemcpy(ones, ones_host.data(), total_rows * sizeof(float), cudaMemcpyHostToDevice));
 
         input_deltas.resize(1);
+        CHECK_CUDA(cudaMalloc(&input_deltas[0].data, total_rows * inputs_number * sizeof(float)));
+        input_deltas[0].set_descriptor({ 1, static_cast<int>(inputs_number), static_cast<int>(total_rows), 1 });
 
         // Los siguientes descriptores no se usan, pero son necesarios para el .size
         bias_deltas_device.set_descriptor({ 1, static_cast<int>(outputs_number), 1, 1 });
         weight_deltas_device.set_descriptor({ 1, static_cast<int>(inputs_number * outputs_number), 1, 1 });
-        input_deltas[0].set_descriptor({ static_cast<int>(total_rows), static_cast<int>(inputs_number), 1, 1 });
 
         cudnnCreateTensorDescriptor(&deltas_tensor_descriptor);
         cudnnSetTensor4dDescriptor(deltas_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, (int)total_rows, (int)outputs_number, 1, 1);
@@ -321,9 +318,9 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         }
     }
 
-    vector<TensorViewCuda*> get_tensor_views_device() override
+    vector<TensorViewCuda*> get_workspace_views_device() override
     {
-        vector<TensorViewCuda*> views = { &bias_deltas_device, &weight_deltas_device, &input_deltas[0] };
+        vector<TensorViewCuda*> views = { &bias_deltas_device, &weight_deltas_device};
 
         auto* dense_layer = static_cast<const Dense<Rank>*>(this->layer);
 

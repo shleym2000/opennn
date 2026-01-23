@@ -12,62 +12,6 @@
 namespace opennn
 {
 
-
-type* link(type* pointer, vector<TensorView*> views)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    for(TensorView* view : views)
-    {
-        if(!view || view->size() == 0)
-            continue;
-
-        view->data = pointer;
-        pointer += (view->size() + ALIGNMENT - 1) & MASK;
-    }
-
-    return pointer;
-}
-
-
-void link(type* pointer, vector<vector<TensorView*>> views)
-{
-    for(size_t i = 0; i < views.size(); i++)
-        pointer = link(pointer, views[i]);
-}
-
-
-Index get_size(const vector<TensorView*> views)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_size = 0;
-
-    for(const TensorView* view : views)
-    {
-        if(!view || view->size() == 0)
-            continue;
-
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
-    }
-
-    return total_size;
-}
-
-
-Index get_size(vector<vector<TensorView*>> views)
-{
-    Index total_size = 0;
-
-    for(size_t i = 0; i < views.size(); i++)
-        total_size += get_size(views[i]);
-
-    return total_size;
-}
-
-
 type bound(const type& value, const type& minimum, const type& maximum)
 {
     return min(max(value, minimum), maximum);
@@ -725,7 +669,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 }
 
 
-type *link(type *pointer, vector<TensorView *> views)
+type *link(type *pointer, vector<TensorView*> views)
 {
     constexpr Index ALIGNMENT = 16;
     constexpr Index MASK = ~(ALIGNMENT - 1);
@@ -743,14 +687,14 @@ type *link(type *pointer, vector<TensorView *> views)
 }
 
 
-void link(type *pointer, vector<vector<TensorView *> > views)
+void link(type *pointer, vector<vector<TensorView*> > views)
 {
     for(size_t i = 0; i < views.size(); i++)
         pointer = link(pointer, views[i]);
 }
 
 
-Index get_size(const vector<TensorView *> views)
+Index get_size(const vector<TensorView*> views)
 {
     constexpr Index ALIGNMENT = 16;
     constexpr Index MASK = ~(ALIGNMENT - 1);
@@ -769,7 +713,7 @@ Index get_size(const vector<TensorView *> views)
 }
 
 
-Index get_size(vector<vector<TensorView *> > views)
+Index get_size(vector<vector<TensorView*> > views)
 {
     Index total_size = 0;
 
@@ -782,20 +726,28 @@ Index get_size(vector<vector<TensorView *> > views)
 
 #ifdef OPENNN_CUDA
 
-type* link(type* ptr, vector<TensorViewCuda*> views_cuda)
+type* link(type* pointer, vector<TensorViewCuda*> views)
 {
     constexpr Index ALIGNMENT = 16;
     constexpr Index MASK = ~(ALIGNMENT - 1);
 
-    for(TensorViewCuda* view_cuda : views_cuda)
+    for (TensorViewCuda* view : views)
     {
-        if(!view_cuda || view_cuda->size() == 0) continue;
+        if (!view || view->size() == 0)
+            continue;
 
-        view_cuda->data = ptr;
-        ptr += (view_cuda->size() + ALIGNMENT - 1) & MASK;
+        view->data = pointer;
+        pointer += (view->size() + ALIGNMENT - 1) & MASK;
     }
 
-    return ptr;
+    return pointer;
+}
+
+
+void link(type* pointer, vector<vector<TensorViewCuda*> > views)
+{
+    for (size_t i = 0; i < views.size(); i++)
+        pointer = link(pointer, views[i]);
 }
 
 
@@ -806,13 +758,24 @@ Index get_size(const vector<TensorViewCuda*> views)
 
     Index total_size = 0;
 
-    for(const TensorView* view : views)
+    for (const TensorViewCuda* view : views)
     {
-        if(!view || view->size() == 0)
+        if (!view || view->size() == 0)
             continue;
 
         total_size += (view->size() + ALIGNMENT - 1) & MASK;
     }
+
+    return total_size;
+}
+
+
+Index get_size(vector<vector<TensorViewCuda*> > views)
+{
+    Index total_size = 0;
+
+    for (size_t i = 0; i < views.size(); i++)
+        total_size += get_size(views[i]);
 
     return total_size;
 }

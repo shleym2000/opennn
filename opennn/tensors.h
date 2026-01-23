@@ -486,8 +486,10 @@ struct TensorViewCuda
 
 
 type* link(type*, vector<TensorViewCuda*>);
+void link(type*, vector<vector<TensorViewCuda*>>);
 
 Index get_size(const vector<TensorViewCuda*>);
+Index get_size(vector<vector<TensorViewCuda*>>);
 
 #endif
 

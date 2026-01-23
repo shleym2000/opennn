@@ -356,12 +356,6 @@ void UnscalingForwardPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> UnscalingForwardPropagationCuda::get_tensor_views_device()
-{
-    return { &outputs };
-}
-
-
 void UnscalingForwardPropagationCuda::print() const
 {
     const Index outputs_number = layer->get_outputs_number();

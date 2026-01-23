@@ -605,7 +605,7 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
 
     // Back propagation
 
-    type* input_deltas = back_propagation_cuda->get_input_deltas()[0].data;
+    type* input_deltas = back_propagation_cuda->get_input_deltas_device()[0].data;
 
     // Pooling
 
