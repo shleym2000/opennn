@@ -59,8 +59,6 @@ public:
         return vector<TensorView*>();
     }
 
-    type* link_parameters(type*);
-
     //virtual pair
 
     virtual dimensions get_input_dimensions() const = 0;
@@ -303,7 +301,7 @@ protected:
 
         #pragma omp parallel
         {
-            for (Index i = 0; i < tensor.size(); i++)
+            for(Index i = 0; i < tensor.size(); i++)
                 tensor(i) = (random_uniform(0, 1) < dropout_rate)
                                 ? 0
                                 : tensor(i) * scaling_factor;
@@ -356,15 +354,7 @@ public:
         return vector<TensorViewCuda*>();
     }
 
-    type* link_parameters_device(type*);
-
-    virtual void copy_parameters_host() {}
-
-    virtual void copy_parameters_device() {}
-
-    virtual void allocate_parameters_device() {}
-
-    virtual void free_parameters_device() {}
+    virtual void free() {}
 
     virtual void print_parameters_cuda() {}
 
@@ -395,11 +385,7 @@ struct LayerForwardPropagation
     void set(const Index& = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    Index get_workspace_size();
-
-    virtual vector<TensorView *> get_tensor_views();
-
-    type* link_workspace(type*);
+    virtual vector<TensorView*> get_workspace_views();
 
     TensorView get_outputs() const;
 
@@ -423,19 +409,12 @@ struct LayerBackPropagation
     void set(const Index& = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    Index get_workspace_size();
-
-    virtual vector<TensorView*> get_tensor_views()
+    virtual vector<TensorView*> get_workspace_views() 
     {
-        return vector<TensorView*>();
-    }
+    		return vector<TensorView*>();
+    };
 
-    type* link_workspace(type*);
-
-    vector<TensorView> get_input_deltas() const
-    {
-        return input_deltas;
-    }
+    vector<TensorView> get_input_deltas() const;
 
     virtual void print() const {}
 
@@ -456,45 +435,15 @@ struct LayerBackPropagationLM
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 
-    virtual vector<TensorView> get_input_deltas() const = 0;
-
     virtual void set(const Index& = 0, Layer* = nullptr) = 0;
+    //virtual void initialize() = 0;
 
-    Index get_workspace_size()
+    virtual vector<TensorView*> get_workspace_views()
     {
-        constexpr Index ALIGNMENT = 16;
-        constexpr Index MASK = ~(ALIGNMENT - 1);
-        Index total_size = 0;
+        return vector<TensorView*>();
+    };
 
-        for (TensorView* view : get_tensor_views())
-        {
-            if (view && view->size() > 0)
-            {
-                Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
-                total_size += padded_size;
-            }
-        }
-        return total_size;
-    }
-
-    type* link_workspace(type* ptr)
-    {
-        constexpr Index ALIGNMENT = 16;
-        constexpr Index MASK = ~(ALIGNMENT - 1);
-
-        for (TensorView* view : get_tensor_views())
-        {
-            if (view && view->size() > 0)
-            {
-                view->data = ptr;
-                Index padded_size = (view->size() + ALIGNMENT - 1) & MASK;
-                ptr += padded_size;
-            }
-        }
-        return ptr;
-    }
-
-    virtual vector<TensorView*> get_tensor_views() = 0;
+    vector<TensorView> get_input_deltas() const;
 
     virtual void print() const {}
 
@@ -503,6 +452,8 @@ struct LayerBackPropagationLM
     Layer* layer = nullptr;
 
     bool is_first_layer = false;
+
+    vector<TensorView> input_deltas;
 };
 
 
@@ -516,19 +467,9 @@ struct LayerForwardPropagationCuda
     void set(const Index& = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    Index get_workspace_size();
+    virtual vector<TensorViewCuda*> get_workspace_views_device();
 
-    virtual vector<TensorViewCuda*> get_tensor_views_device()
-    {
-        return vector<TensorViewCuda*>();
-    }
-
-    type* link_workspace(type*);
-
-    virtual TensorViewCuda get_outputs_view_device()
-    {
-        return outputs;
-    }
+    TensorViewCuda get_outputs_device() const;
 
     virtual void print() const {}
 
@@ -550,19 +491,12 @@ struct LayerBackPropagationCuda
     void set(const Index& = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    Index get_workspace_size();
-
-    virtual vector<TensorViewCuda*> get_tensor_views_device()
+    virtual vector<TensorViewCuda*> get_workspace_views_device() 
     {
-        return vector<TensorViewCuda*>();
-    }
+		return vector<TensorViewCuda*>();
+    };
 
-    type* link_workspace(type*);
-
-    vector<TensorViewCuda> get_input_deltas() const
-    {
-        return input_deltas;
-    }
+    vector<TensorViewCuda> get_input_deltas_device() const;
 
     virtual void print() const {}
 

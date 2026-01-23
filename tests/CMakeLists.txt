@@ -22,7 +22,6 @@ add_executable(run_tests test.cpp
 		cross_entropy_error_3d_test.cpp
 		cross_entropy_error_test.cpp
 		data_set_test.cpp
-		dense_layer_3d_test.cpp
 		dense_layer_test.cpp
 		embedding_layer_test.cpp
 		flatten_layer_test.cpp

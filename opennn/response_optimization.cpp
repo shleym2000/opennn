@@ -910,7 +910,7 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
 
     // @todo adding bool to Index. Cast?
 
-    for (Index i = 0; i < raw_inputs_number; ++i)
+    for(Index i = 0; i < raw_inputs_number; ++i)
         objectives_number += (input_conditions(i) == Condition::Minimum || input_conditions(i) == Condition::Maximum);
 
     for(Index j = 0; j < raw_outputs_number; ++j)
@@ -924,14 +924,14 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
 
     Index counter_objectives = 0;
 
-    for (Index i = 0; i < raw_inputs_number; ++i)
+    for(Index i = 0; i < raw_inputs_number; ++i)
     {
         if (input_conditions(i) != Condition::Minimum && input_conditions(i) != Condition::Maximum)
             continue;
 
         const Index column_idx = raw_input_feature_start[i];
 
-        for (Index row = 0; row < envelope.dimension(0); ++row)
+        for(Index row = 0; row < envelope.dimension(0); ++row)
             objectives(row, counter_objectives) = envelope(row, column_idx);
 
         sense(counter_objectives) = (input_conditions(i) == Condition::Maximum) ? type(-1) : type(1);
@@ -1124,7 +1124,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
                 const Index end = min(feature_index + one_hot_size, inputs_number);
 
-                for (Index i = feature_index; i < end; ++i)
+                for(Index i = feature_index; i < end; ++i)
                     is_categorical_input[i] = true;
 
                 feature_index += one_hot_size;
@@ -1160,7 +1160,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
                 const Index end = min(feature_index + one_hot_size, outputs_number);
 
-                for (Index i = feature_index; i < end; ++i)
+                for(Index i = feature_index; i < end; ++i)
                     is_categorical_output[i] = true;
 
                 feature_index += one_hot_size;
@@ -1192,7 +1192,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
     type sign = type(1);
     int numeric_count = 0;
 
-    for (Index raw = 0; raw < raw_inputs_number; ++raw)
+    for(Index raw = 0; raw < raw_inputs_number; ++raw)
     {
         const Condition input_condition = input_conditions(raw);
 
@@ -1210,7 +1210,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
         ++numeric_count;
     }
 
-    for (Index raw = 0; raw < raw_outputs_number; ++raw)
+    for(Index raw = 0; raw < raw_outputs_number; ++raw)
     {
         const auto output_condition = output_conditions(raw);
 
@@ -1236,7 +1236,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
         bool first_run = true;
 
-        for (Index iteration = 0; iteration < iterative_max_iterations; ++iteration)
+        for(Index iteration = 0; iteration < iterative_max_iterations; ++iteration)
         {
             const Tensor<type,2> inputs = calculate_inputs();
             const Tensor<type,2> outputs = neural_network->calculate_outputs<2,2>(inputs);
@@ -1274,7 +1274,7 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 
             bool collapsed = true;
 
-            for (Index raw = 0; raw < raw_inputs_number; ++raw)
+            for(Index raw = 0; raw < raw_inputs_number; ++raw)
             {
                 const Index start = raw_input_feature_start[raw];
                 const Index size  = raw_input_feature_size[raw];

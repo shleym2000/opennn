@@ -168,12 +168,12 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
     const Index columns_number = inputs.dimension(1);
 
 #pragma omp parallel for
-    for (Index j = 0; j < columns_number; j++)
+    for(Index j = 0; j < columns_number; j++)
     {
         const type& lower_bound = lower_bounds(j);
         const type& upper_bound = upper_bounds(j);
 
-        for (Index i = 0; i < rows_number; i++)
+        for(Index i = 0; i < rows_number; i++)
             outputs(i, j) = clamp(inputs(i, j), lower_bound, upper_bound);
     }
 }
@@ -234,7 +234,7 @@ void Bounding::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
 
-    for (Index i = 0; i < output_dimensions[0]; i++)
+    for(Index i = 0; i < output_dimensions[0]; i++)
     {
         printer.OpenElement("Item");
         printer.PushAttribute("Index", unsigned(i + 1));
@@ -255,7 +255,7 @@ void Bounding::from_XML(const XMLDocument& document)
 {
     const auto* root_element = document.FirstChildElement("Bounding");
 
-    if (!root_element)
+    if(!root_element)
         throw runtime_error("Bounding element is nullptr.\n");
 
     const Index neurons_number = read_xml_index(root_element, "NeuronsNumber");
@@ -264,7 +264,7 @@ void Bounding::from_XML(const XMLDocument& document)
 
     const auto* item_element = root_element->FirstChildElement("Item");
 
-    for (Index i = 0; i < neurons_number && item_element; i++)
+    for(Index i = 0; i < neurons_number && item_element; i++)
     {
         unsigned index = 0;
         item_element->QueryUnsignedAttribute("Index", &index);
@@ -294,12 +294,6 @@ void BoundingForwardPropagation::initialize()
     const Index neurons_number = static_cast<Bounding*>(layer)->get_output_dimensions()[0];
 
     outputs.dims = {batch_size, neurons_number};
-}
-
-
-vector<TensorView *> BoundingForwardPropagation::get_tensor_views()
-{
-    return { &outputs };
 }
 
 
@@ -336,12 +330,6 @@ BoundingForwardPropagationCuda::BoundingForwardPropagationCuda(const Index& new_
 void BoundingForwardPropagationCuda::initialize()
 {
     // @todo
-}
-
-
-vector<TensorViewCuda*> BoundingForwardPropagationCuda::get_tensor_views_device()
-{
-    return { &outputs };
 }
 
 

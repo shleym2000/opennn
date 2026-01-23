@@ -141,7 +141,7 @@ void Unscaling::set(const Index& new_neurons_number, const string& new_label)
 {
     descriptives.resize(new_neurons_number);
 
-    for (auto& descriptive : descriptives)
+    for(auto& descriptive : descriptives)
         descriptive.set(type(-1.0), type(1), type(0), type(1));
 
     scalers.resize(new_neurons_number, "MinimumMaximum");
@@ -179,7 +179,7 @@ void Unscaling::set_scalers(const vector<string>& new_scaler)
 
 void Unscaling::set_scalers(const string& new_scalers)
 {
-    for (string& scaler : scalers)
+    for(string& scaler : scalers)
         scaler = new_scalers;
 }
 
@@ -247,7 +247,7 @@ void Unscaling::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
 
-    for (Index i = 0; i < output_dimensions[0]; i++)
+    for(Index i = 0; i < output_dimensions[0]; i++)
     {
         printer.OpenElement("UnscalingNeuron");
         printer.PushAttribute("Index", int(i + 1));
@@ -274,9 +274,9 @@ void Unscaling::from_XML(const XMLDocument& document)
 
     const XMLElement* start_element = root_element->FirstChildElement("NeuronsNumber");
 
-    for (Index i = 0; i < neurons_number; i++) {
+    for(Index i = 0; i < neurons_number; i++) {
         const XMLElement* unscaling_neuron_element = start_element->NextSiblingElement("UnscalingNeuron");
-        if (!unscaling_neuron_element) {
+        if(!unscaling_neuron_element) {
             throw runtime_error("Unscaling neuron " + to_string(i + 1) + " is nullptr.\n");
         }
 
@@ -320,12 +320,6 @@ void UnscalingForwardPropagation::initialize()
 }
 
 
-vector<TensorView*> UnscalingForwardPropagation::get_tensor_views()
-{
-    return { &outputs };
-}
-
-
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
@@ -359,12 +353,6 @@ UnscalingForwardPropagationCuda::UnscalingForwardPropagationCuda(const Index& ne
 void UnscalingForwardPropagationCuda::initialize()
 {
     // @todo
-}
-
-
-vector<TensorViewCuda*> UnscalingForwardPropagationCuda::get_tensor_views_device()
-{
-    return { &outputs };
 }
 
 

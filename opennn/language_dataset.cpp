@@ -41,7 +41,7 @@ LanguageDataset::LanguageDataset(const Index& samples_number,
 
     set_default();
 
-    for (Index i = 0; i < variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
         RawVariable& raw_variable = raw_variables[i];
 
@@ -58,9 +58,9 @@ LanguageDataset::LanguageDataset(const Index& samples_number,
 
     const Index target_column_index = data.dimension(1) - 1;
 
-    for (Index i = 0; i < data.dimension(0); ++i)
+    for(Index i = 0; i < data.dimension(0); ++i)
     {
-        for (Index j = 0; j < target_column_index; ++j)
+        for(Index j = 0; j < target_column_index; ++j)
             data(i, j) = random_integer(0, input_vocabulary_size - 1);
 
         data(i, target_column_index) = random_integer(0, 1);
@@ -132,8 +132,8 @@ void LanguageDataset::create_vocabulary(const vector<vector<string>>& document_t
 {
     unordered_map<string, size_t> token_count;
 
-    for (const auto& document : document_tokens)
-        for (const auto& token : document)
+    for(const auto& document : document_tokens)
+        for(const auto& token : document)
             ++token_count[token];
 
     vector<pair<string, size_t>> sorted_tokens(token_count.begin(), token_count.end());
@@ -143,10 +143,10 @@ void LanguageDataset::create_vocabulary(const vector<vector<string>>& document_t
 
     vocabulary.clear();
 
-    for (const auto& token : reserved_tokens)
+    for(const auto& token : reserved_tokens)
         vocabulary.push_back(token);
 
-    for (const auto& token : sorted_tokens)
+    for(const auto& token : sorted_tokens)
     {
         if (token.second < size_t(minimum_token_frequency))
             continue;
@@ -170,7 +170,7 @@ void LanguageDataset::encode_input_data(const vector<vector<string>>& input_docu
 
     #pragma omp parallel for
 
-    for (Index sample = 0; sample < samples_number; sample++)
+    for(Index sample = 0; sample < samples_number; sample++)
     {
         data(sample, 0) = 2; // start
 
@@ -178,7 +178,7 @@ void LanguageDataset::encode_input_data(const vector<vector<string>>& input_docu
 
         const size_t input_tokens_number = input_tokens.size();
 
-        for (size_t variable = 0; variable < input_tokens_number; variable++)
+        for(size_t variable = 0; variable < input_tokens_number; variable++)
         {
             auto it = find(input_vocabulary.begin(), input_vocabulary.end(), input_tokens[variable]);
 
@@ -244,13 +244,13 @@ void LanguageDataset::encode_target_data(const vector<vector<string>>& target_do
         const Index samples_number = get_samples_number();
 
         #pragma omp parallel for
-        for (Index sample = 0; sample < samples_number; sample++)
+        for(Index sample = 0; sample < samples_number; sample++)
         {
             data(sample, maximum_input_sequence_length) = 2; // start;
 
             const vector<string>& target_tokens = target_document_tokens[sample];
 
-            for (Index variable = maximum_input_sequence_length + 1;
+            for(Index variable = maximum_input_sequence_length + 1;
                 variable < maximum_input_sequence_length + 1 + Index(target_tokens.size());
                 variable++)
             {
@@ -375,7 +375,7 @@ unordered_map<string, Index> LanguageDataset::create_vocabulary_map(const vector
 {
     unordered_map<string, Index> vocabulary_map;
 
-    for (Index i = 0; i < Index(vocabulary.size()); ++i)
+    for(Index i = 0; i < Index(vocabulary.size()); ++i)
         vocabulary_map[vocabulary[i]] = i;
 
     return vocabulary_map;

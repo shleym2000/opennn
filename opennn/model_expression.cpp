@@ -882,7 +882,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
                     }
                 }
 
-                if(desc_idx == -1 && inputs_descriptives.size() > 0)
+                if(desc_idx == -1 && !inputs_descriptives.empty())
                 {
                     Index inputs_per_variable = inputs_number / inputs_descriptives.size();
                     if(inputs_per_variable < 1)
@@ -1376,7 +1376,7 @@ string ModelExpression::replace_reserved_keywords(const string& s) const
     if(s[0] == '$')
         out = s;
 
-    for (char c : s)
+    for(char c : s)
     {
         if (c == ' ') out += "_";
         else if (c == '.') out += "_dot_";
@@ -1406,7 +1406,7 @@ string ModelExpression::replace_reserved_keywords(const string& s) const
         {"tanh", "ta_nh"}
     };
 
-    for (const auto& pair : special_words)
+    for(const auto& pair : special_words)
     {
         size_t position = 0;
 
@@ -1448,7 +1448,7 @@ vector<string> ModelExpression::fix_get_expression_outputs(const string& str,
     if (tokens.size() < num_outputs)
         return {};
 
-    for (size_t i = 0; i < num_outputs; ++i)
+    for(size_t i = 0; i < num_outputs; ++i)
     {
         string intermediate_var_line = tokens[tokens.size() - num_outputs + i];
         string intermediate_var_name = get_first_word(intermediate_var_line);
@@ -1505,7 +1505,7 @@ vector<string> ModelExpression::fix_output_names(const vector<string>& output_na
 
     vector<string> fixes_output_names(outputs_number);
 
-    for (Index i = 0; i < outputs_number; i++)
+    for(Index i = 0; i < outputs_number; i++)
         if (output_names[i].empty())
             fixes_output_names[i] = "output_" + to_string(i);
         else
@@ -1519,7 +1519,7 @@ void ModelExpression::save_python(const filesystem::path& file_name, const vecto
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     file << get_expression_python(raw_variables);
@@ -1530,7 +1530,7 @@ void ModelExpression::save_c(const filesystem::path& file_name, const vector<Dat
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     file << get_expression_c(raw_variables);
@@ -1541,7 +1541,7 @@ void ModelExpression::save_javascript(const filesystem::path& file_name, const v
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     file << get_expression_javascript(raw_variables);
@@ -1552,7 +1552,7 @@ void ModelExpression::save_api(const filesystem::path& file_name, const vector<D
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
 

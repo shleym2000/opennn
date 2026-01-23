@@ -782,7 +782,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_binary_classification(cons
             true_positive++;
         else if (is_target_positive && !is_output_positive)
             false_negative++;
-        else if (!is_target_positive && is_output_positive)
+        else if(!is_target_positive && is_output_positive)
             false_positive++;
         else  // !is_target_positive && !is_output_positive
             true_negative++;
@@ -2120,7 +2120,7 @@ void TestingAnalysis::save(const filesystem::path& file_name) const
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     XMLPrinter printer;
@@ -2224,7 +2224,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
     neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
 
-    for (const auto& current_batch_indices : testing_batches)
+    for(const auto& current_batch_indices : testing_batches)
     {
         const Index current_batch_size = current_batch_indices.size();
         if (current_batch_size == 0) continue;

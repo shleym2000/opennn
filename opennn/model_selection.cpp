@@ -154,13 +154,13 @@ void ModelSelection::from_XML(const XMLDocument& document)
 {
     const XMLElement* root_element = document.FirstChildElement("ModelSelection");
 
-    if (!root_element) 
+    if(!root_element) 
         throw runtime_error("Model Selection element is nullptr.\n");
 
     // Neuron selection
 
     const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronsSelection");
-    if (!neurons_selection_element) throw runtime_error("Neuron selection element is nullptr.\n");
+    if(!neurons_selection_element) throw runtime_error("Neuron selection element is nullptr.\n");
 
     const string selection_method = read_xml_string(neurons_selection_element, "NeuronsSelectionMethod");
     
@@ -181,7 +181,7 @@ void ModelSelection::from_XML(const XMLDocument& document)
     // Input Selection
 
     const XMLElement* inputs_selection_element = root_element->FirstChildElement("InputsSelection");
-    if (!inputs_selection_element) throw runtime_error("Input selection element is nullptr.\n");
+    if(!inputs_selection_element) throw runtime_error("Input selection element is nullptr.\n");
 
     const string inputs_method = read_xml_string(inputs_selection_element, "InputsSelectionMethod");
 
@@ -212,7 +212,7 @@ void ModelSelection::save(const filesystem::path& file_name) const
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     XMLPrinter printer;

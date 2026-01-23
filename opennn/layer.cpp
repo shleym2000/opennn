@@ -17,64 +17,18 @@ namespace opennn
 
 void LayerForwardPropagation::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
 
     initialize();
-}
-
-
-Index LayerForwardPropagation::get_workspace_size()
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_bytes = 0;
-
-    vector<TensorView*> views = get_tensor_views();
-
-    for (const TensorView* view : views)
-    {
-        if (view && view->size() > 0)
-        {
-            Index size = view->size();
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            total_bytes += padded_size;
-        }
-    }
-
-    return total_bytes;
-}
-
-
-type* LayerForwardPropagation::link_workspace(type* ptr)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    vector<TensorView*> views = get_tensor_views();
-
-    for (TensorView* view : views)
-    {
-        const Index size = view->size();
-
-        if (size > 0)
-        {
-            view->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
-    }
-
-    return ptr;
 }
 
 
 void LayerBackPropagation::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
@@ -83,49 +37,9 @@ void LayerBackPropagation::set(const Index& new_batch_size, Layer* new_layer)
 }
 
 
-Index LayerBackPropagation::get_workspace_size()
+vector<TensorView> LayerBackPropagation::get_input_deltas() const
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_size = 0;
-
-    vector<TensorView*> views = get_tensor_views();
-
-    for (const TensorView* view : views)
-    {
-        if (view && view->size() > 0)
-        {
-            Index size = view->size();
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            total_size += padded_size;
-        }
-    }
-
-    return total_size;
-}
-
-
-type* LayerBackPropagation::link_workspace(type* ptr)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    vector<TensorView*> views = get_tensor_views();
-
-    for (TensorView* view : views)
-    {
-        const Index size = view->size();
-
-        if (size > 0)
-        {
-            view->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
-    }
-
-    return ptr;
+    return input_deltas;
 }
 
 
@@ -133,7 +47,7 @@ type* LayerBackPropagation::link_workspace(type* ptr)
 
 void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
@@ -142,55 +56,21 @@ void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_la
 }
 
 
-Index LayerForwardPropagationCuda::get_workspace_size()
+TensorViewCuda LayerForwardPropagationCuda::get_outputs_device() const
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_bytes = 0;
-
-    vector<TensorViewCuda*> views_cuda = get_tensor_views_device();
-
-    for (const TensorViewCuda* view_cuda : views_cuda)
-    {
-        if (view_cuda && view_cuda->size() > 0)
-        {
-            Index size = view_cuda->size();
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            total_bytes += padded_size;
-        }
-    }
-
-    return total_bytes;
+    return outputs;
 }
 
 
-type* LayerForwardPropagationCuda::link_workspace(type* ptr)
+vector<TensorViewCuda*> LayerForwardPropagationCuda::get_workspace_views_device()
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    vector<TensorViewCuda*> views_cuda = get_tensor_views_device();
-
-    for (TensorViewCuda* view_cuda : views_cuda)
-    {
-        const Index size = view_cuda->size();
-
-        if (size > 0)
-        {
-            view_cuda->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
-    }
-
-    return ptr;
+    return { &outputs };
 }
 
 
 void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer)
 {
-    if (!new_layer) return;
+    if(!new_layer) return;
 
     batch_size = new_batch_size;
     layer = new_layer;
@@ -199,49 +79,9 @@ void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer
 }
 
 
-Index LayerBackPropagationCuda::get_workspace_size()
+vector<TensorViewCuda> LayerBackPropagationCuda::get_input_deltas_device() const
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    Index total_size = 0;
-
-    vector<TensorViewCuda*> views_cuda = get_tensor_views_device();
-
-    for (const TensorViewCuda* view_cuda : views_cuda)
-    {
-        if (view_cuda && view_cuda->size() > 0)
-        {
-            Index size = view_cuda->size();
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            total_size += padded_size;
-        }
-    }
-
-    return total_size;
-}
-
-
-type* LayerBackPropagationCuda::link_workspace(type* ptr)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    vector<TensorViewCuda*> views_cuda = get_tensor_views_device();
-
-    for (TensorViewCuda* view_cuda : views_cuda)
-    {
-        const Index size = view_cuda->size();
-
-        if (size > 0)
-        {
-            view_cuda->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
-    }
-
-    return ptr;
+	return input_deltas;
 }
 
 #endif
@@ -290,7 +130,7 @@ void Layer::set_parameters_random()
 {
     const vector<TensorView*> parameter_views = get_parameter_views();
 
-    for (const auto& view : parameter_views)
+    for(const auto& view : parameter_views)
     {
         TensorMap1 this_parameters(view->data, view->size());
 
@@ -308,7 +148,7 @@ void Layer::set_parameters_glorot()
 
     const vector<TensorView*> parameter_views = get_parameter_views();
 
-    for (const TensorView* view : parameter_views)
+    for(const TensorView* view : parameter_views)
     {
         TensorMap1 this_parameters(view->data, view->size());
 
@@ -327,31 +167,6 @@ Index Layer::get_parameters_number()
         parameters_number += parameter_views[i]->size();
 
     return parameters_number;
-}
-
-
-type* Layer::link_parameters(type* ptr)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    vector<TensorView*> parameter_views = get_parameter_views();
-
-    for (TensorView* view : parameter_views)
-    {
-        if (!view) continue;
-
-        const Index size = view->size();
-
-        if (size > 0)
-        {
-            view->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
-    }
-
-    return ptr;
 }
 
 
@@ -407,7 +222,7 @@ void Layer::add_deltas(const vector<TensorView> &delta_views) const
 {
     TensorMap3 deltas = tensor_map<3>(delta_views[0]);
 
-    for (Index i = 1; i < Index(delta_views.size()); i++)
+    for(Index i = 1; i < Index(delta_views.size()); i++)
         deltas.device(*device) += tensor_map<3>(delta_views[i]);
 }
 
@@ -472,7 +287,7 @@ void Layer::softmax(TensorMap2 y) const
         {
             const type inv_sum = type(1.0) / sum;
 
-            for (Index j = 0; j < columns_number; j++)
+            for(Index j = 0; j < columns_number; j++)
                 y(i, j) *= inv_sum;
         }
     }
@@ -572,9 +387,9 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
 
     Tensor<type, 0> sum;
 
-    for (Index i = 0; i < depth; i++)
+    for(Index i = 0; i < depth; i++)
     {
-        for (Index j = 0; j < columns; j++)
+        for(Index j = 0; j < columns; j++)
         {
             softmax_vector_data = softmax_data + rows * (i * columns + j);
             result_vector_data = result_data + rows * (i * columns + j);
@@ -636,39 +451,23 @@ cudnnHandle_t Layer::get_cudnn_handle()
     return cudnn_handle;
 }
 
-
-float* Layer::link_parameters_device(float* ptr)
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
-
-    vector<TensorView*> cpu_views = get_parameter_views();
-    vector<TensorViewCuda*> cuda_views = get_parameter_views_device();
-
-    for (size_t i = 0; i < cpu_views.size(); ++i)
-    {
-        TensorView* cpu_view = cpu_views[i];
-        TensorViewCuda* cuda_view = cuda_views[i];
-
-        const Index size = cpu_view->size();
-
-        if (size > 0)
-        {
-            cuda_view->data = ptr;
-            Index padded_size = (size + ALIGNMENT - 1) & MASK;
-            ptr += padded_size;
-        }
-    }
-
-    return ptr;
-}
-
 #endif
 
-TensorView LayerForwardPropagation::get_outputs() const { return outputs; }
-std::vector<TensorView *> LayerForwardPropagation::get_tensor_views() {
-    return vector<TensorView *>();
+TensorView LayerForwardPropagation::get_outputs() const
+{
+    return outputs;
 }
+
+vector<TensorView*> LayerForwardPropagation::get_workspace_views()
+{
+    return {&outputs};
+}
+
+vector<TensorView> LayerBackPropagationLM::get_input_deltas() const
+{
+    return input_deltas;
+}
+
 } // namespace opennn
 
 // namespace opennn

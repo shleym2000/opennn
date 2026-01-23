@@ -173,7 +173,7 @@ public:
 
     void set_scalers(const string& new_scaler)
     {
-        for (string& scaler : scalers)
+        for(string& scaler : scalers)
             scaler = new_scaler;
     }
 
@@ -356,9 +356,9 @@ public:
 
         const XMLElement* start_element = scaling_layer_element->FirstChildElement("NeuronsNumber");
 
-        for (Index i = 0; i < neurons_number; i++) {
+        for(Index i = 0; i < neurons_number; i++) {
             const XMLElement* scaling_neuron_element = start_element->NextSiblingElement("ScalingNeuron");
-            if (!scaling_neuron_element) {
+            if(!scaling_neuron_element) {
                 throw runtime_error("Scaling neuron " + to_string(i + 1) + " is nullptr.\n");
             }
 
@@ -370,7 +370,7 @@ public:
 
             const XMLElement* descriptives_element = scaling_neuron_element->FirstChildElement("Descriptives");
 
-            if (!descriptives_element)
+            if(!descriptives_element)
                 throw runtime_error("Descriptives element " + to_string(i + 1) + " is nullptr.\n");
 /*
             if (descriptives_element->GetText()) {
@@ -397,7 +397,7 @@ public:
 
         const Index outputs_number = get_outputs_number();
 
-        for (Index i = 0; i < outputs_number; i++)
+        for(Index i = 0; i < outputs_number; i++)
         {
             printer.OpenElement("ScalingNeuron");
             printer.PushAttribute("Index", int(i + 1));
@@ -420,10 +420,10 @@ public:
             static_cast<ScalingForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
 
         const Index outputs_number = get_outputs_number();
-        const size_t size = outputs_number * scaling_forward_propagation->batch_size;
+        const size_t size = outputs_number * forward_propagation_cuda->batch_size;
 
-        scale_2d_cuda(size, scaling_forward_propagation->batch_size, outputs_number,
-                      inputs_device[0].data, scaling_forward_propagation->outputs.data,
+        scale_2d_cuda(size, forward_propagation_cuda->batch_size, outputs_number,
+                      inputs_device[0].data, forward_propagation_cuda->outputs.data,
                       scaling_forward_propagation->scalers_device,
                       scaling_forward_propagation->minimums_device,
                       scaling_forward_propagation->maximums_device,
@@ -470,11 +470,6 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
         outputs.dims = {batch_size, outputs_number};
     }
 
-    vector<TensorView*> get_tensor_views() override
-    {
-        return { &outputs };
-    }
-
     void print() const override
     {
         cout << "Outputs:" << endl
@@ -499,9 +494,8 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         const Scaling<Rank>* scaling_layer = static_cast<Scaling<Rank>*>(layer);
 
         const Index outputs_number = scaling_layer->get_outputs_number();
-        const size_t size = batch_size * outputs_number;
 
-        CHECK_CUDA(cudaMalloc(&outputs.data, size * sizeof(float)));
+        outputs.set_descriptor({static_cast<int>(batch_size), static_cast<int>(outputs_number), 1, 1});
 
         const Tensor1 minimums_host = scaling_layer->get_minimums();
         const Tensor1 maximums_host = scaling_layer->get_maximums();
@@ -510,7 +504,7 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         const vector<string> scalers_host_vec = scaling_layer->get_scalers();
 
         Tensor<int, 1> scalers_host_tensor(outputs_number);
-        for (Index i = 0; i < outputs_number; ++i)
+        for(Index i = 0; i < outputs_number; ++i)
         {
             const string & scaler_str = scalers_host_vec[i];
 
@@ -543,11 +537,6 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         CHECK_CUDA(cudaMemcpy(scalers_device, scalers_host_tensor.data(), outputs_number * sizeof(int), cudaMemcpyHostToDevice));
     }
 
-    vector<TensorViewCuda*> get_tensor_views_device() override
-    {
-        return { &outputs };
-    }
-
     void print() const override
     {
         const Index outputs_number = layer->get_outputs_number();
@@ -558,19 +547,28 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        cudaFree(outputs.data);
-        cudaFree(scalers_device);
-        cudaFree(minimums_device);
-        cudaFree(maximums_device);
-        cudaFree(means_device);
-        cudaFree(standard_deviations_device);
-
         outputs.data = nullptr;
+
+        cudaFree(scalers_device);
         scalers_device = nullptr;
+
+        cudaFree(minimums_device);
         minimums_device = nullptr;
+
+        cudaFree(maximums_device);
         maximums_device = nullptr;
+
+        cudaFree(means_device);
         means_device = nullptr;
+
+        cudaFree(standard_deviations_device);
         standard_deviations_device = nullptr;
+
+        if (outputs.descriptor)
+        {
+            cudnnDestroyTensorDescriptor(outputs.descriptor);
+            outputs.descriptor = nullptr;
+        }
     }
 
     int* scalers_device = nullptr;

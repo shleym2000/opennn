@@ -90,14 +90,14 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
         Tensor<Index, 2>& maximal_indices = pooling_layer_forward_propagation->maximal_indices;
 
 #pragma omp parallel for
-        for (Index batch_index = 0; batch_index < batch_size; ++batch_index)
+        for(Index batch_index = 0; batch_index < batch_size; ++batch_index)
         {
-            for (Index feature_index = 0; feature_index < features; ++feature_index)
+            for(Index feature_index = 0; feature_index < features; ++feature_index)
             {
                 type   max_val = -std::numeric_limits<type>::infinity();
                 Index  max_idx = 0;
 
-                for (Index seq_index = 0; seq_index < sequence_length; ++seq_index)
+                for(Index seq_index = 0; seq_index < sequence_length; ++seq_index)
                 {
                     const type value = inputs(batch_index, seq_index, feature_index);
                     if (value > max_val)
@@ -142,9 +142,9 @@ void Pooling3d::back_propagate(const vector<TensorView>& input_views,
 
     if (pooling_method == PoolingMethod::MaxPooling)
     {
-        for (Index batch_index = 0; batch_index < batch_size; ++batch_index)
+        for(Index batch_index = 0; batch_index < batch_size; ++batch_index)
         {
-            for (Index feature_index = 0; feature_index < number_of_features; ++feature_index)
+            for(Index feature_index = 0; feature_index < number_of_features; ++feature_index)
             {
                 const Index maximal_index =
                     forward_layer->maximal_indices(batch_index, feature_index);
@@ -215,7 +215,7 @@ void Pooling3d::to_XML(XMLPrinter& printer) const
 void Pooling3d::from_XML(const XMLDocument& document)
 {
     const XMLElement* element = document.FirstChildElement("Pooling3d");
-    if (!element) throw runtime_error("Pooling3d element is nullptr.");
+    if(!element) throw runtime_error("Pooling3d element is nullptr.");
 
     set_input_dimensions(string_to_dimensions(read_xml_string(element, "InputDimensions")));
     set_pooling_method(read_xml_string(element, "PoolingMethod"));

@@ -99,18 +99,13 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
     {
-/*
-        const Index batch_size = layer_forward_propagation->batch_size;
-        const Index outputs_number = get_outputs_number();
-
-        //TensorMap
-
-        FlattenForwardPropagation<Rank>* forward_prop =
+        FlattenForwardPropagation<Rank>* forward_propagation =
             static_cast<FlattenForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
+        const size_t bytes_to_copy = input_views[0].size() * sizeof(type);
 
-        forward_prop->outputs = TensorMap2(input_views[0].data, batch_size, outputs_number);
-*/
+        if (input_views[0].data != forward_propagation->outputs.data)
+            memcpy(forward_propagation->outputs.data, input_views[0].data, bytes_to_copy);
     }
 
     // Back-propagation
@@ -118,17 +113,18 @@ public:
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>& delta_views,
                         unique_ptr<LayerForwardPropagation>&,
-                        unique_ptr<LayerBackPropagation>& back_propagation) const override
+                        unique_ptr<LayerBackPropagation>& layer_back_propagation) const override
     {
-        const Index batch_size = back_propagation->batch_size;
-        const Index outputs_number = get_outputs_number();
+        FlattenBackPropagation<Rank>* flatten_back_propagation =
+            static_cast<FlattenBackPropagation<Rank>*>(layer_back_propagation.get());
 
-        FlattenBackPropagation<Rank>* back_prop =
-            static_cast<FlattenBackPropagation<Rank>*>(back_propagation.get());
+        type* source_ptr = delta_views[0].data;
+        type* dest_ptr = flatten_back_propagation->input_deltas[0].data;
 
-        memcpy(back_prop->input_deltas.data(),
-               delta_views[0].data,
-               (batch_size * outputs_number * sizeof(type)));
+        const size_t bytes_to_copy = flatten_back_propagation->input_deltas[0].size() * sizeof(type);
+
+        if (source_ptr && dest_ptr && source_ptr != dest_ptr)
+            memcpy(dest_ptr, source_ptr, bytes_to_copy);
     }
 
     // Serialization
@@ -137,7 +133,7 @@ public:
     {
 
         const XMLElement* element = document.FirstChildElement("Flatten");
-        if (!element) throw runtime_error("Flatten2d element is nullptr.\n");
+        if(!element) throw runtime_error("Flatten2d element is nullptr.\n");
 
         const Index input_height = read_xml_index(element, "InputHeight");
         const Index input_width = read_xml_index(element, "InputWidth");
@@ -196,7 +192,6 @@ public:
             invert_reorder_inputs_cuda(inputs_device[0].data, reordered_inputs, batch_size, channels, height, width);
 
             reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
-            //reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
         }
         else
             CHECK_CUDA(cudaMemcpy(fp_cuda->outputs.data, inputs_device[0].data, batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice));
@@ -224,6 +219,7 @@ private:
     dimensions input_dimensions;
 };
 
+
 template<int Rank>
 struct FlattenForwardPropagation final : LayerForwardPropagation
 {
@@ -232,17 +228,15 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
         set(new_batch_size, new_layer);
     }
 
-
     void initialize() override
     {
         const dimensions output_dimensions = layer->get_output_dimensions();
         outputs.dims = {batch_size, output_dimensions[0]};
     }
 
-
     void print() const override
     {
-        cout << "Flatten Outputs:" << endl << outputs.dims << endl;
+        cout << "Flatten Outputs Dimensions:" << endl << outputs.dims << endl;
     }
 };
 
@@ -255,29 +249,28 @@ struct FlattenBackPropagation final : LayerBackPropagation
         set(new_batch_size, new_layer);
     }
 
-
-    void initialize()
+    void initialize() override
     {
-        const Flatten<Rank>* layer_ptr = static_cast<const Flatten<Rank>*>(layer);
-        const dimensions input_dimensions = layer_ptr->get_input_dimensions();
+        const Flatten<Rank>* flatten_layer = static_cast<const Flatten<Rank>*>(layer);
 
-        dimensions resize_dimensions(Rank + 1);
-        resize_dimensions[0] = batch_size;
+        const dimensions input_dims = flatten_layer->get_input_dimensions();
 
-        for(int i = 0; i < Rank; ++i)
-            resize_dimensions[i + 1] = input_dimensions[i];
+        dimensions full_dims = { batch_size };
+        full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
+
+        input_deltas_tensor.resize(full_dims);
 
         input_deltas.resize(1);
-        input_deltas[0].dims = resize_dimensions;
+        input_deltas[0].data = input_deltas_tensor.data();
+        input_deltas[0].dims = full_dims;
     }
-
 
     void print() const override
     {
-        cout << "Flatten Input derivatives:" << endl << input_deltas[0].dims << endl;
+        cout << "Flatten Deltas Dimensions:" << endl << input_deltas[0].dims << endl;
     }
 
-    //Tensor<type, Rank> input_deltas;
+    Tensor<type, Rank> input_deltas_tensor;
 };
 
 
@@ -302,16 +295,16 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
             //CUDA_MALLOC_AND_REPORT(reordered_inputs, batch_size * inputs_number * sizeof(float));
         }
 
-        CHECK_CUDA(cudaMalloc(&outputs.data, batch_size * outputs_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(outputs, batch_size * outputs_number * sizeof(float));
+        outputs.set_descriptor({static_cast<Index>(batch_size), outputs_number});
     }
 
     void free() override
     {
-        if (outputs.data) cudaFree(outputs.data);
         outputs.data = nullptr;
+        cudnnDestroyTensorDescriptor(outputs.descriptor);
+        outputs.descriptor = nullptr;
 
-        if (reordered_inputs) cudaFree(reordered_inputs);
+        cudaFree(reordered_inputs);
         reordered_inputs = nullptr;
     }
 
@@ -329,16 +322,15 @@ struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const size_t inputs_number = layer->get_inputs_number();
-
-        CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * inputs_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(input_deltas.data, batch_size * inputs_number * sizeof(float));
+        input_deltas.resize(1);
+        CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * layer->get_inputs_number() * sizeof(float)));
+        input_deltas[0].set_descriptor({ static_cast<Index>(batch_size), layer->get_inputs_number(), 1, 1 });
     }
 
     void free() override
     {
-        if (input_deltas[0].data) cudaFree(input_deltas[0].data);
         input_deltas[0].data = nullptr;
+        cudnnDestroyTensorDescriptor(input_deltas[0].descriptor);
     }
 };
 

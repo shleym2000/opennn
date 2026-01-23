@@ -90,8 +90,6 @@ struct BoundingForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
-    vector<TensorView*> get_tensor_views() override;
-
     void print() const override;
 };
 
@@ -103,8 +101,6 @@ struct BoundingForwardPropagationCuda final : public LayerForwardPropagationCuda
     BoundingForwardPropagationCuda(const Index & = 0, Layer* = nullptr);
 
     void initialize() override;
-
-    vector<TensorViewCuda*> get_tensor_views_device() override;
 
     void print() const override;
 

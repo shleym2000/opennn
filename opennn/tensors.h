@@ -26,14 +26,14 @@ struct TensorView
 
     void print() const
     {
-        if (!data || dims.empty())
+        if(!data || dims.empty())
         {
             cout << "TensorView: Empty or Null" << endl;
             return;
         }
 
         cout << "Dims: (";
-        for (size_t i = 0; i < dims.size(); ++i)
+        for(size_t i = 0; i < dims.size(); ++i)
             cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
 
         cout << ")" << endl;
@@ -41,7 +41,7 @@ struct TensorView
         const Index total_size = size();
         const Index last_dim_stride = dims.back();
 
-        for (Index i = 0; i < total_size; ++i)
+        for(Index i = 0; i < total_size; ++i)
         {
             cout << data[i] << " ";
 
@@ -52,6 +52,13 @@ struct TensorView
             cout << endl;
     }
 };
+
+
+type* link(type*, vector<TensorView*>);
+void link(type*, vector<vector<TensorView*>>);
+
+Index get_size(const vector<TensorView*>);
+Index get_size(vector<vector<TensorView*>>);
 
 
 template<typename T, size_t N>
@@ -122,7 +129,7 @@ bool is_binary(const Tensor<type, Rank>& tensor)
 {
     const Index size = tensor.size();
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if (tensor(i) != type(0) && tensor(i) != type(1) && !isnan(tensor(i)))
             return false;
 
@@ -146,8 +153,8 @@ bool is_constant(const Tensor<type, Rank>& tensor)
 
     const type first_not_nan_element = tensor(first_non_nan_index);
 
-    for (Index i = first_non_nan_index + 1; i < size; ++i)
-        if (!isnan(tensor(i)) && abs(first_not_nan_element - tensor(i)) > numeric_limits<float>::min())
+    for(Index i = first_non_nan_index + 1; i < size; ++i)
+        if(!isnan(tensor(i)) && abs(first_not_nan_element - tensor(i)) > numeric_limits<float>::min())
             return false;
 
     return true;
@@ -212,7 +219,7 @@ void push_back(Tensor<T, 1>& tensor, const T& value)
 
     Tensor<T, 1> new_tensor(new_size);
 
-    for (int i = 0; i < tensor.dimension(0); i++)
+    for(int i = 0; i < tensor.dimension(0); i++)
         new_tensor(i) = tensor(i);
 
     new_tensor(new_size - 1) = value;
@@ -232,7 +239,7 @@ string vector_to_string(const vector<T>& x, const string& separator = " ")
 {
     ostringstream buffer;
 
-    for (size_t i = 0; i < x.size(); i++)
+    for(size_t i = 0; i < x.size(); i++)
     {
         buffer << x[i];
         if (i < x.size() - 1)
@@ -281,7 +288,7 @@ TensorMap3 tensor_map_(const TensorMap4&, const Index&);
 template <Index rank>
 TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_view)
 {
-    if (!tensor_view.data)
+    if(!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
 
     if (reinterpret_cast<uintptr_t>(tensor_view.data) % 16 != 0)
@@ -318,7 +325,7 @@ size_t get_maximum_size(const vector<vector<T>>& v)
 {
     size_t maximum_size = 0;
 
-    for (size_t i = 0; i < v.size(); i++)
+    for(size_t i = 0; i < v.size(); i++)
         if (v[i].size() > maximum_size)
             maximum_size = v[i].size();
 
@@ -331,7 +338,7 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 {
     os << "[ ";
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for(size_t i = 0; i < vec.size(); ++i)
     {
         os << vec[i];
         if (i + 1 < vec.size())
@@ -355,34 +362,22 @@ Tensor<Index, 1> get_dimensions(const Tensor<T, n>& tensor)
 }
 
 
-template <int Rank>
-bool is_equal(const Tensor<bool, Rank>& tensor,
-    const bool& value)
-{
-    const Index size = tensor.size();
-
-    for (Index i = 0; i < size; i++)
-    {
-        if (tensor(i) != value)
-            return false;
-    }
-
-    return true;
-}
-
-
 template <typename Type, int Rank>
 bool is_equal(const Tensor<Type, Rank>& tensor,
-    const Type& value,
-    const Type& tolerance = 0.001)
+              const Type& value,
+              const Type& tolerance = 0.001)
 {
     const Index size = tensor.size();
 
-    for (Index i = 0; i < size; i++)
-    {
-        if (std::abs(tensor(i) - value) > tolerance)
-            return false;
-    }
+    for(Index i = 0; i < size; i++)
+        if constexpr (is_same_v<Type, bool>)
+        {
+            if (tensor(i) != value)
+                return false;
+            else
+                if (std::abs(tensor(i) - value) > tolerance)
+                    return false;
+        }
 
     return true;
 }
@@ -398,7 +393,7 @@ bool are_equal(const Tensor<Type, Rank>& tensor_1,
 
     const Index size = tensor_1.size();
 
-    for (Index i = 0; i < size; i++)
+    for(Index i = 0; i < size; i++)
         if constexpr (is_same_v<Type, bool>)
         {
             if (tensor_1(i) != tensor_2(i))
@@ -422,14 +417,79 @@ struct TensorViewCuda
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
 
+    ~TensorViewCuda()
+    {
+        data = nullptr;
+
+        if (descriptor)
+        {
+            cudnnDestroyTensorDescriptor(descriptor);
+            descriptor = nullptr;
+        }
+    }
+
+    void set_descriptor(const dimensions& dims)
+    {
+        if (descriptor == nullptr)
+            if (cudnnCreateTensorDescriptor(&descriptor) != CUDNN_STATUS_SUCCESS)
+                throw runtime_error("TensorViewCuda: Failed to create descriptor.");
+
+        int n = 1, c = 1, h = 1, w = 1;
+
+        if (dims.size() > 0) n = static_cast<int>(dims[0]);
+        if (dims.size() > 1) c = static_cast<int>(dims[1]);
+        if (dims.size() > 2) h = static_cast<int>(dims[2]);
+        if (dims.size() > 3) w = static_cast<int>(dims[3]);
+
+        cudnnStatus_t status = cudnnSetTensor4dDescriptor(
+            descriptor,
+            CUDNN_TENSOR_NCHW,
+            CUDNN_DATA_FLOAT,
+            n, c, h, w
+            );
+
+        if (status != CUDNN_STATUS_SUCCESS)
+            throw runtime_error("TensorViewCuda: Failed to set 4D descriptor.");
+    }
+
     Index size() const
     {
-        throw runtime_error ("Not implemented yet");
-        // use descriptor to return size.
+        if (descriptor == nullptr)
+            throw runtime_error("TensorViewCuda::size(): Descriptor is nullptr. Cannot calculate size.");
 
-        return 0;
+        constexpr int REQUESTED_DIMS = CUDNN_DIM_MAX;
+
+        cudnnDataType_t dataType;
+        int nbDims = 0;
+        int dimA[REQUESTED_DIMS];
+        int strideA[REQUESTED_DIMS];
+
+        cudnnStatus_t status = cudnnGetTensorNdDescriptor(
+            descriptor,
+            REQUESTED_DIMS,
+            &dataType,
+            &nbDims,
+            dimA,
+            strideA
+        );
+
+        if (status != CUDNN_STATUS_SUCCESS)
+            throw runtime_error(string("TensorViewCuda::size(): Failed to get descriptor info. Error: ") + cudnnGetErrorString(status));
+
+        Index total_elements = 1;
+        for(int i = 0; i < nbDims; ++i)
+            total_elements *= static_cast<Index>(dimA[i]);
+
+        return total_elements;
     }
 };
+
+
+type* link(type*, vector<TensorViewCuda*>);
+void link(type*, vector<vector<TensorViewCuda*>>);
+
+Index get_size(const vector<TensorViewCuda*>);
+Index get_size(vector<vector<TensorViewCuda*>>);
 
 #endif
 

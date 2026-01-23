@@ -164,7 +164,7 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 
 TrainingResults StochasticGradientDescent::train()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number+1);
@@ -227,16 +227,12 @@ TrainingResults StochasticGradientDescent::train()
     ForwardPropagation training_forward_propagation(training_batch_samples_number, neural_network);
     ForwardPropagation selection_forward_propagation(selection_batch_samples_number, neural_network);
 
-    training_forward_propagation.compile();
-
     // Loss index
 
     loss_index->set_normalization_coefficient();
 
     BackPropagation training_back_propagation(training_batch_samples_number, loss_index);
     BackPropagation selection_back_propagation(selection_batch_samples_number, loss_index);
-
-    training_back_propagation.neural_network.compile();
 
     //type training_loss = type(0);
     type training_error = type(0);
@@ -500,7 +496,7 @@ void StochasticGradientDescentData::set(StochasticGradientDescent* new_stochasti
 
 TrainingResults StochasticGradientDescent::train_cuda()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number + 1);
@@ -604,7 +600,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
     // Main loop
 
-    for (Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
+    for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
     {
         if (display && epoch % display_period == 0) cout << "Epoch: " << epoch << endl;
 
@@ -617,7 +613,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
         optimization_data.iteration = 0;
 
-        for (Index iteration = 0; iteration < batches_number; iteration++)
+        for(Index iteration = 0; iteration < batches_number; iteration++)
         {
             optimization_data.iteration++;
 
@@ -666,7 +662,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
             selection_error = type(0);
 
-            for (Index iteration = 0; iteration < selection_batches_number; iteration++)
+            for(Index iteration = 0; iteration < selection_batches_number; iteration++)
             {
                 // Dataset
 
@@ -773,18 +769,18 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data_cuda.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    for (Index layer_index = 0; layer_index < layers_number; ++layer_index)
+    for(Index layer_index = 0; layer_index < layers_number; ++layer_index)
     {
         Layer* layer = neural_network->get_layer(layer_index).get();
 
-        if (!layer->get_is_trainable())
+        if(!layer->get_is_trainable())
             continue;
 
         const vector<TensorView> parameter_views = layer->get_parameter_views_device();
         LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
         const vector<TensorView> delta_views = layer_back_prop->get_gradient_views_device();
 
-        for (Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
+        for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
         {
             float* params_d = parameter_views[parameter_index].data;
             const Index param_size = parameter_views[parameter_index].size;
@@ -821,10 +817,10 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 
     velocity.resize(layers_number);
 
-    for (Index i = 0; i < layers_number; ++i)
+    for(Index i = 0; i < layers_number; ++i)
     {
         Layer* layer = neural_network->get_layer(i).get();
-        if (!layer->get_is_trainable()) continue;
+        if(!layer->get_is_trainable()) continue;
 
         const auto parameter_views = layer->get_parameter_views();
         //const auto parameter_views_device = layer->get_parameter_views_device();
@@ -832,7 +828,7 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 
         velocity[i].resize(param_blocks_count, nullptr);
 
-        for (Index j = 0; j < Index(param_blocks_count); ++j)
+        for(Index j = 0; j < Index(param_blocks_count); ++j)
         {
             const Index param_size = parameter_views[j]->size();
             if (param_size > 0)
@@ -848,9 +844,9 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 
 void SGDOptimizationDataCuda::free()
 {
-    for (auto& layer_velocity : velocity)
+    for(auto& layer_velocity : velocity)
     {
-        for (float*& ptr : layer_velocity)
+        for(float*& ptr : layer_velocity)
         {
             if (ptr != nullptr)
             {
@@ -870,15 +866,15 @@ void SGDOptimizationDataCuda::print() const
     NeuralNetwork* neural_network = stochastic_gradient_descent->get_loss_index()->get_neural_network();
     const Index layers_number = neural_network->get_layers_number();
 
-    for (Index i = 0; i < layers_number; ++i)
+    for(Index i = 0; i < layers_number; ++i)
     {
         Layer* layer = neural_network->get_layer(i).get();
-        if (!layer->get_is_trainable()) continue;
+        if(!layer->get_is_trainable()) continue;
 
         cout << "Layer " << i << " (" << layer->get_name() << "):" << endl;
         const auto parameter_views = layer->get_parameter_views_device();
 
-        for (Index j = 0; j < Index(parameter_views.size()); ++j)
+        for(Index j = 0; j < Index(parameter_views.size()); ++j)
         {
             const Index param_size = parameter_views[j].size;
             if (param_size == 0) continue;

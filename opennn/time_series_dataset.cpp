@@ -104,7 +104,7 @@ TimeSeriesDataset::TimeSeriesData TimeSeriesDataset::get_data() const
     TimeSeriesData ts_data;
 
     const vector<Index> input_variable_indices = get_variable_indices("Input");
-    if (!input_variable_indices.empty())
+    if(!input_variable_indices.empty())
     {
         const Index input_vars_number = input_variable_indices.size();
         ts_data.inputs.resize(total_samples, past_time_steps, input_vars_number);
@@ -113,7 +113,7 @@ TimeSeriesDataset::TimeSeriesData TimeSeriesDataset::get_data() const
     }
 
     const vector<Index> target_variable_indices = get_variable_indices("Target");
-    if (!target_variable_indices.empty())
+    if(!target_variable_indices.empty())
     {
         const Index target_vars_number = target_variable_indices.size();
         ts_data.targets.resize(total_samples, target_vars_number);
@@ -266,7 +266,7 @@ void TimeSeriesDataset::read_csv()
     {
         const vector<Index> target_indices = get_variable_indices("Target");
 
-        if (!target_indices.empty())
+        if(!target_indices.empty())
         {
             const Index raw_variable_target_index = get_raw_variable_index(target_indices[0]);
             set_raw_variable_role(raw_variable_target_index, "InputTarget");
@@ -292,7 +292,7 @@ void TimeSeriesDataset::impute_missing_values_unuse()
     const Index lags = get_past_time_steps();
 
     vector<bool> row_has_nan(samples_number, false);
-    for (Index i = 0; i < samples_number; ++i)
+    for(Index i = 0; i < samples_number; ++i)
         if (has_nan_row(i))
             row_has_nan[i] = true;
 
@@ -300,11 +300,11 @@ void TimeSeriesDataset::impute_missing_values_unuse()
     if (num_sequences < 0) return;
 
     #pragma omp parallel for
-    for (Index i = 0; i < num_sequences; ++i)
+    for(Index i = 0; i < num_sequences; ++i)
     {
         bool sequence_is_invalid = false;
 
-        for (Index j = 0; j <= lags; ++j)
+        for(Index j = 0; j <= lags; ++j)
         {
             const Index current_row = i + j;
             if (row_has_nan[current_row])
@@ -318,7 +318,7 @@ void TimeSeriesDataset::impute_missing_values_unuse()
             set_sample_role(i, "None");
     }
 
-    for (Index i = num_sequences; i < samples_number; ++i)
+    for(Index i = num_sequences; i < samples_number; ++i)
         set_sample_role(i, "None");
 }
 
@@ -403,13 +403,13 @@ void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
     const type* matrix_data = data.data();
 
 #pragma omp parallel for
-    for (Index i = 0; i < batch_size; ++i)
+    for(Index i = 0; i < batch_size; ++i)
     {
         const Index start_row = sample_indices[i];
-        for (Index j = 0; j < past_time_steps; ++j)
+        for(Index j = 0; j < past_time_steps; ++j)
         {
             const Index actual_row = start_row + j;
-            for (Index k = 0; k < input_size; ++k)
+            for(Index k = 0; k < input_size; ++k)
             {
                 const Index col_index = input_indices[k];
 
@@ -438,10 +438,10 @@ void TimeSeriesDataset::fill_target_tensor(const vector<Index>& sample_indices,
     const type* matrix_data = data.data();
 
 #pragma omp parallel for
-    for (Index i = 0; i < batch_size; ++i)
+    for(Index i = 0; i < batch_size; ++i)
     {
         const Index target_row = sample_indices[i] + past_time_steps;
-        for (Index j = 0; j < target_size; ++j)
+        for(Index j = 0; j < target_size; ++j)
         {
             const Index col_index = target_indices[j];
 
@@ -689,7 +689,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index& pa
 
     map<Index, Tensor1> ranked_series;
 
-    for (Index global_idx : numeric_vars_indices)
+    for(Index global_idx : numeric_vars_indices)
     {
         Tensor2 var_data = get_raw_variable_data(global_idx);
         ranked_series[global_idx] = calculate_spearman_ranks(var_data.chip(0, 1));
@@ -698,17 +698,17 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index& pa
     Tensor3 cross_correlations(numeric_vars_count, numeric_vars_count, past_time_steps);
 
     #pragma omp parallel for
-    for (Index i = 0; i < numeric_vars_count; ++i)
+    for(Index i = 0; i < numeric_vars_count; ++i)
     {
         const Tensor1& ranked_series_i = ranked_series.at(numeric_vars_indices[i]);
 
-        for (Index j = 0; j < numeric_vars_count; ++j)
+        for(Index j = 0; j < numeric_vars_count; ++j)
         {
             const Tensor1& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
 
             Tensor1 ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
 
-            for (Index k = 0; k < past_time_steps; ++k)
+            for(Index k = 0; k < past_time_steps; ++k)
                 cross_correlations(i, j, k) = ccf_vector(k);
         }
     }
@@ -723,7 +723,7 @@ vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample
 {
     // @todo copied from dataset
 
-    if (!shuffle) return split_samples(sample_indices, batch_size);
+    if(!shuffle) return split_samples(sample_indices, batch_size);
 
     const Index samples_number = sample_indices.size();
 
@@ -736,7 +736,7 @@ vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample
     shuffle_vector(samples_copy);
 
 #pragma omp parallel for
-    for (Index i = 0; i < batches_number; i++)
+    for(Index i = 0; i < batches_number; i++)
     {
         const Index start_index = i * batch_size;
 

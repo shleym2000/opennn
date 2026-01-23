@@ -54,7 +54,7 @@ void Convolutional::calculate_convolutions(const Tensor4& inputs, Tensor4& convo
 //    const TensorMap2 weights_map = tensor_map<2>(weights);
 //    const TensorMap1 biases_map = tensor_map<1>(biases);
 
-    for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
+    for(Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
 /*
         const TensorMap3 kernel_weights = tensor_map(weights_map, kernel_index);
@@ -174,7 +174,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     bias_deltas.device(*device) = deltas.sum(array<Index, 3>({0, 1, 2}));
 
 #pragma omp parallel for
-    for (Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
+    for(Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
         const TensorMap3 kernel_convolution_deltas = tensor_map_(deltas, kernel_index);
 
@@ -190,32 +190,32 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 */
 
 #pragma omp parallel for //schedule(static)
-    for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
+    for(Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
     {
         const TensorMap3 kernel_rotated_weights = tensor_map(rotated_weights,kernel_index);
 
-        for (Index channel_index = 0; channel_index < input_channels; ++channel_index)
+        for(Index channel_index = 0; channel_index < input_channels; ++channel_index)
             precomputed_rotated_slices[kernel_index][channel_index] = kernel_rotated_weights.chip(channel_index, 2);
     }
 
     const array<Index, 2> convolution_dimensions_2d = {0, 1};
 
-    for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
+    for(Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
     {
         const TensorMap3 kernel_convolution_deltas = tensor_map_(deltas, kernel_index);
 
         #pragma omp parallel for
-        for (Index image_index = 0; image_index < batch_size; ++image_index)
+        for(Index image_index = 0; image_index < batch_size; ++image_index)
         {
             const Tensor2 image_kernel_convolutions_derivatives_padded = kernel_convolution_deltas.chip(image_index, 0).pad(paddings);
 
-            for (Index channel_index = 0; channel_index < input_channels; ++channel_index)
+            for(Index channel_index = 0; channel_index < input_channels; ++channel_index)
             {
                 const Tensor2 convolution_result = image_kernel_convolutions_derivatives_padded
                 .convolve(precomputed_rotated_slices[kernel_index][channel_index], convolution_dimensions_2d);
 
-                for (Index h = 0; h < input_height; ++h)
-                    for (Index w = 0; w < input_width; ++w)
+                for(Index h = 0; h < input_height; ++h)
+                    for(Index w = 0; w < input_width; ++w)
                         input_deltas(image_index, h, w, channel_index) += convolution_result(h, w);
             }
         }
@@ -368,6 +368,8 @@ void Convolutional::set(const dimensions& new_input_dimensions,
     const Index kernel_channels = new_kernel_dimensions[2];
     const Index kernels_number = new_kernel_dimensions[3];
 
+    const Index channels_number = get_input_channels();
+
     set_row_stride(new_stride_dimensions[0]);
     set_column_stride(new_stride_dimensions[1]);
 
@@ -398,14 +400,18 @@ void Convolutional::set(const dimensions& new_input_dimensions,
 
 #ifdef OPENNN_CUDA
 
+    cudnnCreateTensorDescriptor(&biases_tensor_descriptor);
+
+    cudnnSetTensor4dDescriptor(biases_tensor_descriptor,
+                               CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+                               1, kernels_number, 1, 1);
+
+    biases_device.descriptor = biases_tensor_descriptor;
+
     if (batch_normalization)
     {
-        cudnnCreateTensorDescriptor(&bn_tensor_descriptor);
-
-        cudnnSetTensor4dDescriptor(bn_tensor_descriptor,
-                                   CUDNN_TENSOR_NCHW,
-                                   CUDNN_DATA_FLOAT,
-                                   1, kernels_number, 1, 1);
+        scales_device.set_descriptor({1, kernels_number, 1, 1});
+        offsets_device.set_descriptor({1, kernels_number, 1, 1});
     }
 
     cudnnCreateActivationDescriptor(&activation_descriptor);
@@ -458,10 +464,10 @@ void Convolutional::set(const dimensions& new_input_dimensions,
 void Convolutional::set_activation_function(const string& new_activation_function)
 {
     if(new_activation_function == "Logistic"
-        || new_activation_function == "HyperbolicTangent"
-        || new_activation_function == "Linear"
-        || new_activation_function == "RectifiedLinear"
-        || new_activation_function == "ScaledExponentialLinear")
+    || new_activation_function == "HyperbolicTangent"
+    || new_activation_function == "Linear"
+    || new_activation_function == "RectifiedLinear"
+    || new_activation_function == "ScaledExponentialLinear")
         activation_function = new_activation_function;
     else
         throw runtime_error("Unknown activation function: " + new_activation_function);
@@ -545,15 +551,12 @@ Index Convolutional::get_input_width() const
 
 vector<TensorView*> Convolutional::get_parameter_views()
 {
-    vector<TensorView*> parameter_views = {&biases, &weights};
+    vector<TensorView*> views = {&biases, &weights};
 
     if (batch_normalization)
-    {
-        parameter_views.push_back(&scales);
-        parameter_views.push_back(&offsets);
-    }
+        views.insert(views.end(), {&scales, &offsets});
 
-    return parameter_views;
+    return views;
 }
 
 
@@ -609,7 +612,7 @@ void Convolutional::from_XML(const XMLDocument& document)
 {
     const XMLElement* convolutional_layer_element = document.FirstChildElement("Convolutional");
 
-    if (!convolutional_layer_element)
+    if(!convolutional_layer_element)
         throw runtime_error("Convolutional layer element is nullptr.\n");
 
     set_label(read_xml_string(convolutional_layer_element, "Label"));
@@ -742,25 +745,22 @@ void ConvolutionalBackPropagation::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        bn_scale_deltas.dims = {kernels_number};
-        bn_offset_deltas.dims = {kernels_number};
+        scales_deltas.dims = {kernels_number};
+        offsets_deltas.dims = {kernels_number};
     }
 }
 
 
-vector<TensorView*> ConvolutionalBackPropagation::get_tensor_views()
+vector<TensorView*> ConvolutionalBackPropagation::get_workspace_views()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 
-    vector<TensorView*> gradient_views = {&bias_deltas, &weight_deltas};
+    vector<TensorView*> views = {&bias_deltas, &weight_deltas};
 
     if (convolutional_layer->get_batch_normalization())
-    {
-        gradient_views.push_back(&bn_scale_deltas);
-        gradient_views.push_back(&bn_offset_deltas);
-    }
+        views.insert(views.end(), {&scales_deltas, &offsets_deltas});
 
-    return gradient_views;
+    return views;
 }
 
 
@@ -809,9 +809,9 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
     const cudnnTensorDescriptor_t input_tensor_descriptor = convolutional_layer_forward_propagation_cuda->input_tensor_descriptor;
     const cudnnTensorDescriptor_t output_tensor_descriptor = convolutional_layer_forward_propagation_cuda->outputs.descriptor;
-    const cudnnTensorDescriptor_t biases_tensor_descriptor = convolutional_layer_forward_propagation_cuda->biases_tensor_descriptor;
 
     const cudnnFilterDescriptor_t kernel_descriptor = convolutional_layer_forward_propagation_cuda->kernel_descriptor;
+
     const cudnnConvolutionDescriptor_t convolution_descriptor = convolutional_layer_forward_propagation_cuda->convolution_descriptor;
     const cudnnConvolutionFwdAlgo_t convolution_algorithm = convolutional_layer_forward_propagation_cuda->convolution_algorithm;
 
@@ -844,7 +844,7 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
     cudnnAddTensor(cudnn_handle,
                    &alpha,
-                   biases_tensor_descriptor,
+                   biases_device.descriptor,
                    biases_device.data,
                    &alpha,
                    output_tensor_descriptor,
@@ -852,53 +852,49 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
     // Batch Normalization
 
-    if (batch_normalization)
+    if (batch_normalization && is_training)
     {
-        if (is_training)
-        {
-            status = cudnnBatchNormalizationForwardTraining(
-                cudnn_handle,
-                CUDNN_BATCHNORM_SPATIAL,
-                &alpha, &beta,
-                output_tensor_descriptor,
-                outputs_buffer,
-                output_tensor_descriptor,
-                outputs_buffer,
-                bn_tensor_descriptor,
-                bn_scale_device.data,
-                bn_offset_device.data,
-                momentum,
-                bn_running_mean_device,
-                bn_running_variance_device,
-                CUDNN_BN_MIN_EPSILON,
-                convolutional_layer_forward_propagation_cuda->bn_saved_mean,
-                convolutional_layer_forward_propagation_cuda->bn_saved_inv_variance
-                );
+        status = cudnnBatchNormalizationForwardTraining(
+            cudnn_handle,
+            CUDNN_BATCHNORM_SPATIAL,
+            &alpha, &beta,
+            output_tensor_descriptor,
+            outputs_buffer,
+            output_tensor_descriptor,
+            outputs_buffer,
+            scales_device.descriptor,
+            scales_device.data,
+            offsets_device.data,
+            momentum,
+            bn_running_mean_device,
+            bn_running_variance_device,
+            CUDNN_BN_MIN_EPSILON,
+            convolutional_layer_forward_propagation_cuda->bn_saved_mean,
+            convolutional_layer_forward_propagation_cuda->bn_saved_inv_variance);
 
-            if (status != CUDNN_STATUS_SUCCESS)
-                cout << "cudnnBatchNormalizationForwardTraining failed: " << cudnnGetErrorString(status) << endl;
-        }
-        else
-        {
-            status = cudnnBatchNormalizationForwardInference(
-                cudnn_handle,
-                CUDNN_BATCHNORM_SPATIAL,
-                &alpha, &beta,
-                output_tensor_descriptor,
-                outputs_buffer,
-                output_tensor_descriptor,
-                outputs_buffer,
-                bn_tensor_descriptor,
-                bn_scale_device.data,
-                bn_offset_device.data,
-                bn_running_mean_device,
-                bn_running_variance_device,
-                CUDNN_BN_MIN_EPSILON
-                );
+        if (status != CUDNN_STATUS_SUCCESS)
+            cout << "cudnnBatchNormalizationForwardTraining failed: " << cudnnGetErrorString(status) << endl;
+    }
+    else if (batch_normalization && !is_training)
+    {
+        status = cudnnBatchNormalizationForwardInference(
+            cudnn_handle,
+            CUDNN_BATCHNORM_SPATIAL,
+            &alpha, &beta,
+            output_tensor_descriptor,
+            outputs_buffer,
+            output_tensor_descriptor,
+            outputs_buffer,
+            scales_device.descriptor,
+            scales_device.data,
+            offsets_device.data,
+            bn_running_mean_device,
+            bn_running_variance_device,
+            CUDNN_BN_MIN_EPSILON
+            );
 
-            if (status != CUDNN_STATUS_SUCCESS)
-                cout << "cudnnBatchNormalizationForwardInference failed: " << cudnnGetErrorString(status) << endl;
-        }
+        if (status != CUDNN_STATUS_SUCCESS)
+            cout << "cudnnBatchNormalizationForwardInference failed: " << cudnnGetErrorString(status) << endl;
     }
 
     // Activations
@@ -933,8 +929,7 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
 {
     // Forward propagation
 
-    const type* outputs = forward_propagation_cuda->outputs.data;
-    const cudnnTensorDescriptor_t outputs_tensor_descriptor = forward_propagation_cuda->outputs.descriptor;
+    const TensorViewCuda outputs_view = forward_propagation_cuda->outputs;
 
     ConvolutionalForwardPropagationCuda* convolutional_layer_forward_propagation_cuda
         = static_cast<ConvolutionalForwardPropagationCuda*>(forward_propagation_cuda.get());
@@ -976,7 +971,7 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
                                                            activation_descriptor,
                                                            &alpha,
                                                            deltas_tensor_descriptor,
-                                                           outputs,
+                                                           outputs_view.data,
                                                            deltas_tensor_descriptor,
                                                            deltas_device[0].data,
                                                            deltas_tensor_descriptor,
@@ -994,11 +989,11 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
                                                            activation_descriptor,
                                                            &alpha,
                                                            deltas_tensor_descriptor,
-                                                           outputs,
+                                                           outputs_view.data,
                                                            deltas_tensor_descriptor,
                                                            deltas_device[0].data,
                                                            deltas_tensor_descriptor,
-                                                           outputs,
+                                                           outputs_view.data,
                                                            &beta,
                                                            deltas_tensor_descriptor,
                                                            deltas_device[0].data);
@@ -1017,16 +1012,16 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
             CUDNN_BATCHNORM_SPATIAL,
             &alpha, &beta,
             &alpha, &alpha,
-            outputs_tensor_descriptor,
-            use_convolutions ? convolutions : outputs,
+            outputs_view.descriptor,
+            use_convolutions ? convolutions : outputs_view.data,
             deltas_tensor_descriptor,
             deltas_device[0].data,
             deltas_tensor_descriptor,
             deltas_device[0].data,
-            bn_tensor_descriptor,
-            bn_scale_device.data,
-            convolutional_layer_back_propagation_cuda->bn_scale_deltas_device.data,
-            convolutional_layer_back_propagation_cuda->bn_offset_deltas_device.data,
+            scales_device.descriptor,
+            scales_device.data,
+            convolutional_layer_back_propagation_cuda->scales_deltas_device.data,
+            convolutional_layer_back_propagation_cuda->offsets_deltas_device.data,
             CUDNN_BN_MIN_EPSILON,
             convolutional_layer_forward_propagation_cuda->bn_saved_mean,
             convolutional_layer_forward_propagation_cuda->bn_saved_inv_variance
@@ -1082,10 +1077,7 @@ vector<TensorViewCuda*> Convolutional::get_parameter_views_device()
     vector<TensorViewCuda*> views_device = { &biases_device, &weights_device };
 
     if (batch_normalization)
-    {
-        views_device.push_back(&bn_scale_device);
-        views_device.push_back(&bn_offset_device);
-    }
+        views_device.insert(views_device.end(), {&scales_device, &offsets_device});
 
     return views_device;
 }
@@ -1101,59 +1093,41 @@ void Convolutional::allocate_parameters_device()
 
     if (batch_normalization)
     {
-        CHECK_CUDA(cudaMalloc(&bn_scale_device.data, K * sizeof(float)));
-        CHECK_CUDA(cudaMalloc(&bn_offset_device.data, K * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&scales_device.data, K * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&offsets_device.data, K * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&bn_running_mean_device, K * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&bn_running_variance_device, K * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(bn_scale_device.data, K * sizeof(float));
-        //CUDA_MALLOC_AND_REPORT(bn_offset_device.data, K * sizeof(float));
+        //CUDA_MALLOC_AND_REPORT(scales_device.data, K * sizeof(float));
+        //CUDA_MALLOC_AND_REPORT(offsets_device.data, K * sizeof(float));
         //CUDA_MALLOC_AND_REPORT(bn_running_mean_device, K * sizeof(float));
         //CUDA_MALLOC_AND_REPORT(bn_running_variance_device, K * sizeof(float));
     }
-
-    CHECK_CUDA(cudaMalloc(&biases_device.data, K * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(biases_device, K * sizeof(float));
-
-    const size_t weights_size = static_cast<size_t>(R) * S * C * K;
-
-    CHECK_CUDA(cudaMalloc(&weights_device.data, weights_size * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(weights_device, weights_size * sizeof(float));
 }
 
 
-void Convolutional::free_parameters_device()
+void Convolutional::free()
 {
-    cudaFree(biases_device.data);
-    cudaFree(weights_device.data);
+    cudaFree(bn_running_mean_device);
+    bn_running_mean_device = nullptr;
 
-    if (batch_normalization)
-    {
-        cudaFree(bn_scale_device.data);
-        cudaFree(bn_offset_device.data);
-        cudaFree(bn_running_mean_device);
-        cudaFree(bn_running_variance_device);
-
-        bn_scale_device.data = nullptr;
-        bn_offset_device.data = nullptr;
-        bn_running_mean_device = nullptr;
-        bn_running_variance_device = nullptr;
-    }
+    cudaFree(bn_running_variance_device);
+    bn_running_variance_device = nullptr;
 }
 
 
 void Convolutional::copy_parameters_device()
 {
     /*
-    if (!biases_device.data)
+    if(!biases_device.data)
         cout << "Biases device pointer is null" << endl;
 
-    if (!weights_device.data)
+    if(!weights_device.data)
         cout << "Weights device pointer is null" << endl;
 
-    if (!biases.data())
+    if(!biases.data())
         cout << "CPU biases data is null" << endl;
 
-    if (!weights.data())
+    if(!weights.data())
         cout << "CPU weights data is null" << endl;
 
     CHECK_CUDA(cudaMemcpy(biases_device, biases.data(), biases.size() * sizeof(type), cudaMemcpyHostToDevice));
@@ -1165,10 +1139,10 @@ void Convolutional::copy_parameters_device()
 
     Tensor4 weights_for_cudnn_layout(kernel_width, kernel_height, channels, kernels_number);
 
-    for (Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
-        for (Index channel_index = 0; channel_index < channels; ++channel_index)
-            for (Index kernel_height_index = 0; kernel_height_index < kernel_height; ++kernel_height_index)
-                for (Index kernel_width_index = 0; kernel_width_index < kernel_width; ++kernel_width_index)
+    for(Index kernel_index = 0; kernel_index < kernels_number; ++kernel_index)
+        for(Index channel_index = 0; channel_index < channels; ++channel_index)
+            for(Index kernel_height_index = 0; kernel_height_index < kernel_height; ++kernel_height_index)
+                for(Index kernel_width_index = 0; kernel_width_index < kernel_width; ++kernel_width_index)
                     weights_for_cudnn_layout(kernel_width_index, kernel_height_index, channel_index, kernel_index)
                         = weights(kernel_height_index, kernel_width_index, channel_index, kernel_index);
 
@@ -1176,48 +1150,11 @@ void Convolutional::copy_parameters_device()
 
     if (batch_normalization)
     {
-        CHECK_CUDA(cudaMemcpy(bn_scale_device, scales.data(), scales.size() * sizeof(type), cudaMemcpyHostToDevice));
-        CHECK_CUDA(cudaMemcpy(bn_offset_device, offsets.data(), offsets.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(scales_device, scales.data(), scales.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(offsets_device, offsets.data(), offsets.size() * sizeof(type), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(bn_running_mean_device, moving_means.data(), moving_means.size() * sizeof(type), cudaMemcpyHostToDevice));
         Tensor1 moving_variances = moving_standard_deviations.square();
         CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
-    }
-    */
-}
-
-
-void Convolutional::copy_parameters_host()
-{
-    /*
-    if (!biases_device) cout << "Biases is null" << endl;
-
-    if (!weights_device) cout << "Weights is null" << endl;
-
-    CHECK_CUDA(cudaMemcpy(biases.data(), biases_device, biases.size() * sizeof(type), cudaMemcpyDeviceToHost));
-
-    const Index kernel_height = weights.dimension(0);
-    const Index kernel_width = weights.dimension(1);
-    const Index channels = weights.dimension(2);
-    const Index kernels_number = weights.dimension(3);
-
-    Tensor4 weights_cudnn_layout(kernel_width, kernel_height, channels, kernels_number);
-
-    CHECK_CUDA(cudaMemcpy(weights_cudnn_layout.data(), weights_device, weights_cudnn_layout.size() * sizeof(type), cudaMemcpyDeviceToHost));
-
-    for (Index k = 0; k < kernels_number; ++k)
-        for (Index c = 0; c < channels; ++c)
-            for (Index h = 0; h < kernel_height; ++h)
-                for (Index w = 0; w < kernel_width; ++w)
-                    weights(h, w, c, k) = weights_cudnn_layout(w, h, c, k);
-
-    if (batch_normalization)
-    {
-        CHECK_CUDA(cudaMemcpy(scales.data(), bn_scale_device, scales.size() * sizeof(type), cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(offsets.data(), bn_offset_device, offsets.size() * sizeof(type), cudaMemcpyDeviceToHost));
-        CHECK_CUDA(cudaMemcpy(moving_means.data(), bn_running_mean_device, moving_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
-        Tensor1 moving_variances(moving_standard_deviations.size());
-        CHECK_CUDA(cudaMemcpy(moving_variances.data(), bn_running_variance_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
-        moving_standard_deviations = moving_variances.sqrt();
     }
     */
 }
@@ -1251,7 +1188,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
     string layer_label = convolutional_layer->get_label();
 
-    if (!layer_label.empty() && layer_label.substr(layer_label.length() - 2) == "_1")
+    if(!layer_label.empty() && layer_label.substr(layer_label.length() - 2) == "_1")
         is_first_layer = true;
 
     if (is_first_layer)
@@ -1259,6 +1196,14 @@ void ConvolutionalForwardPropagationCuda::initialize()
         CHECK_CUDA(cudaMalloc(&reordered_inputs_device, batch_size * input_height * input_width * channels * sizeof(float)));
         //CUDA_MALLOC_AND_REPORT(reordered_inputs_device, batch_size * input_height * input_width * channels * sizeof(float));
     }
+
+    // Kernels
+
+    cudnnCreateFilterDescriptor(&kernel_descriptor);
+
+    cudnnSetFilter4dDescriptor(kernel_descriptor,
+                               CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW,
+                               kernels_number, channels, kernel_height, kernel_width );
 
     // Inputs
 
@@ -1268,22 +1213,6 @@ void ConvolutionalForwardPropagationCuda::initialize()
                                CUDNN_TENSOR_NCHW,
                                CUDNN_DATA_FLOAT,
                                batch_size, channels, input_height, input_width );
-
-    // Biases
-
-    cudnnCreateTensorDescriptor(&biases_tensor_descriptor);
-
-    cudnnSetTensor4dDescriptor(biases_tensor_descriptor,
-                               CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
-                               1, kernels_number, 1, 1);
-
-    // Kernels
-
-    cudnnCreateFilterDescriptor(&kernel_descriptor);
-
-    cudnnSetFilter4dDescriptor(kernel_descriptor,
-                               CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW,
-                               kernels_number, channels, kernel_height, kernel_width );
 
     // Convolution
 
@@ -1357,24 +1286,25 @@ void ConvolutionalForwardPropagationCuda::print() const
 void ConvolutionalForwardPropagationCuda::free()
 {
     cudaFree(outputs.data);
-    if (convolutions.data != nullptr) cudaFree(convolutions.data);
+    cudaFree(convolutions.data);
 
     cudaFree(workspace);
-    cudaFree(reordered_inputs_device);
     workspace = nullptr;
+
+    cudaFree(reordered_inputs_device);
     reordered_inputs_device = nullptr;
+
+    cudaFree(bn_saved_mean);
+    bn_saved_mean = nullptr;
+
+    cudaFree(bn_saved_inv_variance);
+    bn_saved_inv_variance = nullptr;
 
     cudnnDestroyTensorDescriptor(input_tensor_descriptor);
     cudnnDestroyTensorDescriptor(outputs.descriptor);
-    cudnnDestroyTensorDescriptor(biases_tensor_descriptor);
+
     cudnnDestroyFilterDescriptor(kernel_descriptor);
     cudnnDestroyConvolutionDescriptor(convolution_descriptor);
-
-    if (bn_saved_mean) cudaFree(bn_saved_mean);
-    if (bn_saved_inv_variance) cudaFree(bn_saved_inv_variance);
-
-    bn_saved_mean = nullptr;
-    bn_saved_inv_variance = nullptr;
 }
 
 
@@ -1507,15 +1437,15 @@ void ConvolutionalBackPropagationCuda::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        CHECK_CUDA(cudaMalloc(&bn_scale_deltas_device.data, kernels_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(bn_scale_deltas_device, kernels_number * sizeof(float));
-        CHECK_CUDA(cudaMalloc(&bn_offset_deltas_device.data, kernels_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(bn_offset_deltas_device, kernels_number * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&scales_deltas_device.data, kernels_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(scales_deltas_device, kernels_number * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&offsets_deltas_device.data, kernels_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(offsets_deltas_device, kernels_number * sizeof(float));
     }
 }
 
 
-vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_tensor_views_device()
+vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views_device()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
     /*
@@ -1527,8 +1457,8 @@ vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_tensor_views_devic
 
     if (convolutional_layer->get_batch_normalization())
     {
-        delta_views_device.push_back({ bn_scale_deltas_device.data, bn_scale_deltas_device.descriptor });
-        delta_views_device.push_back({ bn_offset_deltas_device.data, bn_offset_deltas_device.descriptor });
+        delta_views_device.push_back({ scales_deltas_device.data, scales_deltas_device.descriptor });
+        delta_views_device.push_back({ offsets_deltas_device.data, offsets_deltas_device.descriptor });
     }
     */
     vector<TensorViewCuda*> views;
@@ -1574,11 +1504,11 @@ void ConvolutionalBackPropagationCuda::free()
     cudnnDestroyFilterDescriptor(weight_deltas_filter_descriptor);
     cudnnDestroyConvolutionDescriptor(convolution_descriptor);
 
-    if (bn_scale_deltas_device.data) cudaFree(bn_scale_deltas_device.data);
-    if (bn_offset_deltas_device.data) cudaFree(bn_offset_deltas_device.data);
+    cudaFree(scales_deltas_device.data);
+    cudaFree(offsets_deltas_device.data);
 
-    bn_scale_deltas_device.data = nullptr;
-    bn_offset_deltas_device.data = nullptr;
+    scales_deltas_device.data = nullptr;
+    offsets_deltas_device.data = nullptr;
 }
 
 REGISTER(LayerForwardPropagationCuda, ConvolutionalForwardPropagationCuda, "Convolutional")

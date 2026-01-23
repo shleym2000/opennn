@@ -9,6 +9,7 @@
 #include "registry.h"
 #include "strings_utilities.h"
 #include "images.h"
+#include "tensors.h"
 #include "neural_network.h"
 #include "dense_layer.h"
 #include "scaling_layer.h"
@@ -50,54 +51,40 @@ void NeuralNetwork::add_layer(unique_ptr<Layer> layer, const vector<Index>& inpu
 }
 
 
+vector<vector<TensorView*>> NeuralNetwork::get_layer_parameter_views()
+{
+    const Index layers_number = get_layers_number();
+
+    vector<vector<TensorView*>> layer_parameter_views(layers_number);
+
+    for(Index i = 0; i < layers_number; i++)
+        layer_parameter_views[i] = layers[i]->get_parameter_views();
+
+    return layer_parameter_views;
+}
+
+
 void NeuralNetwork::compile()
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    const vector<vector<TensorView*>> layer_parameter_views = get_layer_parameter_views();
 
-    Index total_parameters_size = 0;
+    const Index parameters_size = get_size(layer_parameter_views);
 
-    for (const unique_ptr<Layer>& layer : layers)
-    {
-        vector<TensorView*> views = layer->get_parameter_views();
+    if (parameters_size == 0) return;
 
-        for (const TensorView* view : views)
-        {
-            if (view && view->size() > 0)
-            {
-                Index size = view->size();
-                Index padded_size = (size + ALIGNMENT - 1) & MASK;
-
-                total_parameters_size += padded_size;
-            }
-        }
-    }
-
-    if (total_parameters_size == 0) return;
-
-    parameters.resize(total_parameters_size);
+    parameters.resize(parameters_size);
     parameters.setZero();
 
-    float* current_ptr = parameters.data();
-
-    for (unique_ptr<Layer>& layer : layers)
-        current_ptr = layer->link_parameters(current_ptr);
+    link(parameters.data(), layer_parameter_views);
 
 #ifdef OPENNN_CUDA
 
-    if (parameters_device)
-    {
-        cudaFree(parameters_device);
-        parameters_device = nullptr;
-    }
+    const vector<vector<TensorViewCuda*>> layer_parameter_views_device = get_layer_parameter_views_device();
 
-    CHECK_CUDA(cudaMalloc(&parameters_device, total_parameters_size * sizeof(float)));
-    cudaMemset(parameters_device, 0, total_parameters_size * sizeof(float));
+    CHECK_CUDA(cudaMalloc(&parameters_device, parameters_size * sizeof(float)));
+    cudaMemset(parameters_device, 0, parameters_size * sizeof(float));
 
-    float* current_ptr_device = parameters_device;
-
-    for (unique_ptr<Layer>& layer : layers)
-        current_ptr_device = layer->link_parameters_device(current_ptr_device);
+    link(parameters_device, layer_parameter_views_device);
 
 #endif
 }
@@ -221,8 +208,8 @@ vector<vector<Index>> NeuralNetwork::get_layer_output_indices() const
 
     vector<vector<Index>> layer_output_indices(layers_number);
 
-    for (Index i = 0; i < layers_number; i++)
-        for (Index input_index : layer_input_indices[i])
+    for(Index i = 0; i < layers_number; i++)
+        for(Index input_index : layer_input_indices[i])
             if (input_index >= 0)
                 layer_output_indices[input_index].push_back(i);
 
@@ -236,7 +223,7 @@ vector<vector<Index>> NeuralNetwork::get_layer_output_indices() const
 
 Index NeuralNetwork::find_input_index(const vector<Index>& layer_inputs_indices, const Index& layer_index) const
 {
-    for (Index i = 0; i < Index(layer_inputs_indices.size()); i++)
+    for(Index i = 0; i < Index(layer_inputs_indices.size()); i++)
         if (layer_inputs_indices[i] == layer_index)
             return i;
 
@@ -327,7 +314,7 @@ void NeuralNetwork::set_default()
 
 void NeuralNetwork::set_threads_number(const int& new_threads_number)
 {
-    for (const unique_ptr<Layer>& layer : layers)
+    for(const unique_ptr<Layer>& layer : layers)
         layer->set_threads_number(new_threads_number);
 }
 
@@ -452,10 +439,7 @@ void NeuralNetwork::set_parameters(const Tensor1& new_parameters)
 {
     parameters = new_parameters;
 
-    type* current_ptr = parameters.data();
-
-    for (unique_ptr<Layer>& layer : layers)
-        current_ptr = layer->link_parameters(current_ptr);
+    link(parameters.data(), get_layer_parameter_views());
 }
 
 
@@ -577,7 +561,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
     const vector<vector<TensorView>> layer_input_views
         = forward_propagation.get_layer_input_views(input_view, is_training);
 
-    for (Index i = first_layer_index; i <= last_layer_index; i++)
+    for(Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate(layer_input_views[i],
             forward_propagation.layers[i],
             is_training);
@@ -610,18 +594,18 @@ string NeuralNetwork::get_expression() const
     const Index inputs_number = feature_names.size();
     const Index outputs_number = output_names.size();
 
-    for (Index i = 0; i < inputs_number; i++)
+    for(Index i = 0; i < inputs_number; i++)
         feature_names[i].empty()
             ? new_feature_names[i] = "input_" + to_string(i)
             : new_feature_names[i] = feature_names[i];
 
     ostringstream buffer;
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         if (i == layers_number - 1)
         {
-            for (Index j = 0; j < outputs_number; j++)
+            for(Index j = 0; j < outputs_number; j++)
                 new_output_names[j] = !output_names[j].empty()
                       ? output_names[j]
                       : "output_" + to_string(i);
@@ -634,7 +618,7 @@ string NeuralNetwork::get_expression() const
 
             new_output_names.resize(layer_neurons_number);
             
-            for (Index j = 0; j < layer_neurons_number; j++)
+            for(Index j = 0; j < layer_neurons_number; j++)
                 new_output_names[j] = (layer_labels[i] == "scaling_layer")
                       ? "scaled_" + feature_names[j]
                       : layer_labels[i] + "_output_" + to_string(j);
@@ -786,7 +770,7 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
     // const Index pixels_number = height * width * channels;
 
     // #pragma omp parallel for
-    // for (Index j = 0; j < pixels_number; j++)
+    // for(Index j = 0; j < pixels_number; j++)
     //     input_data(j) = image(j);
 
     // const Tensor2 outputs = calculate_outputs<4,2>(input_data);
@@ -797,7 +781,7 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
     // {
     //     type max_value = outputs(0);
 
-    //     for (Index i = 1; i < outputs.dimension(1); ++i)
+    //     for(Index i = 1; i < outputs.dimension(1); ++i)
     //     {
     //         if (outputs(i) > max_value)
     //         {
@@ -921,7 +905,7 @@ void NeuralNetwork::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "FeaturesNumber", to_string(features_number));
 
-    for (Index i = 0; i < features_number; i++)
+    for(Index i = 0; i < features_number; i++)
         add_xml_element_attribute(printer, "Feature", feature_names[i], "Index", to_string(i + 1));
 
     printer.CloseElement();
@@ -932,14 +916,14 @@ void NeuralNetwork::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "LayersNumber", to_string(layers_number));
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
         layers[i]->to_XML(printer);
 
     // Layer input indices
 
     printer.OpenElement("LayerInputIndices");
 
-    for (Index i = 0; i < Index(layer_input_indices.size()); i++) 
+    for(Index i = 0; i < Index(layer_input_indices.size()); i++) 
         add_xml_element_attribute(printer, "LayerInputsIndices", vector_to_string(layer_input_indices[i]), "LayerIndex", to_string(i));
 
     printer.CloseElement();
@@ -1006,7 +990,7 @@ void NeuralNetwork::features_from_XML(const XMLElement* features_element)
 
 void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
 {
-    if (!layers_element)
+    if(!layers_element)
         throw runtime_error("Layers element is nullptr.\n");
 
     const Index layers_number = read_xml_index(layers_element, "LayersNumber");
@@ -1015,11 +999,11 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
 
     const XMLElement* start_element = layers_element->FirstChildElement("LayersNumber");
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         const XMLElement* layer_element = start_element->NextSiblingElement();
 
-        if (!layer_element)
+        if(!layer_element)
             throw runtime_error("Layer element is nullptr.");
 
         const string name_string = layer_element->Name();
@@ -1036,13 +1020,13 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
     }
 
     const XMLElement* layer_input_indices_element = layers_element->FirstChildElement("LayerInputIndices");
-    if (!layer_input_indices_element)
+    if(!layer_input_indices_element)
         throw runtime_error("LayerInputIndices element is nullptr.\n");
 
     layer_input_indices.resize(layers.size());
     layer_input_indices.clear();
 
-    for (const XMLElement* layer_inputs_indices_element = layer_input_indices_element->FirstChildElement("LayerInputsIndices");
+    for(const XMLElement* layer_inputs_indices_element = layer_input_indices_element->FirstChildElement("LayerInputsIndices");
          layer_inputs_indices_element;
          layer_inputs_indices_element = layer_inputs_indices_element->NextSiblingElement("LayerInputsIndices"))
     {
@@ -1051,11 +1035,11 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
             throw runtime_error("Error: LayerIndex attribute missing or invalid.\n");
 
         const char* text = layer_inputs_indices_element->GetText();
-        if (!text)
+        if(!text)
             throw runtime_error("Text is nullptr for LayerInputsIndices element.");
 
         const vector<Index> input_index = string_to_dimensions(string(text), " ");
-        if ((size_t)layer_index >= layer_input_indices.size())
+        if((size_t)layer_index >= layer_input_indices.size())
             layer_input_indices.push_back(input_index);
     }
 }
@@ -1124,7 +1108,7 @@ void NeuralNetwork::save(const filesystem::path& file_name) const
 {
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         return;
 
     XMLPrinter printer;
@@ -1172,7 +1156,7 @@ void NeuralNetwork::load_parameters_binary(const filesystem::path& file_name)
 
     file.read(reinterpret_cast<char*>(parameters.data()), parameters_number * sizeof(type));
 
-    if (!file)
+    if(!file)
         throw runtime_error("Error reading binary file: " + file_name.string());
 
 //    set_parameters(new_parameters);
@@ -1234,17 +1218,17 @@ void NeuralNetwork::save_outputs(Tensor3& inputs_3d, const filesystem::path& fil
 
     ofstream file(file_name);
 
-    if (!file.is_open())
+    if(!file.is_open())
         throw runtime_error("Cannot open " + file_name.string() + " file.\n");
 
     const vector<string> output_names = get_output_names();
     const Index outputs_number = get_outputs_number();
 
     const vector<string> feature_names = get_feature_names();
-    for (const auto& name : feature_names)
+    for(const auto& name : feature_names)
         file << name << ";";
 
-    for (size_t i = 0; i < size_t(outputs_number); ++i)
+    for(size_t i = 0; i < size_t(outputs_number); ++i)
     {
         file << output_names[i];
         if (i != output_names.size() - 1)
@@ -1252,12 +1236,12 @@ void NeuralNetwork::save_outputs(Tensor3& inputs_3d, const filesystem::path& fil
     }
     file << "\n";
 
-    for (Index i = 0; i < batch_size; ++i)
+    for(Index i = 0; i < batch_size; ++i)
     {
-        for (Index j = 0; j < num_variables; ++j)
+        for(Index j = 0; j < num_variables; ++j)
             file << last_time_step_inputs(i, j) << ";";
 
-        for (Index j = 0; j < outputs_number; ++j)
+        for(Index j = 0; j < outputs_number; ++j)
         {
             file << outputs(i, j);
             if (j != outputs_number - 1)
@@ -1319,52 +1303,45 @@ void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwor
 
     layers.resize(layers_number);
 
-    for (Index i = first_traineable_layer_number; i <= last_traineable_layer_number; i++)
+    for(Index i = first_traineable_layer_number; i <= last_traineable_layer_number; i++)
     {
         layers[i] = Registry<LayerBackPropagation>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(batch_size, neural_network_layers[i].get());
     }
-}
 
+    const vector<vector<TensorView*>> layer_workspace_views = get_layer_workspace_views();
 
-void NeuralNetworkBackPropagation::compile()
-{
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    const Index workspace_size = get_size(layer_workspace_views);
 
-    Index total_workspace_size = 0;
+    if (workspace_size == 0) return;
 
-    for(const unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
-    {
-        if(layer_backpropagation)
-        {
-            Index raw_size = layer_backpropagation->get_workspace_size();
-
-            if (raw_size > 0)
-            {
-                Index padded_size = (raw_size + ALIGNMENT - 1) & MASK;
-                total_workspace_size += padded_size;
-            }
-        }
-    }
-
-    if(total_workspace_size == 0)
-        return;
-
-    workspace.resize(total_workspace_size);
+    workspace.resize(workspace_size);
     workspace.setZero();
 
-    type* current_ptr = workspace.data();
-
-    for(unique_ptr<LayerBackPropagation>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            current_ptr = layer_backpropagation->link_workspace(current_ptr);
+    link(workspace.data(), layer_workspace_views);
 }
 
 
 const vector<unique_ptr<LayerBackPropagation>>& NeuralNetworkBackPropagation::get_layers() const
 {
     return layers;
+}
+
+
+vector<vector<TensorView *> > NeuralNetworkBackPropagation::get_layer_workspace_views()
+{
+    vector<vector<TensorView*>> layer_workspace_views(layers.size());
+    Index i = 0;
+
+    for (const auto& layer_bp : layers)
+    {
+        if (layer_bp)
+            layer_workspace_views[i] = layer_bp->get_workspace_views();
+
+        i++;
+    }
+
+    return layer_workspace_views;
 }
 
 
@@ -1380,12 +1357,12 @@ void NeuralNetworkBackPropagation::print() const
 
     const Index layers_number = layers.size();
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         cout << "Layer " << i << ": "
              << neural_network->get_layer(i)->get_name() << endl;
 
-        if (!layers[i]) continue;
+        if(!layers[i]) continue;
 
         layers[i]->print();
     }
@@ -1417,25 +1394,30 @@ void ForwardPropagation::set(const Index& new_samples_number, NeuralNetwork* new
         layers[i] = Registry<LayerForwardPropagation>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(samples_number, neural_network_layers[i].get());
     }
+
+    const vector<vector<TensorView*>> layer_workspace_views = get_layer_workspace_views();
+
+    const Index workspace_size = get_size(layer_workspace_views);
+
+    if (workspace_size == 0) return;
+
+    workspace.resize(workspace_size);
+    workspace.setZero();
+
+    link(workspace.data(), layer_workspace_views);
 }
 
 
-void ForwardPropagation::compile()
+vector<vector<TensorView*> > ForwardPropagation::get_layer_workspace_views()
 {
-    Index total_workspace_size = 0;
+    const Index layers_number = neural_network->get_layers_number();
 
-    for (const unique_ptr<LayerForwardPropagation>& layer_prop : layers)
-        total_workspace_size += layer_prop->get_workspace_size();
+    vector<vector<TensorView*>> layer_workspace_views(layers_number);
 
-    if (total_workspace_size == 0) return;
+    for (Index i = 0; i < layers_number; i++)
+        layer_workspace_views[i] = layers[i]->get_workspace_views();
 
-    workspace.resize(total_workspace_size);
-    workspace.setZero();
-
-    type* current_ptr = workspace.data();
-
-    for (unique_ptr<LayerForwardPropagation>& layer_prop : layers)
-        current_ptr = layer_prop->link_workspace(current_ptr);
+    return layer_workspace_views;
 }
 
 
@@ -1465,9 +1447,9 @@ vector<vector<TensorView>> ForwardPropagation::get_layer_input_views(const vecto
 
     const Index first_trainable_layer_index = neural_network->get_first_trainable_layer_index();
 
-    for (Index layer_index = first_trainable_layer_index; layer_index < layers_number; layer_index++)
+    for(Index layer_index = first_trainable_layer_index; layer_index < layers_number; layer_index++)
     {
-        if ((layer_index == first_trainable_layer_index && is_training) || layer_index == 0)
+        if((layer_index == first_trainable_layer_index && is_training) || layer_index == 0)
         {
             layer_input_views[layer_index] = batch_input_views;
             continue;
@@ -1476,7 +1458,7 @@ vector<vector<TensorView>> ForwardPropagation::get_layer_input_views(const vecto
         const vector<Index>& input_layer_indices = layer_input_indices[layer_index];
         layer_input_views[layer_index].resize(input_layer_indices.size());
 
-        for (Index input_index = 0; input_index < static_cast<Index>(input_layer_indices.size()); input_index++)
+        for(Index input_index = 0; input_index < static_cast<Index>(input_layer_indices.size()); input_index++)
         {
             const Index input_layer_index = input_layer_indices[input_index];
             layer_input_views[layer_index][input_index] = layers[input_layer_index]->get_outputs();
@@ -1495,7 +1477,7 @@ void ForwardPropagation::print() const
 
     cout << "Layers number: " << layers_number << endl;
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         cout << "Layer " << i + 1 << ": " << neural_network->get_layer(i)->get_label() << endl;
 
@@ -1520,7 +1502,7 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
     const Index first_trainable = neural_network->get_first_trainable_layer_index();
     const Index last_trainable = neural_network->get_last_trainable_layer_index();
 
-    for (Index i = first_trainable; i <= last_trainable; i++)
+    for(Index i = first_trainable; i <= last_trainable; i++)
     {
         const string layer_name = neural_network_layers[i]->get_name();
 
@@ -1529,28 +1511,30 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
         else if (layer_name == "Dense3d")
             layers[i] = make_unique<DenseBackPropagationLM<3>>(batch_size, neural_network_layers[i].get());
     }
+
+    const vector<vector<TensorView*>> layer_workspace_views = get_layer_workspace_views();
+
+    const Index workspace_size = get_size(layer_workspace_views);
+
+    if(workspace_size == 0) return;
+
+    workspace.resize(workspace_size);
+    workspace.setZero();
+
+    link(workspace.data(), layer_workspace_views);
 }
 
 
-void NeuralNetworkBackPropagationLM::compile()
+vector<vector<TensorView *> > NeuralNetworkBackPropagationLM::get_layer_workspace_views()
 {
-    Index total_workspace_size = 0;
+    const Index layers_number = neural_network->get_layers_number();
 
-    for(const unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
-        if(layer_bp_lm)
-            total_workspace_size += layer_bp_lm->get_workspace_size();
+    vector<vector<TensorView*>> layer_workspace_views(layers_number);
 
-    if(total_workspace_size == 0)
-        return;
+    for(Index i = 0; i < layers_number; i++)
+        layer_workspace_views[i] = layers[i]->get_workspace_views();
 
-    workspace.resize(total_workspace_size);
-    workspace.setZero();
-
-    type* current_ptr = workspace.data();
-
-    for(unique_ptr<LayerBackPropagationLM>& layer_bp_lm : layers)
-        if(layer_bp_lm)
-            current_ptr = layer_bp_lm->link_workspace(current_ptr);
+    return layer_workspace_views;
 }
 
 
@@ -1573,6 +1557,8 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1582,29 +1568,23 @@ void NeuralNetwork::allocate_parameters_device()
     const Index first_trainable_layer_index = get_first_trainable_layer_index();
     const Index last_trainable_layer_index = get_last_trainable_layer_index();
 
-    for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
+    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->allocate_parameters_device();
+*/
 }
 
 
 void NeuralNetwork::free_parameters_device()
 {
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->free_parameters_device();
+    cudaFree(parameters_device);
+    parameters_device = nullptr;
 }
 
 
 void NeuralNetwork::copy_parameters_device()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1614,13 +1594,16 @@ void NeuralNetwork::copy_parameters_device()
     const Index first_trainable_layer_index = get_first_trainable_layer_index();
     const Index last_trainable_layer_index = get_last_trainable_layer_index();
 
-    for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
+    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_device();
+*/
 }
 
 
 void NeuralNetwork::copy_parameters_host()
 {
+    // @todo not layer by layer
+/*
     const vector<unique_ptr<Layer>>& layers = get_layers();
 
     const Index layers_number = layers.size();
@@ -1630,8 +1613,22 @@ void NeuralNetwork::copy_parameters_host()
     const Index first_trainable_layer_index = get_first_trainable_layer_index();
     const Index last_trainable_layer_index = get_last_trainable_layer_index();
 
-    for (Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
+    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
         layers[i]->copy_parameters_host();
+*/
+}
+
+
+vector<vector<TensorViewCuda*>> NeuralNetwork::get_layer_parameter_views_device()
+{
+    const Index layers_number = get_layers_number();
+
+    vector<vector<TensorViewCuda*>> layer_parameter_views(layers_number);
+
+    for(Index i = 0; i < layers_number; i++)
+        layer_parameter_views[i] = layers[i]->get_parameter_views_device();
+
+    return layer_parameter_views;
 }
 
 
@@ -1653,7 +1650,7 @@ void NeuralNetwork::forward_propagate_cuda(const vector<TensorViewCuda>& input_v
     const vector<vector<TensorViewCuda>> layer_input_views_device
         = forward_propagation_cuda.get_layer_input_views_device(input_views_device, is_training);
 
-    for (Index i = first_layer_index; i <= last_layer_index; i++)
+    for(Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate_cuda(layer_input_views_device[i],
                                           forward_propagation_cuda.layers[i],
                                           is_training);
@@ -1677,7 +1674,7 @@ void NeuralNetwork::create_cuda() const
 {
     const vector<unique_ptr<Layer>>& neural_network_layers = get_layers();
 
-    for (const unique_ptr<Layer>& layer : neural_network_layers)
+    for(const unique_ptr<Layer>& layer : neural_network_layers)
         layer->create_cuda();
 }
 
@@ -1686,7 +1683,7 @@ void NeuralNetwork::destroy_cuda() const
 {
     const vector<unique_ptr<Layer>>& neural_network_layers = get_layers();
 
-    for (const unique_ptr<Layer>& layer : neural_network_layers)
+    for(const unique_ptr<Layer>& layer : neural_network_layers)
         layer->destroy_cuda();
 }
 
@@ -1703,7 +1700,7 @@ void ForwardPropagationCuda::set(const Index& new_samples_number, NeuralNetwork*
 
     neural_network = new_neural_network;
 
-    if (!neural_network) throw runtime_error("There is no neural network.");
+    if(!neural_network) throw runtime_error("There is no neural network.");
 
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
@@ -1711,32 +1708,37 @@ void ForwardPropagationCuda::set(const Index& new_samples_number, NeuralNetwork*
 
     layers.resize(layers_number);
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         const auto& current_layer = neural_network_layers[i];
 
         layers[i] = Registry<LayerForwardPropagationCuda>::instance().create(current_layer->get_name());
         layers[i]->set(samples_number, current_layer.get());
     }
+
+    const vector<vector<TensorViewCuda*>> layer_workspace_views = get_layer_workspace_views_device();
+
+    const Index workspace_size = get_size(layer_workspace_views);
+
+    if (workspace_size == 0) return;
+
+    CHECK_CUDA(cudaMalloc((void**)&workspace, workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMemset(workspace, 0, workspace_size * sizeof(float)));
+
+    link(workspace, layer_workspace_views);
 }
 
 
-void ForwardPropagationCuda::compile()
+vector<vector<TensorViewCuda*>> ForwardPropagationCuda::get_layer_workspace_views_device()
 {
-    Index total_workspace_size = 0;
+    const Index layers_number = neural_network->get_layers_number();
 
-    for (const unique_ptr<LayerForwardPropagationCuda>& layer_prop : layers)
-        total_workspace_size += layer_prop->get_workspace_size();
+    vector<vector<TensorViewCuda*>> layer_workspace_views(layers_number);
 
-    if (total_workspace_size == 0) return;
+    for (Index i = 0; i < layers_number; i++)
+        layer_workspace_views[i] = layers[i]->get_workspace_views_device();
 
-    CHECK_CUDA(cudaMalloc((void**)&workspace, total_workspace_size * sizeof(float)));
-    CHECK_CUDA(cudaMemset(workspace, 0, total_workspace_size * sizeof(float)));
-
-    type* current_ptr = workspace;
-
-    for (unique_ptr<LayerForwardPropagationCuda>& layer_prop : layers)
-        current_ptr = layer_prop->link_workspace(current_ptr);
+    return layer_workspace_views;
 }
 
 
@@ -1746,7 +1748,7 @@ TensorViewCuda ForwardPropagationCuda::get_last_trainable_layer_outputs_view_dev
 
     const unique_ptr<LayerForwardPropagationCuda>& layer_forward_propagation = layers[last_trainable_layer_index];
 
-    return layer_forward_propagation->get_outputs_view_device();
+    return layer_forward_propagation->get_outputs_device();
 }
 
 
@@ -1766,9 +1768,9 @@ vector<vector<TensorViewCuda>> ForwardPropagationCuda::get_layer_input_views_dev
 
     const Index first_trainable_layer_index = neural_network->get_first_trainable_layer_index();
 
-    for (Index layer_index = first_trainable_layer_index; layer_index < layers_number; layer_index++)
+    for(Index layer_index = first_trainable_layer_index; layer_index < layers_number; layer_index++)
     {
-        if ((layer_index == first_trainable_layer_index && is_training) || layer_index == 0)
+        if((layer_index == first_trainable_layer_index && is_training) || layer_index == 0)
         {
             layer_input_views[layer_index] = batch_input_views;
             continue;
@@ -1777,10 +1779,10 @@ vector<vector<TensorViewCuda>> ForwardPropagationCuda::get_layer_input_views_dev
         const vector<Index>& input_layer_indices = layer_input_indices[layer_index];
         layer_input_views[layer_index].resize(input_layer_indices.size());
 
-        for (Index input_index = 0; input_index < static_cast<Index>(input_layer_indices.size()); input_index++)
+        for(Index input_index = 0; input_index < static_cast<Index>(input_layer_indices.size()); input_index++)
         {
             const Index input_layer_index = input_layer_indices[input_index];
-            layer_input_views[layer_index][input_index] = layers[input_layer_index]->get_outputs_view_device();
+            layer_input_views[layer_index][input_index] = layers[input_layer_index]->get_outputs_device();
         }
     }
 
@@ -1794,7 +1796,7 @@ void ForwardPropagationCuda::print()
 
     cout << "Layers number: " << layers_number << endl;
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         cout << "Layer " << i + 1 << endl;
 
@@ -1807,7 +1809,7 @@ void ForwardPropagationCuda::free()
 {
     const Index layers_number = layers.size();
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
         if (layers[i])
             layers[i]->free();
 }
@@ -1825,7 +1827,7 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
 
     neural_network = new_neural_network;
 
-    if (!neural_network) return;
+    if(!neural_network) return;
 
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
@@ -1835,32 +1837,22 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
 
     layers.resize(layers_number);
 
-    for (Index i = first_traineable_layer_number; i <= last_traineable_layer_number; i++)
+    for(Index i = first_traineable_layer_number; i <= last_traineable_layer_number; i++)
     {
         layers[i] = Registry<LayerBackPropagationCuda>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(batch_size, neural_network_layers[i].get());
     }
-}
 
+    const vector<vector<TensorViewCuda*>> layer_workspace_views = get_layer_workspace_views_device();
 
-void NeuralNetworkBackPropagationCuda::compile()
-{
-    Index total_workspace_size = 0;
+    const Index workspace_size = get_size(layer_workspace_views);
 
-    for (const unique_ptr<LayerBackPropagationCuda>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            total_workspace_size += layer_backpropagation->get_workspace_size();
+    if (workspace_size == 0) return;
 
-    if (total_workspace_size == 0) return;
+    CHECK_CUDA(cudaMalloc((void**)&workspace, workspace_size * sizeof(float)));
+    CHECK_CUDA(cudaMemset(workspace, 0, workspace_size * sizeof(float)));
 
-    CHECK_CUDA(cudaMalloc((void**)&workspace, total_workspace_size * sizeof(float)));
-    CHECK_CUDA(cudaMemset(workspace, 0, total_workspace_size * sizeof(float)));
-
-    type* current_ptr = workspace;
-
-    for (unique_ptr<LayerBackPropagationCuda>& layer_backpropagation : layers)
-        if (layer_backpropagation)
-            current_ptr = layer_backpropagation->link_workspace(current_ptr);
+    link(workspace, layer_workspace_views);   
 }
 
 
@@ -1870,13 +1862,31 @@ const vector<unique_ptr<LayerBackPropagationCuda>>& NeuralNetworkBackPropagation
 }
 
 
+vector<vector<TensorViewCuda*>> NeuralNetworkBackPropagationCuda::get_layer_workspace_views_device()
+{
+    vector<vector<TensorViewCuda*>> layer_workspace_views(layers.size());
+    Index i = 0;
+
+    for (const auto& layer_bp : layers)
+    {
+        if (layer_bp)
+            layer_workspace_views[i] = layer_bp->get_workspace_views_device();
+
+        i++;
+    }
+
+    return layer_workspace_views;
+    
+}
+
+
 void NeuralNetworkBackPropagationCuda::print()
 {
     const Index layers_number = layers.size();
 
     cout << "Layers number: " << layers_number << endl;
 
-    for (Index i = 0; i < layers_number; i++)
+    for(Index i = 0; i < layers_number; i++)
     {
         cout << "Layer " << i + 1 << endl;
 
@@ -1889,8 +1899,8 @@ void NeuralNetworkBackPropagationCuda::free()
 {
     const Index layers_number = layers.size();
 
-    for (Index i = 0; i < layers_number; i++)
-        if (!layers[i])
+    for(Index i = 0; i < layers_number; i++)
+        if(!layers[i])
             layers[i]->free();
 }
 

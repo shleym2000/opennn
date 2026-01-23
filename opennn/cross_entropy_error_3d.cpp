@@ -105,9 +105,9 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     constexpr type epsilon = numeric_limits<type>::epsilon();
 
     #pragma omp parallel for reduction(+:total_log_loss, active_tokens_count)
-    for (Index i = 0; i < batch_size; ++i)
+    for(Index i = 0; i < batch_size; ++i)
     {
-        for (Index j = 0; j < sequence_length; ++j)
+        for(Index j = 0; j < sequence_length; ++j)
         {
             // Only calculate loss if the token is not padding
             if (mask(i, j))

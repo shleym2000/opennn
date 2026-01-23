@@ -74,13 +74,6 @@ public:
 
     vector<TensorViewCuda*> get_parameter_views_device() override;
 
-    void copy_parameters_host() override;
-
-    void copy_parameters_device() override;
-
-    void allocate_parameters_device() override;
-
-    void free_parameters_device() override;
 
 private:
 
@@ -121,7 +114,7 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     void initialize() override;
 
-    vector<TensorView*> get_tensor_views() override;
+    vector<TensorView*> get_workspace_views() override;
 
     void print() const override;
 
@@ -146,7 +139,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override;
 
-    vector<TensorViewCuda*> get_tensor_views_device() override;
+    vector<TensorViewCuda*> get_workspace_views_device() override;
 
     void print() const override;
 

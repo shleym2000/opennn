@@ -281,7 +281,7 @@ Normalization3dBackPropagation::Normalization3dBackPropagation(const Index& new_
 }
 
 
-vector<TensorView*> Normalization3dBackPropagation::get_tensor_views()
+vector<TensorView*> Normalization3dBackPropagation::get_workspace_views()
 {
     return {&gamma_derivatives, &beta_derivatives};
 }

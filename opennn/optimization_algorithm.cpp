@@ -125,7 +125,7 @@ void OptimizationAlgorithm::set_neural_network_file_name(const string& new_neura
 
 void OptimizationAlgorithm::check() const
 {
-    if (!loss_index)
+    if(!loss_index)
         throw runtime_error("loss_index is nullptr.\n");
 }
 
@@ -562,7 +562,7 @@ void TrainingResults::resize_selection_error_history(const Index& new_size)
 
     const Index minimum_size = min(new_size, old_selection_error_history.size());
 
-    for (Index i = 0; i < minimum_size; ++i)
+    for(Index i = 0; i < minimum_size; ++i)
         selection_error_history(i) = old_selection_error_history(i);
 
 }

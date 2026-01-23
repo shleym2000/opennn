@@ -257,7 +257,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
 TrainingResults QuasiNewtonMethod::train()
 {
-    if (!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
+    if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
     TrainingResults results(maximum_epochs_number + 1);
@@ -270,7 +270,7 @@ TrainingResults QuasiNewtonMethod::train()
 
     Dataset* dataset = loss_index->get_dataset();
 
-    if (!dataset)
+    if(!dataset)
         throw runtime_error("Dataset is null.");
 
     const bool has_selection = dataset->has_selection();
@@ -292,10 +292,8 @@ TrainingResults QuasiNewtonMethod::train()
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
     ForwardPropagation training_forward_propagation(training_samples_number, neural_network);
-    training_forward_propagation.compile();
 
     ForwardPropagation selection_forward_propagation(selection_samples_number, neural_network);
-    selection_forward_propagation.compile();
 
     set_names();
 
@@ -316,10 +314,8 @@ TrainingResults QuasiNewtonMethod::train()
     loss_index->set_normalization_coefficient();
 
     BackPropagation training_back_propagation(training_samples_number, loss_index);
-    training_back_propagation.neural_network.compile();
 
     BackPropagation selection_back_propagation(selection_samples_number, loss_index);
-    selection_back_propagation.neural_network.compile();
 
     // Optimization algorithm
 
@@ -494,12 +490,12 @@ void QuasiNewtonMethod::from_XML(const XMLDocument& document)
 {
     const XMLElement* root_element = document.FirstChildElement("QuasiNewtonMethod");
 
-    if (!root_element)
+    if(!root_element)
         throw runtime_error("Quasi-Newton method element is nullptr.\n");
 
     /*const XMLElement* learning_rate_algorithm_element = root_element->FirstChildElement("LearningRateAlgorithm");
 
-    if (!learning_rate_algorithm_element)
+    if(!learning_rate_algorithm_element)
         throw runtime_error("Learning rate algorithm element is nullptr.\n");*/
 
     set_minimum_loss_decrease(read_xml_type(root_element, "MinimumLossDecrease"));
@@ -728,7 +724,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
 
     const type slope = optimization_data.training_slope(0);
 
-    for (int i = 0; i < 20; ++i)
+    for(int i = 0; i < 20; ++i)
     {
         potential_parameters.device(*device) = parameters + training_direction * alpha;
 

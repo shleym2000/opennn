@@ -11,8 +11,6 @@
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 
-#define EIGEN_MAX_ALIGN_BYTES 64
-
 #include <algorithm>
 #include <string>
 #include <cassert>
@@ -49,7 +47,7 @@
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "../eigen/Eigen/src/Core/util/DisableStupidWarnings.h"
 
-//#define OPENNN_CUDA // Comment this line to disable cuda files
+#define OPENNN_CUDA // Comment this line to disable cuda files
 
 #ifdef OPENNN_CUDA
 

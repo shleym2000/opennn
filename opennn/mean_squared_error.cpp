@@ -26,7 +26,7 @@ void MeanSquaredError::calculate_error(const Batch& batch,
                                        const ForwardPropagation& forward_propagation,
                                        BackPropagation& back_propagation) const
 {
-    if (!neural_network)
+    if(!neural_network)
         throw runtime_error("MeanSquaredError: Neural network pointer is null.");
 
     const Index outputs_number = neural_network->get_outputs_number();
