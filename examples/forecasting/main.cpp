@@ -149,7 +149,7 @@ int main()
         //     {0.841470985,  0.89120736}
         // };
 
-        // for (size_t i = 0; i < input_views.size() - 1; ++i)
+        // for(size_t i = 0; i < input_views.size() - 1; ++i)
         // {
         //     const auto& current_pair = input_views[i];
         //     const type input_val_1 = current_pair.first;

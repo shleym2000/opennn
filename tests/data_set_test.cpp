@@ -8,7 +8,7 @@ using namespace opennn;
 void create_temp_csv_file(const string& file_path, const string& content) 
 {
     ofstream outfile(file_path);
-    if (!outfile.is_open())
+    if(!outfile.is_open())
         throw runtime_error("Failed to open temporary CSV file for writing: " + file_path);
 
     outfile << content;
