@@ -23,7 +23,7 @@ public:
                   const dimensions& = {3, 3, 1, 1},                 // Kernel dimensions {kernel_height,kernel_width,channels,kernels_number}
                   const string& = "Linear",
                   const dimensions& = { 1, 1 },                     // Stride dimensions {row_stride,column_stride}
-                  const string& = "Valid",          // Convolution type (Valid || Same)
+                  const string& = "Valid",                          // Convolution type (Valid || Same)
                   const bool& = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
 
@@ -60,6 +60,13 @@ public:
     Index get_input_width() const;
 
     vector<TensorView*> get_parameter_views() override;
+
+    bool use_convolutions() const
+    {
+        return activation_function == "ScaledExponentialLinear"
+            || activation_function == "ClippedRelu"
+            || activation_function == "Swish";
+    }
 
     // Set
 
@@ -126,8 +133,6 @@ public:
 
     void free();
 
-    bool use_convolutions = true;
-
 protected:
 
     TensorViewCuda biases_device;
@@ -140,8 +145,8 @@ protected:
     TensorViewCuda scales_device;
     TensorViewCuda offsets_device;
 
-    TensorCuda bn_running_mean_device = nullptr;
-    TensorCuda bn_running_variance_device = nullptr;
+    TensorCuda running_means_device;
+    TensorCuda running_variances_device;
 
     // Activations
 
@@ -212,7 +217,6 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
     TensorView offsets_deltas;
 
     Tensor4 rotated_weights;
-
 };
 
 

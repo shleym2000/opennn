@@ -309,8 +309,8 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
         type(padding_width));
 
     outputs.device(*device) = image_patches
-                                              .maximum(array_2(1, 2))
-                                              .reshape(array_4(batch_size, output_width, output_height, channels));
+                              .maximum(array_2(1, 2))
+                              .reshape(array_4(batch_size, output_width, output_height, channels));
 
     if(!is_training) return;
 
@@ -324,7 +324,7 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
     const array<Index, 3> output_dimensions({ output_height, output_width, channels });
     const array<Index, 2> reshape_dimensions = { pool_size, output_size };
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for(Index batch_index = 0; batch_index < batch_size; batch_index++)
     {
         const Tensor2 patches_flat = image_patches.chip(batch_index, 0).reshape(reshape_dimensions);
@@ -562,9 +562,8 @@ void PoolingBackPropagation::print() const
 void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                      const bool& is_training)
-{
-    type* outputs = forward_propagation_cuda->outputs.data;
-    const cudnnTensorDescriptor_t output_tensor_descriptor = forward_propagation_cuda->outputs.descriptor;
+{    
+    TensorViewCuda outputs = forward_propagation_cuda->outputs;
 
     // Forward propagation
 
@@ -581,8 +580,8 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
                                     input_tensor_descriptor,
                                     inputs_device[0].data,
                                     &beta,
-                                    output_tensor_descriptor,
-                                    outputs));
+                                    outputs.tensor_descriptor,
+                                    outputs.data));
 }
 
 
@@ -593,7 +592,7 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
 {
     // Forward propagation
 
-    const TensorViewCuda& outputs_view = forward_propagation_cuda->outputs;
+    const TensorViewCuda& outputs = forward_propagation_cuda->outputs;
 
     const PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
         = static_cast<PoolingForwardPropagationCuda*>(forward_propagation_cuda.get());
@@ -609,9 +608,9 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
     CHECK_CUDNN(cudnnPoolingBackward(cudnn_handle,
                                      pooling_descriptor,
                                      &alpha,
-                                     outputs_view.descriptor,
-                                     outputs_view.data,
-                                     outputs_view.descriptor,
+                                     outputs.descriptor,
+                                     outputs.data,
+                                     outputs.descriptor,
                                      deltas_device[0].data,
                                      input_tensor_descriptor,
                                      inputs_device[0].data,
@@ -665,7 +664,6 @@ void PoolingForwardPropagationCuda::initialize()
                                channels,
                                output_height,
                                output_width);
-
 }
 
 
