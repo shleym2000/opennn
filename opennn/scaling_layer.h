@@ -345,7 +345,7 @@ public:
             // But following 2D code strictly, it only reads NeuronsNumber.
             // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
             // However, to make it compile for Rank > 2, I need to pass correct size.
-            // If XML doesn't validation dims, we can't fully restore shape.
+            // If XML doesn't validation dims, we can't fully restore dimensions.
             // I will implement a dummy reshape for now to satisfy Rank:
             // [neurons_number, 1, 1...]
 

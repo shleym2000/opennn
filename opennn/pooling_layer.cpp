@@ -438,10 +438,10 @@ void Pooling::back_propagate_average_pooling(const Tensor4& inputs,
                 const Index width_end = min(width_start + pool_width, input_width);
 
                 const array<Index, 4> grad_offsets = {0, output_height_index, output_width_index, channel_index};
-                const array<Index, 4> offsets = {0, height_start, width_start, channel_index };
+                const array<Index, 4> betas = {0, height_start, width_start, channel_index };
                 const array<Index, 4> extents = {batch_size, height_end - height_start, width_end - width_start, 1};
 
-                input_deltas.slice(offsets, extents) += deltas_by_pool_size
+                input_deltas.slice(betas, extents) += deltas_by_pool_size
                                                             .slice(grad_offsets, grad_extents)
                                                             .broadcast(array_4(1, height_end - height_start, width_end - width_start, 1));
             }

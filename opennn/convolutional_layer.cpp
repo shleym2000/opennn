@@ -93,10 +93,10 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
             this_forward_propagation->outputs,
             this_forward_propagation->means,
             this_forward_propagation->standard_deviations,
-            moving_means,
+            running_means,
             moving_standard_deviations,
-            scales,
-            offsets,
+            gammas,
+            betas,
             is_training);
 
     is_training
@@ -384,16 +384,16 @@ void Convolutional::set(const dimensions& new_input_dimensions,
 
     if (batch_normalization)
     {
-        moving_means.resize(kernels_number);
+        running_means.resize(kernels_number);
         moving_standard_deviations.resize(kernels_number);
 
-        scales.dims = {kernels_number};
-        offsets.dims = {kernels_number};
+        gammas.dims = {kernels_number};
+        betas.dims = {kernels_number};
     }
     else
     {
-        scales.dims.clear();
-        offsets.dims.clear();
+        gammas.dims.clear();
+        betas.dims.clear();
     }
 
     set_label(new_label);
@@ -554,7 +554,7 @@ vector<TensorView*> Convolutional::get_parameter_views()
     vector<TensorView*> views = {&biases, &weights};
 
     if (batch_normalization)
-        views.insert(views.end(), {&scales, &offsets});
+        views.insert(views.end(), {&gammas, &betas});
 
     return views;
 }
@@ -598,9 +598,9 @@ void Convolutional::to_XML(XMLPrinter& printer) const
 /*
     if (batch_normalization)
     {
-        add_xml_element(printer, "Scales", tensor_to_string<type, 1>(scales));
-        add_xml_element(printer, "Offsets", tensor_to_string<type, 1>(offsets));
-        add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
+        add_xml_element(printer, "Scales", tensor_to_string<type, 1>(gammas));
+        add_xml_element(printer, "Offsets", tensor_to_string<type, 1>(betas));
+        add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(running_means));
         add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
     }
 */
@@ -644,14 +644,14 @@ void Convolutional::from_XML(const XMLDocument& document)
 /*
     if (batch_normalization)
     {
-        scales.resize(kernels_number);
-        offsets.resize(kernels_number);
-        moving_means.resize(kernels_number);
+        gammas.resize(kernels_number);
+        betas.resize(kernels_number);
+        running_means.resize(kernels_number);
         moving_standard_deviations.resize(kernels_number);
 
-        string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "Scales"), scales);
-        string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "Offsets"), offsets);
-        string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "MovingMeans"), moving_means);
+        string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "Scales"), gammas);
+        string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "Offsets"), betas);
+        string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "MovingMeans"), running_means);
         string_to_tensor<type, 1>(read_xml_string(convolutional_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
     }
 */
@@ -1150,9 +1150,9 @@ void Convolutional::copy_parameters_device()
 
     if (batch_normalization)
     {
-        CHECK_CUDA(cudaMemcpy(scales_device, scales.data(), scales.size() * sizeof(type), cudaMemcpyHostToDevice));
-        CHECK_CUDA(cudaMemcpy(offsets_device, offsets.data(), offsets.size() * sizeof(type), cudaMemcpyHostToDevice));
-        CHECK_CUDA(cudaMemcpy(bn_running_mean_device, moving_means.data(), moving_means.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(scales_device, gammas.data(), gammas.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(offsets_device, betas.data(), betas.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(bn_running_mean_device, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
         Tensor1 moving_variances = moving_standard_deviations.square();
         CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
@@ -1295,7 +1295,7 @@ void ConvolutionalForwardPropagationCuda::free()
     reordered_inputs_device = nullptr;
 
     cudaFree(bn_saved_mean);
-    bn_saved_mean = nullptr;
+    batch_means= nullptr;
 
     cudaFree(bn_saved_inv_variance);
     bn_saved_inv_variance = nullptr;

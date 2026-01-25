@@ -251,27 +251,26 @@ protected:
         TensorMap<Tensor<type, Rank>, Aligned16>& outputs,
         TensorMap<Tensor<type, Rank>, Aligned16>& normalized_outputs,
         TensorMap1 batch_means,
-        TensorMap1 batch_stds,
-        Tensor1 moving_means,
-        Tensor1 moving_stds,
-        const TensorMap1 scales,
-        const TensorMap1 offsets,
+        TensorMap1 batch_variances,
+        Tensor1 running_means,
+        Tensor1 running_variances,
+        const TensorMap1 gammas,
+        const TensorMap1 betas,
         const bool& is_training,
         const type momentum = type(0.9),
         const type epsilon = type(1e-5)) const
     {
-        const Index neurons = moving_means.size();
+        const Index neurons = running_means.size();
 
         array<int, Rank - 1> reduction_axes;
-        for(int i = 0; i < Rank - 1; ++i)
-            reduction_axes[i] = i;
+        iota(reduction_axes.begin(), reduction_axes.end(), 0);
 
         array<Index, Rank> reshape_dimensions;
         reshape_dimensions.fill(1);
-        reshape_dimensions[Rank - 1] = neurons;
+        reshape_dimensions.back() = neurons;
 
         array<Index, Rank> broadcast_dimensions = outputs.dimensions();
-        broadcast_dimensions[Rank - 1] = 1;
+        broadcast_dimensions.back() = 1;
 
         if(is_training)
         {
@@ -279,20 +278,21 @@ protected:
 
             normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions));
 
-            batch_stds.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
+            batch_variances.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
 
-            normalized_outputs.device(*device) = normalized_outputs / batch_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+            normalized_outputs.device(*device) = normalized_outputs / batch_variances.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
 
-            moving_means.device(*device) = moving_means * momentum + batch_means * (type(1) - momentum);
-            moving_stds.device(*device) = moving_stds * momentum + batch_stds * (type(1) - momentum);
+            running_means.device(*device) = running_means * momentum + batch_means * (type(1) - momentum);
+            running_variances.device(*device) = running_variances * momentum + batch_variances * (type(1) - momentum);
         }
         else
-            normalized_outputs.device(*device) = (outputs - moving_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
-                                                 (moving_stds.reshape(reshape_dimensions).broadcast(broadcast_dimensions) + epsilon);
+            normalized_outputs.device(*device) = (outputs - running_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
+                                                 (running_variances.reshape(reshape_dimensions).broadcast(broadcast_dimensions) + epsilon);
 
-        outputs.device(*device) = normalized_outputs * scales.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
-                                  offsets.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+        outputs.device(*device) = normalized_outputs * gammas.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
+                                  betas.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
     }
+
 
     template <int Rank>
     void dropout(TensorMap<Tensor<type, Rank>, Aligned16> tensor, const type& dropout_rate) const

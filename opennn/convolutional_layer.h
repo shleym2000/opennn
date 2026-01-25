@@ -140,8 +140,8 @@ protected:
     TensorViewCuda scales_device;
     TensorViewCuda offsets_device;
 
-    float* bn_running_mean_device = nullptr;
-    float* bn_running_variance_device = nullptr;
+    TensorCuda bn_running_mean_device = nullptr;
+    TensorCuda bn_running_variance_device = nullptr;
 
     // Activations
 
@@ -154,8 +154,8 @@ private:
     TensorView weights;
     TensorView biases;
 
-    TensorView scales;
-    TensorView offsets;
+    TensorView gammas;
+    TensorView betas;
 
     Index row_stride = 1;
     Index column_stride = 1;
@@ -170,7 +170,7 @@ private:
 
     bool batch_normalization = false;
 
-    Tensor1 moving_means;
+    Tensor1 running_means;
     Tensor1 moving_standard_deviations;
 
     type momentum = type(0.9);
@@ -248,7 +248,7 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
     bool is_first_layer = false;
 
-    float* bn_saved_mean = nullptr;
+    float* batch_means= nullptr;
     float* bn_saved_inv_variance = nullptr;
 };
 

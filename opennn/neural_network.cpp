@@ -1503,14 +1503,7 @@ void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size,
     const Index last_trainable = neural_network->get_last_trainable_layer_index();
 
     for(Index i = first_trainable; i <= last_trainable; i++)
-    {
-        const string layer_name = neural_network_layers[i]->get_name();
-
-        if (layer_name == "Dense2d")
-            layers[i] = make_unique<DenseBackPropagationLM<2>>(batch_size, neural_network_layers[i].get());
-        else if (layer_name == "Dense3d")
-            layers[i] = make_unique<DenseBackPropagationLM<3>>(batch_size, neural_network_layers[i].get());
-    }
+        layers[i] = make_unique<DenseBackPropagationLM>(batch_size, neural_network_layers[i].get());
 
     const vector<vector<TensorView*>> layer_workspace_views = get_layer_workspace_views();
 

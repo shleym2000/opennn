@@ -762,43 +762,38 @@ TrainingResults StochasticGradientDescent::train_cuda()
 void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back_propagation_cuda,
                                                        SGDOptimizationDataCuda& optimization_data_cuda) const
 {
-    /*
+
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
+
+    TensorCuda& parameters_device = neural_network.get_parameters_device();
+
+    back_propagation_cuda.neural_network.workspace;
 
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data_cuda.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    for(Index layer_index = 0; layer_index < layers_number; ++layer_index)
+    const TensorCuda& delta_views = back_propagation_cuda->get_gradient_device();
+
+    // @todo do it in vector form without loop.
+/*
+    for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
     {
-        Layer* layer = neural_network->get_layer(layer_index).get();
+        float* params_d = parameter_views[parameter_index].data;
+        const Index param_size = parameter_views[parameter_index].size;
+        const float* grads_d = delta_views[parameter_index].data;
+        float* velocity_d = optimization_data_cuda.velocity[layer_index][parameter_index];
 
-        if(!layer->get_is_trainable())
-            continue;
-
-        const vector<TensorView> parameter_views = layer->get_parameter_views_device();
-        LayerBackPropagationCuda* layer_back_prop = back_propagation_cuda.neural_network.layers[layer_index].get();
-        const vector<TensorView> delta_views = layer_back_prop->get_gradient_views_device();
-
-        for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
-        {
-            float* params_d = parameter_views[parameter_index].data;
-            const Index param_size = parameter_views[parameter_index].size;
-            const float* grads_d = delta_views[parameter_index].data;
-            float* velocity_d = optimization_data_cuda.velocity[layer_index][parameter_index];
-
-            sgd_update_device(
-                param_size,
-                params_d,
-                velocity_d,
-                grads_d,
-                current_learning_rate,
-                momentum_f,
-                nesterov
-                );
-        }
+        sgd_update_device(
+            param_size,
+            params_d,
+            velocity_d,
+            grads_d,
+            current_learning_rate,
+            momentum_f,
+            nesterov
+            );
     }
-    */
+*/
 }
 
 
@@ -813,80 +808,26 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
     stochastic_gradient_descent = new_stochastic_gradient_descent;
 
     NeuralNetwork* neural_network = stochastic_gradient_descent->get_loss_index()->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
 
-    velocity.resize(layers_number);
+    const Index parameters_number = neural_network->get_parameters_number();
 
-    for(Index i = 0; i < layers_number; ++i)
-    {
-        Layer* layer = neural_network->get_layer(i).get();
-        if(!layer->get_is_trainable()) continue;
+    velocity.resize(parameters_number);
 
-        const auto parameter_views = layer->get_parameter_views();
-        //const auto parameter_views_device = layer->get_parameter_views_device();
-        const size_t param_blocks_count = parameter_views.size();
-
-        velocity[i].resize(param_blocks_count, nullptr);
-
-        for(Index j = 0; j < Index(param_blocks_count); ++j)
-        {
-            const Index param_size = parameter_views[j]->size();
-            if (param_size > 0)
-            {
-                const size_t memory_size_bytes = param_size * sizeof(float);
-                CHECK_CUDA(cudaMalloc(&velocity[i][j], memory_size_bytes));
-                CHECK_CUDA(cudaMemset(velocity[i][j], 0, memory_size_bytes));
-            }
-        }
-    }
+    CHECK_CUDA(cudaMemset(velocity, 0, parameters_number * sizeof(float));
 }
 
 
 void SGDOptimizationDataCuda::free()
 {
-    for(auto& layer_velocity : velocity)
-    {
-        for(float*& ptr : layer_velocity)
-        {
-            if (ptr != nullptr)
-            {
-                CHECK_CUDA(cudaFree(ptr));
-                ptr = nullptr;
-            }
-        }
-    }
-    velocity.clear();
 }
 
 
 void SGDOptimizationDataCuda::print() const
-{
-    /*
+{    
     cout << "--- SGD Optimization Data (CUDA) ---" << endl;
     NeuralNetwork* neural_network = stochastic_gradient_descent->get_loss_index()->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
 
-    for(Index i = 0; i < layers_number; ++i)
-    {
-        Layer* layer = neural_network->get_layer(i).get();
-        if(!layer->get_is_trainable()) continue;
-
-        cout << "Layer " << i << " (" << layer->get_name() << "):" << endl;
-        const auto parameter_views = layer->get_parameter_views_device();
-
-        for(Index j = 0; j < Index(parameter_views.size()); ++j)
-        {
-            const Index param_size = parameter_views[j].size;
-            if (param_size == 0) continue;
-
-            cout << "  - Parameter Block " << j << " (Size: " << param_size << "):" << endl;
-            cout << "    velocity_host:" << endl << "      ";
-            const float* v_device_ptr = velocity[i][j];
-            cout << vector_from_device(v_device_ptr, param_size) << endl;
-        }
-    }
     cout << "------------------------------------" << endl;
-    */
 }
 
 #endif

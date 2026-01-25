@@ -30,10 +30,10 @@ struct DenseForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
-        const dimensions output_dims = dense_layer->get_output_dimensions();
+        const dimensions output_dimensions = dense_layer->get_output_dimensions();
 
         dimensions full_output_dims = {batch_size};
-        full_output_dims.insert(full_output_dims.end(), output_dims.begin(), output_dims.end());
+        full_output_dims.insert(full_output_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
         outputs.dims = full_output_dims;
         activation_derivatives.dims = full_output_dims;
@@ -98,17 +98,15 @@ struct DenseBackPropagation final : LayerBackPropagation
             offsets_deltas.dims = {outputs_number};
         }
 
-        const dimensions input_dims = dense_layer->get_input_dimensions();
+        const dimensions input_shape = dense_layer->get_input_dimensions();
 
         dimensions full_input_dims = { batch_size };
-        full_input_dims.insert(full_input_dims.end(), input_dims.begin(), input_dims.end());
+        full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
         input_deltas_tensor.resize(full_input_dims);
         input_deltas_tensor.setZero();
 
-        input_deltas.resize(1);
-        input_deltas[0].data = input_deltas_tensor.data();
-        input_deltas[0].dims = full_input_dims;
+        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_input_dims));
     }
 
 
@@ -143,7 +141,6 @@ struct DenseBackPropagation final : LayerBackPropagation
 };
 
 
-template<int Rank>
 struct DenseBackPropagationLM final : LayerBackPropagationLM
 {
     DenseBackPropagationLM(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
@@ -262,7 +259,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
     // Batch normalization
 
-    float* bn_saved_mean = nullptr;
+    float* batch_means= nullptr;
     float* bn_saved_inv_variance = nullptr;
 
     // Dropout
@@ -430,7 +427,7 @@ public:
         vector<TensorView*> views = {&biases, &weights};
 
         if (batch_normalization)
-            views.insert(views.end(), {&scales, &offsets});
+            views.insert(views.end(), {&gammas, &betas});
 
         return views;
     }
@@ -477,9 +474,9 @@ public:
 
         if (batch_normalization)
         {
-            scales.dims = {outputs_number};
-            offsets.dims = {outputs_number};
-            moving_means.resize(outputs_number);
+            gammas.dims = {outputs_number};
+            betas.dims = {outputs_number};
+            running_means.resize(outputs_number);
             moving_standard_deviations.resize(outputs_number);
         }
 
@@ -519,19 +516,18 @@ public:
 
         if(batch_normalization)
         {
-            if(scales.size() > 0)
+            if(gammas.size() > 0)
             {
-                TensorMap1 scales_map(scales.data, scales.size());
+                TensorMap1 scales_map(gammas.data, gammas.size());
                 scales_map.setConstant(1.0);
             }
-            if(offsets.size() > 0)
+            if(betas.size() > 0)
             {
-                TensorMap1 offsets_map(offsets.data, offsets.size());
+                TensorMap1 offsets_map(betas.data, betas.size());
                 offsets_map.setZero();
             }
         }
     }
-
 
     void set_parameters_random() override
     {
@@ -549,11 +545,11 @@ public:
 
         if (batch_normalization)
         {
-            if(scales.size() > 0)
-                TensorMap1(scales.data, scales.size()).setConstant(1.0);
+            if(gammas.size() > 0)
+                TensorMap1(gammas.data, gammas.size()).setConstant(1.0);
 
-            if(offsets.size() > 0)
-                TensorMap1(offsets.data, offsets.size()).setZero();
+            if(betas.size() > 0)
+                TensorMap1(betas.data, betas.size()).setZero();
         }
     }
 
@@ -664,7 +660,7 @@ public:
 
         outputs = inputs;// -means.broadcast(array<Index, 2>({ outputs.dimension(0), 1 }));
             //shifts.broadcast(rows);
-            //+ (outputs - means.broadcast(rows))*scales.broadcast(rows)/standard_deviations.broadcast(rows);
+            //+ (outputs - means.broadcast(rows))*gammas.broadcast(rows)/standard_deviations.broadcast(rows);
     }
 */
 
@@ -678,13 +674,13 @@ public:
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             unique_ptr<LayerBackPropagation>& layer_back_propagation) const
     {
+//        const Index batch_size = layer_forward_propagation->batch_size;
+
         const DenseForwardPropagation<2>* dense2d_forward_propagation =
             static_cast<const DenseForwardPropagation<2>*>(layer_forward_propagation.get());
 
-        const Index batch_size = dense2d_forward_propagation->batch_size;
-
         const TensorMap2 normalized_outputs = tensor_map<2>(dense2d_forward_propagation->normalized_outputs);
-        const TensorMap1 standard_deviations = tensor_map<1>(dense2d_forward_propagation->standard_deviations);
+//        const TensorMap1 standard_deviations = tensor_map<1>(dense2d_forward_propagation->standard_deviations);
 
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(layer_back_propagation.get());
@@ -692,15 +688,14 @@ public:
         TensorMap1 scales_deltas = tensor_map<1>(dense2d_back_propagation->scales_deltas);
         TensorMap1 offsets_deltas = tensor_map<1>(dense2d_back_propagation->offsets_deltas);
 
-        const array<int, 1> reduction_axes = { 0 };
+        offsets_deltas.device(*device) = deltas.sum(array_1(0));
+        scales_deltas.device(*device) = (deltas * normalized_outputs).sum(array_1(0));
+/*
         const array<Index, 2> reshape_dims = { 1, get_outputs_number() };
         const array<Index, 2> broadcast_dims = { batch_size, 1 };
 
-        offsets_deltas.device(*device) = deltas.sum(reduction_axes);
-        scales_deltas.device(*device) = (deltas * normalized_outputs).sum(reduction_axes);
-
         const auto inv_m = type(1) / batch_size;
-/*
+
         deltas.device(*device) =
             ((deltas * type(batch_size))
              - offsets_deltas.reshape(reshape_dims).broadcast(broadcast_dims)
@@ -708,7 +703,7 @@ public:
                    scales_deltas.reshape(reshape_dims).broadcast(broadcast_dims)
              ) * inv_m
             / standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims)
-            * scales.reshape(reshape_dims).broadcast(broadcast_dims);
+            * gammas.reshape(reshape_dims).broadcast(broadcast_dims);
 */
     }
 
@@ -732,10 +727,10 @@ public:
                 normalized_outputs,
                 tensor_map<1>(dense_forward_propagation->means),
                 tensor_map<1>(dense_forward_propagation->standard_deviations),
-                moving_means,
+                running_means,
                 moving_standard_deviations,
-                tensor_map<1>(scales),
-                tensor_map<1>(offsets),
+                tensor_map<1>(gammas),
+                tensor_map<1>(betas),
                 is_training,
                 momentum);
         }
@@ -820,8 +815,8 @@ public:
         const auto activation_derivatives
             = tensor_map<Rank>(dense2d_layer_forward_propagation->activation_derivatives);
 
-        DenseBackPropagationLM<Rank>* dense_lm =
-            static_cast<DenseBackPropagationLM<Rank>*>(back_propagation.get());
+        DenseBackPropagationLM* dense_lm =
+            static_cast<DenseBackPropagationLM*>(back_propagation.get());
 
         TensorMap2 squared_errors_Jacobian = tensor_map<2>(dense_lm->squared_errors_Jacobian);
 
@@ -848,7 +843,7 @@ public:
                 const auto input_i = inputs.chip(i, Rank - 1);
                 const auto derivative = delta_j * input_i;
 
-                const Index weight_column_index = biases_number + (i * outputs_number) + j;
+                const Index weight_column_index = biases_number + i*outputs_number + j;
 
                 if constexpr(Rank == 2)
                     squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative;
@@ -866,8 +861,8 @@ public:
                                            const Index& start_column_index,
                                            Tensor2& global_jacobian) const override
     {
-        DenseBackPropagationLM<Rank>* dense_lm =
-            static_cast<DenseBackPropagationLM<Rank>*>(back_propagation.get());
+        DenseBackPropagationLM* dense_lm =
+            static_cast<DenseBackPropagationLM*>(back_propagation.get());
 
         const Index batch_size = dense_lm->batch_size;
         constexpr Index ALIGNMENT = 16;
@@ -904,9 +899,9 @@ public:
 
         if(batch_normalization)
         {
-            if(scales.size() > 0)
+            if(gammas.size() > 0)
             {
-                const Index size = scales.size();
+                const Index size = gammas.size();
 
                 global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, size})
                     .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
@@ -916,9 +911,9 @@ public:
                 global_offset += (size + ALIGNMENT - 1) & MASK;
             }
 
-            if(offsets.size() > 0)
+            if(betas.size() > 0)
             {
-                const Index size = offsets.size();
+                const Index size = betas.size();
 
                 global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, size})
                     .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
@@ -1003,14 +998,14 @@ public:
 /*
         if (batch_normalization)
         {
-            scales.resize(neurons_number);
-            offsets.resize(neurons_number);
-            moving_means.resize(neurons_number);
+            gammas.resize(neurons_number);
+            betas.resize(neurons_number);
+            running_means.resize(neurons_number);
             moving_standard_deviations.resize(neurons_number);
 
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Scales"), scales);
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Offsets"), offsets);
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), moving_means);
+            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Scales"), gammas);
+            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Offsets"), betas);
+            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), running_means);
             string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
         }
 */
@@ -1029,9 +1024,9 @@ public:
 /*
         if (batch_normalization)
         {
-            add_xml_element(printer, "Scales", tensor_to_string<type, 1>(scales));
-            add_xml_element(printer, "Offsets", tensor_to_string<type, 1>(offsets));
-            add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(moving_means));
+            add_xml_element(printer, "Scales", tensor_to_string<type, 1>(gammas));
+            add_xml_element(printer, "Offsets", tensor_to_string<type, 1>(betas));
+            add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(running_means));
             add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
         }
 */
@@ -1069,7 +1064,7 @@ public:
     {
         if (batch_normalization)
         {
-            CHECK_CUDA(cudaMemcpy(bn_running_mean_device, moving_means.data(), moving_means.size() * sizeof(type), cudaMemcpyHostToDevice));
+            CHECK_CUDA(cudaMemcpy(bn_running_mean_device, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
             Tensor1 moving_variances = moving_standard_deviations.square();
             CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
         }
@@ -1080,7 +1075,7 @@ public:
     {
         if (batch_normalization)
         {
-            CHECK_CUDA(cudaMemcpy(moving_means.data(), bn_running_mean_device, moving_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
+            CHECK_CUDA(cudaMemcpy(running_means.data(), bn_running_mean_device, running_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
             Tensor1 moving_variances(moving_standard_deviations.size());
             CHECK_CUDA(cudaMemcpy(moving_variances.data(), bn_running_variance_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
             moving_standard_deviations = moving_variances.sqrt();
@@ -1153,7 +1148,8 @@ public:
                 bn_status = cudnnBatchNormalizationForwardTraining(
                     cudnn_handle,
                     CUDNN_BATCHNORM_PER_ACTIVATION,
-                    &alpha, &beta_add,
+                    &alpha,
+                    &beta_add,
                     outputs.descriptor,
                     outputs_buffer,
                     outputs.descriptor,
@@ -1460,10 +1456,10 @@ private:
     TensorView biases;
     TensorView weights;
 
-    TensorView scales;
-    TensorView offsets;
+    TensorView gammas;
+    TensorView betas;
 
-    Tensor1 moving_means;
+    Tensor1 running_means;
     Tensor1 moving_standard_deviations;
 
     bool batch_normalization = false;
