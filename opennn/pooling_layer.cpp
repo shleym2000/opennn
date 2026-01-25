@@ -575,17 +575,14 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
 
     // Pooling
 
-    const cudnnStatus_t status = cudnnPoolingForward(cudnn_handle,
-                                               pooling_descriptor,
-                                               &alpha,
-                                               input_tensor_descriptor,
-                                               inputs_device[0].data,
-                                               &beta,
-                                               output_tensor_descriptor,
-                                               outputs);
-
-    if (status != CUDNN_STATUS_SUCCESS)
-        cout << "cudnnPoolingForward failed: " << cudnnGetErrorString(status) << endl;
+    CHECK_CUDNN(cudnnPoolingForward(cudnn_handle,
+                                    pooling_descriptor,
+                                    &alpha,
+                                    input_tensor_descriptor,
+                                    inputs_device[0].data,
+                                    &beta,
+                                    output_tensor_descriptor,
+                                    outputs));
 }
 
 
@@ -609,21 +606,18 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
 
     // Pooling
 
-    const cudnnStatus_t status = cudnnPoolingBackward(cudnn_handle,
-                                                      pooling_descriptor,
-                                                      &alpha,
-                                                      outputs_view.descriptor,
-                                                      outputs_view.data,
-                                                      outputs_view.descriptor,
-                                                      deltas_device[0].data,
-                                                      input_tensor_descriptor,
-                                                      inputs_device[0].data,
-                                                      &beta,
-                                                      input_tensor_descriptor,
-                                                      input_deltas);
-
-    if (status != CUDNN_STATUS_SUCCESS)
-        cout << "cudnnPoolingBackward failed: " << cudnnGetErrorString(status) << endl;
+    CHECK_CUDNN(cudnnPoolingBackward(cudnn_handle,
+                                     pooling_descriptor,
+                                     &alpha,
+                                     outputs_view.descriptor,
+                                     outputs_view.data,
+                                     outputs_view.descriptor,
+                                     deltas_device[0].data,
+                                     input_tensor_descriptor,
+                                     inputs_device[0].data,
+                                     &beta,
+                                     input_tensor_descriptor,
+                                     input_deltas));
 }
 
 

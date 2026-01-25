@@ -89,16 +89,17 @@
         }                                                                         \
     } while (0)
 
-#define CHECK_CUDA_ERROR(message)                                       \
-    do {                                                                \
-        cudaError_t error = cudaGetLastError();                         \
-        if (error != cudaSuccess) {                                     \
-            std::cerr << "CUDA Error after " << message << ": "         \
-                      << cudaGetErrorString(error) << " (" << error     \
-                      << ")" << std::endl;                              \
-        }                                                               \
-    } while (0)
-
+#define CHECK_CUDNN(call) do \
+{ \
+        cudnnStatus_t status = call; \
+        if (status != CUDNN_STATUS_SUCCESS) \
+    { \
+            string error_msg = std::string("cuDNN Error: ") + cudnnGetErrorString(status) + \
+              " in " + __FILE__ + ":" + std::to_string(__LINE__); \
+            fprintf(stderr, "%s\n", error_msg.c_str()); \
+            throw runtime_error(error_msg); \
+    } \
+} while(0)
 #endif
 
 using namespace std;

@@ -477,7 +477,7 @@ public:
             gammas.dims = {outputs_number};
             betas.dims = {outputs_number};
             running_means.resize(outputs_number);
-            moving_standard_deviations.resize(outputs_number);
+            running_standard_deviations.resize(outputs_number);
         }
 
         set_label(new_label);
@@ -728,7 +728,7 @@ public:
                 tensor_map<1>(dense_forward_propagation->means),
                 tensor_map<1>(dense_forward_propagation->standard_deviations),
                 running_means,
-                moving_standard_deviations,
+                running_standard_deviations,
                 tensor_map<1>(gammas),
                 tensor_map<1>(betas),
                 is_training,
@@ -995,20 +995,15 @@ public:
         if (bn_element && bn_element->GetText())
             use_batch_normalization = (string(bn_element->GetText()) == "true");
         set_batch_normalization(use_batch_normalization);      
-/*
+
         if (batch_normalization)
         {
-            gammas.resize(neurons_number);
-            betas.resize(neurons_number);
             running_means.resize(neurons_number);
-            moving_standard_deviations.resize(neurons_number);
+            running_standard_deviations.resize(neurons_number);
 
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Scales"), gammas);
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "Offsets"), betas);
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingMeans"), running_means);
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "MovingStandardDeviations"), moving_standard_deviations);
+            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "RunningMeans"), running_means);
+            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "RunningStandardDeviations"), running_standard_deviations);
         }
-*/
     }
 
 
@@ -1021,15 +1016,13 @@ public:
         add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
         add_xml_element(printer, "Activation", activation_function);
         add_xml_element(printer, "BatchNormalization", batch_normalization ? "true" : "false");
-/*
+
         if (batch_normalization)
         {
-            add_xml_element(printer, "Scales", tensor_to_string<type, 1>(gammas));
-            add_xml_element(printer, "Offsets", tensor_to_string<type, 1>(betas));
-            add_xml_element(printer, "MovingMeans", tensor_to_string<type, 1>(running_means));
-            add_xml_element(printer, "MovingStandardDeviations", tensor_to_string<type, 1>(moving_standard_deviations));
+            add_xml_element(printer, "RunningMeans", tensor_to_string<type, 1>(running_means));
+            add_xml_element(printer, "RunningStandardDeviations", tensor_to_string<type, 1>(running_standard_deviations));
         }
-*/
+
         printer.CloseElement();
     }
 
@@ -1052,34 +1045,31 @@ public:
 
     void allocate_parameters_device()
     {
-        if (batch_normalization)
-        {
-            CHECK_CUDA(cudaMalloc(&bn_running_mean_device, outputs_number * sizeof(float)));
-            CHECK_CUDA(cudaMalloc(&bn_running_variance_device, outputs_number * sizeof(float)));
-        }
+        if (!batch_normalization) return;
+
+        CHECK_CUDA(cudaMalloc(&bn_running_mean_device, outputs_number * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&bn_running_variance_device, outputs_number * sizeof(float)));
     }
 
 
     void copy_parameters_device()
     {
-        if (batch_normalization)
-        {
-            CHECK_CUDA(cudaMemcpy(bn_running_mean_device, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
-            Tensor1 moving_variances = moving_standard_deviations.square();
-            CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
-        }
+        if (!batch_normalization) return;
+
+        CHECK_CUDA(cudaMemcpy(bn_running_mean_device, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
+        Tensor1 moving_variances = running_standard_deviations.square();
+        CHECK_CUDA(cudaMemcpy(bn_running_variance_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
 
 
     void copy_parameters_host()
     {
-        if (batch_normalization)
-        {
-            CHECK_CUDA(cudaMemcpy(running_means.data(), bn_running_mean_device, running_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
-            Tensor1 moving_variances(moving_standard_deviations.size());
-            CHECK_CUDA(cudaMemcpy(moving_variances.data(), bn_running_variance_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
-            moving_standard_deviations = moving_variances.sqrt();
-        }
+        if (!batch_normalization) return;
+
+        CHECK_CUDA(cudaMemcpy(running_means.data(), bn_running_mean_device, running_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
+        Tensor1 moving_variances(running_standard_deviations.size());
+        CHECK_CUDA(cudaMemcpy(moving_variances.data(), bn_running_variance_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
+        running_standard_deviations = moving_variances.sqrt();
     }
 
 
@@ -1125,27 +1115,18 @@ public:
                     outputs_buffer,
                     batch_size);
 
-        cudnnStatus_t status = cudnnAddTensor(cudnn_handle,
-                                              &alpha,
-                                              biases_device.descriptor,
-                                              biases_device.data,
-                                              &beta_add,
-                                              biases_add_tensor_descriptor,
-                                              outputs_buffer);
-
-        if (status != CUDNN_STATUS_SUCCESS)
-            cerr << "Dense CUDA: cudnnAddTensor failed. Error: " << cudnnGetErrorString(status) << endl;
+        CHECK_CUDNN(cudnnAddTensor(cudnn_handle,
+                                   &alpha,
+                                   biases_device.descriptor,
+                                   biases_device.data,
+                                   &beta_add,
+                                   biases_add_tensor_descriptor,
+                                   outputs_buffer));
 
         // Batch Normalization
 
-        if (batch_normalization)
-        {
-            cudnnStatus_t bn_status;
-            constexpr type epsilon = numeric_limits<type>::epsilon();
-
-            if (is_training)
-            {
-                bn_status = cudnnBatchNormalizationForwardTraining(
+        if (batch_normalization && is_training)
+                CHECK_CUDNN(cudnnBatchNormalizationForwardTraining(
                     cudnn_handle,
                     CUDNN_BATCHNORM_PER_ACTIVATION,
                     &alpha,
@@ -1160,16 +1141,12 @@ public:
                     momentum,
                     bn_running_mean_device,
                     bn_running_variance_device,
-                    epsilon,
+                    numeric_limits<type>::epsilon(),
                     dense_layer_forward_propagation_cuda->bn_saved_mean,
-                    dense_layer_forward_propagation_cuda->bn_saved_inv_variance);
+                    dense_layer_forward_propagation_cuda->bn_saved_inv_variance));
 
-                if (bn_status != CUDNN_STATUS_SUCCESS)
-                    cout << "cudnnBatchNormalizationForwardTraining failed: " << cudnnGetErrorString(bn_status) << endl;
-            }
-            else
-            {
-                bn_status = cudnnBatchNormalizationForwardInference(
+        else if (batch_normalization && !is_training)
+                CHECK_CUDNN(cudnnBatchNormalizationForwardInference(
                     cudnn_handle,
                     CUDNN_BATCHNORM_PER_ACTIVATION,
                     &alpha, &beta_add,
@@ -1182,12 +1159,7 @@ public:
                     offsets_device.data,
                     bn_running_mean_device,
                     bn_running_variance_device,
-                    epsilon);
-
-                if (bn_status != CUDNN_STATUS_SUCCESS)
-                    cout << "cudnnBatchNormalizationForwardInference failed: " << cudnnGetErrorString(bn_status) << endl;
-            }
-        }
+                    numeric_limits<type>::epsilon()));
 
         // Activations
 
@@ -1216,19 +1188,15 @@ public:
         // Droput
 
         if (is_training && activation_function != "Softmax" && get_dropout_rate() > type(0))
-        {
-            status = cudnnDropoutForward(cudnn_handle,
-                                         dense_layer_forward_propagation_cuda->dropout_descriptor,
-                                         outputs.descriptor,
-                                         outputs.data,
-                                         outputs.descriptor,
-                                         outputs.data,
-                                         dense_layer_forward_propagation_cuda->dropout_reserve_space,
-                                         dense_layer_forward_propagation_cuda->dropout_reserve_space_size);
+            CHECK_CUDNN(cudnnDropoutForward(cudnn_handle,
+                                            dense_layer_forward_propagation_cuda->dropout_descriptor,
+                                            outputs.descriptor,
+                                            outputs.data,
+                                            outputs.descriptor,
+                                            outputs.data,
+                                            dense_layer_forward_propagation_cuda->dropout_reserve_space,
+                                            dense_layer_forward_propagation_cuda->dropout_reserve_space_size));
 
-            if (status != CUDNN_STATUS_SUCCESS)
-                cout << "cudnnDropoutForward failed: " << cudnnGetErrorString(status) << endl;
-        }
     }
 
 
@@ -1270,68 +1238,52 @@ public:
         // Dropout
 
         if (get_dropout_rate() > type(0) && activation_function != "Softmax")
-        {
-            const cudnnStatus_t status = cudnnDropoutBackward(cudnn_handle,
-                                                        dense_layer_forward_propagation_cuda->dropout_descriptor,
-                                                        deltas_tensor_descriptor,
-                                                        deltas_device[0].data,
-                                                        deltas_tensor_descriptor,
-                                                        deltas_device[0].data,
-                                                        dense_layer_forward_propagation_cuda->dropout_reserve_space,
-                                                        dense_layer_forward_propagation_cuda->dropout_reserve_space_size);
-
-            if (status != CUDNN_STATUS_SUCCESS)
-                cout << "cudnnDropoutBackward failed: " << cudnnGetErrorString(status) << endl;
-        }
+            CHECK_CUDNN(cudnnDropoutBackward(cudnn_handle,
+                                             dense_layer_forward_propagation_cuda->dropout_descriptor,
+                                             deltas_tensor_descriptor,
+                                             deltas_device[0].data,
+                                             deltas_tensor_descriptor,
+                                             deltas_device[0].data,
+                                             dense_layer_forward_propagation_cuda->dropout_reserve_space,
+                                             dense_layer_forward_propagation_cuda->dropout_reserve_space_size));
 
         // Error combinations derivatives
 
         if (dense_layer->get_activation_function() != "Linear" && dense_layer->get_activation_function() != "Softmax")
-        {
             if (use_combinations)
-            {
-                const cudnnStatus_t status = cudnnActivationBackward(cudnn_handle,
-                                                               activation_descriptor,
-                                                               &alpha,
-                                                               deltas_tensor_descriptor,
-                                                               outputs_view.data,
-                                                               deltas_tensor_descriptor,
-                                                               deltas_device[0].data,
-                                                               deltas_tensor_descriptor,
-                                                               combinations,
-                                                               &beta,
-                                                               deltas_tensor_descriptor,
-                                                               deltas_device[0].data);
+                CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
+                                                    activation_descriptor,
+                                                    &alpha,
+                                                    deltas_tensor_descriptor,
+                                                    outputs_view.data,
+                                                    deltas_tensor_descriptor,
+                                                    deltas_device[0].data,
+                                                    deltas_tensor_descriptor,
+                                                    combinations,
+                                                    &beta,
+                                                    deltas_tensor_descriptor,
+                                                    deltas_device[0].data));
 
-                if (status != CUDNN_STATUS_SUCCESS)
-                    cout << "cudnnActivationBackward failed: " << cudnnGetErrorString(status) << endl;
-            }
             else
-            {
-                const cudnnStatus_t status = cudnnActivationBackward(cudnn_handle,
-                                                               activation_descriptor,
-                                                               &alpha,
-                                                               deltas_tensor_descriptor,
-                                                               outputs_view.data,
-                                                               deltas_tensor_descriptor,
-                                                               deltas_device[0].data,
-                                                               deltas_tensor_descriptor,
-                                                               outputs_view.data,
-                                                               &beta,
-                                                               deltas_tensor_descriptor,
-                                                               deltas_device[0].data);
-
-                if (status != CUDNN_STATUS_SUCCESS)
-                    cout << "cudnnActivationBackward failed: " << cudnnGetErrorString(status) << endl;
-            }
+                CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
+                                                    activation_descriptor,
+                                                    &alpha,
+                                                    deltas_tensor_descriptor,
+                                                    outputs_view.data,
+                                                    deltas_tensor_descriptor,
+                                                    deltas_device[0].data,
+                                                    deltas_tensor_descriptor,
+                                                    outputs_view.data,
+                                                    &beta,
+                                                    deltas_tensor_descriptor,
+                                                    deltas_device[0].data));
         }
 
         // Batch Normalization
         constexpr type epsilon = numeric_limits<type>::epsilon();
 
         if (batch_normalization)
-        {
-            const cudnnStatus_t bn_status = cudnnBatchNormalizationBackward(
+            CHECK_CUDNN(cudnnBatchNormalizationBackward(
                 cudnn_handle,
                 CUDNN_BATCHNORM_PER_ACTIVATION,
                 &alpha, &beta,
@@ -1348,11 +1300,7 @@ public:
                 dense_layer_back_propagation->offsets_deltas_device.data,
                 epsilon,
                 dense_layer_forward_propagation_cuda->bn_saved_mean,
-                dense_layer_forward_propagation_cuda->bn_saved_inv_variance);
-
-            if (bn_status != CUDNN_STATUS_SUCCESS)
-                cout << "cudnnBatchNormalizationBackward failed: " << cudnnGetErrorString(bn_status) << endl;
-        }
+                dense_layer_forward_propagation_cuda->bn_saved_inv_variance));
 
         // Bias derivatives
 
@@ -1460,7 +1408,7 @@ private:
     TensorView betas;
 
     Tensor1 running_means;
-    Tensor1 moving_standard_deviations;
+    Tensor1 running_standard_deviations;
 
     bool batch_normalization = false;
 
@@ -1470,7 +1418,6 @@ private:
 
     type dropout_rate = type(0);
 };
-
 
 void reference_dense_layer();
 

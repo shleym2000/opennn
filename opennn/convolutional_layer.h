@@ -171,7 +171,7 @@ private:
     bool batch_normalization = false;
 
     Tensor1 running_means;
-    Tensor1 moving_standard_deviations;
+    Tensor1 running_standard_deviations;
 
     type momentum = type(0.9);
 
