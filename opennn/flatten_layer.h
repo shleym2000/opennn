@@ -236,7 +236,7 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
 
     void print() const override
     {
-        cout << "Flatten Outputs:" << endl << outputs.dims << endl;
+        cout << "Flatten Outputs Dimensions:" << endl << outputs.dims << endl;
     }
 };
 
@@ -251,20 +251,26 @@ struct FlattenBackPropagation final : LayerBackPropagation
 
     void initialize() override
     {
-        const Flatten<Rank>* layer_ptr = static_cast<const Flatten<Rank>*>(layer);
-        const dimensions input_dimensions = layer_ptr->get_input_dimensions();
+        const Flatten<Rank>* flatten_layer = static_cast<const Flatten<Rank>*>(layer);
+
+        const dimensions input_dims = flatten_layer->get_input_dimensions();
 
         dimensions full_dims = { batch_size };
-        full_dims.insert(full_dims.end(), input_dimensions.begin(), input_dimensions.end());
+        full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
+
+        input_deltas_tensor.resize(full_dims);
 
         input_deltas.resize(1);
+        input_deltas[0].data = input_deltas_tensor.data();
         input_deltas[0].dims = full_dims;
     }
 
     void print() const override
     {
-        cout << "Flatten Input derivatives:" << endl << input_deltas[0].dims << endl;
+        cout << "Flatten Deltas Dimensions:" << endl << input_deltas[0].dims << endl;
     }
+
+    Tensor<type, Rank> input_deltas_tensor;
 };
 
 
@@ -292,11 +298,6 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
         outputs.set_descriptor({static_cast<Index>(batch_size), outputs_number});
     }
 
-    vector<TensorViewCuda*> get_tensor_views_device() override
-    {
-        return { &outputs };
-    }
-
     void free() override
     {
         outputs.data = nullptr;
@@ -321,25 +322,15 @@ struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const dimensions input_dims = layer->get_input_dimensions();
-
-        dimensions full_input_dims = { static_cast<Index>(batch_size) };
-        full_input_dims.insert(full_input_dims.end(), input_dims.begin(), input_dims.end());
-
         input_deltas.resize(1);
-        input_deltas[0].set_descriptor(full_input_dims);
-    }
-
-    vector<TensorViewCuda*> get_tensor_views_device() override
-    {
-        return { &input_deltas[0] };
+        CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * layer->get_inputs_number() * sizeof(float)));
+        input_deltas[0].set_descriptor({ static_cast<Index>(batch_size), layer->get_inputs_number(), 1, 1 });
     }
 
     void free() override
     {
         input_deltas[0].data = nullptr;
         cudnnDestroyTensorDescriptor(input_deltas[0].descriptor);
-        input_deltas[0].descriptor = nullptr;
     }
 };
 

@@ -31,9 +31,9 @@ struct ForwardPropagation
 
     ForwardPropagation(const Index& = 0, NeuralNetwork* = nullptr);
 
-    vector<vector<TensorView*>> get_layer_workspace_views();
+    void set(const Index & = 0, NeuralNetwork* = nullptr);
 
-    void set(const Index& = 0, NeuralNetwork* = nullptr);
+    vector<vector<TensorView*>> get_layer_workspace_views();
 
     TensorView get_last_trainable_layer_outputs_view() const;
 
@@ -66,13 +66,15 @@ struct ForwardPropagationCuda
 
     void set(const Index & = 0, NeuralNetwork* = nullptr);
 
+    vector<vector<TensorViewCuda*>> get_layer_workspace_views_device();
+
     TensorViewCuda get_last_trainable_layer_outputs_view_device() const;
 
     vector<vector<TensorViewCuda>> get_layer_input_views_device(const vector<TensorViewCuda>&, const bool&) const;
 
     TensorViewCuda get_outputs()
     {
-        return layers.back()->get_outputs_view_device();
+        return layers.back()->get_outputs_device();
     }
 
     void print();
@@ -105,17 +107,7 @@ public:
     void add_layer(unique_ptr<Layer>,
                   const vector<Index>& = vector<Index>());
 
-    vector<vector<TensorView*>> get_layer_parameter_views()
-    {
-        const Index layers_number = get_layers_number();
-
-        vector<vector<TensorView*>> layer_parameter_views(layers_number);
-
-        for(Index i = 0; i < layers_number; i++)
-            layer_parameter_views[i] = layers[i]->get_parameter_views();
-
-        return layer_parameter_views;
-    }
+    vector<vector<TensorView*>> get_layer_parameter_views();
 
     void compile();
 
@@ -304,6 +296,8 @@ public:
     void create_cuda() const;
     void destroy_cuda() const;
 
+    vector<vector<TensorViewCuda*>> get_layer_parameter_views_device();
+
     void allocate_parameters_device();
     void free_parameters_device();
     void copy_parameters_device();
@@ -378,6 +372,8 @@ struct NeuralNetworkBackPropagationCuda
     void set(const Index& = 0, NeuralNetwork* = nullptr);
 
     const vector<unique_ptr<LayerBackPropagationCuda>>& get_layers() const;
+
+    vector<vector<TensorViewCuda*>> get_layer_workspace_views_device();
 
     void print();
 

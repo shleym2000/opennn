@@ -537,11 +537,6 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
         CHECK_CUDA(cudaMemcpy(scalers_device, scalers_host_tensor.data(), outputs_number * sizeof(int), cudaMemcpyHostToDevice));
     }
 
-    vector<TensorViewCuda*> get_tensor_views_device() override
-    {
-        return { &outputs };
-    }
-
     void print() const override
     {
         const Index outputs_number = layer->get_outputs_number();

@@ -75,12 +75,12 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Scaling<2>>(input_dimensions));
 
-    for(Index i = 0; i < complexity_size; i++)
+    /*for(Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{complexity_dimensions[i]},
                                        "HyperbolicTangent",
                                        false,
-                                       "dense2d_layer_" + to_string(i + 1)));
+                                       "dense2d_layer_" + to_string(i + 1)));*/
 
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,

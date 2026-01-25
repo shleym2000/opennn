@@ -1619,7 +1619,7 @@ vector<vector<TensorViewCuda>> BackPropagationCuda::get_layer_delta_views_device
             const Index output_index = layer_output_indices[i][j];
             const Index input_index = neural_network_ptr->find_input_index(layer_input_indices[output_index], i);
 
-            input_derivative_views = layer_back_propagations[output_index]->get_input_deltas();
+            input_derivative_views = layer_back_propagations[output_index]->get_input_deltas_device();
 
             layer_delta_views[i].push_back(input_derivative_views[input_index]);
         }

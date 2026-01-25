@@ -1074,10 +1074,10 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
 
 vector<TensorViewCuda*> Convolutional::get_parameter_views_device()
 {
-    vector<TensorViewCuda*> views = { &biases_device, &weights_device };
+    vector<TensorViewCuda*> views_device = { &biases_device, &weights_device };
 
     if (batch_normalization)
-        views.insert(views.end(), {&scales_device, &offsets_device});
+        views_device.insert(views_device.end(), {&scales_device, &offsets_device});
 
     return views_device;
 }
@@ -1445,7 +1445,7 @@ void ConvolutionalBackPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_tensor_views_device()
+vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views_device()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
     /*
