@@ -547,8 +547,6 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        outputs.data = nullptr;
-
         cudaFree(scalers_device);
         scalers_device = nullptr;
 

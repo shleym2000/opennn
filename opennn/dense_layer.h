@@ -240,10 +240,6 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         if (bn_saved_mean) cudaFree(bn_saved_mean);
         if (bn_saved_inv_variance) cudaFree(bn_saved_inv_variance);
 
-        outputs.data = nullptr;
-        cudnnDestroyTensorDescriptor(outputs.descriptor);
-        outputs.descriptor = nullptr;
-
         cudnnDestroyTensorDescriptor(output_softmax_tensor_descriptor);
         cudnnDestroyTensorDescriptor(biases_add_tensor_descriptor);
 
