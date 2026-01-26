@@ -282,8 +282,6 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        cudaFree(outputs.data);
-        outputs.data = nullptr;
     }
 };
 

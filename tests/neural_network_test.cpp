@@ -238,7 +238,7 @@ TEST(NeuralNetworkTest, TestSaveLoad)
     const string file_path_str = "../blank/data/neural_network.xml";
     const filesystem::path file_path(file_path_str);
 
-    if (!filesystem::exists(file_path.parent_path()))
+    if(!filesystem::exists(file_path.parent_path()))
         filesystem::create_directories(file_path.parent_path());
   
     // Empty neural network

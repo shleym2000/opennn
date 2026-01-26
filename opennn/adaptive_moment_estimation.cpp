@@ -1,4 +1,4 @@
- //   OpenNN: Open Neural Networks Library
+//   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
 //   A D A P T I V E   M O M E N T   E S T I M A T I O N
@@ -770,10 +770,13 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_propagation_cuda,
                                                       ADAMOptimizationDataCuda& optimization_data_cuda) const
 {
-
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
 
-    //const Index layers_number = neural_network->get_layers_number();
+    const Index parameters_number = neural_network->get_parameters_number();
+
+    TensorCuda& parameters_device = neural_network->get_parameters_device();
+
+    const TensorCuda& gradient_device = back_propagation_cuda.neural_network->get_gradient_device();
 
     optimization_data_cuda.iteration++;
     const int iteration = static_cast<int>(optimization_data_cuda.iteration);
@@ -782,17 +785,18 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     const float bias_correction_2 = 1.0f - powf(beta_2, static_cast<float>(iteration));
 
     constexpr type epsilon = numeric_limits<type>::epsilon();
+
+    assert(gradient_device.size() == parameters_device.size());
+
+    // @todo do this in vector form
 /*
-    assert(parameter_views.size() == delta_views.size());
-
-    for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
+    for(Index i = 0; i < parameters_number; ++i)
     {
-        float* params_d = parameter_views_device[parameter_index]->data;
-        const Index param_size = parameter_views[parameter_index]->size();
-        const float* grads_d = delta_views[parameter_index]->data;
+        float* params_d = parameters_device[i]->data;
+        const float* grads_d = gradient_device[i]->data;
 
-        float* gradient_exponential_decay = optimization_data_cuda.gradient_exponential_decay[layer_index][parameter_index];
-        float* square_gradient_exponential_decay = optimization_data_cuda.square_gradient_exponential_decay[layer_index][parameter_index];
+        float* gradient_exponential_decay = optimization_data_cuda.gradient_exponential_decay[i];
+        float* square_gradient_exponential_decay = optimization_data_cuda.square_gradient_exponential_decay[i];
 
         adam_update_device(
             param_size,
@@ -823,72 +827,18 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
     adaptive_moment_estimation = new_adaptive_moment_estimation;
 
     NeuralNetwork* neural_network = adaptive_moment_estimation->get_loss_index()->get_neural_network();
-    const Index layers_number = neural_network->get_layers_number();
+    const Index parameters_number = neural_network->get_parameters_number();
 
-    gradient_exponential_decay.resize(layers_number);
-    square_gradient_exponential_decay.resize(layers_number);
+    gradient_exponential_decay.resize(parameters_number);
+    square_gradient_exponential_decay.resize(parameters_number);
 
-    for(Index i = 0; i < layers_number; ++i)
-    {
-        Layer* layer = neural_network->get_layer(i).get();
-
-        if(!layer->get_is_trainable())
-            continue;
-
-        const auto parameter_views = layer->get_parameter_views();
-        const size_t param_blocks_count = parameter_views.size();
-
-        gradient_exponential_decay[i].resize(param_blocks_count, nullptr);
-        square_gradient_exponential_decay[i].resize(param_blocks_count, nullptr);
-
-        for(Index j = 0; j < Index(param_blocks_count); ++j)
-        {
-            const Index param_size = parameter_views[j]->size();
-
-            if (param_size == 0) continue;
-
-            const size_t memory_size_bytes = param_size * sizeof(float);
-
-            CHECK_CUDA(cudaMalloc(&gradient_exponential_decay[i][j], memory_size_bytes));
-            //CUDA_MALLOC_AND_REPORT(gradient_exponential_decay[i][j], memory_size_bytes);
-            CHECK_CUDA(cudaMemset(gradient_exponential_decay[i][j], 0, memory_size_bytes));
-
-            CHECK_CUDA(cudaMalloc(&square_gradient_exponential_decay[i][j], memory_size_bytes));
-            //CUDA_MALLOC_AND_REPORT(square_gradient_exponential_decay[i][j], memory_size_bytes);
-            CHECK_CUDA(cudaMemset(square_gradient_exponential_decay[i][j], 0, memory_size_bytes));
-        }
-    }
+    CHECK_CUDA(cudaMemset(gradient_exponential_decay, 0, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay, 0, parameters_number * sizeof(float)));
 }
 
 
 void ADAMOptimizationDataCuda::free()
 {
-    for(auto& layer_moments : gradient_exponential_decay)
-    {
-        for(float*& ptr : layer_moments)
-        {
-            if (ptr != nullptr)
-            {
-                CHECK_CUDA(cudaFree(ptr));
-                ptr = nullptr;
-            }
-        }
-    }
-    gradient_exponential_decay.clear();
-
-    for(auto& layer_moments : square_gradient_exponential_decay)
-    {
-        for(float*& ptr : layer_moments)
-        {
-            if (ptr != nullptr)
-            {
-                CHECK_CUDA(cudaFree(ptr));
-                ptr = nullptr;
-            }
-        }
-    }
-
-    square_gradient_exponential_decay.clear();
 }
 
 
@@ -897,37 +847,6 @@ void ADAMOptimizationDataCuda::print() const
     cout << "--- ADAM Optimization Data (CUDA) ---" << endl;
 
     NeuralNetwork* neural_network = adaptive_moment_estimation->get_loss_index()->get_neural_network();
-
-    const Index layers_number = neural_network->get_layers_number();
-
-    for(Index i = 0; i < layers_number; ++i)
-    {
-        Layer* layer = neural_network->get_layer(i).get();
-
-        if(!layer->get_is_trainable())
-            continue;
-
-        cout << "Layer " << i << " (" << layer->get_name() << "):" << endl;
-
-        const vector<TensorView*> parameter_views = layer->get_parameter_views();
-
-        for(Index j = 0; j < Index(parameter_views.size()); ++j)
-        {
-            const Index param_size = parameter_views[j]->size();
-
-            if (param_size == 0) continue;
-
-            cout << "  - Parameter Block " << j << " (Size: " << param_size << "):" << endl;
-
-            cout << "    gradient_exponential_decay_host:" << endl << "      ";
-            const float* m_device_ptr = gradient_exponential_decay[i][j];
-            cout << vector_from_device(m_device_ptr, param_size) << endl;
-
-            cout << "    square_gradient_exponential_decay_host:" << endl << "      ";
-            const float* v_device_ptr = square_gradient_exponential_decay[i][j];
-            cout << vector_from_device(v_device_ptr, param_size) << endl;
-        }
-    }
 
     cout << "-----------------------------------" << endl;
 }

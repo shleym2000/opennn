@@ -367,8 +367,6 @@ void UnscalingForwardPropagationCuda::print() const
 
 void UnscalingForwardPropagationCuda::free()
 {
-    cudaFree(outputs.data);
-    outputs.data = nullptr;
 }
 
 

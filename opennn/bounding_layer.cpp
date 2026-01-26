@@ -344,8 +344,6 @@ void BoundingForwardPropagationCuda::print() const
 
 void BoundingForwardPropagationCuda::free()
 {
-    cudaFree(outputs.data);
-    outputs.data = nullptr;
 }
 
 REGISTER(LayerForwardPropagationCuda, BoundingForwardPropagationCuda, "Bounding")

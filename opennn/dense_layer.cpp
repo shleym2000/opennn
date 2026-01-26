@@ -19,8 +19,7 @@ namespace opennn
     using DenseForwardPropagation3d = DenseForwardPropagation<3>;
     using DenseBackPropagation3d = DenseBackPropagation<3>;
 
-    using DenseBackPropagationLM2d = DenseBackPropagationLM<2>;
-    using DenseBackPropagationLM3d = DenseBackPropagationLM<3>;
+    using DenseBackPropagationLM2d = DenseBackPropagationLM;
 
 #ifdef OPENNN_CUDA
     using DenseForwardPropagationCuda2d = DenseForwardPropagationCuda<2>;
@@ -53,8 +52,7 @@ namespace opennn
     template struct DenseForwardPropagation<2>;
     template struct DenseForwardPropagation<3>;
 
-    template struct DenseBackPropagationLM<2>;
-    template struct DenseBackPropagationLM<3>;
+    struct DenseBackPropagationLM;
 
     void reference_dense_layer() { }
 

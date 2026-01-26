@@ -302,7 +302,7 @@ TEST(GeneticAlgorithmTest, Mutation)
                 break;
             }
         }
-        if (!are_equal) 
+        if(!are_equal) 
             break;
     }
     EXPECT_TRUE(are_equal);

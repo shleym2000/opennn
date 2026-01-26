@@ -55,7 +55,6 @@ public:
 
     Index get_input_height() const
     {
-
         if constexpr (Rank < 2)
             throw logic_error("get_input_height() requires Rank ≥ 2.");
 
@@ -131,14 +130,16 @@ public:
 
     void from_XML(const XMLDocument& document) override
     {
-
         const XMLElement* element = document.FirstChildElement("Flatten");
-        if(!element) throw runtime_error("Flatten2d element is nullptr.\n");
+
+        if(!element)
+            throw runtime_error("Flatten2d element is nullptr.\n");
 
         const Index input_height = read_xml_index(element, "InputHeight");
         const Index input_width = read_xml_index(element, "InputWidth");
 
-        if constexpr (Rank == 3){
+        if constexpr (Rank == 3)
+        {
             const Index input_channels = read_xml_index(element, "InputChannels");
             set({input_height, input_width, input_channels});
         }
@@ -174,10 +175,7 @@ public:
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
                                 const bool&)
     {
-        FlattenForwardPropagationCuda<Rank>* fp_cuda =
-            static_cast<FlattenForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
-
-        const Index batch_size = fp_cuda->batch_size;
+        const Index batch_size = forward_propagation_cuda->batch_size;
         const Index outputs_number = get_outputs_number();
 
         if constexpr (Rank == 4)
@@ -185,6 +183,9 @@ public:
             const Index height = get_input_height();
             const Index width = get_input_width();
             const Index channels = get_input_channels();
+
+            FlattenForwardPropagationCuda<Rank>* fp_cuda =
+                static_cast<FlattenForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
 
             type* reordered_inputs = fp_cuda->reordered_inputs;
             type* outputs_device = fp_cuda->outputs.data;
@@ -194,7 +195,9 @@ public:
             reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
         }
         else
-            CHECK_CUDA(cudaMemcpy(fp_cuda->outputs.data, inputs_device[0].data, batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice));
+            CHECK_CUDA(cudaMemcpy(forward_propagation_cuda->outputs.data,
+                                  inputs_device[0].data, batch_size * outputs_number * sizeof(type),
+                                  cudaMemcpyDeviceToDevice));
     }
 
 
@@ -253,16 +256,14 @@ struct FlattenBackPropagation final : LayerBackPropagation
     {
         const Flatten<Rank>* flatten_layer = static_cast<const Flatten<Rank>*>(layer);
 
-        const dimensions input_dims = flatten_layer->get_input_dimensions();
+        const dimensions input_shape = flatten_layer->get_input_dimensions();
 
-        dimensions full_dims = { batch_size };
-        full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
+        dimensions full_dimensions = { batch_size };
+        full_dimensions.insert(full_dimensions.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_tensor.resize(full_dims);
+        input_deltas_tensor.resize(full_dimensions);
 
-        input_deltas.resize(1);
-        input_deltas[0].data = input_deltas_tensor.data();
-        input_deltas[0].dims = full_dims;
+        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_dimensions));
     }
 
     void print() const override
@@ -300,10 +301,6 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void free() override
     {
-        outputs.data = nullptr;
-        cudnnDestroyTensorDescriptor(outputs.descriptor);
-        outputs.descriptor = nullptr;
-
         cudaFree(reordered_inputs);
         reordered_inputs = nullptr;
     }

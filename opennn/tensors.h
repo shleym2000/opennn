@@ -457,15 +457,11 @@ struct TensorViewCuda
         if (dims.size() > 2) h = static_cast<int>(dims[2]);
         if (dims.size() > 3) w = static_cast<int>(dims[3]);
 
-        cudnnStatus_t status = cudnnSetTensor4dDescriptor(
+        CHECK_CUDNN(cudnnSetTensor4dDescriptor(
             descriptor,
             CUDNN_TENSOR_NCHW,
             CUDNN_DATA_FLOAT,
-            n, c, h, w
-            );
-
-        if (status != CUDNN_STATUS_SUCCESS)
-            throw runtime_error("TensorViewCuda: Failed to set 4D descriptor.");
+            n, c, h, w));
     }
 
     Index size() const
@@ -480,17 +476,13 @@ struct TensorViewCuda
         int dimA[REQUESTED_DIMS];
         int strideA[REQUESTED_DIMS];
 
-        cudnnStatus_t status = cudnnGetTensorNdDescriptor(
+        CHECK_CUDNN(cudnnGetTensorNdDescriptor(
             descriptor,
             REQUESTED_DIMS,
             &dataType,
             &nbDims,
             dimA,
-            strideA
-        );
-
-        if (status != CUDNN_STATUS_SUCCESS)
-            throw runtime_error(string("TensorViewCuda::size(): Failed to get descriptor info. Error: ") + cudnnGetErrorString(status));
+            strideA));
 
         Index total_elements = 1;
         for(int i = 0; i < nbDims; ++i)

@@ -57,7 +57,7 @@ int main()
         Tensor<type, 1> single_output = output_tensor.chip(0, 0);
 
         Index predicted_class = 0;
-        for (Index i = 1; i < single_output.size(); ++i)
+        for(Index i = 1; i < single_output.size(); ++i)
             if (single_output(i) > single_output(predicted_class))
                 predicted_class = i;
 

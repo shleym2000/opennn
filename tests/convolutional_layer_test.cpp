@@ -128,7 +128,7 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
     EXPECT_EQ(output_view.dims[2], expected_output_dims[1]);
     EXPECT_EQ(output_view.dims[3], expected_output_dims[2]);
 
-    if (!parameters.batch_normalization && parameters.activation_function == "Linear")
+    if(!parameters.batch_normalization && parameters.activation_function == "Linear")
     {
         const Index kernel_height = parameters.kernel_dimensions[0];
         const Index kernel_width = parameters.kernel_dimensions[1];

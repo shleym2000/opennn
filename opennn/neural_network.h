@@ -296,6 +296,11 @@ public:
     void create_cuda() const;
     void destroy_cuda() const;
 
+    TensorCuda& parameters_device get_parameters_device()
+    {
+        return &parameters_device;
+    }
+
     vector<vector<TensorViewCuda*>> get_layer_parameter_views_device();
 
     void allocate_parameters_device();
@@ -309,12 +314,14 @@ public:
 
     TensorViewCuda calculate_outputs_cuda(TensorViewCuda, const Index&);
 
+
+
 protected:
 
     cublasHandle_t cublas_handle;
     cudnnHandle_t cudnn_handle;
 
-    float* parameters_device = nullptr;
+    TensorCuda parameters_device;
 
 #endif
 

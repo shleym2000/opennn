@@ -124,7 +124,7 @@ struct SGDOptimizationDataCuda final : public OptimizationAlgorithmData
 
     Index iteration = 0;
 
-    vector<vector<float*>> velocity;
+    TensorCuda velocity;
 };
 
 #endif
