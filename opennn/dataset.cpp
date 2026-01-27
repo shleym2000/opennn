@@ -4541,7 +4541,6 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
 
         CHECK_CUDA(cudaMallocHost(&inputs_host, input_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&inputs_device, input_size * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(inputs_device, input_size * sizeof(float));
     }
     /*
     if(!data_set_decoder_dimensions.empty())
@@ -4565,7 +4564,6 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
 
         CHECK_CUDA(cudaMallocHost(&targets_host, target_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&targets_device, target_size * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(targets_device, target_size * sizeof(float));
     }
 }
 
@@ -4624,7 +4622,7 @@ Tensor2 BatchCuda::get_targets_device() const
 
 vector<TensorViewCuda> BatchCuda::get_input_views_device() const
 {
-    vector<TensorViewCuda> input_views = {{inputs_device, input_descriptor}};
+    vector<TensorViewCuda> input_views = {{inputs_device, nullptr}};
 
     return input_views;
 }

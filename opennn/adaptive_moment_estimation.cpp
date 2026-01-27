@@ -222,9 +222,9 @@ TrainingResults AdaptiveMomentEstimation::train()
     for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
     {
         if(display && epoch%display_period == 0) cout << "Epoch: " << epoch << endl;
-
+        
         training_batches = dataset->get_batches(training_samples_indices, training_batch_samples_number, shuffle);
-
+        
         training_error = type(0);
 
         if(is_classification_model) training_accuracy = type(0);
@@ -232,20 +232,20 @@ TrainingResults AdaptiveMomentEstimation::train()
         for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {
             // Dataset
-
+         
             training_batch.fill(training_batches[iteration],
                                 input_variable_indices,
                                 // decoder_variable_indices,
                                 target_variable_indices);
 
             // Neural network
-
+      
             neural_network->forward_propagate(training_batch.get_input_views(),
                                               training_forward_propagation,
                                               is_training);
 
             // Loss index
-
+     
             loss_index->back_propagate(training_batch,
                                        training_forward_propagation,
                                        training_back_propagation);

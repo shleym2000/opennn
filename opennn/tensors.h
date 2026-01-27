@@ -417,17 +417,6 @@ struct TensorViewCuda
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
 
-    ~TensorViewCuda()
-    {
-        data = nullptr;
-
-        if (descriptor)
-        {
-            cudnnDestroyTensorDescriptor(descriptor);
-            descriptor = nullptr;
-        }
-    }
-
     void set_descriptor(const dimensions& dims)
     {
         if (descriptor == nullptr)

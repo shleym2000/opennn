@@ -1663,7 +1663,7 @@ void NeuralNetwork::forward_propagate_cuda(const vector<TensorViewCuda>& input_v
     const vector<vector<TensorViewCuda>> layer_input_views_device
         = forward_propagation_cuda.get_layer_input_views_device(input_views_device, is_training);
 
-    for(Index i = first_layer_index; i <= last_layer_index; i++)
+    for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate_cuda(layer_input_views_device[i],
                                           forward_propagation_cuda.layers[i],
                                           is_training);

@@ -691,8 +691,6 @@ struct BatchCuda
     float* inputs_device = nullptr;
     float* decoder_device = nullptr;
     float* targets_device = nullptr;
-
-    cudnnTensorDescriptor_t input_descriptor;
 };
 
 #endif
