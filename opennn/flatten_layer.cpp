@@ -85,4 +85,4 @@ namespace opennn
 	// Linker fix: Ensures the static registration macros in this file are run.
 	void reference_flatten_layer() { }
 
-} // namespace opennn
+} 

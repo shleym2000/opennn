@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef ADAPTIVEMOMENTESTIMATION_H
-#define ADAPTIVEMOMENTESTIMATION_H
+#pragma once
 
 #include "optimization_algorithm.h"
 
@@ -161,5 +160,3 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
 #endif
 
 }
-
-#endif

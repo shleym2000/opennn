@@ -55,11 +55,9 @@ int main()
     const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
     cout << "\nConfusion matrix:\n" << confusion << endl;
    
-
 #ifndef OPENNN_CUDA
         cout << "Enable CUDA in pch.h" << endl;
 #endif
-
         cout << "Completed." << endl;
 
         return 0;
