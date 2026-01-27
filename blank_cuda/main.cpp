@@ -16,7 +16,7 @@ int main()
     try
     {
         cout << "OpenNN. Blank Cuda." << endl;
-
+        
         cout << "OpenNN. National Institute of Standards and Techonology (MNIST) Example." << endl;
 
         // Dataset
@@ -49,16 +49,7 @@ int main()
 #else
     training_strategy.train();
 #endif
-
-        // Testing analysis
-
-        const TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
-
-        cout << "Calculating confusion...." << endl;
-        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
-        cout << "\nConfusion matrix:\n" << confusion << endl;
-
-        cout << "Bye!" << endl;
+   
 
 #ifndef OPENNN_CUDA
         cout << "Enable CUDA in pch.h" << endl;

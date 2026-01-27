@@ -145,8 +145,8 @@ protected:
     TensorViewCuda scales_device;
     TensorViewCuda offsets_device;
 
-    TensorCuda running_means_device;
-    TensorCuda running_variances_device;
+    TensorViewCuda running_means_device;
+    TensorViewCuda running_variances_device;
 
     // Activations
 

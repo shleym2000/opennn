@@ -227,7 +227,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_batch_normalization())
         {
-            CHECK_CUDA(cudaMalloc(&bn_saved_mean, outputs_number * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&batch_means, outputs_number * sizeof(float)));
             CHECK_CUDA(cudaMalloc(&bn_saved_inv_variance, outputs_number * sizeof(float)));
         }
     }
@@ -237,7 +237,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         if (combinations) cudaFree(combinations);
         if (dropout_states) cudaFree(dropout_states);
         if (dropout_reserve_space) cudaFree(dropout_reserve_space);
-        if (bn_saved_mean) cudaFree(bn_saved_mean);
+        if (batch_means) cudaFree(batch_means);
         if (bn_saved_inv_variance) cudaFree(bn_saved_inv_variance);
 
         cudnnDestroyTensorDescriptor(output_softmax_tensor_descriptor);
@@ -483,6 +483,7 @@ public:
 #ifdef OPENNN_CUDA
 
         biases_device.set_descriptor({1, outputs_number, 1, 1});
+        weights_device.set_descriptor({ new_input_dimensions[0], outputs_number, 1, 1 });
 
         if (batch_normalization)
         {
@@ -1030,8 +1031,8 @@ public:
     {
         if (!batch_normalization) return;
 
-        CHECK_CUDA(cudaMalloc(&running_means_device, outputs_number * sizeof(float)));
-        CHECK_CUDA(cudaMalloc(&running_variances_device, outputs_number * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&running_means_device.data, outputs_number * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&running_variances_device.data, outputs_number * sizeof(float)));
     }
 
 
@@ -1039,9 +1040,9 @@ public:
     {
         if (!batch_normalization) return;
 
-        CHECK_CUDA(cudaMemcpy(running_means_device, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(running_means_device.data, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
         Tensor1 moving_variances = running_standard_deviations.square();
-        CHECK_CUDA(cudaMemcpy(running_variances_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(running_variances_device.data, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
 
 
@@ -1049,9 +1050,9 @@ public:
     {
         if (!batch_normalization) return;
 
-        CHECK_CUDA(cudaMemcpy(running_means.data(), running_means_device, running_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(running_means.data(), running_means_device.data, running_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
         Tensor1 moving_variances(running_standard_deviations.size());
-        CHECK_CUDA(cudaMemcpy(moving_variances.data(), running_variances_device, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(moving_variances.data(), running_variances_device.data, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
         running_standard_deviations = moving_variances.sqrt();
     }
 
@@ -1122,10 +1123,10 @@ public:
                     scales_device.data,
                     offsets_device.data,
                     momentum,
-                    running_means_device,
-                    running_variances_device,
+                    running_means_device.data,
+                    running_variances_device.data,
                     numeric_limits<type>::epsilon(),
-                    dense_layer_forward_propagation_cuda->bn_saved_mean,
+                    dense_layer_forward_propagation_cuda->batch_means,
                     dense_layer_forward_propagation_cuda->bn_saved_inv_variance));
         else if (batch_normalization && !is_training)
                 CHECK_CUDNN(cudnnBatchNormalizationForwardInference(
@@ -1139,8 +1140,8 @@ public:
                     scales_device.descriptor,
                     scales_device.data,
                     offsets_device.data,
-                    running_means_device,
-                    running_variances_device,
+                    running_means_device.data,
+                    running_variances_device.data,
                     numeric_limits<type>::epsilon()));
 
         // Activations
@@ -1231,7 +1232,7 @@ public:
 
         // Error combinations derivatives
 
-        if (activation_function != "Linear" && activation_function() != "Softmax" && use_combinations)
+        if (activation_function != "Linear" && activation_function != "Softmax" && use_combinations)
             CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
                                                 activation_descriptor,
                                                 &alpha,
@@ -1244,7 +1245,7 @@ public:
                                                 &beta,
                                                 deltas_tensor_descriptor,
                                                 deltas_device[0].data));
-        else if (activation_function != "Linear" && activation_function() != "Softmax" && !use_combinations)
+        else if (activation_function != "Linear" && activation_function != "Softmax" && !use_combinations)
             CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
                                                 activation_descriptor,
                                                 &alpha,
@@ -1279,7 +1280,7 @@ public:
                 dense_layer_back_propagation->scales_deltas_device.data,
                 dense_layer_back_propagation->offsets_deltas_device.data,
                 epsilon,
-                dense_layer_forward_propagation_cuda->bn_saved_mean,
+                dense_layer_forward_propagation_cuda->batch_means,
                 dense_layer_forward_propagation_cuda->bn_saved_inv_variance));
 
         // Bias derivatives
@@ -1338,13 +1339,13 @@ public:
         {
             cudaFree(scales_device.data);
             cudaFree(offsets_device.data);
-            cudaFree(running_means_device);
-            cudaFree(running_variances_device);
+            cudaFree(running_means_device.data);
+            cudaFree(running_variances_device.data);
 
             scales_device.data = nullptr;
             offsets_device.data = nullptr;
-            running_means_device = nullptr;
-            running_variances_device = nullptr;
+            running_means_device.data = nullptr;
+            running_variances_device.data = nullptr;
 
             cudnnDestroyTensorDescriptor(scales_device.descriptor);
             scales_device.descriptor = nullptr;
@@ -1365,8 +1366,8 @@ private:
     TensorViewCuda scales_device;
     TensorViewCuda offsets_device;
 
-    TensorCuda running_means_device;
-    TensorCuda running_variances_device;
+    TensorViewCuda running_means_device;
+    TensorViewCuda running_variances_device;
 
 #endif
 

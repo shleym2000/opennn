@@ -580,7 +580,7 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
                                     input_tensor_descriptor,
                                     inputs_device[0].data,
                                     &beta,
-                                    outputs.tensor_descriptor,
+                                    outputs.descriptor,
                                     outputs.data));
 }
 

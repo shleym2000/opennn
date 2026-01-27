@@ -765,14 +765,14 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
 
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
 
-    TensorCuda& parameters_device = neural_network.get_parameters_device();
+    float* parameters_device = neural_network->get_parameters_device();
 
     back_propagation_cuda.neural_network.workspace;
 
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data_cuda.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    const TensorCuda& delta_views = back_propagation_cuda->get_gradient_device();
+    const float* delta_views = back_propagation_cuda.neural_network.workspace;
 
     // @todo do it in vector form without loop.
 /*
@@ -811,9 +811,9 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 
     const Index parameters_number = neural_network->get_parameters_number();
 
-    velocity.resize(parameters_number);
+    //velocity.resize(parameters_number);
 
-    CHECK_CUDA(cudaMemset(velocity, 0, parameters_number * sizeof(float));
+    //CHECK_CUDA(cudaMemset(velocity, 0, parameters_number * sizeof(float));
 }
 
 

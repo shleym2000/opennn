@@ -93,7 +93,7 @@ public:
     }
 
     // Forward propagation
-
+    
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
@@ -106,9 +106,9 @@ public:
         if (input_views[0].data != forward_propagation->outputs.data)
             memcpy(forward_propagation->outputs.data, input_views[0].data, bytes_to_copy);
     }
-
+    
     // Back-propagation
-
+    
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>& delta_views,
                         unique_ptr<LayerForwardPropagation>&,
@@ -125,7 +125,7 @@ public:
         if (source_ptr && dest_ptr && source_ptr != dest_ptr)
             memcpy(dest_ptr, source_ptr, bytes_to_copy);
     }
-
+    
     // Serialization
 
     void from_XML(const XMLDocument& document) override
@@ -262,8 +262,11 @@ struct FlattenBackPropagation final : LayerBackPropagation
         full_dimensions.insert(full_dimensions.end(), input_shape.begin(), input_shape.end());
 
         input_deltas_tensor.resize(full_dimensions);
+        input_deltas_tensor.setZero();
 
-        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_dimensions));
+        input_deltas.resize(1);
+        input_deltas[0].data = input_deltas_tensor.data();
+        input_deltas[0].dims = full_dimensions;
     }
 
     void print() const override

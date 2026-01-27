@@ -1341,8 +1341,8 @@ void LossIndex::back_propagate_cuda(const BatchCuda& batch_cuda,
 
 
 void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda,
-                                                     ForwardPropagationCuda& forward_propagation_cuda,
-                                                     BackPropagationCuda& back_propagation_cuda) const
+    ForwardPropagationCuda& forward_propagation_cuda,
+    BackPropagationCuda& back_propagation_cuda) const
 {
     const vector<unique_ptr<Layer>>& layers = neural_network->get_layers();
     const Index layers_number = layers.size();
@@ -1360,7 +1360,7 @@ void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda
 
     calculate_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
 
-    for(Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
+    for (Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
         layers[i]->back_propagate_cuda(layer_input_views[i],
                                        layer_delta_views[i],
                                        forward_propagation_cuda.layers[i],

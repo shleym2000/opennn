@@ -839,10 +839,10 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
             scales_device.data,
             offsets_device.data,
             momentum,
-            running_means_device,
-            running_variances_device,
+            running_means_device.data,
+            running_variances_device.data,
             CUDNN_BN_MIN_EPSILON,
-            convolutional_layer_forward_propagation_cuda->bn_saved_mean,
+            convolutional_layer_forward_propagation_cuda->batch_means,
             convolutional_layer_forward_propagation_cuda->bn_saved_inv_variance));
     else if (batch_normalization && !is_training)
         CHECK_CUDNN(cudnnBatchNormalizationForwardInference(
@@ -856,8 +856,8 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
             scales_device.descriptor,
             scales_device.data,
             offsets_device.data,
-            running_means_device,
-            running_variances_device,
+            running_means_device.data,
+            running_variances_device.data,
             CUDNN_BN_MIN_EPSILON));
 
     // Activations
@@ -966,7 +966,7 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
             convolutional_layer_back_propagation_cuda->scales_deltas_device.data,
             convolutional_layer_back_propagation_cuda->offsets_deltas_device.data,
             CUDNN_BN_MIN_EPSILON,
-            convolutional_layer_forward_propagation_cuda->bn_saved_mean,
+            convolutional_layer_forward_propagation_cuda->batch_means,
             convolutional_layer_forward_propagation_cuda->bn_saved_inv_variance));
 
     // Convolution backwards for weights derivatives
@@ -1023,29 +1023,23 @@ vector<TensorViewCuda*> Convolutional::get_parameter_views_device()
 
 void Convolutional::allocate_parameters_device()
 {
-    // @todo, no hace falta?
-    const Index C = get_input_channels();
-    const Index R = get_kernel_height();
-    const Index S = get_kernel_width();
     const Index K = get_kernels_number();
 
     if (batch_normalization)
     {
-        CHECK_CUDA(cudaMalloc(&running_means_device, K * sizeof(float)));
-        CHECK_CUDA(cudaMalloc(&running_variances_device, K * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(running_means_device, K * sizeof(float));
-        //CUDA_MALLOC_AND_REPORT(running_variances_device, K * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&running_means_device.data, K * sizeof(float)));
+        CHECK_CUDA(cudaMalloc(&running_variances_device.data, K * sizeof(float)));
     }
 }
 
 
 void Convolutional::free()
 {
-    cudaFree(running_means_device);
-    running_means_device = nullptr;
+    cudaFree(running_means_device.data);
+    running_means_device.data = nullptr;
 
-    cudaFree(running_variances_device);
-    running_variances_device = nullptr;
+    cudaFree(running_variances_device.data);
+    running_variances_device.data = nullptr;
 }
 
 
@@ -1086,7 +1080,7 @@ void Convolutional::copy_parameters_device()
     {
         CHECK_CUDA(cudaMemcpy(scales_device, gammas.data(), gammas.size() * sizeof(type), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(offsets_device, betas.data(), betas.size() * sizeof(type), cudaMemcpyHostToDevice));
-        CHECK_CUDA(cudaMemcpy(running_means_device, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(running_means_device.data, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
         Tensor1 moving_variances = running_standard_deviations.square();
         CHECK_CUDA(cudaMemcpy(running_variances_device, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
@@ -1176,7 +1170,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
     CHECK_CUDA(cudaMalloc(&outputs.data, output_batch_size * output_height * output_width * output_channels * sizeof(float)));
     //CUDA_MALLOC_AND_REPORT(outputs, output_batch_size * output_height * output_width * output_channels * sizeof(float));
 
-    if (use_convolutions())
+    if (use_convolutions)
     {
         CHECK_CUDA(cudaMalloc(&convolutions.data, output_batch_size * output_height * output_width * output_channels * sizeof(float)));
         //CUDA_MALLOC_AND_REPORT(convolutions, output_batch_size * output_height * output_width * output_channels * sizeof(float));
@@ -1199,8 +1193,8 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        CHECK_CUDA(cudaMalloc(&bn_saved_mean, kernels_number * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(bn_saved_mean, kernels_number * sizeof(float));
+        CHECK_CUDA(cudaMalloc(&batch_means, kernels_number * sizeof(float)));
+        //CUDA_MALLOC_AND_REPORT(batch_means, kernels_number * sizeof(float));
         CHECK_CUDA(cudaMalloc(&bn_saved_inv_variance, kernels_number * sizeof(float)));
         //CUDA_MALLOC_AND_REPORT(bn_saved_inv_variance, kernels_number * sizeof(float));
     }
@@ -1229,7 +1223,7 @@ void ConvolutionalForwardPropagationCuda::free()
     cudaFree(reordered_inputs_device);
     reordered_inputs_device = nullptr;
 
-    cudaFree(bn_saved_mean);
+    cudaFree(batch_means);
     batch_means= nullptr;
 
     cudaFree(bn_saved_inv_variance);
