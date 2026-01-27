@@ -258,15 +258,13 @@ struct FlattenBackPropagation final : LayerBackPropagation
 
         const dimensions input_shape = flatten_layer->get_input_dimensions();
 
-        dimensions full_dimensions = { batch_size };
-        full_dimensions.insert(full_dimensions.end(), input_shape.begin(), input_shape.end());
+        dimensions full_input_dims = { batch_size };
+        full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_tensor.resize(full_dimensions);
+        input_deltas_tensor.resize(full_input_dims);
         input_deltas_tensor.setZero();
 
-        input_deltas.resize(1);
-        input_deltas[0].data = input_deltas_tensor.data();
-        input_deltas[0].dims = full_dimensions;
+        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_input_dims));
     }
 
     void print() const override

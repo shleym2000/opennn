@@ -159,14 +159,14 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         dimensions input_dims_vec = {batch_size};
         input_dims_vec.insert(input_dims_vec.end(), layer_input_dims.begin(), layer_input_dims.end());
 
-        input_deltas.dims = input_dims_vec;
+        input_deltas[0].dims = input_dims_vec;
 
         squared_errors_Jacobian.dims = {batch_size, parameters_number};
     }
 
     vector<TensorView*> get_workspace_views() override
     {
-        return { &input_deltas, &squared_errors_Jacobian };
+        return {&squared_errors_Jacobian };
     }
 
     void print() const override
@@ -174,10 +174,9 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         cout << "Squared errors Jacobian: " << endl;
         squared_errors_Jacobian.print();
         cout << "Input derivatives: " << endl;
-        input_deltas.print();
+        input_deltas[0].print();
     }
 
-    TensorView input_deltas;
     TensorView squared_errors_Jacobian;
 };
 
@@ -817,7 +816,7 @@ public:
 
         TensorMap2 squared_errors_Jacobian = tensor_map<2>(dense_lm->squared_errors_Jacobian);
 
-        auto input_deltas = tensor_map<Rank>(dense_lm->input_deltas);
+        auto input_deltas = tensor_map<Rank>(dense_lm->input_deltas[0]);
 
         const bool& is_first_layer = dense_lm->is_first_layer;
 
