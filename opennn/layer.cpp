@@ -166,8 +166,8 @@ Index Layer::get_parameters_number()
 
     Index parameters_number = 0;
 
-    for(Index i = 0; i < Index(parameter_views.size()); i++)
-        parameters_number += parameter_views[i]->size();
+    for (const auto* view : parameter_views)
+        parameters_number += view->size();
 
     return parameters_number;
 }

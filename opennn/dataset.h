@@ -365,7 +365,7 @@ public:
 
     Tensor1 calculate_means(const string& , const string&) const;
 
-    Index calculate_used_negatives(const Index&);
+    Index calculate_used_negatives(const Index&) const;
     Index calculate_negatives(const Index&, const string&) const;
 
     // Distribution

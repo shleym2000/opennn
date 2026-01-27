@@ -528,8 +528,7 @@ Tensor3 NeuralNetwork::calculate_outputs(const Tensor3 &inputs_1, const Tensor3 
 
     ForwardPropagation forward_propagation(batch_size, this);
 
-    const vector<TensorView> input_views = {
-                                            TensorView((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}}),
+    const vector<TensorView> input_views = {TensorView((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}}),
                                             TensorView((type*)inputs_2.data(), {{inputs_2.dimension(0), inputs_2.dimension(1), inputs_2.dimension(2)}})};
 
     forward_propagate(input_views, forward_propagation, false);
@@ -548,14 +547,13 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
 {
     const Index layers_number = get_layers_number();
 
-    Index first_layer_index = 0;
-    Index last_layer_index = layers_number-1;
+    const Index first_layer_index = is_training
+                                  ? get_first_trainable_layer_index()
+                                  : 0;
 
-    if(is_training)
-    {
-        first_layer_index = get_first_trainable_layer_index();
-        last_layer_index = get_last_trainable_layer_index();
-    }
+    const Index last_layer_index = is_training
+                                 ? get_last_trainable_layer_index()
+                                 : layers_number - 1;
 
     const vector<vector<TensorView>> layer_input_views
         = forward_propagation.get_layer_input_views(input_view, is_training);
@@ -719,10 +717,10 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
 
 Tensor2 NeuralNetwork::calculate_directional_inputs(const Index& direction,
-                                                            const Tensor1& point,
-                                                            const type& minimum,
-                                                            const type& maximum,
-                                                            const Index& points_number) const
+                                                    const Tensor1& point,
+                                                    const type& minimum,
+                                                    const type& maximum,
+                                                    const Index& points_number) const
 {
     const Index inputs_number = get_features_number();
 
@@ -832,7 +830,7 @@ Tensor2 NeuralNetwork::calculate_text_outputs(const Tensor<string, 1> &input_doc
             if(current_index >= sequence_length - 1)
                 break;
 
-            auto it = vocabulary_map.find(token);
+            const auto it = vocabulary_map.find(token);
 
             if(it != vocabulary_map.end())
                 inputs(i, current_index) = (type)it->second;

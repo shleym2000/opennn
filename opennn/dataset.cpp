@@ -1975,7 +1975,7 @@ vector<BoxPlot> Dataset::calculate_raw_variables_box_plots() const
 }
 
 
-Index Dataset::calculate_used_negatives(const Index& target_index)
+Index Dataset::calculate_used_negatives(const Index& target_index) const
 {
     Index negatives = 0;
 

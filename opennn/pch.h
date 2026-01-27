@@ -116,6 +116,10 @@ using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned16>;
 using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned16>;
 using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned16>;
 
+using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, Aligned16>;
+using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, Aligned16>;
+using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, Aligned16>;
+using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, Aligned16>;
 
 template<typename Base, typename T>
 inline bool is_instance_of(const T* ptr)
