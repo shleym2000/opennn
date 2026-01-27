@@ -575,8 +575,13 @@ public:
         static const unordered_set<string> activation_functions =
             {"Logistic", "HyperbolicTangent", "Linear", "RectifiedLinear", "ScaledExponentialLinear", "Softmax"};
 
-        if(activation_functions.count(new_activation_function))
+        if (activation_functions.count(new_activation_function))
+        {
+            if (get_output_dimensions()[0] == 1 && new_activation_function == "Softmax")
+                activation_function = "Logistic";
+            else
             activation_function = new_activation_function;
+        }
         else
             throw runtime_error("Unknown activation function: " + new_activation_function);
 
