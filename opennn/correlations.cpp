@@ -712,9 +712,7 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
     input_columns_indices[0] = type(0);
 
     vector<Index> target_columns_indices(y_filtered.dimension(1));
-
-    for(Index i = 0; i < y_filtered.dimension(1); i++)
-        target_columns_indices[i] = i + 1;
+    iota(target_columns_indices.begin(), target_columns_indices.end(), 1);
 
     Dataset dataset(x_filtered.size(), {1}, {y_filtered.dimension(1)});
 
@@ -829,9 +827,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
     iota(input_columns_indices.begin(), input_columns_indices.end(), 0);
 
     vector<Index> target_columns_indices(y_filtered.dimension(1));
-
-    for(Index i = 0; i < y_filtered.dimension(1); i++)
-        target_columns_indices[i] = x_filtered.dimension(1)+i;
+    iota(target_columns_indices.begin(), target_columns_indices.end(), x_filtered.dimension(1));
 
     Dataset Dataset(x_filtered.dimension(0), { x_filtered.dimension(1) }, { y_filtered.dimension(1) });
 

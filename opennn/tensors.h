@@ -13,6 +13,11 @@
 namespace opennn
 {
 
+inline Index count_elements(const dimensions& dims)
+{
+    return accumulate(dims.begin(), dims.end(), 1, multiplies<Index>());
+}
+
 struct TensorView
 {
     type* data = nullptr;

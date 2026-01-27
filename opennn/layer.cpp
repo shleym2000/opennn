@@ -234,7 +234,7 @@ Index Layer::get_inputs_number() const
 {
     const dimensions input_dimensions = get_input_dimensions();
 
-    return accumulate(input_dimensions.begin(), input_dimensions.end(), 1, multiplies<Index>());
+    return count_elements(input_dimensions);
 }
 
 

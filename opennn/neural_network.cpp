@@ -277,7 +277,7 @@ void NeuralNetwork::set_output_names(const vector<string>& new_output_namess)
 
 void NeuralNetwork::set_input_dimensions(const dimensions& new_input_dimensions)
 {
-    const Index total_inputs = accumulate(new_input_dimensions.begin(), new_input_dimensions.end(), 1, multiplies<Index>());
+    const Index total_inputs = count_elements(new_input_dimensions);
     feature_names.resize(total_inputs);
 
     if(has("Scaling2d"))
@@ -378,7 +378,7 @@ Index NeuralNetwork::get_features_number() const
 
     const dimensions input_dimensions = layers[0]->get_input_dimensions();
 
-    return accumulate(input_dimensions.begin(), input_dimensions.end(), Index(1), multiplies<Index>());
+    return count_elements(input_dimensions);
 }
 
 
@@ -391,7 +391,7 @@ Index NeuralNetwork::get_outputs_number() const
 
     const dimensions output_dimensions = last_layer->get_output_dimensions();
 
-    return accumulate(output_dimensions.begin(), output_dimensions.end(), Index(1), multiplies<Index>());
+    return count_elements(output_dimensions);
 }
 
 
@@ -1761,11 +1761,9 @@ void ForwardPropagationCuda::print()
 
 void ForwardPropagationCuda::free()
 {
-    const Index layers_number = layers.size();
-
-    for(Index i = 0; i < layers_number; i++)
-        if (layers[i])
-            layers[i]->free();
+    for (auto* layer : layers)
+        if (layer)
+            layer->free();
 }
 
 
@@ -1851,11 +1849,9 @@ void NeuralNetworkBackPropagationCuda::print()
 
 void NeuralNetworkBackPropagationCuda::free()
 {
-    const Index layers_number = layers.size();
-
-    for(Index i = 0; i < layers_number; i++)
-        if(!layers[i])
-            layers[i]->free();
+    for(auto* layer : layers)
+        if(layer)
+            layer->free();
 }
 
 #endif

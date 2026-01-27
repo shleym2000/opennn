@@ -505,7 +505,7 @@ void BackPropagation::set(const Index& new_samples_number, const LossIndex* new_
     output_deltas_dimensions = { samples_number };
     output_deltas_dimensions.insert(output_deltas_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
 
-    const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
+    const Index size = count_elements(output_dimensions);
 
     output_deltas.resize(size);
 
@@ -1524,7 +1524,7 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
     output_deltas_dimensions = { samples_number };
     output_deltas_dimensions.insert(output_deltas_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
 
-    const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
+    const Index size = count_elements(output_dimensions);
 
     CHECK_CUDA(cudaMalloc(&output_deltas, size * sizeof(float)));
     //CUDA_MALLOC_AND_REPORT(output_deltas, size * sizeof(float));

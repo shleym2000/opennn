@@ -1417,9 +1417,7 @@ vector<Index> Dataset::get_variable_indices(const Index& raw_variable_index) con
     if (raw_variable.type == RawVariableType::Categorical)
     {
         vector<Index> indices(raw_variable.categories.size());
-
-        for(size_t j = 0; j < raw_variable.categories.size(); j++)
-            indices[j] = index + j;
+        iota(indices.begin(), indices.end(), index);
 
         return indices;
     }
@@ -1531,15 +1529,9 @@ void Dataset::set(const Index& new_samples_number,
 
     input_dimensions = new_input_dimensions;
 
-    const Index new_inputs_number = accumulate(new_input_dimensions.begin(),
-                                               new_input_dimensions.end(),
-                                               1,
-                                               multiplies<Index>());
+    const Index new_inputs_number = count_elements(new_input_dimensions);
 
-    Index new_targets_number = accumulate(new_target_dimensions.begin(),
-                                          new_target_dimensions.end(),
-                                          1,
-                                          multiplies<Index>());
+    Index new_targets_number = count_elements(new_target_dimensions);
 
     new_targets_number = (new_targets_number == 2) ? 1 : new_targets_number;
 
@@ -4548,7 +4540,7 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
         decoder_dimensions = { samples_number };
         decoder_dimensions.insert(decoder_dimensions.end(), data_set_decoder_dimensions.begin(), data_set_decoder_dimensions.end());
 
-        const Index decoder_size = accumulate(decoder_dimensions.begin(), decoder_dimensions.end(), 1, multiplies<Index>());
+        const Index decoder_size = count_elements(decoder_dimensions);
 
         CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));

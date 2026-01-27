@@ -122,7 +122,7 @@ public:
 
         input_dimensions = new_input_dimensions;
 
-        const Index new_inputs_number = accumulate(new_input_dimensions.begin(), new_input_dimensions.end(), 1, multiplies<Index>());
+        const Index new_inputs_number = count_elements(new_input_dimensions);
 
         descriptives.resize(new_inputs_number);
 
@@ -212,7 +212,7 @@ public:
 
     string write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>());
+        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
         ostringstream buffer;
 
@@ -226,7 +226,7 @@ public:
 
     string write_minimum_maximum_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>());
+        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
         ostringstream buffer;
 
@@ -254,7 +254,7 @@ public:
 
     string write_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>());
+        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
         ostringstream buffer;
 

@@ -14,7 +14,7 @@ namespace opennn
 
 type bound(const type& value, const type& minimum, const type& maximum)
 {
-    return min(max(value, minimum), maximum);
+    return clamp(value, minimum, maximum);
 }
 
 
@@ -669,7 +669,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 }
 
 
-type *link(type *pointer, vector<TensorView*> views)
+type* link(type *pointer, vector<TensorView*> views)
 {
     constexpr Index ALIGN_BYTES = 16;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
@@ -682,9 +682,7 @@ type *link(type *pointer, vector<TensorView*> views)
 
         view->data = pointer;
 
-        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
-
-        pointer += aligned_size;
+        pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return pointer;
@@ -711,8 +709,7 @@ Index get_size(const vector<TensorView*> views)
         if(!view || view->size() == 0)
             continue;
 
-        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
-        total_size += aligned_size;
+        total_size += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return total_size;
@@ -745,8 +742,7 @@ type* link(type* pointer, vector<TensorViewCuda*> views)
 
         view->data = pointer;
 
-        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
-        pointer += aligned_size;
+        pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return pointer;
@@ -773,8 +769,7 @@ Index get_size(const vector<TensorViewCuda*> views)
         if (!view || view->size() == 0)
             continue;
 
-        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
-        total_size += aligned_size;
+        total_size += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return total_size;
