@@ -295,6 +295,12 @@ TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_vie
         throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned. "
                             "This will cause a crash with Aligned16 TensorMaps.");
 
+    if constexpr (rank == 2)
+        if (tensor_view.rank() == 4)
+            return TensorMap2(tensor_view.data,
+                              tensor_view.dims[0],
+                              tensor_view.size() / tensor_view.dims[0]);
+
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 

@@ -895,9 +895,9 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type& decision_thres
         type* input_data = inputs.data();
 
         Tensor4 inputs_4d(samples_number,
-                                  input_dimensions[0],
-                                  input_dimensions[1],
-                                  input_dimensions[2]);
+                          input_dimensions[0],
+                          input_dimensions[1],
+                          input_dimensions[2]);
 
         memcpy(inputs_4d.data(), input_data, samples_number * inputs.dimension(1)*sizeof(type));
 

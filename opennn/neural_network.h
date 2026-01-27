@@ -232,9 +232,22 @@ public:
         forward_propagate({input_view}, forward_propagation, false);
 
         const TensorView& output_view = forward_propagation.layers.back()->get_outputs();
- 
+
         if constexpr (output_rank == 2)
-           return tensor_map<2>(output_view);
+        {
+            if (output_view.rank() == 4)
+            {
+                const Index batch_size = output_view.dims[0];
+                const Index features = output_view.size() / batch_size;
+
+                if (reinterpret_cast<uintptr_t>(output_view.data) % 16 != 0)
+                    throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned.");
+
+                return TensorMap2(output_view.data, batch_size, features);
+            }
+
+            return tensor_map<2>(output_view);
+        }
         else if constexpr (output_rank == 3)
            return tensor_map<3>(output_view);
         else if constexpr (output_rank == 4)

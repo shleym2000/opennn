@@ -46,8 +46,8 @@ int main()
         training_strategy.get_loss_index()->set_regularization_method("None");
 
         AdaptiveMomentEstimation* adam = dynamic_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
-        adam->set_maximum_epochs_number(10);
-        adam->set_display_period(1);
+        adam->set_maximum_epochs_number(200);
+        adam->set_display_period(10);
 
 #ifdef OPENNN_CUDA
     //training_strategy.train_cuda();
