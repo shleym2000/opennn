@@ -86,6 +86,7 @@ vector<TensorViewCuda> LayerBackPropagationCuda::get_input_deltas_device() const
 
 #endif
 
+
 Layer::Layer()
 {
     const unsigned int threads_number = thread::hardware_concurrency();
@@ -94,7 +95,9 @@ Layer::Layer()
     device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 }
 
+
 Layer::~Layer() = default;
+
 
 const bool& Layer::get_display() const
 {

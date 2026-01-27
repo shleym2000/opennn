@@ -671,8 +671,9 @@ dimensions prepend(const Index &x, const dimensions &d)
 
 type *link(type *pointer, vector<TensorView*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for(TensorView* view : views)
     {
@@ -680,7 +681,10 @@ type *link(type *pointer, vector<TensorView*> views)
             continue;
 
         view->data = pointer;
-        pointer += (view->size() + ALIGNMENT - 1) & MASK;
+
+        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
+
+        pointer += aligned_size;
     }
 
     return pointer;
@@ -696,8 +700,9 @@ void link(type *pointer, vector<vector<TensorView*> > views)
 
 Index get_size(const vector<TensorView*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
 
@@ -706,7 +711,8 @@ Index get_size(const vector<TensorView*> views)
         if(!view || view->size() == 0)
             continue;
 
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
+        total_size += aligned_size;
     }
 
     return total_size;
@@ -728,8 +734,9 @@ Index get_size(vector<vector<TensorView*> > views)
 
 type* link(type* pointer, vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for (TensorViewCuda* view : views)
     {
@@ -737,7 +744,9 @@ type* link(type* pointer, vector<TensorViewCuda*> views)
             continue;
 
         view->data = pointer;
-        pointer += (view->size() + ALIGNMENT - 1) & MASK;
+
+        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
+        pointer += aligned_size;
     }
 
     return pointer;
@@ -753,8 +762,9 @@ void link(type* pointer, vector<vector<TensorViewCuda*> > views)
 
 Index get_size(const vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
 
@@ -763,7 +773,8 @@ Index get_size(const vector<TensorViewCuda*> views)
         if (!view || view->size() == 0)
             continue;
 
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+        Index aligned_size = (view->size() + ALIGN_ELEMENTS - 1) & MASK;
+        total_size += aligned_size;
     }
 
     return total_size;
