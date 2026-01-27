@@ -67,17 +67,7 @@ vector<vector<TensorView*>> NeuralNetwork::get_layer_parameter_views()
 void NeuralNetwork::compile()
 {
     const vector<vector<TensorView*>> layer_parameter_views = get_layer_parameter_views();
-    /* DEBUG
-    for (size_t i = 0; i < layer_parameter_views.size(); ++i) {
-        std::cout << "[DEBUG] Capa i = " << i << std::endl;
 
-        for (size_t j = 0; j < layer_parameter_views[i].size(); ++j) {
-            std::cout << "  [DEBUG] Tensor j = " << j
-                << " | size = " << layer_parameter_views[i][j]->size()
-                << std::endl;
-        }
-    }
-    */
     const Index parameters_size = get_size(layer_parameter_views);
 
     if (parameters_size == 0) return;
@@ -90,19 +80,8 @@ void NeuralNetwork::compile()
 #ifdef OPENNN_CUDA
 
     const vector<vector<TensorViewCuda*>> layer_parameter_views_device = get_layer_parameter_views_device();
-    /* DEBUG
-    for (size_t i = 0; i < layer_parameter_views_device.size(); ++i) {
-        std::cout << "[DEBUG] Capa i = " << i << std::endl;
 
-        for (size_t j = 0; j < layer_parameter_views_device[i].size(); ++j) {
-            std::cout << "  [DEBUG] Tensor j = " << j
-                << " | size = " << layer_parameter_views_device[i][j]->size()
-                << std::endl;
-        }
-    }
-    */
-    CHECK_CUDA(cudaMalloc(&parameters_device, parameters_size * sizeof(float)));
-    cudaMemset(parameters_device, 0, parameters_size * sizeof(float));
+    allocate_parameters_device();
 
     link(parameters_device, layer_parameter_views_device);
 
@@ -1570,20 +1549,8 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
-    // @todo not layer by layer
-/*
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->allocate_parameters_device();
-*/
+    CHECK_CUDA(cudaMalloc(&parameters_device, parameters.size() * sizeof(float)));
+    cudaMemset(parameters_device, 0, parameters.size() * sizeof(float));
 }
 
 
@@ -1596,39 +1563,13 @@ void NeuralNetwork::free_parameters_device()
 
 void NeuralNetwork::copy_parameters_device()
 {
-    // @todo not layer by layer
-/*
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->copy_parameters_device();
-*/
+    CHECK_CUDA(cudaMemcpy(parameters_device, parameters.data(), parameters.size() * sizeof(type),cudaMemcpyHostToDevice));
 }
 
 
 void NeuralNetwork::copy_parameters_host()
 {
-    // @todo not layer by layer
-/*
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->copy_parameters_host();
-*/
+    CHECK_CUDA(cudaMemcpy(parameters.data(), parameters_device, parameters.size() * sizeof(type), cudaMemcpyDeviceToHost));
 }
 
 

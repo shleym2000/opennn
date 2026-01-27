@@ -21,9 +21,7 @@ int main()
 
         // Dataset
 
-        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/mnist_data_binary");
-
-        image_dataset.set_sample_roles("Training");
+        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/mnist_data");
 
         // Neural network
 
@@ -45,9 +43,17 @@ int main()
 
 #ifdef OPENNN_CUDA
     training_strategy.train_cuda();
+    //    training_strategy.train();
 #else
     training_strategy.train();
 #endif
+
+    const TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
+
+    cout << "Calculating confusion...." << endl;
+    const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_cuda();
+    const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
+    cout << "\nConfusion matrix:\n" << confusion << endl;
    
 
 #ifndef OPENNN_CUDA

@@ -559,7 +559,6 @@ TrainingResults StochasticGradientDescent::train_cuda()
     ForwardPropagationCuda training_forward_propagation_cuda(training_batch_samples_number, neural_network);
     unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
 
-    neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
 
     // Loss Index

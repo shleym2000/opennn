@@ -347,7 +347,10 @@ public:
     virtual void back_propagate_cuda(const vector<TensorViewCuda>&,
                                      const vector<TensorViewCuda>&,
                                      unique_ptr<LayerForwardPropagationCuda>&,
-                                     unique_ptr<LayerBackPropagationCuda>&) const {}
+                                     unique_ptr<LayerBackPropagationCuda>&) const 
+    {
+        throw runtime_error("CUDA back propagation not implemented for layer type: " + get_name());
+    }
 
     virtual vector<TensorViewCuda*> get_parameter_views_device()
     {
