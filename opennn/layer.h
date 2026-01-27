@@ -411,7 +411,7 @@ struct LayerBackPropagation
 
     virtual vector<TensorView*> get_workspace_views() 
     {
-    		return vector<TensorView*>();
+        return vector<TensorView*>();
     };
 
     vector<TensorView> get_input_deltas() const;
