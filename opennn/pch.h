@@ -1,6 +1,3 @@
-#ifndef PCH_H
-#define PCH_H
-
 #pragma once
 
 #define NUMERIC_LIMITS_MIN type(0.000001)
@@ -47,7 +44,7 @@
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "../eigen/Eigen/src/Core/util/DisableStupidWarnings.h"
 
-//#define OPENNN_CUDA // Comment this line to disable cuda files
+#define OPENNN_CUDA // Comment this line to disable cuda files
 
 #ifdef OPENNN_CUDA
 
@@ -113,12 +110,17 @@ using Tensor1 = Tensor<type, 1>;
 using Tensor2 = Tensor<type, 2>;
 using Tensor3 = Tensor<type, 3>;
 using Tensor4 = Tensor<type, 4>;
+using Tensor5 = Tensor<type, 5>;
 
 using TensorMap1 = TensorMap<Tensor<type, 1>, Aligned16>;
 using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned16>;
 using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned16>;
 using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned16>;
 
+using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, Aligned16>;
+using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, Aligned16>;
+using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, Aligned16>;
+using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, Aligned16>;
 
 template<typename Base, typename T>
 inline bool is_instance_of(const T* ptr)
@@ -126,4 +128,16 @@ inline bool is_instance_of(const T* ptr)
     return dynamic_cast<const Base*>(ptr);
 }
 
-#endif // PCH_H
+// OpenNN: Open Neural Networks Library.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or any later version.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

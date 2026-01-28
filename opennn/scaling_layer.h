@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef SCALINGLAYER_H
-#define SCALINGLAYER_H
+#pragma once
 
 #include "layer.h"
 #include "statistics.h"
@@ -123,7 +122,7 @@ public:
 
         input_dimensions = new_input_dimensions;
 
-        const Index new_inputs_number = accumulate(new_input_dimensions.begin(), new_input_dimensions.end(), 1, multiplies<Index>());
+        const Index new_inputs_number = count_elements(new_input_dimensions);
 
         descriptives.resize(new_inputs_number);
 
@@ -213,7 +212,7 @@ public:
 
     string write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>());
+        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
         ostringstream buffer;
 
@@ -227,7 +226,7 @@ public:
 
     string write_minimum_maximum_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>());
+        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
         ostringstream buffer;
 
@@ -255,7 +254,7 @@ public:
 
     string write_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>());
+        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
         ostringstream buffer;
 
@@ -583,21 +582,16 @@ void reference_scaling_layer();
 
 }
 
-#endif
-
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

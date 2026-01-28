@@ -14,7 +14,7 @@ namespace opennn
 
 type bound(const type& value, const type& minimum, const type& maximum)
 {
-    return min(max(value, minimum), maximum);
+    return clamp(value, minimum, maximum);
 }
 
 
@@ -669,10 +669,11 @@ dimensions prepend(const Index &x, const dimensions &d)
 }
 
 
-type *link(type *pointer, vector<TensorView*> views)
+type* link(type *pointer, vector<TensorView*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for(TensorView* view : views)
     {
@@ -680,7 +681,8 @@ type *link(type *pointer, vector<TensorView*> views)
             continue;
 
         view->data = pointer;
-        pointer += (view->size() + ALIGNMENT - 1) & MASK;
+
+        pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return pointer;
@@ -696,8 +698,9 @@ void link(type *pointer, vector<vector<TensorView*> > views)
 
 Index get_size(const vector<TensorView*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
 
@@ -706,7 +709,7 @@ Index get_size(const vector<TensorView*> views)
         if(!view || view->size() == 0)
             continue;
 
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+        total_size += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return total_size;
@@ -728,8 +731,9 @@ Index get_size(vector<vector<TensorView*> > views)
 
 type* link(type* pointer, vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for (TensorViewCuda* view : views)
     {
@@ -737,7 +741,8 @@ type* link(type* pointer, vector<TensorViewCuda*> views)
             continue;
 
         view->data = pointer;
-        pointer += (view->size() + ALIGNMENT - 1) & MASK;
+
+        pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return pointer;
@@ -753,8 +758,9 @@ void link(type* pointer, vector<vector<TensorViewCuda*> > views)
 
 Index get_size(const vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGNMENT = 16;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
 
@@ -763,7 +769,7 @@ Index get_size(const vector<TensorViewCuda*> views)
         if (!view || view->size() == 0)
             continue;
 
-        total_size += (view->size() + ALIGNMENT - 1) & MASK;
+        total_size += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
 
     return total_size;
@@ -786,17 +792,14 @@ Index get_size(vector<vector<TensorViewCuda*> > views)
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

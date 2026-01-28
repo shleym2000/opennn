@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef POOLINGLAYER_H
-#define POOLINGLAYER_H
+#pragma once
 
 #include "layer.h"
 
@@ -27,6 +26,13 @@ public:
             const dimensions& = { 0, 0 },  // Padding dimensions {padding_height, padding_width}
             const string& = "MaxPooling",
             const string& = "pooling_layer");
+
+    void set(const dimensions & = { 0, 0, 0 },
+             const dimensions & = { 1, 1 },
+             const dimensions & = { 1, 1 },
+             const dimensions & = { 0, 0 },
+             const string & = "MaxPooling",
+             const string & = "pooling_layer");
 
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
@@ -49,13 +55,6 @@ public:
     Index get_pool_width() const;
 
     string get_pooling_method() const;
-
-    void set(const dimensions& = {0, 0, 0},
-             const dimensions& = {1, 1},
-             const dimensions& = {1, 1},
-             const dimensions& = {0, 0},
-             const string& = "MaxPooling",
-             const string& = "pooling_layer");
 
     void set_input_dimensions(const dimensions&) override;
 
@@ -152,7 +151,7 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 5> image_patches;
+    Tensor5 image_patches;
 
     Tensor<Index, 4> maximal_indices;
 };
@@ -178,6 +177,8 @@ struct PoolingForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void initialize() override;
 
+    vector<TensorViewCuda*> get_workspace_views_device() override;
+
     void print() const override;
 
     void free() override;
@@ -201,4 +202,16 @@ struct PoolingBackPropagationCuda : public LayerBackPropagationCuda
 
 }
 
-#endif // POOLING_LAYER_H
+// OpenNN: Open Neural Networks Library.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or any later version.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

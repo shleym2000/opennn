@@ -559,7 +559,6 @@ TrainingResults StochasticGradientDescent::train_cuda()
     ForwardPropagationCuda training_forward_propagation_cuda(training_batch_samples_number, neural_network);
     unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
 
-    neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
 
     // Loss Index
@@ -765,14 +764,14 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
 
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
 
-    TensorCuda& parameters_device = neural_network.get_parameters_device();
+    float* parameters_device = neural_network->get_parameters_device();
 
     back_propagation_cuda.neural_network.workspace;
 
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data_cuda.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    const TensorCuda& delta_views = back_propagation_cuda->get_gradient_device();
+    const float* delta_views = back_propagation_cuda.neural_network.workspace;
 
     // @todo do it in vector form without loop.
 /*
@@ -811,9 +810,9 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 
     const Index parameters_number = neural_network->get_parameters_number();
 
-    velocity.resize(parameters_number);
+    //velocity.resize(parameters_number);
 
-    CHECK_CUDA(cudaMemset(velocity, 0, parameters_number * sizeof(float));
+    //CHECK_CUDA(cudaMemset(velocity, 0, parameters_number * sizeof(float));
 }
 
 
@@ -836,20 +835,16 @@ REGISTER(OptimizationAlgorithm, StochasticGradientDescent, "StochasticGradientDe
 
 }
 
-
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

@@ -1,10 +1,22 @@
-#ifndef TENSORS_H
-#define TENSORS_H
+//   OpenNN: Open Neural Networks Library
+//   www.opennn.net
+//
+//   T E N S O R   U T I L I T I E S   C L A S S   H E A D E R
+//
+//   Artificial Intelligence Techniques SL
+//   artelnics@artelnics.com
+
+#pragma once
 
 #include "pch.h"
 
 namespace opennn
 {
+
+inline Index count_elements(const dimensions& dims)
+{
+    return accumulate(dims.begin(), dims.end(), 1, multiplies<Index>());
+}
 
 struct TensorView
 {
@@ -168,7 +180,7 @@ Index count_NAN(const Tensor<type, rank>& x)
     return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
 }
 
-Index count_between(Tensor1&, const type&, const type&);
+Index count_between(const Tensor1&, const type&, const type&);
 
 Index count_greater_than(const vector<Index>&, const Index&);
 
@@ -294,6 +306,12 @@ TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_vie
     if (reinterpret_cast<uintptr_t>(tensor_view.data) % 16 != 0)
         throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned. "
                             "This will cause a crash with Aligned16 TensorMaps.");
+
+    if constexpr (rank == 2)
+        if (tensor_view.rank() == 4)
+            return TensorMap2(tensor_view.data,
+                              tensor_view.dims[0],
+                              tensor_view.size() / tensor_view.dims[0]);
 
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
@@ -433,17 +451,6 @@ struct TensorViewCuda
     TensorViewCuda(float* new_data, cudnnTensorDescriptor_t new_descriptor)
         : data(new_data), descriptor(new_descriptor) {}
 
-    ~TensorViewCuda()
-    {
-        data = nullptr;
-
-        if (descriptor)
-        {
-            cudnnDestroyTensorDescriptor(descriptor);
-            descriptor = nullptr;
-        }
-    }
-
     void set_descriptor(const dimensions& dims)
     {
         if (descriptor == nullptr)
@@ -503,4 +510,16 @@ Index get_size(vector<vector<TensorViewCuda*>>);
 
 }
 
-#endif
+// OpenNN: Open Neural Networks Library.
+// Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or any later version.
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

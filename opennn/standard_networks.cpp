@@ -75,12 +75,12 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
 
     add_layer(make_unique<Scaling<2>>(input_dimensions));
 
-    /*for(Index i = 0; i < complexity_size; i++)
+    for(Index i = 0; i < complexity_size; i++)
         add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                        dimensions{complexity_dimensions[i]},
                                        "HyperbolicTangent",
                                        false,
-                                       "dense2d_layer_" + to_string(i + 1)));*/
+                                       "dense2d_layer_" + to_string(i + 1)));
 
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),
                                    output_dimensions,
@@ -180,12 +180,12 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
     add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     const Index complexity_size = complexity_dimensions.size();
-    /*
+    
     for(Index i = 0; i < complexity_size; i++)
     {
         const dimensions kernel_dimensions = { 3, 3, get_output_dimensions()[2], complexity_dimensions[i] };
         const dimensions stride_dimensions = { 1, 1 };
-
+        
         add_layer(make_unique<Convolutional>(get_output_dimensions(),
                                              kernel_dimensions,
                                              "RectifiedLinear",
@@ -193,11 +193,11 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                              "Same",
                                              false, // Batch normalization
                                              "convolutional_layer_" + to_string(i + 1)));
-
+        
         const dimensions pool_dimensions = { 2, 2 };
         const dimensions pooling_stride_dimensions = { 2, 2 };
         const dimensions padding_dimensions = { 0, 0 };
-
+        
         add_layer(make_unique<Pooling>(get_output_dimensions(),
                                        pool_dimensions,
                                        pooling_stride_dimensions,
@@ -205,7 +205,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                        "MaxPooling",
                                        "pooling_layer_" + to_string(i + 1)));
     }
-    */
+    
     add_layer(make_unique<Flatten<4>>(get_output_dimensions()));
 
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),
@@ -917,22 +917,18 @@ string Transformer::calculate_outputs(const string& source)
     return result;
 }
 
-} // namespace opennn
+} 
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

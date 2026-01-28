@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef FLATTENLAYER_H
-#define FLATTENLAYER_H
+#pragma once
 
 #include "layer.h"
 #include "tensors.h"
@@ -93,7 +92,7 @@ public:
     }
 
     // Forward propagation
-
+    
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            const bool&) override
@@ -106,9 +105,9 @@ public:
         if (input_views[0].data != forward_propagation->outputs.data)
             memcpy(forward_propagation->outputs.data, input_views[0].data, bytes_to_copy);
     }
-
+    
     // Back-propagation
-
+    
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>& delta_views,
                         unique_ptr<LayerForwardPropagation>&,
@@ -125,7 +124,7 @@ public:
         if (source_ptr && dest_ptr && source_ptr != dest_ptr)
             memcpy(dest_ptr, source_ptr, bytes_to_copy);
     }
-
+    
     // Serialization
 
     void from_XML(const XMLDocument& document) override
@@ -258,12 +257,13 @@ struct FlattenBackPropagation final : LayerBackPropagation
 
         const dimensions input_shape = flatten_layer->get_input_dimensions();
 
-        dimensions full_dimensions = { batch_size };
-        full_dimensions.insert(full_dimensions.end(), input_shape.begin(), input_shape.end());
+        dimensions full_input_dims = { batch_size };
+        full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_tensor.resize(full_dimensions);
+        input_deltas_tensor.resize(full_input_dims);
+        input_deltas_tensor.setZero();
 
-        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_dimensions));
+        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_input_dims));
     }
 
     void print() const override
@@ -337,23 +337,18 @@ void reference_flatten_layer();
 
 }
 
-#endif
-
+#pragma once
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

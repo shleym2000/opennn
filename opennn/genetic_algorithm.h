@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef GENETICALGORITHM_H
-#define GENETICALGORITHM_H
+#pragma once
 
 #include "inputs_selection.h"
 
@@ -137,5 +136,3 @@ private:
 };
 
 }
-
-#endif

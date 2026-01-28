@@ -505,7 +505,7 @@ void BackPropagation::set(const Index& new_samples_number, const LossIndex* new_
     output_deltas_dimensions = { samples_number };
     output_deltas_dimensions.insert(output_deltas_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
 
-    const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
+    const Index size = count_elements(output_dimensions);
 
     output_deltas.resize(size);
 
@@ -1360,7 +1360,7 @@ void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda
 
     calculate_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
 
-    for(Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
+    for (Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
         layers[i]->back_propagate_cuda(layer_input_views[i],
                                        layer_delta_views[i],
                                        forward_propagation_cuda.layers[i],
@@ -1524,7 +1524,7 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
     output_deltas_dimensions = { samples_number };
     output_deltas_dimensions.insert(output_deltas_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
 
-    const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
+    const Index size = count_elements(output_dimensions);
 
     CHECK_CUDA(cudaMalloc(&output_deltas, size * sizeof(float)));
     //CUDA_MALLOC_AND_REPORT(output_deltas, size * sizeof(float));
@@ -1670,21 +1670,18 @@ void BackPropagationCuda::free()
 
 #endif
 
-} // namespace opennn
+} 
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

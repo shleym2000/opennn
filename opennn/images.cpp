@@ -413,4 +413,4 @@ void translate_image_y(const ThreadPoolDevice* device,
     }
 }
 
-} // namespace opennn
+} 

@@ -20,8 +20,7 @@
 // distribution.
 
 
-#ifndef TINYXML2_INCLUDED
-#define TINYXML2_INCLUDED
+#pragma once
 
 #if defined(ANDROID_NDK) || defined(__BORLANDC__) || defined(__QNXNTO__)
 #   include <ctype.h>
@@ -2259,5 +2258,3 @@ string read_xml_string(const XMLElement* root, const string& element_name);
 #if defined(_MSC_VER)
 #   pragma warning(pop)
 #endif
-
-#endif // TINYXML2_INCLUDED

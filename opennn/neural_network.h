@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef NEURALNETWORK_H
-#define NEURALNETWORK_H
+#pragma once
 
 #include "layer.h"
 #include "tensors.h"
@@ -232,9 +231,22 @@ public:
         forward_propagate({input_view}, forward_propagation, false);
 
         const TensorView& output_view = forward_propagation.layers.back()->get_outputs();
- 
+
         if constexpr (output_rank == 2)
-           return tensor_map<2>(output_view);
+        {
+            if (output_view.rank() == 4)
+            {
+                const Index batch_size = output_view.dims[0];
+                const Index features = output_view.size() / batch_size;
+
+                if (reinterpret_cast<uintptr_t>(output_view.data) % 16 != 0)
+                    throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned.");
+
+                return TensorMap2(output_view.data, batch_size, features);
+            }
+
+            return tensor_map<2>(output_view);
+        }
         else if constexpr (output_rank == 3)
            return tensor_map<3>(output_view);
         else if constexpr (output_rank == 4)
@@ -296,9 +308,9 @@ public:
     void create_cuda() const;
     void destroy_cuda() const;
 
-    TensorCuda& parameters_device get_parameters_device()
+    float* get_parameters_device() 
     {
-        return &parameters_device;
+        return parameters_device;
     }
 
     vector<vector<TensorViewCuda*>> get_layer_parameter_views_device();
@@ -321,7 +333,7 @@ protected:
     cublasHandle_t cublas_handle;
     cudnnHandle_t cudnn_handle;
 
-    TensorCuda parameters_device;
+    float* parameters_device;
 
 #endif
 
@@ -432,22 +444,16 @@ struct NeuralNetworkBackPropagationLM
 
 }
 
-#endif
-
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

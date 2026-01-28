@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef OPENNN_H
-#define OPENNN_H
+#pragma once
 
 // Precompiled header with common includes and Eigen
 #include "pch.h"
@@ -85,5 +84,3 @@
 
 // Registry
 #include "registry.h"
-
-#endif // OPENNN_H

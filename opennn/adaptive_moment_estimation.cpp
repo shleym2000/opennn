@@ -222,9 +222,9 @@ TrainingResults AdaptiveMomentEstimation::train()
     for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
     {
         if(display && epoch%display_period == 0) cout << "Epoch: " << epoch << endl;
-
+        
         training_batches = dataset->get_batches(training_samples_indices, training_batch_samples_number, shuffle);
-
+        
         training_error = type(0);
 
         if(is_classification_model) training_accuracy = type(0);
@@ -232,20 +232,20 @@ TrainingResults AdaptiveMomentEstimation::train()
         for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {
             // Dataset
-
+         
             training_batch.fill(training_batches[iteration],
                                 input_variable_indices,
                                 // decoder_variable_indices,
                                 target_variable_indices);
 
             // Neural network
-
+      
             neural_network->forward_propagate(training_batch.get_input_views(),
                                               training_forward_propagation,
                                               is_training);
 
             // Loss index
-
+     
             loss_index->back_propagate(training_batch,
                                        training_forward_propagation,
                                        training_back_propagation);
@@ -772,11 +772,10 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 {
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const int total_parameters_size = static_cast<int>(neural_network->get_parameters().size());
 
-    TensorCuda& parameters_device = neural_network->get_parameters_device();
-
-    const TensorCuda& gradient_device = back_propagation_cuda.neural_network->get_gradient_device();
+    float* parameters_device = neural_network->get_parameters_device();
+    const float* gradients_device = back_propagation_cuda.neural_network.workspace;
 
     optimization_data_cuda.iteration++;
     const int iteration = static_cast<int>(optimization_data_cuda.iteration);
@@ -784,35 +783,19 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     const float bias_correction_1 = 1.0f - powf(beta_1, static_cast<float>(iteration));
     const float bias_correction_2 = 1.0f - powf(beta_2, static_cast<float>(iteration));
 
-    constexpr type epsilon = numeric_limits<type>::epsilon();
-
-    assert(gradient_device.size() == parameters_device.size());
-
-    // @todo do this in vector form
-/*
-    for(Index i = 0; i < parameters_number; ++i)
-    {
-        float* params_d = parameters_device[i]->data;
-        const float* grads_d = gradient_device[i]->data;
-
-        float* gradient_exponential_decay = optimization_data_cuda.gradient_exponential_decay[i];
-        float* square_gradient_exponential_decay = optimization_data_cuda.square_gradient_exponential_decay[i];
-
-        adam_update_device(
-            param_size,
-            params_d,
-            gradient_exponential_decay,
-            square_gradient_exponential_decay,
-            grads_d,
-            beta_1,
-            beta_2,
-            learning_rate,
-            static_cast<float>(epsilon),
-            bias_correction_1,
-            bias_correction_2
-        );
-    }
-*/
+    adam_update_device(
+        total_parameters_size,
+        parameters_device,
+        optimization_data_cuda.gradient_exponential_decay_device,
+        optimization_data_cuda.square_gradient_exponential_decay_device,
+        gradients_device,
+        beta_1,
+        beta_2,
+        learning_rate,
+        numeric_limits<float>::epsilon(),
+        bias_correction_1,
+        bias_correction_2
+    );
 }
 
 
@@ -829,11 +812,11 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
     NeuralNetwork* neural_network = adaptive_moment_estimation->get_loss_index()->get_neural_network();
     const Index parameters_number = neural_network->get_parameters_number();
 
-    gradient_exponential_decay.resize(parameters_number);
-    square_gradient_exponential_decay.resize(parameters_number);
+    CHECK_CUDA(cudaMalloc(&gradient_exponential_decay_device, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&square_gradient_exponential_decay_device, parameters_number * sizeof(float)));
 
-    CHECK_CUDA(cudaMemset(gradient_exponential_decay, 0, parameters_number * sizeof(float)));
-    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay, 0, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMemset(gradient_exponential_decay_device, 0, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay_device, 0, parameters_number * sizeof(float)));
 }
 
 
@@ -859,17 +842,14 @@ REGISTER(OptimizationAlgorithm, AdaptiveMomentEstimation, "AdaptiveMomentEstimat
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

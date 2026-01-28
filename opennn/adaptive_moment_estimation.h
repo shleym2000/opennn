@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef ADAPTIVEMOMENTESTIMATION_H
-#define ADAPTIVEMOMENTESTIMATION_H
+#pragma once
 
 #include "optimization_algorithm.h"
 
@@ -148,16 +147,16 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
 
         AdaptiveMomentEstimation* adaptive_moment_estimation = nullptr;
 
-        TensorCuda gradient_exponential_decay;
-        TensorCuda square_gradient_exponential_decay;
+        float* gradient_exponential_decay_device = nullptr;
+        float* square_gradient_exponential_decay_device = nullptr;
 
         Index iteration = 0;
 
         type step = 0;
+
+        //Index learning_rate_iteration = 0;
     };
 
 #endif
 
 }
-
-#endif

@@ -1417,9 +1417,7 @@ vector<Index> Dataset::get_variable_indices(const Index& raw_variable_index) con
     if (raw_variable.type == RawVariableType::Categorical)
     {
         vector<Index> indices(raw_variable.categories.size());
-
-        for(size_t j = 0; j < raw_variable.categories.size(); j++)
-            indices[j] = index + j;
+        iota(indices.begin(), indices.end(), index);
 
         return indices;
     }
@@ -1531,15 +1529,9 @@ void Dataset::set(const Index& new_samples_number,
 
     input_dimensions = new_input_dimensions;
 
-    const Index new_inputs_number = accumulate(new_input_dimensions.begin(),
-                                               new_input_dimensions.end(),
-                                               1,
-                                               multiplies<Index>());
+    const Index new_inputs_number = count_elements(new_input_dimensions);
 
-    Index new_targets_number = accumulate(new_target_dimensions.begin(),
-                                          new_target_dimensions.end(),
-                                          1,
-                                          multiplies<Index>());
+    Index new_targets_number = count_elements(new_target_dimensions);
 
     new_targets_number = (new_targets_number == 2) ? 1 : new_targets_number;
 
@@ -1983,7 +1975,7 @@ vector<BoxPlot> Dataset::calculate_raw_variables_box_plots() const
 }
 
 
-Index Dataset::calculate_used_negatives(const Index& target_index)
+Index Dataset::calculate_used_negatives(const Index& target_index) const
 {
     Index negatives = 0;
 
@@ -4541,7 +4533,6 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
 
         CHECK_CUDA(cudaMallocHost(&inputs_host, input_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&inputs_device, input_size * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(inputs_device, input_size * sizeof(float));
     }
     /*
     if(!data_set_decoder_dimensions.empty())
@@ -4549,7 +4540,7 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
         decoder_dimensions = { samples_number };
         decoder_dimensions.insert(decoder_dimensions.end(), data_set_decoder_dimensions.begin(), data_set_decoder_dimensions.end());
 
-        const Index decoder_size = accumulate(decoder_dimensions.begin(), decoder_dimensions.end(), 1, multiplies<Index>());
+        const Index decoder_size = count_elements(decoder_dimensions);
 
         CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));
@@ -4565,7 +4556,6 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
 
         CHECK_CUDA(cudaMallocHost(&targets_host, target_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&targets_device, target_size * sizeof(float)));
-        //CUDA_MALLOC_AND_REPORT(targets_device, target_size * sizeof(float));
     }
 }
 
@@ -4624,7 +4614,7 @@ Tensor2 BatchCuda::get_targets_device() const
 
 vector<TensorViewCuda> BatchCuda::get_input_views_device() const
 {
-    vector<TensorViewCuda> input_views = {{inputs_device, input_descriptor}};
+    vector<TensorViewCuda> input_views = {{inputs_device, nullptr}};
 
     return input_views;
 }
@@ -4682,22 +4672,19 @@ void BatchCuda::free()
 
 #endif
 
-} // namespace opennn
+}
 
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

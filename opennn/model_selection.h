@@ -6,8 +6,7 @@
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
-#ifndef MODELSELECTION_H
-#define MODELSELECTION_H
+#pragma once
 
 #include "inputs_selection.h"
 #include "neurons_selection.h"
@@ -71,5 +70,3 @@ private:
 };
 
 }
-
-#endif

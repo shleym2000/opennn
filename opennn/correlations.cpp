@@ -712,9 +712,7 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
     input_columns_indices[0] = type(0);
 
     vector<Index> target_columns_indices(y_filtered.dimension(1));
-
-    for(Index i = 0; i < y_filtered.dimension(1); i++)
-        target_columns_indices[i] = i + 1;
+    iota(target_columns_indices.begin(), target_columns_indices.end(), 1);
 
     Dataset dataset(x_filtered.size(), {1}, {y_filtered.dimension(1)});
 
@@ -829,9 +827,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
     iota(input_columns_indices.begin(), input_columns_indices.end(), 0);
 
     vector<Index> target_columns_indices(y_filtered.dimension(1));
-
-    for(Index i = 0; i < y_filtered.dimension(1); i++)
-        target_columns_indices[i] = x_filtered.dimension(1)+i;
+    iota(target_columns_indices.begin(), target_columns_indices.end(), x_filtered.dimension(1));
 
     Dataset Dataset(x_filtered.dimension(0), { x_filtered.dimension(1) }, { y_filtered.dimension(1) });
 
@@ -982,17 +978,14 @@ void register_optimization_algorithms()
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA

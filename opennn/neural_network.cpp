@@ -15,6 +15,7 @@
 #include "scaling_layer.h"
 #include "scaling_layer.h"
 #include "flatten_layer.h"
+#include "convolutional_layer.h"
 #include "addition_layer.h"
 #include "embedding_layer.h"
 
@@ -81,8 +82,7 @@ void NeuralNetwork::compile()
 
     const vector<vector<TensorViewCuda*>> layer_parameter_views_device = get_layer_parameter_views_device();
 
-    CHECK_CUDA(cudaMalloc(&parameters_device, parameters_size * sizeof(float)));
-    cudaMemset(parameters_device, 0, parameters_size * sizeof(float));
+    allocate_parameters_device();
 
     link(parameters_device, layer_parameter_views_device);
 
@@ -278,7 +278,7 @@ void NeuralNetwork::set_output_names(const vector<string>& new_output_namess)
 
 void NeuralNetwork::set_input_dimensions(const dimensions& new_input_dimensions)
 {
-    const Index total_inputs = accumulate(new_input_dimensions.begin(), new_input_dimensions.end(), 1, multiplies<Index>());
+    const Index total_inputs = count_elements(new_input_dimensions);
     feature_names.resize(total_inputs);
 
     if(has("Scaling2d"))
@@ -379,7 +379,7 @@ Index NeuralNetwork::get_features_number() const
 
     const dimensions input_dimensions = layers[0]->get_input_dimensions();
 
-    return accumulate(input_dimensions.begin(), input_dimensions.end(), Index(1), multiplies<Index>());
+    return count_elements(input_dimensions);
 }
 
 
@@ -392,7 +392,7 @@ Index NeuralNetwork::get_outputs_number() const
 
     const dimensions output_dimensions = last_layer->get_output_dimensions();
 
-    return accumulate(output_dimensions.begin(), output_dimensions.end(), Index(1), multiplies<Index>());
+    return count_elements(output_dimensions);
 }
 
 
@@ -529,8 +529,7 @@ Tensor3 NeuralNetwork::calculate_outputs(const Tensor3 &inputs_1, const Tensor3 
 
     ForwardPropagation forward_propagation(batch_size, this);
 
-    const vector<TensorView> input_views = {
-                                            TensorView((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}}),
+    const vector<TensorView> input_views = {TensorView((type*)inputs_1.data(), {{inputs_1.dimension(0), inputs_1.dimension(1), inputs_1.dimension(2)}}),
                                             TensorView((type*)inputs_2.data(), {{inputs_2.dimension(0), inputs_2.dimension(1), inputs_2.dimension(2)}})};
 
     forward_propagate(input_views, forward_propagation, false);
@@ -549,14 +548,13 @@ void NeuralNetwork::forward_propagate(const vector<TensorView>& input_view,
 {
     const Index layers_number = get_layers_number();
 
-    Index first_layer_index = 0;
-    Index last_layer_index = layers_number-1;
+    const Index first_layer_index = is_training
+                                  ? get_first_trainable_layer_index()
+                                  : 0;
 
-    if(is_training)
-    {
-        first_layer_index = get_first_trainable_layer_index();
-        last_layer_index = get_last_trainable_layer_index();
-    }
+    const Index last_layer_index = is_training
+                                 ? get_last_trainable_layer_index()
+                                 : layers_number - 1;
 
     const vector<vector<TensorView>> layer_input_views
         = forward_propagation.get_layer_input_views(input_view, is_training);
@@ -720,10 +718,10 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
 
 Tensor2 NeuralNetwork::calculate_directional_inputs(const Index& direction,
-                                                            const Tensor1& point,
-                                                            const type& minimum,
-                                                            const type& maximum,
-                                                            const Index& points_number) const
+                                                    const Tensor1& point,
+                                                    const type& minimum,
+                                                    const type& maximum,
+                                                    const Index& points_number) const
 {
     const Index inputs_number = get_features_number();
 
@@ -833,7 +831,7 @@ Tensor2 NeuralNetwork::calculate_text_outputs(const Tensor<string, 1> &input_doc
             if(current_index >= sequence_length - 1)
                 break;
 
-            auto it = vocabulary_map.find(token);
+            const auto it = vocabulary_map.find(token);
 
             if(it != vocabulary_map.end())
                 inputs(i, current_index) = (type)it->second;
@@ -1550,20 +1548,8 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
-    // @todo not layer by layer
-/*
-    const vector<unique_ptr<Layer>>& layers = get_layers();
-
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->allocate_parameters_device();
-*/
+    CHECK_CUDA(cudaMalloc(&parameters_device, parameters.size() * sizeof(float)));
+    cudaMemset(parameters_device, 0, parameters.size() * sizeof(float));
 }
 
 
@@ -1576,39 +1562,27 @@ void NeuralNetwork::free_parameters_device()
 
 void NeuralNetwork::copy_parameters_device()
 {
-    // @todo not layer by layer
-/*
-    const vector<unique_ptr<Layer>>& layers = get_layers();
+    // Convolutional weights need custom order for gpu
+    for (const unique_ptr<Layer>& layer : layers)
+        if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
+            conv->reorder_weights_for_cudnn();
 
-    const Index layers_number = layers.size();
+    CHECK_CUDA(cudaMemcpy(parameters_device, parameters.data(), parameters.size() * sizeof(type), cudaMemcpyHostToDevice));
 
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->copy_parameters_device();
-*/
+    for (const unique_ptr<Layer>& layer : layers)
+        if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
+            conv->reorder_weights_for_cudnn();
 }
 
 
 void NeuralNetwork::copy_parameters_host()
 {
-    // @todo not layer by layer
-/*
-    const vector<unique_ptr<Layer>>& layers = get_layers();
+    CHECK_CUDA(cudaMemcpy(parameters.data(), parameters_device, parameters.size() * sizeof(type), cudaMemcpyDeviceToHost));
 
-    const Index layers_number = layers.size();
-
-    if (layers_number == 0) return;
-
-    const Index first_trainable_layer_index = get_first_trainable_layer_index();
-    const Index last_trainable_layer_index = get_last_trainable_layer_index();
-
-    for(Index i = first_trainable_layer_index; i <= last_trainable_layer_index; i++)
-        layers[i]->copy_parameters_host();
-*/
+    // Convolutional weights need custom order for gpu
+    for (const unique_ptr<Layer>& layer : layers)
+        if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
+            conv->reorder_weights_for_cudnn();
 }
 
 
@@ -1643,7 +1617,7 @@ void NeuralNetwork::forward_propagate_cuda(const vector<TensorViewCuda>& input_v
     const vector<vector<TensorViewCuda>> layer_input_views_device
         = forward_propagation_cuda.get_layer_input_views_device(input_views_device, is_training);
 
-    for(Index i = first_layer_index; i <= last_layer_index; i++)
+    for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate_cuda(layer_input_views_device[i],
                                           forward_propagation_cuda.layers[i],
                                           is_training);
@@ -1800,11 +1774,8 @@ void ForwardPropagationCuda::print()
 
 void ForwardPropagationCuda::free()
 {
-    const Index layers_number = layers.size();
-
-    for(Index i = 0; i < layers_number; i++)
-        if (layers[i])
-            layers[i]->free();
+    for (unique_ptr<LayerForwardPropagationCuda>& layer : layers)
+        if (layer) layer->free();
 }
 
 
@@ -1890,30 +1861,24 @@ void NeuralNetworkBackPropagationCuda::print()
 
 void NeuralNetworkBackPropagationCuda::free()
 {
-    const Index layers_number = layers.size();
-
-    for(Index i = 0; i < layers_number; i++)
-        if(!layers[i])
-            layers[i]->free();
+    for (unique_ptr<LayerBackPropagationCuda>& layer : layers)
+        if (layer) layer->free();
 }
 
 #endif
 
-} // Namespace
+}
 
 // OpenNN: Open Neural Networks Library.
 // Copyright(C) 2005-2026 Artificial Intelligence Techniques, SL.
-//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or any later version.
-//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
