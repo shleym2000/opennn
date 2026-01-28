@@ -1605,14 +1605,13 @@ void NeuralNetwork::forward_propagate_cuda(const vector<TensorViewCuda>& input_v
 {
     const Index layers_number = get_layers_number();
 
-    Index first_layer_index = 0;
-    Index last_layer_index = layers_number - 1;
+    const Index first_layer_index = is_training
+                                        ? get_first_trainable_layer_index()
+                                        : 0;
 
-    if (is_training)
-    {
-        first_layer_index = get_first_trainable_layer_index();
-        last_layer_index = get_last_trainable_layer_index();
-    }
+    const Index last_layer_index = is_training
+                                       ? get_last_trainable_layer_index()
+                                       : layers_number - 1;
 
     const vector<vector<TensorViewCuda>> layer_input_views_device
         = forward_propagation_cuda.get_layer_input_views_device(input_views_device, is_training);

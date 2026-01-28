@@ -913,7 +913,7 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
 
     Convolutional* convolutional_layer = static_cast<Convolutional*>(convolutional_layer_forward_propagation_cuda->layer);
 
-    const type* convolutions = convolutional_layer_forward_propagation_cuda->convolutions.data;
+    const type* const convolutions = convolutional_layer_forward_propagation_cuda->convolutions.data;
 
     // Back propagation
 
@@ -944,31 +944,31 @@ void Convolutional::back_propagate_cuda(const vector<TensorViewCuda>& inputs_dev
 
     if (activation_function != "Linear" && use_convolutions() && convolutions != nullptr)
         CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
-                                                       activation_descriptor,
-                                                       &alpha,
-                                                       deltas_tensor_descriptor,
-                                                       outputs_view.data,
-                                                       deltas_tensor_descriptor,
-                                                       deltas_device[0].data,
-                                                       deltas_tensor_descriptor,
-                                                       convolutions,
-                                                       &beta,
-                                                       deltas_tensor_descriptor,
-                                                       deltas_device[0].data));
+                                            activation_descriptor,
+                                            &alpha,
+                                            deltas_tensor_descriptor,
+                                            outputs_view.data,
+                                            deltas_tensor_descriptor,
+                                            deltas_device[0].data,
+                                            deltas_tensor_descriptor,
+                                            convolutions,
+                                            &beta,
+                                            deltas_tensor_descriptor,
+                                            deltas_device[0].data));
 
     if (activation_function != "Linear" && !use_convolutions())
         CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
-                                                       activation_descriptor,
-                                                       &alpha,
-                                                       deltas_tensor_descriptor,
-                                                       outputs_view.data,
-                                                       deltas_tensor_descriptor,
-                                                       deltas_device[0].data,
-                                                       deltas_tensor_descriptor,
-                                                       outputs_view.data,
-                                                       &beta,
-                                                       deltas_tensor_descriptor,
-                                                       deltas_device[0].data));
+                                            activation_descriptor,
+                                            &alpha,
+                                            deltas_tensor_descriptor,
+                                            outputs_view.data,
+                                            deltas_tensor_descriptor,
+                                            deltas_device[0].data,
+                                            deltas_tensor_descriptor,
+                                            outputs_view.data,
+                                            &beta,
+                                            deltas_tensor_descriptor,
+                                            deltas_device[0].data));
 
     // Batch Normalization
 

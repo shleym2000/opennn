@@ -173,16 +173,16 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 
     for(size_t i = 0; i < lines.size(); i++)
     {
-        size_t equal_pos = lines[i].find('=');
+        const size_t equal_pos = lines[i].find('=');
         if(equal_pos != string::npos)
         {
-            string var_def = lines[i].substr(0, equal_pos);
-            size_t first = var_def.find_first_not_of(" \t");
+            const string var_def = lines[i].substr(0, equal_pos);
+            const size_t first = var_def.find_first_not_of(" \t");
             if(first == string::npos)
                 continue;
 
-            size_t last = var_def.find_last_not_of(" \t");
-            string clean_var = var_def.substr(first, (last - first + 1));
+            const size_t last = var_def.find_last_not_of(" \t");
+            const string clean_var = var_def.substr(first, (last - first + 1));
 
             if(clean_var.find(' ') != string::npos)
             {
@@ -445,17 +445,17 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 
     for(size_t i = 0; i < lines.size(); i++)
     {
-        size_t equal_pos = lines[i].find('=');
+        const size_t equal_pos = lines[i].find('=');
         if(equal_pos != string::npos)
         {
-            string var_def = lines[i].substr(0, equal_pos);
+            const string var_def = lines[i].substr(0, equal_pos);
 
-            size_t first = var_def.find_first_not_of(" \t");
+            const size_t first = var_def.find_first_not_of(" \t");
             if(first == string::npos)
                 continue;
 
-            size_t last = var_def.find_last_not_of(" \t");
-            string clean_var = var_def.substr(first, (last - first + 1));
+            const size_t last = var_def.find_last_not_of(" \t");
+            const string clean_var = var_def.substr(first, (last - first + 1));
 
             if(clean_var.find(' ') != string::npos)
             {
@@ -788,17 +788,17 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     for(size_t i = 0; i < lines.size(); i++)
     {
-        size_t equal_pos = lines[i].find('=');
+        const size_t equal_pos = lines[i].find('=');
         if(equal_pos != string::npos)
         {
-            string var_def = lines[i].substr(0, equal_pos);
+            const string var_def = lines[i].substr(0, equal_pos);
 
             size_t first = var_def.find_first_not_of(" \t");
             if(first == string::npos)
                 continue;
 
-            size_t last = var_def.find_last_not_of(" \t");
-            string clean_var = var_def.substr(first, (last - first + 1));
+            const size_t last = var_def.find_last_not_of(" \t");
+            const string clean_var = var_def.substr(first, (last - first + 1));
 
             if(clean_var.find(' ') != string::npos)
             {
@@ -1195,17 +1195,17 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     for(size_t i = 0; i < lines.size(); i++)
     {
-        size_t equal_pos = lines[i].find('=');
+        const size_t equal_pos = lines[i].find('=');
         if(equal_pos != string::npos)
         {
-            string var_def = lines[i].substr(0, equal_pos);
+            const string var_def = lines[i].substr(0, equal_pos);
 
-            size_t first = var_def.find_first_not_of(" \t");
+            const size_t first = var_def.find_first_not_of(" \t");
             if(first == string::npos)
                 continue;
 
-            size_t last = var_def.find_last_not_of(" \t");
-            string clean_var = var_def.substr(first, (last - first + 1));
+            const size_t last = var_def.find_last_not_of(" \t");
+            const string clean_var = var_def.substr(first, (last - first + 1));
 
             if(clean_var.find(' ') != string::npos)
             {
