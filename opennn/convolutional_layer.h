@@ -28,6 +28,8 @@ public:
 
     bool get_batch_normalization() const;
 
+    void reorder_weights_for_cudnn();
+
     const string& get_activation_function() const;
 
     dimensions get_input_dimensions() const override;
@@ -35,7 +37,7 @@ public:
 
     pair<Index, Index> get_padding() const;
 
-    Eigen::array<pair<Index, Index>, 4> get_paddings() const;
+    array<pair<Index, Index>, 4> get_paddings() const;
 
     Index get_output_height() const;
     Index get_output_width() const;
@@ -93,7 +95,7 @@ public:
 
     void preprocess_inputs(const Tensor4&, Tensor4&) const;
 
-    void calculate_convolutions(const Tensor4&,Tensor4&) const;
+    void calculate_convolutions(const Tensor4&, TensorMap4) const;
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -137,8 +139,6 @@ protected:
     TensorViewCuda biases_device;
     TensorViewCuda weights_device;
 
-    cudnnTensorDescriptor_t biases_tensor_descriptor = nullptr;
-
     // Batch Normalization
 
     TensorViewCuda scales_device;
@@ -158,9 +158,6 @@ private:
     TensorView weights;
     TensorView biases;
 
-    TensorView gammas;
-    TensorView betas;
-
     Index row_stride = 1;
     Index column_stride = 1;
 
@@ -173,6 +170,9 @@ private:
     // Batch normalization
 
     bool batch_normalization = false;
+
+    TensorView gammas;
+    TensorView betas;
 
     Tensor1 running_means;
     Tensor1 running_standard_deviations;
@@ -188,14 +188,16 @@ struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
+    vector<TensorView*> get_workspace_views() override;
+
     void print() const override;
 
     Tensor4 preprocessed_inputs;
 
-    Tensor1 means;
-    Tensor1 standard_deviations;
+    TensorView means;
+    TensorView standard_deviations;
 
-    Tensor4 activation_derivatives;
+    TensorView activation_derivatives;
 };
 
 
@@ -238,7 +240,6 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
     TensorViewCuda convolutions;
 
     cudnnTensorDescriptor_t input_tensor_descriptor = nullptr;
-    cudnnTensorDescriptor_t inputs_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;
 
@@ -276,7 +277,6 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
     size_t backward_data_workspace_bytes = 0;
     size_t backward_filter_workspace_bytes = 0;
 
-    cudnnTensorDescriptor_t input_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;

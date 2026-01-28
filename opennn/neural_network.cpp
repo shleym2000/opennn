@@ -15,6 +15,7 @@
 #include "scaling_layer.h"
 #include "scaling_layer.h"
 #include "flatten_layer.h"
+#include "convolutional_layer.h"
 #include "addition_layer.h"
 #include "embedding_layer.h"
 
@@ -1561,13 +1562,27 @@ void NeuralNetwork::free_parameters_device()
 
 void NeuralNetwork::copy_parameters_device()
 {
-    CHECK_CUDA(cudaMemcpy(parameters_device, parameters.data(), parameters.size() * sizeof(type),cudaMemcpyHostToDevice));
+    // Convolutional weights need custom order for gpu
+    for (const unique_ptr<Layer>& layer : layers)
+        if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
+            conv->reorder_weights_for_cudnn();
+
+    CHECK_CUDA(cudaMemcpy(parameters_device, parameters.data(), parameters.size() * sizeof(type), cudaMemcpyHostToDevice));
+
+    for (const unique_ptr<Layer>& layer : layers)
+        if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
+            conv->reorder_weights_for_cudnn();
 }
 
 
 void NeuralNetwork::copy_parameters_host()
 {
     CHECK_CUDA(cudaMemcpy(parameters.data(), parameters_device, parameters.size() * sizeof(type), cudaMemcpyDeviceToHost));
+
+    // Convolutional weights need custom order for gpu
+    for (const unique_ptr<Layer>& layer : layers)
+        if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
+            conv->reorder_weights_for_cudnn();
 }
 
 
@@ -1759,9 +1774,8 @@ void ForwardPropagationCuda::print()
 
 void ForwardPropagationCuda::free()
 {
-    for (auto* layer : layers)
-        if (layer)
-            layer->free();
+    for (unique_ptr<LayerForwardPropagationCuda>& layer : layers)
+        if (layer) layer->free();
 }
 
 
@@ -1847,9 +1861,8 @@ void NeuralNetworkBackPropagationCuda::print()
 
 void NeuralNetworkBackPropagationCuda::free()
 {
-    for(auto* layer : layers)
-        if(layer)
-            layer->free();
+    for (unique_ptr<LayerBackPropagationCuda>& layer : layers)
+        if (layer) layer->free();
 }
 
 #endif

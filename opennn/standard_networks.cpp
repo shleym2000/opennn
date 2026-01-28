@@ -180,12 +180,12 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
     add_layer(make_unique<Scaling<4>>(input_dimensions));
 
     const Index complexity_size = complexity_dimensions.size();
-    /*
+    
     for(Index i = 0; i < complexity_size; i++)
     {
         const dimensions kernel_dimensions = { 3, 3, get_output_dimensions()[2], complexity_dimensions[i] };
         const dimensions stride_dimensions = { 1, 1 };
-
+        
         add_layer(make_unique<Convolutional>(get_output_dimensions(),
                                              kernel_dimensions,
                                              "RectifiedLinear",
@@ -193,11 +193,11 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                              "Same",
                                              false, // Batch normalization
                                              "convolutional_layer_" + to_string(i + 1)));
-
+        
         const dimensions pool_dimensions = { 2, 2 };
         const dimensions pooling_stride_dimensions = { 2, 2 };
         const dimensions padding_dimensions = { 0, 0 };
-
+        
         add_layer(make_unique<Pooling>(get_output_dimensions(),
                                        pool_dimensions,
                                        pooling_stride_dimensions,
@@ -205,7 +205,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                        "MaxPooling",
                                        "pooling_layer_" + to_string(i + 1)));
     }
-    */
+    
     add_layer(make_unique<Flatten<4>>(get_output_dimensions()));
 
     add_layer(make_unique<Dense<2>>(get_output_dimensions(),

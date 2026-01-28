@@ -27,6 +27,13 @@ public:
             const string& = "MaxPooling",
             const string& = "pooling_layer");
 
+    void set(const dimensions & = { 0, 0, 0 },
+             const dimensions & = { 1, 1 },
+             const dimensions & = { 1, 1 },
+             const dimensions & = { 0, 0 },
+             const string & = "MaxPooling",
+             const string & = "pooling_layer");
+
     dimensions get_input_dimensions() const override;
     dimensions get_output_dimensions() const override;
 
@@ -48,13 +55,6 @@ public:
     Index get_pool_width() const;
 
     string get_pooling_method() const;
-
-    void set(const dimensions& = {0, 0, 0},
-             const dimensions& = {1, 1},
-             const dimensions& = {1, 1},
-             const dimensions& = {0, 0},
-             const string& = "MaxPooling",
-             const string& = "pooling_layer");
 
     void set_input_dimensions(const dimensions&) override;
 
@@ -151,7 +151,7 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 
     void print() const override;
 
-    Tensor<type, 5> image_patches;
+    Tensor5 image_patches;
 
     Tensor<Index, 4> maximal_indices;
 };
@@ -176,6 +176,8 @@ struct PoolingForwardPropagationCuda : public LayerForwardPropagationCuda
     PoolingForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
 
     void initialize() override;
+
+    vector<TensorViewCuda*> get_workspace_views_device() override;
 
     void print() const override;
 

@@ -26,7 +26,7 @@ int main()
         // Neural network
 
         ImageClassificationNetwork image_classification_network(image_dataset.get_dimensions("Input"),
-            {1},
+            {4},
             image_dataset.get_dimensions("Target"));
 
         // Training strategy
@@ -47,13 +47,15 @@ int main()
 #else
     training_strategy.train();
 #endif
-
+    /*
     const TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
 
     cout << "Calculating confusion...." << endl;
-    const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_cuda();
+    const Tensor<Index, 2> confusion_cuda = testing_analysis.calculate_confusion_cuda();
     const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
+    cout << "\nConfusion matrix CUDA:\n" << confusion_cuda << endl;
     cout << "\nConfusion matrix:\n" << confusion << endl;
+    */
    
 #ifndef OPENNN_CUDA
         cout << "Enable CUDA in pch.h" << endl;

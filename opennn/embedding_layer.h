@@ -62,12 +62,12 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<const TensorViewCuda>&,
+    void forward_propagate_cuda(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
                                 const bool&) override;
 
-    void back_propagate_cuda(const vector<const TensorViewCuda>&,
-                             const vector<const TensorViewCuda>&,
+    void back_propagate_cuda(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>&,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
 
