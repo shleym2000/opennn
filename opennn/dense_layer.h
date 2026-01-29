@@ -101,11 +101,9 @@ struct DenseBackPropagation final : LayerBackPropagation
 
         dimensions full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
-
-        input_deltas_tensor.resize(full_input_dims);
-        input_deltas_tensor.setZero();
-
-        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_input_dims));
+        
+        input_deltas.resize(1);
+        input_deltas[0].dims = full_input_dims;
     }
 
 
@@ -135,8 +133,6 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     TensorView scales_deltas;
     TensorView offsets_deltas;
-
-    Tensor<type, Rank> input_deltas_tensor;
 };
 
 
@@ -646,6 +642,12 @@ public:
         dropout_rate = new_dropout_rate;
     }
 
+
+    void set_batch_normalization(const bool& new_batch_normalization)
+    {
+        batch_normalization = new_batch_normalization;
+    }
+
 /*
     void normalization(Tensor1& means, Tensor1& standard_deviations, const Tensor2& inputs, Tensor2& outputs) const
     {
@@ -663,12 +665,6 @@ public:
             //+ (outputs - means.broadcast(rows))*gammas.broadcast(rows)/standard_deviations.broadcast(rows);
     }
 */
-
-    void set_batch_normalization(const bool& new_batch_normalization)
-    {
-        batch_normalization = new_batch_normalization;
-    }
-
 
     void apply_batch_normalization_backward(TensorMap2& deltas,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
@@ -770,14 +766,14 @@ public:
 
         // Back propagation
 
-        TensorMap2 input_deltas = tensor_map<2>(back_propagation->input_deltas[0]);
-
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
+        
+        TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
 
         TensorMap2 weight_deltas = tensor_map<2>(dense2d_back_propagation->weight_deltas);
 
-        TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
+        TensorMap2 input_deltas = tensor_map<2>(dense2d_back_propagation->input_deltas[0]);
 
         const bool& is_first_layer = dense2d_back_propagation->is_first_layer;
 

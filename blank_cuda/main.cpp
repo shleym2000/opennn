@@ -42,8 +42,8 @@ int main()
         adam->set_display_period(10);
 
 #ifdef OPENNN_CUDA
-    training_strategy.train_cuda();
-    //    training_strategy.train();
+    //training_strategy.train_cuda();
+        training_strategy.train();
 #else
     training_strategy.train();
 #endif

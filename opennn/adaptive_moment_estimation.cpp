@@ -232,20 +232,20 @@ TrainingResults AdaptiveMomentEstimation::train()
         for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {
             // Dataset
-         
+
             training_batch.fill(training_batches[iteration],
                                 input_variable_indices,
                                 // decoder_variable_indices,
                                 target_variable_indices);
 
             // Neural network
-      
+
             neural_network->forward_propagate(training_batch.get_input_views(),
                                               training_forward_propagation,
                                               is_training);
 
             // Loss index
-     
+
             loss_index->back_propagate(training_batch,
                                        training_forward_propagation,
                                        training_back_propagation);
