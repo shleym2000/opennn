@@ -740,8 +740,10 @@ void ConvolutionalBackPropagation::initialize()
                            kernel_channels,
                            kernels_number);
 
+    //input_deltas_memory.resize(batch_size, input_height, input_width, channels);
     input_deltas.resize(1);
-    input_deltas[0].dims = {batch_size, input_height, input_width, channels};
+    //input_deltas[0].data = input_deltas_memory.data();
+    //input_deltas[0].dims = { batch_size, input_height, input_width, channels };
 
     // Batch Normalization
 
@@ -1156,7 +1158,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
     convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
 
     cudnnGetConvolutionForwardWorkspaceSize(
-        convolutional_layer->get_cudnn_handle(),
+        layer->get_cudnn_handle(),
         input_tensor_descriptor, kernel_descriptor,
         convolution_descriptor, outputs.descriptor,
         convolution_algorithm, &workspace_bytes);
@@ -1301,7 +1303,7 @@ void ConvolutionalBackPropagationCuda::initialize()
 
     // Workspace
 
-    cudnnGetConvolutionBackwardDataWorkspaceSize(convolutional_layer->get_cudnn_handle(),
+    cudnnGetConvolutionBackwardDataWorkspaceSize(layer->get_cudnn_handle(),
                                                  kernel_descriptor,
                                                  deltas_tensor_descriptor,
                                                  convolution_descriptor,
@@ -1309,7 +1311,7 @@ void ConvolutionalBackPropagationCuda::initialize()
                                                  CUDNN_CONVOLUTION_BWD_DATA_ALGO_0,
                                                  &backward_data_workspace_bytes);
 
-    cudnnGetConvolutionBackwardFilterWorkspaceSize(convolutional_layer->get_cudnn_handle(),
+    cudnnGetConvolutionBackwardFilterWorkspaceSize(layer->get_cudnn_handle(),
                                                    input_deltas[0].descriptor,
                                                    deltas_tensor_descriptor,
                                                    convolution_descriptor,

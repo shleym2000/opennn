@@ -427,6 +427,7 @@ struct LayerBackPropagation
     bool is_first_layer = false;
 
     vector<TensorView> input_deltas;
+    Tensor1 input_deltas_memory;
 };
 
 

@@ -102,7 +102,9 @@ struct DenseBackPropagation final : LayerBackPropagation
         dimensions full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
         
+        input_deltas_memory.resize(full_input_dims.size());
         input_deltas.resize(1);
+        input_deltas[0].data = input_deltas_memory.data();
         input_deltas[0].dims = full_input_dims;
     }
 
@@ -768,12 +770,12 @@ public:
 
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
-        
+
         TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
 
         TensorMap2 weight_deltas = tensor_map<2>(dense2d_back_propagation->weight_deltas);
 
-        TensorMap2 input_deltas = tensor_map<2>(dense2d_back_propagation->input_deltas[0]);
+        TensorMap2 input_deltas = tensor_map<2>(back_propagation->input_deltas[0]);
 
         const bool& is_first_layer = dense2d_back_propagation->is_first_layer;
 
