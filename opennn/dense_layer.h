@@ -101,8 +101,8 @@ struct DenseBackPropagation final : LayerBackPropagation
 
         dimensions full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
-        
-        input_deltas_memory.resize(full_input_dims.size());
+
+        input_deltas_memory.resize(count_elements(full_input_dims));
         input_deltas.resize(1);
         input_deltas[0].data = input_deltas_memory.data();
         input_deltas[0].dims = full_input_dims;
