@@ -560,12 +560,6 @@ struct ScalingForwardPropagationCuda : public LayerForwardPropagationCuda
 
         cudaFree(standard_deviations_device);
         standard_deviations_device = nullptr;
-
-        if (outputs.descriptor)
-        {
-            cudnnDestroyTensorDescriptor(outputs.descriptor);
-            outputs.descriptor = nullptr;
-        }
     }
 
     int* scalers_device = nullptr;

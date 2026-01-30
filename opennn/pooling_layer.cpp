@@ -471,7 +471,7 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
         input_tensor_descriptor,
         inputs_device[0].data,
         &beta,
-        outputs.descriptor,
+        outputs.get_descriptor(),
         outputs.data));
 }
 
@@ -492,16 +492,16 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
 
     // Back propagation
 
-    type* input_deltas = back_propagation_cuda->get_input_deltas_device()[0].data;
+    type* input_deltas = back_propagation_cuda->input_deltas[0].data;
 
     // Pooling
 
     CHECK_CUDNN(cudnnPoolingBackward(cudnn_handle,
         pooling_descriptor,
         &alpha,
-        outputs.descriptor,
+        outputs.get_descriptor(),
         outputs.data,
-        outputs.descriptor,
+        outputs.get_descriptor(),
         deltas_device[0].data,
         input_tensor_descriptor,
         inputs_device[0].data,
@@ -684,6 +684,7 @@ void PoolingForwardPropagationCuda::print() const
 void PoolingForwardPropagationCuda::free()
 {
     cudnnDestroyTensorDescriptor(input_tensor_descriptor);
+    input_tensor_descriptor = nullptr;
 }
 
 
@@ -705,7 +706,7 @@ void PoolingBackPropagationCuda::initialize()
     // Input derivatives
 
     input_deltas.resize(1);
-    CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * input_height * input_width * channels * sizeof(float)));
+    input_deltas[0].resize({ batch_size, input_height, input_width, channels});
 }
 
 
@@ -720,13 +721,6 @@ void PoolingBackPropagationCuda::print() const
     cout << "Pooling layer back propagation CUDA" << endl
          << "Input deltas:" << endl
          << matrix_4d_from_device(input_deltas[0].data, batch_size, input_height, input_width, channels) << endl;
-}
-
-
-void PoolingBackPropagationCuda::free()
-{
-    cudaFree(input_deltas[0].data);
-    input_deltas[0].data = nullptr;
 }
 
 

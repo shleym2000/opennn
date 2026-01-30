@@ -30,7 +30,6 @@ int main()
             image_dataset.get_dimensions("Target"));
 
         // Training strategy
-        WeightedSquaredError* wse = new WeightedSquaredError(&image_classification_network, &image_dataset); 
         TrainingStrategy training_strategy(&image_classification_network, &image_dataset);
 
         training_strategy.set_loss_index("CrossEntropyError2d");
@@ -42,8 +41,7 @@ int main()
         adam->set_display_period(10);
 
 #ifdef OPENNN_CUDA
-    //training_strategy.train_cuda();
-        training_strategy.train();
+        training_strategy.train_cuda();
 #else
     training_strategy.train();
 #endif

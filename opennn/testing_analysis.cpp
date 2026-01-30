@@ -2255,8 +2255,6 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
         total_confusion_matrix += batch_confusion;
     }
 
-    neural_network->free_parameters_device();
-
     total_confusion_matrix(confusion_matrix_size - 1, confusion_matrix_size - 1) = testing_indices.size();
 
     return total_confusion_matrix;

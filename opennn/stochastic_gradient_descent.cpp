@@ -750,7 +750,6 @@ TrainingResults StochasticGradientDescent::train_cuda()
     set_unscaling();
 
     neural_network->copy_parameters_host();
-    neural_network->free_parameters_device();
 
     if (display) results.print();
 
@@ -764,7 +763,7 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
 
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
 
-    float* parameters_device = neural_network->get_parameters_device();
+    float* parameters_device_data = neural_network->get_parameters_device().data;
 
     back_propagation_cuda.neural_network.workspace;
 

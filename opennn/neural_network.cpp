@@ -84,7 +84,7 @@ void NeuralNetwork::compile()
 
     allocate_parameters_device();
 
-    link(parameters_device, layer_parameter_views_device);
+    link(parameters_device.data, layer_parameter_views_device);
 
 #endif
 }
@@ -1548,15 +1548,7 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
-    CHECK_CUDA(cudaMalloc(&parameters_device, parameters.size() * sizeof(float)));
-    cudaMemset(parameters_device, 0, parameters.size() * sizeof(float));
-}
-
-
-void NeuralNetwork::free_parameters_device()
-{
-    cudaFree(parameters_device);
-    parameters_device = nullptr;
+    parameters_device.resize(parameters.size());
 }
 
 

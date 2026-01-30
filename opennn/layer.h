@@ -427,7 +427,7 @@ struct LayerBackPropagation
     bool is_first_layer = false;
 
     vector<TensorView> input_deltas;
-    Tensor1 input_deltas_memory;
+    vector<Tensor1> input_deltas_memory;
 };
 
 
@@ -499,11 +499,11 @@ struct LayerBackPropagationCuda
 		return vector<TensorViewCuda*>();
     };
 
-    vector<TensorViewCuda> get_input_deltas_device() const;
+    vector<TensorViewCuda> get_input_deltas_views_device() const;
 
     virtual void print() const {}
 
-    virtual void free() {}
+	virtual void free() {}
 
     Index batch_size = 0;
 
@@ -511,7 +511,7 @@ struct LayerBackPropagationCuda
 
     bool is_first_layer = false;
 
-    vector<TensorViewCuda> input_deltas;
+    vector<TensorCuda> input_deltas;
 };
 
 #endif

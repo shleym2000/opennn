@@ -130,10 +130,6 @@ public:
 
     void copy_parameters_device();
 
-    void allocate_parameters_device();
-
-    void free();
-
 protected:
 
     TensorViewCuda biases_device;
@@ -144,8 +140,8 @@ protected:
     TensorViewCuda scales_device;
     TensorViewCuda offsets_device;
 
-    TensorViewCuda running_means_device;
-    TensorViewCuda running_variances_device;
+    TensorCuda running_means_device;
+    TensorCuda running_variances_device;
 
     // Activations
 
@@ -235,16 +231,15 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
     int output_batch_size, output_channels, output_height, output_width = 0;
 
-    float* reordered_inputs_device;
+    TensorCuda reordered_inputs_device;
 
-    TensorViewCuda convolutions;
+    TensorCuda convolutions;
 
     cudnnTensorDescriptor_t input_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
-
     cudnnConvolutionFwdAlgo_t convolution_algorithm;
 
     void* workspace = nullptr;
@@ -252,8 +247,8 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
     bool is_first_layer = false;
 
-    float* batch_means= nullptr;
-    float* bn_saved_inv_variance = nullptr;
+    TensorCuda batch_means;
+    TensorCuda bn_saved_inv_variance;
 };
 
 

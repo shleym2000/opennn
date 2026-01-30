@@ -756,7 +756,6 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     }
 
     neural_network->copy_parameters_host();
-    neural_network->free_parameters_device();
 
     set_unscaling();
 
@@ -774,7 +773,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 
     const int total_parameters_size = static_cast<int>(neural_network->get_parameters().size());
 
-    float* parameters_device = neural_network->get_parameters_device();
+    float* parameters_device_data = neural_network->get_parameters_device().data;
     const float* gradients_device = back_propagation_cuda.neural_network.workspace;
 
     optimization_data_cuda.iteration++;
@@ -785,7 +784,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 
     adam_update_device(
         total_parameters_size,
-        parameters_device,
+        parameters_device_data,
         optimization_data_cuda.gradient_exponential_decay_device,
         optimization_data_cuda.square_gradient_exponential_decay_device,
         gradients_device,

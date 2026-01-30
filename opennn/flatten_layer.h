@@ -186,7 +186,7 @@ public:
             FlattenForwardPropagationCuda<Rank>* fp_cuda =
                 static_cast<FlattenForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
 
-            type* reordered_inputs = fp_cuda->reordered_inputs;
+            type* reordered_inputs = fp_cuda->reordered_inputs.data;
             type* outputs_device = fp_cuda->outputs.data;
 
             invert_reorder_inputs_cuda(inputs_device[0].data, reordered_inputs, batch_size, channels, height, width);
@@ -260,18 +260,17 @@ struct FlattenBackPropagation final : LayerBackPropagation
         dimensions full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_tensor.resize(full_input_dims);
-        input_deltas_tensor.setZero();
-
-        input_deltas.resize(1, TensorView(input_deltas_tensor.data(), full_input_dims));
+        input_deltas_memory.resize(1);
+        input_deltas_memory[0].resize(count_elements(full_input_dims));
+        input_deltas.resize(1);
+        input_deltas[0].data = input_deltas_memory[0].data();
+        input_deltas[0].dims = full_input_dims;
     }
 
     void print() const override
     {
         cout << "Flatten Deltas Dimensions:" << endl << input_deltas[0].dims << endl;
     }
-
-    Tensor<type, Rank> input_deltas_tensor;
 };
 
 
@@ -292,20 +291,13 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if constexpr (Rank == 4)
         {
-            CHECK_CUDA(cudaMalloc(&reordered_inputs, batch_size * inputs_number * sizeof(float)));
-            //CUDA_MALLOC_AND_REPORT(reordered_inputs, batch_size * inputs_number * sizeof(float));
+            reordered_inputs.resize({ batch_size , inputs_number, 1, 1 });
         }
 
-        outputs.set_descriptor({static_cast<Index>(batch_size), outputs_number});
+        outputs.set_descriptor({batch_size, outputs_number});
     }
 
-    void free() override
-    {
-        cudaFree(reordered_inputs);
-        reordered_inputs = nullptr;
-    }
-
-    type* reordered_inputs = nullptr;
+    TensorCuda reordered_inputs;
 };
 
 
@@ -319,15 +311,10 @@ struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        input_deltas.resize(1);
-        CHECK_CUDA(cudaMalloc(&input_deltas[0].data, batch_size * layer->get_inputs_number() * sizeof(float)));
-        input_deltas[0].set_descriptor({ static_cast<Index>(batch_size), layer->get_inputs_number(), 1, 1 });
-    }
+        const Index inputs_number = layer->get_inputs_number();
 
-    void free() override
-    {
-        input_deltas[0].data = nullptr;
-        cudnnDestroyTensorDescriptor(input_deltas[0].descriptor);
+        input_deltas.resize(1);
+        input_deltas[0].resize({ batch_size, inputs_number, 1, 1 });
     }
 };
 
