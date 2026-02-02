@@ -41,14 +41,14 @@ public:
 
     vector<TensorView*> get_parameter_views() override;
 
-    void set(const Index& = 0,
+    void set(const Index = 0,
              const Index& = 0,
              const Index& = 0,
              const Index& = 0,
              const bool& = false,
              const string& = "multihead_attention_layer");
 
-    void set_dropout_rate(const type&);
+    void set_dropout_rate(const type);
 
     void apply_causal_mask(Tensor4&) const;
 
@@ -161,7 +161,7 @@ private:
 
 struct MultiHeadAttentionForwardPropagation final : LayerForwardPropagation
 {
-    MultiHeadAttentionForwardPropagation(const Index& new_batch_size = 0,
+    MultiHeadAttentionForwardPropagation(const Index new_batch_size = 0,
                                          Layer* new_layer = nullptr);
 
     void initialize() override;
@@ -181,7 +181,7 @@ struct MultiHeadAttentionForwardPropagation final : LayerForwardPropagation
 
 struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 {
-    MultiHeadAttentionBackPropagation(const Index& = 0, Layer* = nullptr);
+    MultiHeadAttentionBackPropagation(const Index = 0, Layer* = nullptr);
 
     vector<TensorView*> get_workspace_views() override;
 

@@ -12,7 +12,7 @@
 namespace opennn
 {
 
-type bound(const type& value, const type& minimum, const type& maximum)
+type bound(const type value, const type& minimum, const type& maximum)
 {
     return clamp(value, minimum, maximum);
 }
@@ -182,7 +182,7 @@ Tensor<Index, 1> calculate_rank_less(const Tensor1& vector)
 
 Index count_greater_than(const vector<Index>& data, const Index& bound)
 {
-    return count_if(data.begin(), data.end(), [&](const Index& value) {
+    return count_if(data.begin(), data.end(), [&](const Index value) {
         return value > bound;
     });
 }

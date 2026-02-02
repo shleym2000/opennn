@@ -30,10 +30,10 @@ public:
     string get_bounding_method_string() const;
 
     const Tensor1& get_lower_bounds() const;
-    type get_lower_bound(const Index&) const;
+    type get_lower_bound(const Index) const;
 
     const Tensor1& get_upper_bounds() const;
-    type get_upper_bound(const Index&) const;
+    type get_upper_bound(const Index) const;
 
     void set(const dimensions & = { 0 }, const string & = "bounding_layer");
 
@@ -44,10 +44,10 @@ public:
     void set_bounding_method(const string&);
 
     void set_lower_bounds(const Tensor1&);
-    void set_lower_bound(const Index&, const type&);
+    void set_lower_bound(const Index, const type&);
 
     void set_upper_bounds(const Tensor1&);
-    void set_upper_bound(const Index&, const type&);
+    void set_upper_bound(const Index, const type&);
 
     // Lower and upper bounds
 
@@ -85,7 +85,7 @@ private:
 
 struct BoundingForwardPropagation final : LayerForwardPropagation
 {
-    BoundingForwardPropagation(const Index& = 0, Layer* = nullptr);
+    BoundingForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -97,7 +97,7 @@ struct BoundingForwardPropagation final : LayerForwardPropagation
 
 struct BoundingForwardPropagationCuda final : public LayerForwardPropagationCuda
 {
-    BoundingForwardPropagationCuda(const Index & = 0, Layer* = nullptr);
+    BoundingForwardPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 

@@ -93,7 +93,7 @@ void LossIndex::set_regularization_method(const string& new_regularization_metho
 }
 
 
-void LossIndex::set_regularization_weight(const type& new_regularization_weight)
+void LossIndex::set_regularization_weight(const type new_regularization_weight)
 {
     regularization_weight = new_regularization_weight;
 }
@@ -469,13 +469,13 @@ void LossIndex::from_XML(const XMLDocument& document)
 }
 
 
-BackPropagation::BackPropagation(const Index& new_batch_size, const LossIndex* new_loss_index)
+BackPropagation::BackPropagation(const Index new_batch_size, const LossIndex* new_loss_index)
 {
     set(new_batch_size, new_loss_index);
 }
 
 
-void BackPropagation::set(const Index& new_samples_number, const LossIndex* new_loss_index)
+void BackPropagation::set(const Index new_samples_number, const LossIndex* new_loss_index)
 {
     samples_number = new_samples_number;
 
@@ -1165,7 +1165,7 @@ Tensor2 LossIndex::calculate_inverse_hessian()
     return H_inv;
 }
 
-type LossIndex::calculate_h(const type& x)
+type LossIndex::calculate_h(const type x)
 {
     const Index precision_digits = 6;
 
@@ -1251,7 +1251,7 @@ TensorView BackPropagationLM::get_output_deltas_tensor_view() const
 }
 
 
-void BackPropagationLM::set(const Index& new_samples_number,
+void BackPropagationLM::set(const Index new_samples_number,
                             LossIndex *new_loss_index)
 {
     loss_index = new_loss_index;
@@ -1309,7 +1309,7 @@ void BackPropagationLM::set(const Index& new_samples_number,
 }
 
 
-BackPropagationLM::BackPropagationLM(const Index& new_batch_size, LossIndex *new_loss_index)
+BackPropagationLM::BackPropagationLM(const Index new_batch_size, LossIndex *new_loss_index)
 {
     set(new_batch_size, new_loss_index);
 }
@@ -1318,30 +1318,30 @@ BackPropagationLM::BackPropagationLM(const Index& new_batch_size, LossIndex *new
 #ifdef OPENNN_CUDA
 
 void LossIndex::back_propagate_cuda(const BatchCuda& batch_cuda,
-                                    ForwardPropagationCuda& forward_propagation_cuda,
-                                    BackPropagationCuda& back_propagation_cuda)
+                                    ForwardPropagationCuda& forward_propagation,
+                                    BackPropagationCuda& back_propagation)
 {
     if (batch_cuda.is_empty()) return;
 
     // Loss index
 
-    calculate_error_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
+    calculate_error_cuda(batch_cuda, forward_propagation, back_propagation);
 
-    calculate_layers_error_gradient_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
+    calculate_layers_error_gradient_cuda(batch_cuda, forward_propagation, back_propagation);
 
     // Loss
 
-    back_propagation_cuda.loss = back_propagation_cuda.error();
+    back_propagation.loss = back_propagation.error();
 
     // Regularization
 
-    add_regularization_cuda(back_propagation_cuda);
+    add_regularization_cuda(back_propagation);
 }
 
 
 void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda,
-                                                     ForwardPropagationCuda& forward_propagation_cuda,
-                                                     BackPropagationCuda& back_propagation_cuda) const
+                                                     ForwardPropagationCuda& forward_propagation,
+                                                     BackPropagationCuda& back_propagation) const
 {
     const vector<unique_ptr<Layer>>& layers = neural_network->get_layers();
     const Index layers_number = layers.size();
@@ -1352,31 +1352,31 @@ void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
     const vector<vector<TensorViewCuda>> layer_input_views
-        = forward_propagation_cuda.get_layer_input_views_device(batch_cuda.get_input_views_device(), true);
+        = forward_propagation.get_layer_input_views_device(batch_cuda.get_input_views_device(), true);
 
     const vector<vector<TensorViewCuda>> layer_delta_views
-        = back_propagation_cuda.get_layer_delta_views_device();
+        = back_propagation.get_layer_delta_views_device();
 
-    calculate_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
+    calculate_output_delta_cuda(batch_cuda, forward_propagation, back_propagation);
 
     for (Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
         layers[i]->back_propagate_cuda(layer_input_views[i],
                                        layer_delta_views[i],
-                                       forward_propagation_cuda.layers[i],
-                                       back_propagation_cuda.neural_network.layers[i]);
+                                       forward_propagation.layers[i],
+                                       back_propagation.neural_network.layers[i]);
 }
 
 
-void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation_cuda) const
+void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation) const
 {
     /*
     if (regularization_method == "None" || regularization_weight == 0.0f)
     {
-        back_propagation_cuda.regularization = 0.0f;
+        back_propagation.regularization = 0.0f;
         return;
     }
 
-    NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
+    NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
 
     const Index layers_number = neural_network->get_layers_number();
 
@@ -1392,7 +1392,7 @@ void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation_cu
         if(!layer->get_is_trainable())
             continue;
 
-        LayerBackPropagationCuda* layer_back_prop_cuda = back_propagation_cuda.neural_network.layers[layer_index].get();
+        LayerBackPropagationCuda* layer_back_prop_cuda = back_propagation.neural_network.layers[layer_index].get();
 
         const vector<TensorView>& parameter_device_pairs = layer->get_parameter_views_device();
         const vector<TensorView>& delta_device_pairs = layer_back_prop_cuda->get_gradient_views_device();
@@ -1447,15 +1447,15 @@ void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation_cu
     {
         const type regularization_term = 0.5f * regularization_weight * total_sum_squares;
 
-        back_propagation_cuda.regularization = regularization_term;
-        back_propagation_cuda.loss += regularization_term;
+        back_propagation.regularization = regularization_term;
+        back_propagation.loss += regularization_term;
     }
     else if (regularization_method == "L1")
     {
         const type regularization_term = regularization_weight * total_l1_norm;
 
-        back_propagation_cuda.regularization = regularization_term;
-        back_propagation_cuda.loss += regularization_term;
+        back_propagation.regularization = regularization_term;
+        back_propagation.loss += regularization_term;
     }
     */
 }
@@ -1482,13 +1482,13 @@ cudnnHandle_t LossIndex::get_cudnn_handle()
 
 // CUDA structs
 
-BackPropagationCuda::BackPropagationCuda(const Index& new_samples_number, LossIndex* new_loss_index)
+BackPropagationCuda::BackPropagationCuda(const Index new_samples_number, LossIndex* new_loss_index)
 {
     set(new_samples_number, new_loss_index);
 }
 
 
-void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_loss_index)
+void BackPropagationCuda::set(const Index new_samples_number, LossIndex* new_loss_index)
 {
     samples_number = new_samples_number;
     loss_index = new_loss_index;

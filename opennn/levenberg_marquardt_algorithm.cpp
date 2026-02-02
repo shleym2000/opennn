@@ -92,56 +92,55 @@ void LevenbergMarquardtAlgorithm::set_default()
 }
 
 
-void LevenbergMarquardtAlgorithm::set_damping_parameter(const type& new_damping_parameter)
+void LevenbergMarquardtAlgorithm::set_damping_parameter(const type new_damping_parameter)
 {
     damping_parameter = clamp(new_damping_parameter, minimum_damping_parameter, maximum_damping_parameter);
 }
 
 
-void LevenbergMarquardtAlgorithm::set_damping_parameter_factor(const type& new_damping_parameter_factor)
+void LevenbergMarquardtAlgorithm::set_damping_parameter_factor(const type new_damping_parameter_factor)
 {
     damping_parameter_factor = new_damping_parameter_factor;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_minimum_damping_parameter(const type& new_minimum_damping_parameter)
+void LevenbergMarquardtAlgorithm::set_minimum_damping_parameter(const type new_minimum_damping_parameter)
 {
     minimum_damping_parameter = new_minimum_damping_parameter;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_maximum_damping_parameter(const type& new_maximum_damping_parameter)
+void LevenbergMarquardtAlgorithm::set_maximum_damping_parameter(const type new_maximum_damping_parameter)
 {
     maximum_damping_parameter = new_maximum_damping_parameter;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_minimum_loss_decrease(const type& new_minimum_loss_decrease)
+void LevenbergMarquardtAlgorithm::set_minimum_loss_decrease(const type new_minimum_loss_decrease)
 {
     minimum_loss_decrease = new_minimum_loss_decrease;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_loss_goal(const type& new_loss_goal)
+void LevenbergMarquardtAlgorithm::set_loss_goal(const type new_loss_goal)
 {
     training_loss_goal = new_loss_goal;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_maximum_selection_failures(
-        const Index& new_maximum_selection_failures)
+void LevenbergMarquardtAlgorithm::set_maximum_selection_failures(const Index new_maximum_selection_failures)
 {
     maximum_selection_failures = new_maximum_selection_failures;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void LevenbergMarquardtAlgorithm::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void LevenbergMarquardtAlgorithm::set_maximum_time(const type& new_maximum_time)
+void LevenbergMarquardtAlgorithm::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }

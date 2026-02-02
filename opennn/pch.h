@@ -86,6 +86,20 @@
         }                                                                         \
     } while (0)
 
+
+#define CHECK_CUBLAS(call) do \
+{ \
+        cublasStatus_t status = call; \
+        if (status != CUBLAS_STATUS_SUCCESS) \
+    { \
+            string error_msg = std::string("CuBLAS Error code: ") + std::to_string(status) + \
+              " in " + __FILE__ + ":" + std::to_string(__LINE__); \
+            fprintf(stderr, "%s\n", error_msg.c_str()); \
+            throw runtime_error(error_msg); \
+    } \
+} while(0)
+
+
 #define CHECK_CUDNN(call) do \
 { \
         cudnnStatus_t status = call; \

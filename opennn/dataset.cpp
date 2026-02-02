@@ -20,7 +20,7 @@
 namespace opennn
 {
 
-Dataset::Dataset(const Index& new_samples_number,
+Dataset::Dataset(const Index new_samples_number,
                  const dimensions& new_input_dimensions,
                  const dimensions& new_target_dimensions)
 {
@@ -197,7 +197,7 @@ void Dataset::get_categorical_info(const string& variable_role, vector<Index>& r
     }
 }
 
-bool Dataset::is_sample_used(const Index& index) const
+bool Dataset::is_sample_used(const Index index) const
 {
     return sample_roles[index] != "None";
 }
@@ -262,7 +262,7 @@ vector<Index> Dataset::get_used_sample_indices() const
 }
 
 
-string Dataset::get_sample_role(const Index& index) const
+string Dataset::get_sample_role(const Index index) const
 {
     return sample_roles[index];
 }
@@ -355,7 +355,7 @@ void Dataset::set_sample_roles(const string& sample_role)
 }
 
 
-void Dataset::set_sample_role(const Index& index, const string& new_role)
+void Dataset::set_sample_role(const Index index, const string& new_role)
 {
     if (new_role == "Training")
         sample_roles[index] = "Training";
@@ -395,7 +395,7 @@ void Dataset::set_sample_roles(const vector<Index>& indices, const string& sampl
 }
 
 
-void Dataset::split_samples_random(const type& training_samples_ratio,
+void Dataset::split_samples_random(const type training_samples_ratio,
                                    const type& selection_samples_ratio,
                                    const type& testing_samples_ratio)
 {
@@ -446,7 +446,7 @@ void Dataset::split_samples_random(const type& training_samples_ratio,
 }
 
 
-void Dataset::split_samples_sequential(const type& training_samples_ratio,
+void Dataset::split_samples_sequential(const type training_samples_ratio,
                                        const type& selection_samples_ratio,
                                        const type& testing_samples_ratio)
 {
@@ -912,10 +912,10 @@ void Dataset::set_raw_variable_indices(const vector<Index>& input_raw_variables,
 {
     set_raw_variables("None");
 
-    for(const Index& index : input_raw_variables)
+    for(const Index index : input_raw_variables)
         set_raw_variable_role(index, "Input");
 
-    for(const Index& index : target_raw_variables)
+    for(const Index index : target_raw_variables)
     {
         if(raw_variables[index].role == "Input")
             set_raw_variable_role(index, "InputTarget");
@@ -947,7 +947,7 @@ void Dataset::set_input_raw_variables_unused()
 }
 
 
-void Dataset::set_raw_variable_role(const Index& index, const string& new_role)
+void Dataset::set_raw_variable_role(const Index index, const string& new_role)
 {
     static const unordered_set<string> valid_strings
         = {"Id", "Input", "Target", "InputTarget", "Time", "None", "Decoder"};
@@ -967,7 +967,7 @@ void Dataset::set_raw_variable_role(const string& name, const string& new_role)
 }
 
 
-void Dataset::set_raw_variable_type(const Index& index, const RawVariableType& new_type)
+void Dataset::set_raw_variable_type(const Index index, const RawVariableType& new_type)
 {
     raw_variables[index].type = new_type;
 }
@@ -1029,7 +1029,7 @@ void Dataset::set_variable_roles(const string& variable_role)
 }
 
 
-void Dataset::set_raw_variables_number(const Index& new_raw_variables_number)
+void Dataset::set_raw_variables_number(const Index new_raw_variables_number)
 {
     raw_variables.resize(new_raw_variables_number);
 }
@@ -1311,13 +1311,13 @@ Tensor2 Dataset::get_data_from_indices(const vector<Index>& sample_indices, cons
 }
 
 
-Tensor1 Dataset::get_sample_data(const Index& index) const
+Tensor1 Dataset::get_sample_data(const Index index) const
 {
     return data.chip(index, 0);
 }
 
 
-Tensor1 Dataset::get_sample_data(const Index& sample_index, const vector<Index>& variable_indices) const
+Tensor1 Dataset::get_sample_data(const Index sample_index, const vector<Index>& variable_indices) const
 {
     const Index variables_number = variable_indices.size();
 
@@ -1331,7 +1331,7 @@ Tensor1 Dataset::get_sample_data(const Index& sample_index, const vector<Index>&
 }
 
 
-Tensor2 Dataset::get_sample_input_data(const Index& sample_index) const
+Tensor2 Dataset::get_sample_input_data(const Index sample_index) const
 {
     const Index input_variables_number = get_variables_number("Input");
 
@@ -1346,7 +1346,7 @@ Tensor2 Dataset::get_sample_input_data(const Index& sample_index) const
 }
 
 
-Tensor2 Dataset::get_sample_target_data(const Index& sample_index) const
+Tensor2 Dataset::get_sample_target_data(const Index sample_index) const
 {
     const vector<Index> target_variable_indices = get_variable_indices("Target");
 
@@ -1370,7 +1370,7 @@ Index Dataset::get_raw_variable_index(const string& column_name) const
 }
 
 
-Index Dataset::get_raw_variable_index(const Index& variable_index) const
+Index Dataset::get_raw_variable_index(const Index variable_index) const
 {
     const Index raw_variables_number = get_raw_variables_number();
 
@@ -1403,7 +1403,7 @@ vector<vector<Index>> Dataset::get_variable_indices() const
 }
 
 
-vector<Index> Dataset::get_variable_indices(const Index& raw_variable_index) const
+vector<Index> Dataset::get_variable_indices(const Index raw_variable_index) const
 {
     Index index = 0;
 
@@ -1426,7 +1426,7 @@ vector<Index> Dataset::get_variable_indices(const Index& raw_variable_index) con
 }
 
 
-Tensor2 Dataset::get_raw_variable_data(const Index& raw_variable_index) const
+Tensor2 Dataset::get_raw_variable_data(const Index raw_variable_index) const
 {
     Index raw_variables_number = 1;
     const Index rows_number = data.dimension(0);
@@ -1441,7 +1441,7 @@ Tensor2 Dataset::get_raw_variable_data(const Index& raw_variable_index) const
 }
 
 
-Tensor1 Dataset::get_sample(const Index& sample_index) const
+Tensor1 Dataset::get_sample(const Index sample_index) const
 {
     if (sample_index >= data.dimension(0))
         throw runtime_error("Sample index out of bounds.");
@@ -1450,7 +1450,7 @@ Tensor1 Dataset::get_sample(const Index& sample_index) const
 }
 
 
-string Dataset::get_sample_category(const Index& sample_index, const Index& column_index_start) const
+string Dataset::get_sample_category(const Index sample_index, const Index& column_index_start) const
 {
     if (raw_variables[column_index_start].type != RawVariableType::Categorical)
         throw runtime_error("The specified raw_variable is not of categorical type.");
@@ -1463,7 +1463,7 @@ string Dataset::get_sample_category(const Index& sample_index, const Index& colu
 }
 
 
-Tensor2 Dataset::get_raw_variable_data(const Index& raw_variable_index, const vector<Index>& row_indices) const
+Tensor2 Dataset::get_raw_variable_data(const Index raw_variable_index, const vector<Index>& row_indices) const
 {
     Tensor2 raw_variable_data(row_indices.size(), get_variable_indices(raw_variable_index).size());
 
@@ -1518,7 +1518,7 @@ void Dataset::set(const filesystem::path& new_data_path,
 }
 
 
-void Dataset::set(const Index& new_samples_number,
+void Dataset::set(const Index new_samples_number,
                   const dimensions& new_input_dimensions,
                   const dimensions& new_target_dimensions)
 {
@@ -1713,7 +1713,7 @@ void Dataset::set_threads_number(const int& new_threads_number)
 }
 
 
-vector<string> Dataset::unuse_uncorrelated_raw_variables(const type& minimum_correlation)
+vector<string> Dataset::unuse_uncorrelated_raw_variables(const type minimum_correlation)
 {
     vector<string> unused_raw_variables;
 
@@ -1763,7 +1763,7 @@ vector<string> Dataset::unuse_uncorrelated_raw_variables(const type& minimum_cor
 }
 
 
-vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correlation)
+vector<string> Dataset::unuse_collinear_raw_variables(const type maximum_correlation)
 {
     const Tensor<Correlation, 2> correlations = calculate_input_raw_variable_pearson_correlations();
     const vector<Index> input_raw_variable_indices = get_raw_variable_indices("Input");
@@ -1840,7 +1840,7 @@ vector<string> Dataset::unuse_collinear_raw_variables(const type& maximum_correl
 }
 
 
-vector<Histogram> Dataset::calculate_raw_variable_distributions(const Index& bins_number) const
+vector<Histogram> Dataset::calculate_raw_variable_distributions(const Index bins_number) const
 {
     const Index used_raw_variables_number = get_used_raw_variables_number();
     const vector<Index> used_sample_indices = get_used_sample_indices();
@@ -1975,7 +1975,7 @@ vector<BoxPlot> Dataset::calculate_raw_variables_box_plots() const
 }
 
 
-Index Dataset::calculate_used_negatives(const Index& target_index) const
+Index Dataset::calculate_used_negatives(const Index target_index) const
 {
     Index negatives = 0;
 
@@ -2002,7 +2002,7 @@ Index Dataset::calculate_used_negatives(const Index& target_index) const
 }
 
 
-Index Dataset::calculate_negatives(const Index& target_index, const string& sample_role) const
+Index Dataset::calculate_negatives(const Index target_index, const string& sample_role) const
 {
     Index negatives = 0;
     const vector<Index> indices = get_sample_indices(sample_role);
@@ -2102,7 +2102,7 @@ vector<Descriptives> Dataset::calculate_raw_variable_descriptives_negative_sampl
 }
 
 
-vector<Descriptives> Dataset::calculate_raw_variable_descriptives_categories(const Index& class_index) const
+vector<Descriptives> Dataset::calculate_raw_variable_descriptives_categories(const Index class_index) const
 {
     const vector<Index> used_sample_indices = get_used_sample_indices();
     const vector<Index> input_variable_indices = get_variable_indices("Input");
@@ -2176,7 +2176,7 @@ Index Dataset::get_gmt() const
 }
 
 
-void Dataset::set_gmt(const Index& new_gmt)
+void Dataset::set_gmt(const Index new_gmt)
 {
     gmt = new_gmt;
 }
@@ -2259,7 +2259,7 @@ bool Dataset::has_nan() const
 }
 
 
-bool Dataset::has_nan_row(const Index& row_index) const
+bool Dataset::has_nan_row(const Index row_index) const
 {
     const Index variables_number = get_variables_number();
 
@@ -2585,7 +2585,7 @@ void Dataset::unscale_variables(const string& variable_role,
 }
 
 
-void Dataset::set_data_constant(const type& new_value)
+void Dataset::set_data_constant(const type new_value)
 {
     const vector<Index> input_indices = get_variable_indices("Input");
 
@@ -2602,7 +2602,7 @@ void Dataset::set_data_random()
     set_random_uniform(data);
 }
 
-void Dataset::set_data_integer(const Index& vocabulary_size)
+void Dataset::set_data_integer(const Index vocabulary_size)
 {
     set_random_integer(data, 0, vocabulary_size - 1);
 }
@@ -3147,7 +3147,7 @@ Tensor<Index, 1> Dataset::calculate_target_distribution() const
 }
 
 
-vector<vector<Index>> Dataset::calculate_Tukey_outliers(const type& cleaning_parameter) const
+vector<vector<Index>> Dataset::calculate_Tukey_outliers(const type cleaning_parameter) const
 {
     const Index samples_number = get_used_samples_number();
     const vector<Index> sample_indices = get_used_sample_indices();
@@ -3234,7 +3234,7 @@ vector<vector<Index>> Dataset::calculate_Tukey_outliers(const type& cleaning_par
 }
 
 
-vector<vector<Index>> Dataset::replace_Tukey_outliers_with_NaN(const type& cleaning_parameter)
+vector<vector<Index>> Dataset::replace_Tukey_outliers_with_NaN(const type cleaning_parameter)
 {
     const Index samples_number = get_used_samples_number();
     const vector<Index> sample_indices = get_used_sample_indices();
@@ -3323,7 +3323,7 @@ vector<vector<Index>> Dataset::replace_Tukey_outliers_with_NaN(const type& clean
 }
 
 
-void Dataset::unuse_Tukey_outliers(const type& cleaning_parameter)
+void Dataset::unuse_Tukey_outliers(const type cleaning_parameter)
 {
     const vector<vector<Index>> outliers_indices = calculate_Tukey_outliers(cleaning_parameter);
 
@@ -4365,7 +4365,7 @@ void Batch::fill(const vector<Index>& sample_indices,
 }
 
 
-Batch::Batch(const Index& new_samples_number, const Dataset* new_dataset)
+Batch::Batch(const Index new_samples_number, const Dataset* new_dataset)
 {
     const unsigned int threads_number = thread::hardware_concurrency();
     thread_pool = make_unique<ThreadPool>(threads_number);
@@ -4375,7 +4375,7 @@ Batch::Batch(const Index& new_samples_number, const Dataset* new_dataset)
 }
 
 
-void Batch::set(const Index& new_samples_number, const Dataset* new_dataset)
+void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 {
     if(!new_dataset) return;
 
@@ -4506,13 +4506,13 @@ void BatchCuda::fill(const vector<Index>& sample_indices,
 }
 
 
-BatchCuda::BatchCuda(const Index& new_samples_number, Dataset* new_dataset)
+BatchCuda::BatchCuda(const Index new_samples_number, Dataset* new_dataset)
 {
     set(new_samples_number, new_dataset);
 }
 
 
-void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
+void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
 {
     if(!new_dataset) return;
 
@@ -4532,7 +4532,7 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
         input_dimensions.insert(input_dimensions.end(), data_set_input_dimensions.begin(), data_set_input_dimensions.end());
 
         CHECK_CUDA(cudaMallocHost(&inputs_host, input_size * sizeof(float)));
-        CHECK_CUDA(cudaMalloc(&inputs_device, input_size * sizeof(float)));
+        inputs_device.resize({samples_number, num_input_features});
     }
     /*
     if(!data_set_decoder_dimensions.empty())
@@ -4555,18 +4555,18 @@ void BatchCuda::set(const Index& new_samples_number, Dataset* new_dataset)
         target_dimensions.insert(target_dimensions.end(), data_set_target_dimensions.begin(), data_set_target_dimensions.end());
 
         CHECK_CUDA(cudaMallocHost(&targets_host, target_size * sizeof(float)));
-        CHECK_CUDA(cudaMalloc(&targets_device, target_size * sizeof(float)));
+        targets_device.resize({samples_number, num_target_features});
     }
 }
 
 
-void BatchCuda::copy_device(const Index& current_batch_size)
+void BatchCuda::copy_device(const Index current_batch_size)
 {
     const Index input_size = current_batch_size * num_input_features;
     const Index target_size = current_batch_size * num_target_features;
 
-    CHECK_CUDA(cudaMemcpy(inputs_device, inputs_host, input_size * sizeof(float), cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemcpy(targets_device, targets_host, target_size * sizeof(float), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(inputs_device.data, inputs_host, input_size * sizeof(float), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(targets_device.data, targets_host, target_size * sizeof(float), cudaMemcpyHostToDevice));
 }
 
 
@@ -4578,7 +4578,7 @@ Tensor2 BatchCuda::get_inputs_device() const
 
     inputs.setZero();
 
-    CHECK_CUDA(cudaMemcpy(inputs.data(), inputs_device, samples_number * inputs_number * sizeof(type), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(inputs.data(), inputs_device.data, samples_number * inputs_number * sizeof(type), cudaMemcpyDeviceToHost));
 
     return inputs;
 }
@@ -4592,7 +4592,7 @@ Tensor2 BatchCuda::get_decoder_device() const
 
     decoder.setZero();
 
-    CHECK_CUDA(cudaMemcpy(decoder.data(), inputs_device, samples_number * decoder_number * sizeof(type), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(decoder.data(), inputs_device.data, samples_number * decoder_number * sizeof(type), cudaMemcpyDeviceToHost));
 
     return decoder;
 }
@@ -4606,7 +4606,7 @@ Tensor2 BatchCuda::get_targets_device() const
 
     targets.setZero();
 
-    CHECK_CUDA(cudaMemcpy(targets.data(), targets_device, samples_number * targets_number * sizeof(type), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(targets.data(), targets_device.data, samples_number * targets_number * sizeof(type), cudaMemcpyDeviceToHost));
 
     return targets;
 }
@@ -4614,17 +4614,13 @@ Tensor2 BatchCuda::get_targets_device() const
 
 vector<TensorViewCuda> BatchCuda::get_input_views_device() const
 {
-    vector<TensorViewCuda> input_views = {{inputs_device, nullptr}};
-
-    return input_views;
+    return {{inputs_device.data, nullptr}};
 }
 
 
 TensorViewCuda BatchCuda::get_target_view_device() const
 {
-    TensorViewCuda target_pair = {targets_device , nullptr};
-
-    return target_pair;
+    return {targets_device.data , nullptr};
 }
 
 
@@ -4658,13 +4654,7 @@ void BatchCuda::free()
     cudaFreeHost(inputs_host);
     cudaFreeHost(decoder_host);
     cudaFreeHost(targets_host);
-    cudaFree(inputs_device);
-    cudaFree(decoder_device);
-    cudaFree(targets_device);
 
-    inputs_device = nullptr;
-    decoder_device = nullptr;
-    targets_device = nullptr;
     inputs_host = nullptr;
     decoder_host = nullptr;
     targets_host = nullptr;

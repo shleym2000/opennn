@@ -26,7 +26,7 @@ public:
 
     enum class Codification { UTF8, SHIFT_JIS };
 
-    Dataset(const Index& = 0,
+    Dataset(const Index = 0,
             const dimensions& = {0},
             const dimensions& = {0});
 
@@ -120,7 +120,7 @@ public:
 
     vector<Index> get_used_sample_indices() const;
 
-    string get_sample_role(const Index&) const;
+    string get_sample_role(const Index) const;
     const vector<string>& get_sample_roles() const;
 
     vector<Index> get_sample_roles_vector() const;
@@ -135,7 +135,7 @@ public:
     vector<RawVariable> get_raw_variables(const string&) const;
 
     Index get_raw_variable_index(const string&) const;
-    Index get_raw_variable_index(const Index&) const;
+    Index get_raw_variable_index(const Index) const;
 
     vector<Index> get_raw_variable_indices(const string&) const;
     vector<Index> get_used_raw_variables_indices() const;
@@ -143,7 +143,7 @@ public:
     vector<string> get_raw_variable_names() const;
     vector<string> get_raw_variable_names(const string&) const;
 
-    RawVariableType get_raw_variable_type(const Index& index) const {return raw_variables[index].type;}
+    RawVariableType get_raw_variable_type(const Index index) const {return raw_variables[index].type;}
 
     // Variables get
 
@@ -155,7 +155,7 @@ public:
     vector<string> get_variable_names(const string&) const;
 
     vector<vector<Index>> get_variable_indices() const;
-    vector<Index> get_variable_indices(const Index&) const;
+    vector<Index> get_variable_indices(const Index) const;
     vector<Index> get_variable_indices(const string&) const;
     vector<Index> get_used_variable_indices() const;
 
@@ -172,18 +172,18 @@ public:
     Tensor2 get_data(const string&, const string&) const;
     Tensor2 get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
 
-    Tensor1 get_sample_data(const Index&) const;
-    Tensor1 get_sample_data(const Index&, const vector<Index>&) const;
-    Tensor2 get_sample_input_data(const Index&) const;
-    Tensor2 get_sample_target_data(const Index&) const;
+    Tensor1 get_sample_data(const Index) const;
+    Tensor1 get_sample_data(const Index, const vector<Index>&) const;
+    Tensor2 get_sample_input_data(const Index) const;
+    Tensor2 get_sample_target_data(const Index) const;
 
-    Tensor2 get_raw_variable_data(const Index&) const;
-    Tensor2 get_raw_variable_data(const Index&, const vector<Index>&) const;
+    Tensor2 get_raw_variable_data(const Index) const;
+    Tensor2 get_raw_variable_data(const Index, const vector<Index>&) const;
     //Tensor2 get_raw_variable_data(const Tensor<Index, 1>&) const;
     Tensor2 get_raw_variable_data(const string&) const;
 
-    string get_sample_category(const Index&, const Index&) const;
-    Tensor1 get_sample(const Index&) const;
+    string get_sample_category(const Index, const Index&) const;
+    Tensor1 get_sample(const Index) const;
 
     const vector<vector<string>>& get_data_file_preview() const;
 
@@ -224,7 +224,7 @@ public:
 
     // Set
 
-    void set(const Index& = 0, const dimensions& = {}, const dimensions& = {});
+    void set(const Index = 0, const dimensions& = {}, const dimensions& = {});
 
     void set(const filesystem::path&,
              const string&,
@@ -242,7 +242,7 @@ public:
 
     void set_sample_roles(const string&);
 
-    void set_sample_role(const Index&, const string&);
+    void set_sample_role(const Index, const string&);
 
     void set_sample_roles(const vector<string>&);
     void set_sample_roles(const vector<Index>&, const string&);
@@ -261,17 +261,17 @@ public:
     void set_raw_variable_indices(const vector<Index>&, const vector<Index>&);
     void set_input_raw_variables_unused();
 
-    void set_raw_variable_role(const Index&, const string&);
+    void set_raw_variable_role(const Index, const string&);
     void set_raw_variable_role(const string&, const string&);
 
-    void set_raw_variable_type(const Index&, const RawVariableType&);
+    void set_raw_variable_type(const Index, const RawVariableType&);
     void set_raw_variable_type(const string&, const RawVariableType&);
 
     void set_raw_variable_types(const RawVariableType&);
 
     void set_raw_variable_names(const vector<string>&);
 
-    void set_raw_variables_number(const Index&);
+    void set_raw_variables_number(const Index);
 
     void set_raw_variable_scalers(const string&);
 
@@ -310,11 +310,11 @@ public:
     void set_missing_values_method(const MissingValuesMethod&);
     void set_missing_values_method(const string&);
 
-    void set_gmt(const Index&);
+    void set_gmt(const Index);
 
     void set_display(const bool&);
 
-    bool is_sample_used(const Index&) const;
+    bool is_sample_used(const Index) const;
 
     bool has_binary_raw_variables() const;
     bool has_categorical_raw_variables() const;
@@ -327,11 +327,11 @@ public:
 
     // Splitting
 
-    void split_samples_sequential(const type& training_ratio = type(0.6),
+    void split_samples_sequential(const type training_ratio = type(0.6),
                                   const type& selection_ratio = type(0.2),
                                   const type& testing_ratio = type(0.2));
 
-    void split_samples_random(const type& training_ratio = type(0.6),
+    void split_samples_random(const type training_ratio = type(0.6),
                               const type& selection_ratio = type(0.2),
                               const type& testing_ratio = type(0.2));
 
@@ -339,12 +339,12 @@ public:
 
     //Tensor<Index, 1> unuse_repeated_samples();
 
-    vector<string> unuse_uncorrelated_raw_variables(const type& = type(0.25));
-    vector<string> unuse_collinear_raw_variables(const type& = type(0.95));
+    vector<string> unuse_uncorrelated_raw_variables(const type = type(0.25));
+    vector<string> unuse_collinear_raw_variables(const type = type(0.95));
 
     // Initialization
 
-    void set_data_constant(const type&);
+    void set_data_constant(const type);
 
     // Descriptives
 
@@ -355,7 +355,7 @@ public:
 
     vector<Descriptives> calculate_raw_variable_descriptives_positive_samples() const;
     vector<Descriptives> calculate_raw_variable_descriptives_negative_samples() const;
-    vector<Descriptives> calculate_raw_variable_descriptives_categories(const Index&) const;
+    vector<Descriptives> calculate_raw_variable_descriptives_categories(const Index) const;
 
     vector<Descriptives> calculate_variable_descriptives(const string&) const;
 
@@ -365,12 +365,12 @@ public:
 
     Tensor1 calculate_means(const string& , const string&) const;
 
-    Index calculate_used_negatives(const Index&) const;
-    Index calculate_negatives(const Index&, const string&) const;
+    Index calculate_used_negatives(const Index) const;
+    Index calculate_negatives(const Index, const string&) const;
 
     // Distribution
 
-    vector<Histogram> calculate_raw_variable_distributions(const Index& = 10) const;
+    vector<Histogram> calculate_raw_variable_distributions(const Index = 10) const;
 
     // Box plots
 
@@ -421,16 +421,16 @@ public:
 
     // Tuckey outlier detection
 
-    vector<vector<Index>> calculate_Tukey_outliers(const type& = type(1.5)) const;
+    vector<vector<Index>> calculate_Tukey_outliers(const type = type(1.5)) const;
 
-    vector<vector<Index>> replace_Tukey_outliers_with_NaN(const type& = type(1.5));
+    vector<vector<Index>> replace_Tukey_outliers_with_NaN(const type = type(1.5));
 
-    void unuse_Tukey_outliers(const type& = type(1.5));
+    void unuse_Tukey_outliers(const type = type(1.5));
 
     // Data generation
 
     virtual void set_data_random();
-    virtual void set_data_integer(const Index& vocabulary_size); 
+    virtual void set_data_integer(const Index vocabulary_size);
     void set_data_rosenbrock();
     void set_data_binary_classification();
 
@@ -464,7 +464,7 @@ public:
 
     bool has_nan() const;
 
-    bool has_nan_row(const Index&) const;
+    bool has_nan_row(const Index) const;
 
     void print_missing_values_information() const;
 
@@ -600,9 +600,9 @@ protected:
 
 struct Batch
 {
-    Batch(const Index& = 0, const Dataset* = nullptr);
+    Batch(const Index = 0, const Dataset* = nullptr);
 
-    void set(const Index& = 0, const Dataset* = nullptr);
+    void set(const Index = 0, const Dataset* = nullptr);
 
     void fill(const vector<Index>&,
               const vector<Index>&,
@@ -642,11 +642,11 @@ struct Batch
 
 struct BatchCuda
 {
-    BatchCuda(const Index& = 0, Dataset* = nullptr);
+    BatchCuda(const Index = 0, Dataset* = nullptr);
 
     ~BatchCuda() { free(); }
 
-    void set(const Index&, Dataset*);
+    void set(const Index, Dataset*);
 
     void fill(const vector<Index>&,
               const vector<Index>&,
@@ -665,7 +665,7 @@ struct BatchCuda
     Tensor2 get_decoder_device() const;
     Tensor2 get_targets_device() const;
 
-    void copy_device(const Index&);
+    void copy_device(const Index);
 
     void free();
 
@@ -687,9 +687,9 @@ struct BatchCuda
     float* decoder_host = nullptr;
     float* targets_host = nullptr;
 
-    float* inputs_device = nullptr;
-    float* decoder_device = nullptr;
-    float* targets_device = nullptr;
+    TensorCuda inputs_device;
+    TensorCuda decoder_device;
+    TensorCuda targets_device;
 };
 
 #endif

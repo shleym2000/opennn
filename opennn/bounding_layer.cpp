@@ -32,7 +32,7 @@ dimensions Bounding::get_input_dimensions() const
 }
 
 
-type Bounding::get_lower_bound(const Index& i) const
+type Bounding::get_lower_bound(const Index i) const
 {
     return lower_bounds[i];
 }
@@ -50,7 +50,7 @@ dimensions Bounding::get_output_dimensions() const
 }
 
 
-type Bounding::get_upper_bound(const Index& i) const
+type Bounding::get_upper_bound(const Index i) const
 {
     return upper_bounds(i);
 }
@@ -100,7 +100,7 @@ void Bounding::set_input_dimensions(const dimensions& new_input_dimensions)
 }
 
 
-void Bounding::set_lower_bound(const Index& index, const type& new_lower_bound)
+void Bounding::set_lower_bound(const Index index, const type& new_lower_bound)
 {
     const dimensions output_dimensions = get_output_dimensions();
 
@@ -136,7 +136,7 @@ void Bounding::set_upper_bounds(const Tensor1& new_upper_bounds)
 }
 
 
-void Bounding::set_upper_bound(const Index& index, const type& new_upper_bound)
+void Bounding::set_upper_bound(const Index index, const type& new_upper_bound)
 {
     const dimensions output_dimensions = get_output_dimensions();
 
@@ -282,7 +282,7 @@ void Bounding::from_XML(const XMLDocument& document)
 }
 
 
-BoundingForwardPropagation::BoundingForwardPropagation(const Index& new_batch_size, Layer* new_layer)
+BoundingForwardPropagation::BoundingForwardPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
@@ -310,17 +310,17 @@ REGISTER(LayerForwardPropagation, BoundingForwardPropagation, "Bounding")
 #ifdef OPENNN_CUDA
 
 void Bounding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                       const bool&)
 {
     BoundingForwardPropagationCuda* this_forward_propagation =
-        static_cast<BoundingForwardPropagationCuda*>(forward_propagation_cuda.get());
+        static_cast<BoundingForwardPropagationCuda*>(forward_propagation.get());
 
     // @todo Implement bounding in CUDA
 }
 
 
-BoundingForwardPropagationCuda::BoundingForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+BoundingForwardPropagationCuda::BoundingForwardPropagationCuda(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagationCuda()
 {
     set(new_batch_size, new_layer);

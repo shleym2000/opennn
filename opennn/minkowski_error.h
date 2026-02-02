@@ -24,7 +24,7 @@ public:
 
     void set_default();
 
-    void set_Minkowski_parameter(const type&);
+    void set_Minkowski_parameter(const type);
 
     void calculate_error(const Batch& batch,
                          const ForwardPropagation& forward_propagation,

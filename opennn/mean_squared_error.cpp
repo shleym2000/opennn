@@ -160,8 +160,8 @@ void MeanSquaredError::to_XML(XMLPrinter& file_stream) const
 #ifdef OPENNN_CUDA
 
 void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
-                                            const ForwardPropagationCuda& forward_propagation_cuda,
-                                            BackPropagationCuda& back_propagation_cuda) const
+                                            const ForwardPropagationCuda& forward_propagation,
+                                            BackPropagationCuda& back_propagation) const
 {
 
     const Index outputs_number = neural_network->get_outputs_number();
@@ -170,21 +170,21 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     const Index samples_number = batch_cuda.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device;
+    const type* targets = batch_cuda.targets_device.data;
 
     // Forward propagation
 
-    const type* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
+    const type* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagatioin
 
-    type* errors_device = back_propagation_cuda.errors;
+    type* errors_device = back_propagation.errors;
 
-    Tensor<type,0>& error = back_propagation_cuda.error;
+    Tensor<type,0>& error = back_propagation.error;
 
-    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation_cuda.output_deltas.get_descriptor();
+    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_deltas.get_descriptor();
 
-    const cudnnOpTensorDescriptor_t operator_sum_descriptor = back_propagation_cuda.operator_sum_descriptor;
+    const cudnnOpTensorDescriptor_t operator_sum_descriptor = back_propagation.operator_sum_descriptor;
 
     float alpha = 1.0f;
     float alpha_minus_one = -1.0f;
@@ -202,7 +202,7 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
                   output_tensor_descriptor,
                   errors_device);
 
-    cublasSdot(cublas_handle, samples_number * outputs_number, errors_device, 1, errors_device, 1, &error(0));
+    CHECK_CUBLAS(cublasSdot(cublas_handle, samples_number * outputs_number, errors_device, 1, errors_device, 1, &error(0)));
 
     const type coefficient = type(1.0)/type(samples_number * outputs_number);
 
@@ -213,8 +213,8 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
 
 void MeanSquaredError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
-                                                   ForwardPropagationCuda& forward_propagation_cuda,
-                                                   BackPropagationCuda& back_propagation_cuda) const
+                                                   ForwardPropagationCuda& forward_propagation,
+                                                   BackPropagationCuda& back_propagation) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -224,15 +224,15 @@ void MeanSquaredError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
 
     // Back propagation
 
-    type* errors_device = back_propagation_cuda.errors;
+    type* errors_device = back_propagation.errors;
 
-    float* output_deltas_device = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
+    float* output_deltas_device = back_propagation.get_output_deltas_tensor_view_device().data;
 
     const type coefficient = type(2.0) / type(outputs_number * samples_number);
 
     cudaMemcpy(output_deltas_device, errors_device, outputs_number * samples_number * sizeof(float), cudaMemcpyDeviceToDevice);
 
-    cublasSscal(cublas_handle, outputs_number * samples_number, &coefficient, output_deltas_device, 1);
+    CHECK_CUBLAS(cublasSscal(cublas_handle, outputs_number * samples_number, &coefficient, output_deltas_device, 1));
 }
 
 #endif

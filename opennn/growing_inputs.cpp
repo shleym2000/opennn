@@ -60,13 +60,13 @@ void GrowingInputs::set_default()
 }
 
 
-void GrowingInputs::set_minimum_inputs_number(const Index& new_minimum_inputs_number)
+void GrowingInputs::set_minimum_inputs_number(const Index new_minimum_inputs_number)
 {
     minimum_inputs_number = new_minimum_inputs_number;
 }
 
 
-void GrowingInputs::set_maximum_inputs_number(const Index& new_maximum_inputs_number)
+void GrowingInputs::set_maximum_inputs_number(const Index new_maximum_inputs_number)
 {
     const Index inputs_number = training_strategy->get_dataset()->get_raw_variables_number("Input");
 
@@ -76,19 +76,19 @@ void GrowingInputs::set_maximum_inputs_number(const Index& new_maximum_inputs_nu
 }
 
 
-void GrowingInputs::set_minimum_correlation(const type& new_minimum_correlation)
+void GrowingInputs::set_minimum_correlation(const type new_minimum_correlation)
 {
     minimum_correlation = new_minimum_correlation;
 }
 
 
-void GrowingInputs::set_maximum_correlation(const type& new_maximum_correlation)
+void GrowingInputs::set_maximum_correlation(const type new_maximum_correlation)
 {
     maximum_correlation = new_maximum_correlation;
 }
 
 
-void GrowingInputs::set_maximum_selection_failures(const Index& new_maximum_selection_failures)
+void GrowingInputs::set_maximum_selection_failures(const Index new_maximum_selection_failures)
 {
     maximum_selection_failures = new_maximum_selection_failures;
 }

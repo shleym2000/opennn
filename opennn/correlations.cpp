@@ -419,19 +419,19 @@ Correlation linear_correlation(const ThreadPoolDevice* device,
 }
 
 
-type r_correlation_to_z_correlation(const type& r_correlation)
+type r_correlation_to_z_correlation(const type r_correlation)
 {
     return type(0.5 * log((1 + r_correlation) / (1 - r_correlation)));
 }
 
 
-type z_correlation_to_r_correlation (const type& z_correlation)
+type z_correlation_to_r_correlation (const type z_correlation)
 {
     return type((exp(2 * z_correlation) - 1) / (exp(2 * z_correlation) + 1));
 }
 
 
-Tensor1 confidence_interval_z_correlation(const type& z_correlation, const Index& n)
+Tensor1 confidence_interval_z_correlation(const type z_correlation, const Index& n)
 {
     Tensor1 confidence_interval(2);
 

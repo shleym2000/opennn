@@ -47,13 +47,13 @@ void GrowingNeurons::set_default()
 }
 
 
-void GrowingNeurons::set_neurons_increment(const Index& new_neurons_increment)
+void GrowingNeurons::set_neurons_increment(const Index new_neurons_increment)
 {
     neurons_increment = new_neurons_increment;
 }
 
 
-void GrowingNeurons::set_maximum_selection_failures(const Index& new_maximum_selection_failures)
+void GrowingNeurons::set_maximum_selection_failures(const Index new_maximum_selection_failures)
 {
     maximum_selection_failures = new_maximum_selection_failures;
 }

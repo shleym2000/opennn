@@ -108,19 +108,19 @@ void NeuronsSelection::set_default()
 }
 
 
-void NeuronsSelection::set_maximum_neurons(const Index& new_maximum_neurons)
+void NeuronsSelection::set_maximum_neurons(const Index new_maximum_neurons)
 {
     maximum_neurons = new_maximum_neurons;
 }
 
 
-void NeuronsSelection::set_minimum_neurons(const Index& new_minimum_neurons)
+void NeuronsSelection::set_minimum_neurons(const Index new_minimum_neurons)
 {
     minimum_neurons = new_minimum_neurons;
 }
 
 
-void NeuronsSelection::set_trials_number(const Index& new_trials_number)
+void NeuronsSelection::set_trials_number(const Index new_trials_number)
 {
     trials_number = new_trials_number;
 }
@@ -132,19 +132,19 @@ void NeuronsSelection::set_display(const bool& new_display)
 }
 
 
-void NeuronsSelection::set_selection_error_goal(const type& new_selection_error_goal)
+void NeuronsSelection::set_selection_error_goal(const type new_selection_error_goal)
 {
     selection_error_goal = new_selection_error_goal;
 }
 
 
-void NeuronsSelection::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void NeuronsSelection::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void NeuronsSelection::set_maximum_time(const type& new_maximum_time)
+void NeuronsSelection::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }
@@ -206,7 +206,7 @@ void NeuronsSelection::check() const
 }
 
 
-string NeuronsSelection::write_time(const type& time) const
+string NeuronsSelection::write_time(const type time) const
 {
     const int total_seconds = static_cast<int>(time);
     const int hours = total_seconds / 3600;
@@ -223,7 +223,7 @@ string NeuronsSelection::write_time(const type& time) const
 }
 
 
-NeuronsSelectionResults::NeuronsSelectionResults(const Index& maximum_epochs_number)
+NeuronsSelectionResults::NeuronsSelectionResults(const Index maximum_epochs_number)
 {
     neurons_number_history.resize(maximum_epochs_number);
     neurons_number_history.setZero();
@@ -239,7 +239,7 @@ NeuronsSelectionResults::NeuronsSelectionResults(const Index& maximum_epochs_num
 }
 
 
-void NeuronsSelectionResults::resize_history(const Index& new_size)
+void NeuronsSelectionResults::resize_history(const Index new_size)
 {
     const Index old_size = neurons_number_history.size();
 

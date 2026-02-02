@@ -31,9 +31,9 @@ public:
 
     void set_default();
 
-    void set_neurons_increment(const Index&);
+    void set_neurons_increment(const Index);
 
-    void set_maximum_selection_failures(const Index&);
+    void set_maximum_selection_failures(const Index);
 
     NeuronsSelectionResults perform_neurons_selection() override;
 

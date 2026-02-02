@@ -45,13 +45,13 @@ public:
 
     void set(NeuralNetwork* = nullptr, Dataset* = nullptr);
 
-    void set_evaluations_number(const Index&);
+    void set_evaluations_number(const Index);
 
     void set_input_condition(const string&, const Condition&, const Tensor1& = Tensor1());
     void set_output_condition(const string&, const Condition&, const Tensor1& = Tensor1());
 
-    void set_input_condition(const Index&, const Condition&, const Tensor1& = Tensor1());
-    void set_output_condition(const Index&, const Condition&, const Tensor1& = Tensor1());
+    void set_input_condition(const Index, const Condition&, const Tensor1& = Tensor1());
+    void set_output_condition(const Index, const Condition&, const Tensor1& = Tensor1());
 
     Tensor2 calculate_inputs() const;
 
@@ -61,14 +61,14 @@ public:
 
     struct Pareto
     {
-        Pareto(const Index& points_number = 0, const Index& objectives_number = 0, const Index& envelope_variables_number = 0)
+        Pareto(const Index points_number = 0, const Index& objectives_number = 0, const Index& envelope_variables_number = 0)
         {
             set(points_number, objectives_number, envelope_variables_number);
         }
 
         virtual ~Pareto() = default;
 
-        void set(const Index& points_number = 0, const Index& objectives_number = 0, const Index& envelope_variables_number = 0)
+        void set(const Index points_number = 0, const Index& objectives_number = 0, const Index& envelope_variables_number = 0)
         {
             indices.resize(points_number);
             objectives.resize(points_number, objectives_number);

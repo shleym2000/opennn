@@ -120,14 +120,14 @@ public:
 public:
 
     void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                 const bool&) override
     {
         if (inputs_device.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs for CUDA propagation.");
 
         const size_t inputs_number = get_inputs_number();
-        const size_t total_elements = static_cast<size_t>(forward_propagation_cuda->batch_size) * inputs_number;
+        const size_t total_elements = static_cast<size_t>(forward_propagation->batch_size) * inputs_number;
 
         float alpha = 1.0f;
         float alpha_minus_one = -1.0f;
@@ -148,23 +148,23 @@ public:
                       errors_device);
 
 */
-        addition_cuda(total_elements, inputs_device[0].data, inputs_device[1].data, forward_propagation_cuda->outputs.data);
+        addition_cuda(total_elements, inputs_device[0].data, inputs_device[1].data, forward_propagation->outputs.data);
     }
 
 
     void back_propagate_cuda(const vector<TensorViewCuda>&,
                              const vector<TensorViewCuda>& deltas_device,
                              unique_ptr<LayerForwardPropagationCuda>&,
-                             unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const override
+                             unique_ptr<LayerBackPropagationCuda>& back_propagation) const override
     {
         if (deltas_device.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input for CUDA.");
 
         AdditionBackPropagationCuda<Rank>* this_back_propagation =
-            static_cast<AdditionBackPropagationCuda<Rank>*>(back_propagation_cuda.get());
+            static_cast<AdditionBackPropagationCuda<Rank>*>(back_propagation.get());
 
         const size_t inputs_number = get_inputs_number();
-        const size_t total_elements = static_cast<size_t>(back_propagation_cuda->batch_size) * inputs_number;
+        const size_t total_elements = static_cast<size_t>(back_propagation->batch_size) * inputs_number;
 
         CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[0].data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
         CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[1].data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
@@ -181,7 +181,7 @@ private:
 template<int Rank>
 struct AdditionForwardPropagation final : LayerForwardPropagation
 {
-    AdditionForwardPropagation(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    AdditionForwardPropagation(const Index new_batch_size = 0, Layer* new_layer = nullptr)
         : LayerForwardPropagation()
     {
         set(new_batch_size, new_layer);
@@ -210,7 +210,7 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
 template<int Rank>
 struct AdditionBackPropagation final : LayerBackPropagation
 {
-    AdditionBackPropagation(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    AdditionBackPropagation(const Index new_batch_size = 0, Layer* new_layer = nullptr)
         : LayerBackPropagation()
     {
         set(new_batch_size, new_layer);
@@ -258,7 +258,7 @@ struct AdditionBackPropagation final : LayerBackPropagation
 template<int Rank>
 struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    AdditionForwardPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    AdditionForwardPropagationCuda(const Index new_batch_size = 0, Layer* new_layer = nullptr)
         : LayerForwardPropagationCuda()
     {
         set(new_batch_size, new_layer);
@@ -283,7 +283,7 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 template<int Rank>
 struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
 {
-    AdditionBackPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    AdditionBackPropagationCuda(const Index new_batch_size = 0, Layer* new_layer = nullptr)
         : LayerBackPropagationCuda()
     {
         set(new_batch_size, new_layer);

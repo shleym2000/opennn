@@ -51,7 +51,7 @@ public:
 
     const string& get_neural_network_file_name() const;
 
-    string write_time(const type&) const;
+    string write_time(const type) const;
 
     void set(const LossIndex* = nullptr);
 
@@ -61,9 +61,9 @@ public:
 
     virtual void set_display(const bool&);
 
-    void set_display_period(const Index&);
+    void set_display_period(const Index);
 
-    void set_save_period(const Index&);
+    void set_save_period(const Index);
     void set_neural_network_file_name(const string&);
 
     // Training
@@ -163,7 +163,7 @@ struct TrainingResults
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    TrainingResults(const Index& = 0);
+    TrainingResults(const Index = 0);
     virtual ~TrainingResults() = default;
 
     string write_stopping_condition() const;
@@ -180,11 +180,11 @@ struct TrainingResults
 
     OptimizationAlgorithm::StoppingCondition stopping_condition = OptimizationAlgorithm::StoppingCondition::None;
 
-    Tensor<string, 2> write_override_results(const Index& = 3) const;
+    Tensor<string, 2> write_override_results(const Index = 3) const;
 
-    void resize_training_error_history(const Index&);
+    void resize_training_error_history(const Index);
 
-    void resize_selection_error_history(const Index&);
+    void resize_selection_error_history(const Index);
 
     Tensor1 training_error_history;
 

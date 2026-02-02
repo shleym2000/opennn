@@ -15,7 +15,7 @@
 namespace opennn
 {
 
-ImageDataset::ImageDataset(const Index& new_samples_number,
+ImageDataset::ImageDataset(const Index new_samples_number,
                            const dimensions& new_input_dimensions,
                            const dimensions& new_target_dimensions)
 {
@@ -221,37 +221,37 @@ void ImageDataset::set_random_reflection_axis_y(const bool& new_random_reflectio
 }
 
 
-void ImageDataset::set_random_rotation_minimum(const type& new_random_rotation_minimum)
+void ImageDataset::set_random_rotation_minimum(const type new_random_rotation_minimum)
 {
     random_rotation_minimum = new_random_rotation_minimum;
 }
 
 
-void ImageDataset::set_random_rotation_maximum(const type& new_random_rotation_maximum)
+void ImageDataset::set_random_rotation_maximum(const type new_random_rotation_maximum)
 {
     random_rotation_maximum = new_random_rotation_maximum;
 }
 
 
-void ImageDataset::set_random_horizontal_translation_maximum(const type& new_random_horizontal_translation_maximum)
+void ImageDataset::set_random_horizontal_translation_maximum(const type new_random_horizontal_translation_maximum)
 {
     random_horizontal_translation_maximum = new_random_horizontal_translation_maximum;
 }
 
 
-void ImageDataset::set_random_horizontal_translation_minimum(const type& new_random_horizontal_translation_minimum)
+void ImageDataset::set_random_horizontal_translation_minimum(const type new_random_horizontal_translation_minimum)
 {
     random_horizontal_translation_minimum = new_random_horizontal_translation_minimum;
 }
 
 
-void ImageDataset::set_random_vertical_translation_minimum(const type& new_random_vertical_translation_minimum)
+void ImageDataset::set_random_vertical_translation_minimum(const type new_random_vertical_translation_minimum)
 {
     random_vertical_translation_minimum = new_random_vertical_translation_minimum;
 }
 
 
-void ImageDataset::set_random_vertical_translation_maximum(const type& new_random_vertical_translation_maximum)
+void ImageDataset::set_random_vertical_translation_maximum(const type new_random_vertical_translation_maximum)
 {
     random_vertical_translation_maximum = new_random_vertical_translation_maximum;
 }

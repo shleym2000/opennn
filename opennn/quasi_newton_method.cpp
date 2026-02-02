@@ -75,31 +75,31 @@ void QuasiNewtonMethod::set_default()
 }
 
 
-void QuasiNewtonMethod::set_minimum_loss_decrease(const type& new_minimum_loss_decrease)
+void QuasiNewtonMethod::set_minimum_loss_decrease(const type new_minimum_loss_decrease)
 {
     minimum_loss_decrease = new_minimum_loss_decrease;
 }
 
 
-void QuasiNewtonMethod::set_loss_goal(const type& new_loss_goal)
+void QuasiNewtonMethod::set_loss_goal(const type new_loss_goal)
 {
     training_loss_goal = new_loss_goal;
 }
 
 
-void QuasiNewtonMethod::set_maximum_selection_failures(const Index& new_maximum_selection_failures)
+void QuasiNewtonMethod::set_maximum_selection_failures(const Index new_maximum_selection_failures)
 {
     maximum_selection_failures = new_maximum_selection_failures;
 }
 
 
-void QuasiNewtonMethod::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void QuasiNewtonMethod::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void QuasiNewtonMethod::set_maximum_time(const type& new_maximum_time)
+void QuasiNewtonMethod::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }

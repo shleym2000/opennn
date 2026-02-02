@@ -38,7 +38,7 @@ void MinkowskiError::set_default()
 }
 
 
-void MinkowskiError::set_Minkowski_parameter(const type& new_Minkowski_parameter)
+void MinkowskiError::set_Minkowski_parameter(const type new_Minkowski_parameter)
 {
     if(new_Minkowski_parameter < type(1))
         throw runtime_error("The Minkowski parameter must be greater than 1.\n");
@@ -120,16 +120,16 @@ void MinkowskiError::from_XML(const XMLDocument& document)
 #ifdef OPENNN_CUDA
 
 void MinkowskiError::calculate_error_cuda(const BatchCuda& batch_cuda,
-                                          const ForwardPropagationCuda& forward_propagation_cuda,
-                                          BackPropagationCuda& back_propagation_cuda) const
+                                          const ForwardPropagationCuda& forward_propagation,
+                                          BackPropagationCuda& back_propagation) const
 {
     throw runtime_error("CUDA calculate_error_cuda not implemented for loss index type: MinkowskiError");
 }
 
 
 void MinkowskiError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
-                                                 ForwardPropagationCuda& forward_propagation_cuda,
-                                                 BackPropagationCuda& back_propagation_cuda) const
+                                                 ForwardPropagationCuda& forward_propagation,
+                                                 BackPropagationCuda& back_propagation) const
 {
     throw runtime_error("CUDA calculate_output_delta_cuda not implemented for loss index type: MinkowskiError");
 }

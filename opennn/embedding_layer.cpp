@@ -61,7 +61,7 @@ vector<TensorView*> Embedding::get_parameter_views()
 }
 
 
-void Embedding::set(const Index& new_vocabulary_size,
+void Embedding::set(const Index new_vocabulary_size,
                     const Index& new_sequence_length,
                     const Index& new_embedding_dimension,
                     const string& new_label)
@@ -97,7 +97,7 @@ void Embedding::set_add_positional_encoding(const bool& new_add_positional_encod
 }
 
 
-void Embedding::set_dropout_rate(const type& new_dropout_rate)
+void Embedding::set_dropout_rate(const type new_dropout_rate)
 {
     dropout_rate = new_dropout_rate;
 }
@@ -274,7 +274,7 @@ void Embedding::to_XML(XMLPrinter& printer) const
 }
 
 
-EmbeddingForwardPropagation::EmbeddingForwardPropagation(const Index& new_batch_size, Layer* new_layer)
+EmbeddingForwardPropagation::EmbeddingForwardPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
@@ -301,7 +301,7 @@ void EmbeddingForwardPropagation::print() const
 }
 
 
-EmbeddingBackPropagation::EmbeddingBackPropagation(const Index& new_batch_size, Layer* new_layer)
+EmbeddingBackPropagation::EmbeddingBackPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerBackPropagation()
 {
     set(new_batch_size, new_layer);
@@ -332,7 +332,7 @@ void EmbeddingBackPropagation::print() const
 #ifdef OPENNN_CUDA
 
 void Embedding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                        const bool& is_training)
 {
     throw runtime_error("Embedding::forward_propagate_cuda is not yet implemented. Please check back in a future version.");
@@ -355,7 +355,7 @@ vector<TensorViewCuda*> Embedding::get_parameter_views_device()
 }
 
 
-EmbeddingForwardPropagationCuda::EmbeddingForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+EmbeddingForwardPropagationCuda::EmbeddingForwardPropagationCuda(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagationCuda()
 {
     set(new_batch_size, new_layer);
@@ -374,7 +374,7 @@ void EmbeddingForwardPropagationCuda::print() const
 }
 
 
-EmbeddingBackPropagationCuda::EmbeddingBackPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+EmbeddingBackPropagationCuda::EmbeddingBackPropagationCuda(const Index new_batch_size, Layer* new_layer)
     : LayerBackPropagationCuda()
 {
     set(new_batch_size, new_layer);

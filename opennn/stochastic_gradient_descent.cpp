@@ -75,7 +75,7 @@ void StochasticGradientDescent::set_default()
 }
 
 
-void StochasticGradientDescent::set_batch_size(const Index& new_batch_size)
+void StochasticGradientDescent::set_batch_size(const Index new_batch_size)
 {
     batch_size = new_batch_size;
 }
@@ -87,19 +87,19 @@ Index StochasticGradientDescent::get_samples_number() const
 }
 
 
-void StochasticGradientDescent::set_initial_learning_rate(const type& new_learning_rate)
+void StochasticGradientDescent::set_initial_learning_rate(const type new_learning_rate)
 {
     initial_learning_rate = new_learning_rate;
 }
 
 
-void StochasticGradientDescent::set_initial_decay(const type& new_decay)
+void StochasticGradientDescent::set_initial_decay(const type new_decay)
 {
     initial_decay = new_decay;
 }
 
 
-void StochasticGradientDescent::set_momentum(const type& new_momentum)
+void StochasticGradientDescent::set_momentum(const type new_momentum)
 {
     momentum = new_momentum;
 }
@@ -111,19 +111,19 @@ void StochasticGradientDescent::set_nesterov(const bool& new_nesterov_momentum)
 }
 
 
-void StochasticGradientDescent::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void StochasticGradientDescent::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void StochasticGradientDescent::set_loss_goal(const type& new_loss_goal)
+void StochasticGradientDescent::set_loss_goal(const type new_loss_goal)
 {
     training_loss_goal = new_loss_goal;
 }
 
 
-void StochasticGradientDescent::set_maximum_time(const type& new_maximum_time)
+void StochasticGradientDescent::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }
@@ -556,8 +556,8 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
     set_vocabularies();
 
-    ForwardPropagationCuda training_forward_propagation_cuda(training_batch_samples_number, neural_network);
-    unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
+    ForwardPropagationCuda training_forward_propagation(training_batch_samples_number, neural_network);
+    unique_ptr<ForwardPropagationCuda> selection_forward_propagation;
 
     neural_network->copy_parameters_device();
 
@@ -565,14 +565,14 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
     loss_index->set_normalization_coefficient();
 
-    BackPropagationCuda training_back_propagation_cuda(training_batch_samples_number, loss_index);
-    unique_ptr<BackPropagationCuda> selection_back_propagation_cuda;
+    BackPropagationCuda training_back_propagation(training_batch_samples_number, loss_index);
+    unique_ptr<BackPropagationCuda> selection_back_propagation;
 
     if (has_selection)
     {
         selection_batch_cuda = make_unique<BatchCuda>(selection_batch_samples_number, dataset);
-        selection_forward_propagation_cuda = make_unique<ForwardPropagationCuda>(selection_batch_samples_number, neural_network);
-        selection_back_propagation_cuda = make_unique<BackPropagationCuda>(selection_batch_samples_number, loss_index);
+        selection_forward_propagation = make_unique<ForwardPropagationCuda>(selection_batch_samples_number, neural_network);
+        selection_back_propagation = make_unique<BackPropagationCuda>(selection_batch_samples_number, loss_index);
     }
 
     //type training_loss = type(0);
@@ -626,23 +626,23 @@ TrainingResults StochasticGradientDescent::train_cuda()
             // Neural network
 
             neural_network->forward_propagate_cuda(training_batch_cuda.get_input_views_device(),
-                                                   training_forward_propagation_cuda,
+                                                   training_forward_propagation,
                                                    is_training);
 
             // Loss index
 
             loss_index->back_propagate_cuda(training_batch_cuda,
-                                            training_forward_propagation_cuda,
-                                            training_back_propagation_cuda);
+                                            training_forward_propagation,
+                                            training_back_propagation);
 
-            results.training_error_history(epoch) = training_back_propagation_cuda.error();
+            results.training_error_history(epoch) = training_back_propagation.error();
 
-            training_error += training_back_propagation_cuda.error();
+            training_error += training_back_propagation.error();
             //training_loss += training_back_propagation.loss;
 
             // Gradient
 
-            update_parameters_cuda(training_back_propagation_cuda, optimization_data);
+            update_parameters_cuda(training_back_propagation, optimization_data);
 
             //if(display && epoch % display_period == 0)      display_progress_bar(iteration, batches_number - 1);
         }
@@ -673,7 +673,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
                 // Neural network
 
                 neural_network->forward_propagate_cuda(selection_batch_cuda->get_input_views_device(),
-                                                       *selection_forward_propagation_cuda,
+                                                       *selection_forward_propagation,
                                                        is_training);
 
                 results.selection_error_history(epoch) = selection_error;
@@ -681,10 +681,10 @@ TrainingResults StochasticGradientDescent::train_cuda()
                 // Loss
 
                 loss_index->calculate_error_cuda(*selection_batch_cuda,
-                                                 *selection_forward_propagation_cuda,
-                                                 *selection_back_propagation_cuda);
+                                                 *selection_forward_propagation,
+                                                 *selection_back_propagation);
 
-                selection_error += selection_back_propagation_cuda->error();
+                selection_error += selection_back_propagation->error();
             }
 
             selection_error /= type(selection_batches_number);
@@ -736,7 +736,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
         if (stop_training)
         {
-            results.loss = training_back_propagation_cuda.loss;
+            results.loss = training_back_propagation.loss;
             results.selection_failures = selection_failures;
             results.elapsed_time = write_time(elapsed_time);
 
@@ -757,18 +757,18 @@ TrainingResults StochasticGradientDescent::train_cuda()
 }
 
 
-void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back_propagation_cuda,
+void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back_propagation,
                                                        SGDOptimizationDataCuda& optimization_data_cuda) const
 {
 
-    NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
+    NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
 
     float* parameters_device_data = neural_network->get_parameters_device().data;
 
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data_cuda.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    const float* delta_views = back_propagation_cuda.neural_network.workspace.data;
+    const float* delta_views = back_propagation.neural_network.workspace.data;
 
     // @todo do it in vector form without loop.
 /*

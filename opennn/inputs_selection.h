@@ -53,13 +53,13 @@ public:
 
     void set(const TrainingStrategy* = nullptr);
 
-    void set_trials_number(const Index&);
+    void set_trials_number(const Index);
 
     void set_display(const bool&);
 
-    void set_selection_error_goal(const type&);
-    void set_maximum_epochs_number(const Index&);
-    void set_maximum_time(const type&);
+    void set_selection_error_goal(const type);
+    void set_maximum_epochs_number(const Index);
+    void set_maximum_time(const type);
 
     string write_stopping_condition(const TrainingResults&) const;
 
@@ -72,7 +72,7 @@ public:
         return name;
     }
 
-    string write_time(const type&) const;
+    string write_time(const type) const;
 
     virtual Tensor<string, 2> to_string_matrix() const { return {}; }
 
@@ -104,15 +104,15 @@ protected:
 
 struct InputsSelectionResults
 {
-    InputsSelectionResults(const Index& = 0);
+    InputsSelectionResults(const Index = 0);
 
     Index get_epochs_number() const;
 
-    void set(const Index& = 0);
+    void set(const Index = 0);
 
     string write_stopping_condition() const;
 
-    void resize_history(const Index& new_size);
+    void resize_history(const Index new_size);
 
     void print() const;
 

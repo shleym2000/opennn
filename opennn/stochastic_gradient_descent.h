@@ -39,19 +39,19 @@ public:
 
     void set_default();
 
-    void set_batch_size(const Index&);
+    void set_batch_size(const Index);
 
     Index get_samples_number() const;
 
-    void set_initial_learning_rate(const type&);
-    void set_initial_decay(const type&);
-    void set_momentum(const type&);
+    void set_initial_learning_rate(const type);
+    void set_initial_decay(const type);
+    void set_momentum(const type);
     void set_nesterov(const bool&);
 
-    void set_maximum_epochs_number(const Index&);
+    void set_maximum_epochs_number(const Index);
 
-    void set_loss_goal(const type&);
-    void set_maximum_time(const type&);
+    void set_loss_goal(const type);
+    void set_maximum_time(const type);
 
     void update_parameters(BackPropagation& , StochasticGradientDescentData&, const type&) const;
 

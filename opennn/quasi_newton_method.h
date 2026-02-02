@@ -41,13 +41,13 @@ public:
 
     // Stopping criteria
 
-    void set_minimum_loss_decrease(const type&);
-    void set_loss_goal(const type&);
+    void set_minimum_loss_decrease(const type);
+    void set_loss_goal(const type);
 
-    void set_maximum_selection_failures(const Index&);
+    void set_maximum_selection_failures(const Index);
 
-    void set_maximum_epochs_number(const Index&);
-    void set_maximum_time(const type&);
+    void set_maximum_epochs_number(const Index);
+    void set_maximum_time(const type);
 
     // Training
 

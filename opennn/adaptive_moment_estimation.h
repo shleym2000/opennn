@@ -38,7 +38,7 @@ public:
 
    // Set
 
-   void set_batch_size(const Index& new_batch_size);
+   void set_batch_size(const Index new_batch_size);
 
    void set_default();
 
@@ -50,19 +50,19 @@ public:
 
    // Training operators
 
-   void set_learning_rate(const type&);
-   void set_beta_1(const type&);
-   void set_beta_2(const type&);
+   void set_learning_rate(const type);
+   void set_beta_1(const type);
+   void set_beta_2(const type);
 
    // Training parameters
 
-   void set_maximum_epochs_number(const Index&);
+   void set_maximum_epochs_number(const Index);
 
    // Stopping criteria
 
-   void set_loss_goal(const type&);
-   void set_accuracy_goal(const type&);
-   void set_maximum_time(const type&);
+   void set_loss_goal(const type);
+   void set_accuracy_goal(const type);
+   void set_maximum_time(const type);
 
    // Training
 
@@ -147,8 +147,8 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
 
         AdaptiveMomentEstimation* adaptive_moment_estimation = nullptr;
 
-        float* gradient_exponential_decay_device = nullptr;
-        float* square_gradient_exponential_decay_device = nullptr;
+        float* gradient_exponential_decay = nullptr;
+        float* square_gradient_exponential_decay = nullptr;
 
         Index iteration = 0;
 

@@ -14,7 +14,7 @@ using namespace std;
 namespace opennn
 {
 
-Descriptives::Descriptives(const type& new_minimum,
+Descriptives::Descriptives(const type new_minimum,
                            const type& new_maximum,
                            const type& new_mean,
                            const type& new_standard_deviation) :
@@ -35,7 +35,7 @@ Tensor1 Descriptives::to_tensor() const
 }
 
 
-void Descriptives::set(const type& new_minimum, const type& new_maximum,
+void Descriptives::set(const type new_minimum, const type& new_maximum,
                        const type& new_mean, const type& new_standard_deviation)
 {
     minimum = new_minimum;
@@ -55,7 +55,7 @@ void Descriptives::print(const string& title) const
 }
 
 
-BoxPlot::BoxPlot(const type& new_minimum,
+BoxPlot::BoxPlot(const type new_minimum,
                  const type& new_first_quartile,
                  const type& new_median,
                  const type& new_third_quartile,
@@ -69,7 +69,7 @@ BoxPlot::BoxPlot(const type& new_minimum,
 }
 
 
-void BoxPlot::set(const type& new_minimum,
+void BoxPlot::set(const type new_minimum,
                   const type& new_first_quartile,
                   const type& new_median,
                   const type& new_third_quartile,
@@ -99,7 +99,7 @@ void Descriptives::save(const filesystem::path& file_name) const
 }
 
 
-Histogram::Histogram(const Index& bins_number)
+Histogram::Histogram(const Index bins_number)
 {
     centers.resize(bins_number);
     frequencies.resize(bins_number);
@@ -304,7 +304,7 @@ Tensor1 Histogram::calculate_maximal_centers() const
 }
 
 
-Index Histogram::calculate_bin(const type& value) const
+Index Histogram::calculate_bin(const type value) const
 {
     const Index bins_number = get_bins_number();
 
@@ -324,7 +324,7 @@ Index Histogram::calculate_bin(const type& value) const
 }
 
 
-Index Histogram::calculate_frequency(const type&value) const
+Index Histogram::calculate_frequency(const type value) const
 {
     const Index bins_number = get_bins_number();
     

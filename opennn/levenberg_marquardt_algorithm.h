@@ -41,22 +41,22 @@ public:
 
    void set_default();
 
-   void set_damping_parameter(const type&);
+   void set_damping_parameter(const type);
 
-   void set_damping_parameter_factor(const type&);
+   void set_damping_parameter_factor(const type);
 
-   void set_minimum_damping_parameter(const type&);
-   void set_maximum_damping_parameter(const type&);
+   void set_minimum_damping_parameter(const type);
+   void set_maximum_damping_parameter(const type);
 
    // Stopping criteria
 
-   void set_minimum_loss_decrease(const type&);
-   void set_loss_goal(const type&);
+   void set_minimum_loss_decrease(const type);
+   void set_loss_goal(const type);
 
-   void set_maximum_selection_failures(const Index&);
+   void set_maximum_selection_failures(const Index);
 
-   void set_maximum_epochs_number(const Index&);
-   void set_maximum_time(const type&);
+   void set_maximum_epochs_number(const Index);
+   void set_maximum_time(const type);
 
    // Training
 
