@@ -482,7 +482,7 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                   unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
 {
     // Forward propagation
-
+    
     const TensorViewCuda& outputs = forward_propagation_cuda->outputs;
 
     const PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
@@ -607,11 +607,17 @@ void PoolingBackPropagation::initialize()
     const dimensions& input_dimensions = pooling_layer->get_input_dimensions();
     const dimensions& output_dimensions = pooling_layer->get_output_dimensions();
 
+    dimensions full_input_dims = { batch_size };
+    full_input_dims.insert(full_input_dims.end(), input_dimensions.begin(), input_dimensions.end());
+
     if (pooling_layer->get_pooling_method() == "AveragePooling")
         deltas_by_pool_size.resize(batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]);
 
+    input_deltas_memory.resize(1);
+    input_deltas_memory[0].resize(count_elements(full_input_dims));
     input_deltas.resize(1);
-    input_deltas[0].dims = {batch_size, input_dimensions[0], input_dimensions[1], input_dimensions[2]};
+    input_deltas[0].data = input_deltas_memory[0].data();
+    input_deltas[0].dims = full_input_dims;
 }
 
 

@@ -130,7 +130,6 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
                                    unique_ptr<LayerForwardPropagation>& forward_propagation,
                                    unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-
     // Convolutional layer
 
     const Index batch_size = back_propagation->batch_size;
@@ -189,16 +188,20 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     preprocess_inputs(inputs, preprocessed_inputs);
 
     deltas.device(*device) = deltas*activation_derivatives;
+    
+    // Bias derivatives
 
     bias_deltas.device(*device) = deltas.sum(array<Index, 3>({0, 1, 2}));
+
+    // Weights derivatives
 
 #pragma omp parallel for
     for(Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
         const TensorMap3 kernel_convolution_deltas = tensor_map_(deltas, kernel_index);
 
-        TensorMap4 kernel_weight_deltas(weight_deltas_data + kernel_index*kernel_size,
-                                                        1, kernel_height,kernel_width, kernel_channels);
+        TensorMap<Tensor<type, 4>, Unaligned> kernel_weight_deltas(weight_deltas_data + kernel_index*kernel_size,
+                                                                   1, kernel_height, kernel_width, kernel_channels);
 
         kernel_weight_deltas = preprocessed_inputs.convolve(kernel_convolution_deltas, array<Index, 3>({0, 1, 2}));
     }
@@ -737,7 +740,7 @@ void ConvolutionalBackPropagation::initialize()
 
     bias_deltas.dims = {kernels_number};
 
-    weight_deltas.dims = {kernels_number, kernel_height, kernel_width, kernel_channels};
+    weight_deltas.dims = { kernel_height, kernel_width, kernel_channels, kernels_number };
 
     rotated_weights.resize(kernel_height,
                            kernel_width,
