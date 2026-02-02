@@ -431,19 +431,14 @@ struct TensorViewCuda
     shared_ptr<cudnnTensorStruct> descriptor_handle = nullptr;
 
     TensorViewCuda() = default;
-    TensorViewCuda(float* new_data, cudnnTensorDescriptor_t desc) : data(new_data)
-    {
-        if (desc) {
-            descriptor_handle = shared_ptr<cudnnTensorStruct>(desc, [](cudnnTensorDescriptor_t p) {
-                if (p) cudnnDestroyTensorDescriptor(p);
-                });
-        }
-    }
+
+    TensorViewCuda(float* new_data, std::shared_ptr<cudnnTensorStruct> handle)
+        : data(new_data), descriptor_handle(handle) {}
 
     cudnnTensorDescriptor_t get_descriptor() const 
     {
-        return descriptor_handle.get();
-    } 
+        return descriptor_handle ? descriptor_handle.get() : nullptr;
+    }
 
     void set_descriptor(const dimensions& dims)
     {
@@ -464,67 +459,43 @@ struct TensorViewCuda
         if (dims.size() > 2) h = static_cast<int>(dims[2]);
         if (dims.size() > 3) w = static_cast<int>(dims[3]);
 
-        CHECK_CUDNN(cudnnSetTensor4dDescriptor(
-            descriptor_handle.get(),
-            CUDNN_TENSOR_NCHW,
-            CUDNN_DATA_FLOAT,
-            n, c, h, w));
+        CHECK_CUDNN(cudnnSetTensor4dDescriptor(descriptor_handle.get(), CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w));
     }
 
     Index size() const
     {
-        if (descriptor_handle == nullptr)
-            throw std::runtime_error("TensorViewCuda::size(): Descriptor is nullptr. Cannot calculate size.");
+        if (descriptor_handle == nullptr) return 0;
 
         constexpr int REQUESTED_DIMS = CUDNN_DIM_MAX;
         cudnnDataType_t dataType;
-        int nbDims = 0;
-        int dimA[REQUESTED_DIMS];
-        int strideA[REQUESTED_DIMS];
+        int nbDims = 0, dimA[REQUESTED_DIMS], strideA[REQUESTED_DIMS];
 
-        CHECK_CUDNN(cudnnGetTensorNdDescriptor(
-            descriptor_handle.get(),
-            REQUESTED_DIMS,
-            &dataType,
-            &nbDims,
-            dimA,
-            strideA));
+        CHECK_CUDNN(cudnnGetTensorNdDescriptor(descriptor_handle.get(), REQUESTED_DIMS, &dataType, &nbDims, dimA, strideA));
 
         Index total_elements = 1;
         for (int i = 0; i < nbDims; ++i)
             total_elements *= static_cast<Index>(dimA[i]);
-
         return total_elements;
     }
 };
 
-
 struct TensorCuda
 {
     float* data = nullptr;
-    cudnnTensorDescriptor_t descriptor = nullptr;
+    shared_ptr<cudnnTensorStruct> descriptor_handle = nullptr;
 
     TensorCuda() = default;
+    explicit TensorCuda(const dimensions& dims) { resize(dims); }
 
-    explicit TensorCuda(const dimensions& dims)
-    {
-        resize(dims);
-    }
-
-    ~TensorCuda()
-    {
-        free();
-    }
-
+    ~TensorCuda() { if (data) cudaFree(data); }
 
     TensorCuda(const TensorCuda&) = delete;
     TensorCuda& operator=(const TensorCuda&) = delete;
 
     TensorCuda(TensorCuda&& other) noexcept
-        : data(other.data), descriptor(other.descriptor)
+        : data(other.data), descriptor_handle(move(other.descriptor_handle))
     {
         other.data = nullptr;
-        other.descriptor = nullptr;
     }
 
     TensorCuda& operator=(TensorCuda&& other) noexcept
@@ -533,92 +504,72 @@ struct TensorCuda
         {
             free();
             data = other.data;
-            descriptor = other.descriptor;
+            descriptor_handle = std::move(other.descriptor_handle);
             other.data = nullptr;
-            other.descriptor = nullptr;
         }
         return *this;
     }
 
-    cudnnTensorDescriptor_t get_descriptor() const 
-    {
-        return descriptor;
+    cudnnTensorDescriptor_t get_descriptor() const {
+        return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
     void resize(const dimensions& dims)
     {
         set_descriptor(dims);
-
         const size_t total_elements = size();
         const size_t bytes = total_elements * sizeof(float);
-
+        if (data) cudaFree(data);
         CHECK_CUDA(cudaMalloc(&data, bytes));
+        CHECK_CUDA(cudaMemset(data, 0, bytes));
     }
 
     void set_descriptor(const dimensions& dims)
     {
-        if (descriptor == nullptr)
+        if (descriptor_handle == nullptr)
         {
-            CHECK_CUDNN(cudnnCreateTensorDescriptor(&descriptor));
+            cudnnTensorDescriptor_t raw_desc;
+            if (cudnnCreateTensorDescriptor(&raw_desc) != CUDNN_STATUS_SUCCESS)
+                throw std::runtime_error("TensorCuda: Failed to create descriptor.");
+
+            descriptor_handle = std::shared_ptr<cudnnTensorStruct>(raw_desc, [](cudnnTensorDescriptor_t p) {
+                if (p) cudnnDestroyTensorDescriptor(p);
+                });
         }
 
         int n = 1, c = 1, h = 1, w = 1;
-
         if (dims.size() > 0) n = static_cast<int>(dims[0]);
         if (dims.size() > 1) c = static_cast<int>(dims[1]);
         if (dims.size() > 2) h = static_cast<int>(dims[2]);
         if (dims.size() > 3) w = static_cast<int>(dims[3]);
 
-        CHECK_CUDNN(cudnnSetTensor4dDescriptor(
-            descriptor,
-            CUDNN_TENSOR_NCHW,
-            CUDNN_DATA_FLOAT,
-            n, c, h, w));
+        CHECK_CUDNN(cudnnSetTensor4dDescriptor(descriptor_handle.get(), CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w));
     }
 
     Index size() const
     {
-        if (descriptor == nullptr) return 0;
-
+        if (descriptor_handle == nullptr) return 0;
         constexpr int REQUESTED_DIMS = CUDNN_DIM_MAX;
         cudnnDataType_t dataType;
-        int nbDims = 0;
-        int dimA[REQUESTED_DIMS];
-        int strideA[REQUESTED_DIMS];
+        int nbDims = 0, dimA[REQUESTED_DIMS], strideA[REQUESTED_DIMS];
 
-        CHECK_CUDNN(cudnnGetTensorNdDescriptor(
-            descriptor,
-            REQUESTED_DIMS,
-            &dataType,
-            &nbDims,
-            dimA,
-            strideA));
+        CHECK_CUDNN(cudnnGetTensorNdDescriptor(descriptor_handle.get(), REQUESTED_DIMS, &dataType, &nbDims, dimA, strideA));
 
         Index total_elements = 1;
         for (int i = 0; i < nbDims; ++i)
             total_elements *= static_cast<Index>(dimA[i]);
-
         return total_elements;
     }
 
     void free()
     {
-        if (data)
-        {
-            cudaFree(data);
-            data = nullptr;
-        }
-
-        if (descriptor)
-        {
-            cudnnDestroyTensorDescriptor(descriptor);
-            descriptor = nullptr;
-        }
+        if (data) { cudaFree(data); data = nullptr; }
+        descriptor_handle.reset();
     }
 
     TensorViewCuda view() const
     {
-        return TensorViewCuda(data, descriptor);
+        return TensorViewCuda(data, descriptor_handle);
     }
 };
 

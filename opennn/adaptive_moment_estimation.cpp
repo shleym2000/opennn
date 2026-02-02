@@ -774,7 +774,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     const int total_parameters_size = static_cast<int>(neural_network->get_parameters().size());
 
     float* parameters_device_data = neural_network->get_parameters_device().data;
-    const float* gradients_device = back_propagation_cuda.neural_network.workspace;
+    const float* gradients_device = back_propagation_cuda.neural_network.workspace.data;
 
     optimization_data_cuda.iteration++;
     const int iteration = static_cast<int>(optimization_data_cuda.iteration);

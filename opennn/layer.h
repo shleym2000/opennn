@@ -472,7 +472,7 @@ struct LayerForwardPropagationCuda
 
     virtual vector<TensorViewCuda*> get_workspace_views_device();
 
-    TensorViewCuda get_outputs_device() const;
+    TensorViewCuda get_outputs() const;
 
     virtual void print() const {}
 

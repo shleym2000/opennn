@@ -56,7 +56,7 @@ void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_la
 }
 
 
-TensorViewCuda LayerForwardPropagationCuda::get_outputs_device() const
+TensorViewCuda LayerForwardPropagationCuda::get_outputs() const
 {
     return outputs;
 }

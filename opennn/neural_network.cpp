@@ -1548,7 +1548,7 @@ void NeuralNetworkBackPropagationLM::print()
 
 void NeuralNetwork::allocate_parameters_device()
 {
-    parameters_device.resize(parameters.size());
+    parameters_device.resize({ parameters.size() });
 }
 
 
@@ -1559,7 +1559,7 @@ void NeuralNetwork::copy_parameters_device()
         if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
             conv->reorder_weights_for_cudnn();
 
-    CHECK_CUDA(cudaMemcpy(parameters_device, parameters.data(), parameters.size() * sizeof(type), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(parameters_device.data, parameters.data(), parameters.size() * sizeof(type), cudaMemcpyHostToDevice));
 
     for (const unique_ptr<Layer>& layer : layers)
         if (auto* conv = dynamic_cast<Convolutional*>(layer.get()))
@@ -1569,7 +1569,7 @@ void NeuralNetwork::copy_parameters_device()
 
 void NeuralNetwork::copy_parameters_host()
 {
-    CHECK_CUDA(cudaMemcpy(parameters.data(), parameters_device, parameters.size() * sizeof(type), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(parameters.data(), parameters_device.data, parameters.size() * sizeof(type), cudaMemcpyDeviceToHost));
 
     // Convolutional weights need custom order for gpu
     for (const unique_ptr<Layer>& layer : layers)
@@ -1680,10 +1680,9 @@ void ForwardPropagationCuda::set(const Index& new_samples_number, NeuralNetwork*
 
     if (workspace_size == 0) return;
 
-    CHECK_CUDA(cudaMalloc((void**)&workspace, workspace_size * sizeof(float)));
-    CHECK_CUDA(cudaMemset(workspace, 0, workspace_size * sizeof(float)));
+    workspace.resize({workspace_size});
 
-    link(workspace, layer_workspace_views);
+    link(workspace.data, layer_workspace_views);
 }
 
 
@@ -1706,7 +1705,7 @@ TensorViewCuda ForwardPropagationCuda::get_last_trainable_layer_outputs_view_dev
 
     const unique_ptr<LayerForwardPropagationCuda>& layer_forward_propagation = layers[last_trainable_layer_index];
 
-    return layer_forward_propagation->get_outputs_device();
+    return layer_forward_propagation->get_outputs();
 }
 
 
@@ -1740,7 +1739,7 @@ vector<vector<TensorViewCuda>> ForwardPropagationCuda::get_layer_input_views_dev
         for(Index input_index = 0; input_index < static_cast<Index>(input_layer_indices.size()); input_index++)
         {
             const Index input_layer_index = input_layer_indices[input_index];
-            layer_input_views[layer_index][input_index] = layers[input_layer_index]->get_outputs_device();
+            layer_input_views[layer_index][input_index] = layers[input_layer_index]->get_outputs();
         }
     }
 
@@ -1782,7 +1781,7 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
 
     neural_network = new_neural_network;
 
-    if(!neural_network) return;
+    if (!neural_network) return;
 
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
@@ -1792,7 +1791,7 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
 
     layers.resize(layers_number);
 
-    for(Index i = first_traineable_layer_number; i <= last_traineable_layer_number; i++)
+    for (Index i = first_traineable_layer_number; i <= last_traineable_layer_number; i++)
     {
         layers[i] = Registry<LayerBackPropagationCuda>::instance().create(neural_network_layers[i]->get_name());
         layers[i]->set(batch_size, neural_network_layers[i].get());
@@ -1804,10 +1803,9 @@ void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNe
 
     if (workspace_size == 0) return;
 
-    CHECK_CUDA(cudaMalloc((void**)&workspace, workspace_size * sizeof(float)));
-    CHECK_CUDA(cudaMemset(workspace, 0, workspace_size * sizeof(float)));
+    workspace.resize({workspace_size});
 
-    link(workspace, layer_workspace_views);   
+    link(workspace.data, layer_workspace_views);
 }
 
 

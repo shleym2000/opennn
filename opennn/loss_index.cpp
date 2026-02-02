@@ -1499,8 +1499,6 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    //const Index parameters_number = neural_network_ptr->get_parameters_number();
-
     const dimensions output_dimensions = neural_network_ptr->get_output_dimensions();
 
     const Index outputs_number = output_dimensions[0];
@@ -1514,19 +1512,16 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
     regularization = type(0);
 
     CHECK_CUDA(cudaMalloc(&errors, samples_number * outputs_number * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(errors, samples_number * outputs_number * sizeof(float));
     CHECK_CUDA(cudaMalloc(&error_device, sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(error_device, sizeof(float));
 
     // Outputs_delta
 
-    output_deltas_dimensions = { samples_number };
+    dimensions output_deltas_dimensions = { samples_number };
     output_deltas_dimensions.insert(output_deltas_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
 
     const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
 
-    CHECK_CUDA(cudaMalloc(&output_deltas, size * sizeof(float)));
-    //CUDA_MALLOC_AND_REPORT(output_deltas, size * sizeof(float));
+    output_deltas.resize(output_deltas_dimensions);
 
     // Reduce
 
@@ -1538,16 +1533,6 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
                                    CUDNN_PROPAGATE_NAN,
                                    CUDNN_REDUCE_TENSOR_NO_INDICES,
                                    CUDNN_32BIT_INDICES);
-
-    cudnnCreateTensorDescriptor(&output_tensor_descriptor);
-
-    cudnnSetTensor4dDescriptor(output_tensor_descriptor,
-                               CUDNN_TENSOR_NCHW,
-                               CUDNN_DATA_FLOAT,
-                               samples_number,
-                               outputs_number,
-                               1,
-                               1);
 
     cudnnCreateTensorDescriptor(&output_reduce_tensor_descriptor);
 
@@ -1561,7 +1546,7 @@ void BackPropagationCuda::set(const Index& new_samples_number, LossIndex* new_lo
 
     cudnnGetReductionWorkspaceSize(loss_index->get_cudnn_handle(),
                                    reduce_tensor_descriptor,
-                                   output_tensor_descriptor,
+                                   output_deltas.get_descriptor(),
                                    output_reduce_tensor_descriptor,
                                    &workspace_size);
 
@@ -1630,7 +1615,7 @@ vector<vector<TensorViewCuda>> BackPropagationCuda::get_layer_delta_views_device
 
 TensorViewCuda BackPropagationCuda::get_output_deltas_tensor_view_device() const
 {
-    return { output_deltas, output_tensor_descriptor };
+    return output_deltas.view();
 }
 
 
@@ -1648,9 +1633,6 @@ void BackPropagationCuda::free()
     cudaFree(errors);
     errors = nullptr;
 
-    cudaFree(output_deltas);
-    output_deltas = nullptr;
-
     cudaFree(workspace);
     workspace = nullptr;
 
@@ -1663,7 +1645,6 @@ void BackPropagationCuda::free()
 
     cudnnDestroyReduceTensorDescriptor(reduce_tensor_descriptor);
     cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
-    cudnnDestroyTensorDescriptor(output_tensor_descriptor);
     cudnnDestroyTensorDescriptor(output_reduce_tensor_descriptor);
 }
 

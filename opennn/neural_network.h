@@ -73,7 +73,7 @@ struct ForwardPropagationCuda
 
     TensorViewCuda get_outputs()
     {
-        return layers.back()->get_outputs_device();
+        return layers.back()->get_outputs();
     }
 
     void print();
@@ -86,7 +86,7 @@ struct ForwardPropagationCuda
 
     vector<unique_ptr<LayerForwardPropagationCuda>> layers;
 
-    float* workspace;
+    TensorCuda workspace;
 };
 
 #endif
@@ -403,7 +403,7 @@ struct NeuralNetworkBackPropagationCuda
 
     vector<unique_ptr<LayerBackPropagationCuda>> layers;
 
-    float* workspace;
+    TensorCuda workspace;
 };
 
 #endif
