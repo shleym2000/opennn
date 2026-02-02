@@ -194,8 +194,6 @@ struct PoolingBackPropagationCuda : public LayerBackPropagationCuda
     void initialize() override;
 
     void print() const override;
-
-    void free() override;
 };
 
 #endif

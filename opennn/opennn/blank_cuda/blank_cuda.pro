@@ -1,14 +1,14 @@
 #   OpenNN: Open Neural Networks Library
 #   www.artelnics.com/opennn
 #
-#   B L A N K   P R O J E C T
+#   B L A N K _ C U D A   P R O J E C T
 #
 #   Artificial Intelligence Techniques SL (Artelnics)
 #   artelnics@artelnics.com
 
 QT += core widgets
 
-TARGET = blank
+TARGET = blank_cuda
 TEMPLATE = app
 CONFIG += console c++17
 
@@ -26,15 +26,6 @@ SOURCES = main.cpp
 win32 {
     DEFINES += _HAS_STD_BYTE=0
     DEFINES += WIN32_LEAN_AND_MEAN
-}
-
-win32-msvc* {
-    QMAKE_CXXFLAGS += /arch:AVX2 /O2
-}
-
-win32-g++ {
-    QMAKE_CXXFLAGS += -march=native -mstackrealign -O3
-    QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static
 }
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../opennn/release/ -lopennn

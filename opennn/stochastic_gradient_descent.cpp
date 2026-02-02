@@ -750,7 +750,6 @@ TrainingResults StochasticGradientDescent::train_cuda()
     set_unscaling();
 
     neural_network->copy_parameters_host();
-    neural_network->free_parameters_device();
 
     if (display) results.print();
 
@@ -764,14 +763,12 @@ void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back
 
     NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
 
-    float* parameters_device = neural_network->get_parameters_device();
-
-    back_propagation_cuda.neural_network.workspace;
+    float* parameters_device_data = neural_network->get_parameters_device().data;
 
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data_cuda.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    const float* delta_views = back_propagation_cuda.neural_network.workspace;
+    const float* delta_views = back_propagation_cuda.neural_network.workspace.data;
 
     // @todo do it in vector form without loop.
 /*

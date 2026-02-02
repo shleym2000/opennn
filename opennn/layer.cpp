@@ -56,7 +56,7 @@ void LayerForwardPropagationCuda::set(const Index& new_batch_size, Layer* new_la
 }
 
 
-TensorViewCuda LayerForwardPropagationCuda::get_outputs_device() const
+TensorViewCuda LayerForwardPropagationCuda::get_outputs() const
 {
     return outputs;
 }
@@ -79,9 +79,15 @@ void LayerBackPropagationCuda::set(const Index& new_batch_size, Layer* new_layer
 }
 
 
-vector<TensorViewCuda> LayerBackPropagationCuda::get_input_deltas_device() const
+vector<TensorViewCuda> LayerBackPropagationCuda::get_input_deltas_views_device() const
 {
-	return input_deltas;
+    vector<TensorViewCuda> views;
+    views.reserve(input_deltas.size());
+
+    for (const TensorCuda& tensor : input_deltas)
+        views.push_back(tensor.view());
+
+    return views;
 }
 
 #endif

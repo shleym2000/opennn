@@ -327,12 +327,9 @@ struct BackPropagationCuda
     cudnnReduceTensorDescriptor_t reduce_tensor_descriptor;
     void* workspace = nullptr;
     size_t workspace_size = 0;
-
-    cudnnTensorDescriptor_t output_tensor_descriptor = nullptr;
     cudnnTensorDescriptor_t output_reduce_tensor_descriptor = nullptr;
 
-    float* output_deltas = nullptr;
-    dimensions output_deltas_dimensions;
+    TensorCuda output_deltas;
 
     Tensor<type, 0> accuracy;
     float* predictions = nullptr;

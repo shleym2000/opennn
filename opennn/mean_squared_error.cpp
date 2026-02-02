@@ -182,7 +182,7 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     Tensor<type,0>& error = back_propagation_cuda.error;
 
-    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation_cuda.output_tensor_descriptor;
+    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation_cuda.output_deltas.get_descriptor();
 
     const cudnnOpTensorDescriptor_t operator_sum_descriptor = back_propagation_cuda.operator_sum_descriptor;
 

@@ -6,9 +6,6 @@
 //   Artificial Intelligence Techniques SL (Artelnics)
 //   artelnics@artelnics.com
 
-#include <iostream>
-#include <string>
-
 #include "../../opennn/dataset.h"
 #include "../../opennn/standard_networks.h"
 #include "../../opennn/training_strategy.h"
@@ -52,18 +49,13 @@ int main()
         Tensor<type, 2> input_tensor(1, 4);
         input_tensor.setValues({{5.1, 3.5, 1.4, 0.2}});
 
-        Tensor<type, 2> output_tensor = classification_network.calculate_outputs<2, 2>(input_tensor);
+        const Tensor<type, 2> output_tensor = classification_network.calculate_outputs<2, 2>(input_tensor);
 
-        Tensor<type, 1> single_output = output_tensor.chip(0, 0);
+        cout << "Class probabilities: " << output_tensor << endl;
 
-        Index predicted_class = 0;
-        for(Index i = 1; i < single_output.size(); ++i)
-            if (single_output(i) > single_output(predicted_class))
-                predicted_class = i;
+        // Export
 
-        cout << "Predicted class: " << predicted_class << endl;
-
-        cout << "Bye!" << endl;
+        classification_network.save("iris_model.xml");
 
         return 0;
     }

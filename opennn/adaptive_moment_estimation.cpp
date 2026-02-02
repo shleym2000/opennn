@@ -232,20 +232,20 @@ TrainingResults AdaptiveMomentEstimation::train()
         for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {
             // Dataset
-         
+
             training_batch.fill(training_batches[iteration],
                                 input_variable_indices,
                                 // decoder_variable_indices,
                                 target_variable_indices);
 
             // Neural network
-      
+
             neural_network->forward_propagate(training_batch.get_input_views(),
                                               training_forward_propagation,
                                               is_training);
 
             // Loss index
-     
+
             loss_index->back_propagate(training_batch,
                                        training_forward_propagation,
                                        training_back_propagation);
@@ -756,7 +756,6 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     }
 
     neural_network->copy_parameters_host();
-    neural_network->free_parameters_device();
 
     set_unscaling();
 
@@ -774,8 +773,8 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 
     const int total_parameters_size = static_cast<int>(neural_network->get_parameters().size());
 
-    float* parameters_device = neural_network->get_parameters_device();
-    const float* gradients_device = back_propagation_cuda.neural_network.workspace;
+    float* parameters_device_data = neural_network->get_parameters_device().data;
+    const float* gradients_device = back_propagation_cuda.neural_network.workspace.data;
 
     optimization_data_cuda.iteration++;
     const int iteration = static_cast<int>(optimization_data_cuda.iteration);
@@ -785,7 +784,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 
     adam_update_device(
         total_parameters_size,
-        parameters_device,
+        parameters_device_data,
         optimization_data_cuda.gradient_exponential_decay_device,
         optimization_data_cuda.square_gradient_exponential_decay_device,
         gradients_device,

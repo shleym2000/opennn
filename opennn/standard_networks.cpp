@@ -204,6 +204,7 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                        padding_dimensions,
                                        "MaxPooling",
                                        "pooling_layer_" + to_string(i + 1)));
+                                       
     }
     
     add_layer(make_unique<Flatten<4>>(get_output_dimensions()));
