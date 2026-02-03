@@ -242,9 +242,9 @@ void push_back(Tensor<T, 1>& tensor, const T& value)
 string dimensions_to_string(const dimensions&, const string& = " ");
 dimensions string_to_dimensions(const string&, const string& = " ");
 
-dimensions prepend(const Index x, const dimensions& d);
+dimensions prepend(const Index&, const dimensions&);
 
-Index get_size(const dimensions& d);
+Index get_size(const dimensions&);
 
 template <typename T>
 string vector_to_string(const vector<T>& x, const string& separator = " ")
