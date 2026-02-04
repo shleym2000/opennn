@@ -54,7 +54,7 @@ vector<TensorView*> Normalization3d::get_parameter_views()
 }
 
 
-void Normalization3d::set(const Index& new_sequence_length,
+void Normalization3d::set(const Index new_sequence_length,
                           const Index& new_embedding_dimension,
                           const string& new_label)
 {
@@ -216,7 +216,7 @@ void Normalization3d::to_XML(XMLPrinter& printer) const
 }
 
 
-Normalization3dForwardPropagation::Normalization3dForwardPropagation(const Index& new_batch_size, Layer* new_layer)
+Normalization3dForwardPropagation::Normalization3dForwardPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
@@ -225,7 +225,7 @@ Normalization3dForwardPropagation::Normalization3dForwardPropagation(const Index
 
 void Normalization3dForwardPropagation::initialize()
 {
-    Normalization3d* normalization_3d = static_cast<Normalization3d*>(layer);
+    const Normalization3d* normalization_3d = static_cast<Normalization3d*>(layer);
 
     const Index sequence_length = normalization_3d->get_sequence_length();
     const Index embedding_dimension = normalization_3d->get_embedding_dimension();
@@ -246,7 +246,7 @@ void Normalization3dForwardPropagation::print() const
 
 void Normalization3dBackPropagation::initialize()
 {
-    Normalization3d* normalization_layer_3d = static_cast<Normalization3d*>(layer);
+    const Normalization3d* normalization_layer_3d = static_cast<Normalization3d*>(layer);
 
     const Index sequence_length = normalization_layer_3d->get_sequence_length();
     const Index embedding_dimension = normalization_layer_3d->get_embedding_dimension();
@@ -274,7 +274,7 @@ void Normalization3dBackPropagation::print() const
 }
 
 
-Normalization3dBackPropagation::Normalization3dBackPropagation(const Index& new_batch_size, Layer* new_layer)
+Normalization3dBackPropagation::Normalization3dBackPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerBackPropagation()
 {
     set(new_batch_size, new_layer);

@@ -68,7 +68,7 @@ void InputsSelection::set(const TrainingStrategy* new_training_strategy)
 }
 
 
-void InputsSelection::set_trials_number(const Index& new_trials_number)
+void InputsSelection::set_trials_number(const Index new_trials_number)
 {
     trials_number = new_trials_number;
 }
@@ -80,20 +80,20 @@ void InputsSelection::set_display(const bool& new_display)
 }
 
 
-void InputsSelection::set_selection_error_goal(const type& new_selection_error_goal)
+void InputsSelection::set_selection_error_goal(const type new_selection_error_goal)
 {
     selection_error_goal = new_selection_error_goal;
 }
 
 
-void InputsSelection::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void InputsSelection::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
     
 }
 
 
-void InputsSelection::set_maximum_time(const type& new_maximum_time)
+void InputsSelection::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }
@@ -138,7 +138,7 @@ void InputsSelection::check() const
 }
 
 
-InputsSelectionResults::InputsSelectionResults(const Index&maximum_epochs_number)
+InputsSelectionResults::InputsSelectionResults(const Index maximum_epochs_number)
 {
     set(maximum_epochs_number);
 }
@@ -150,7 +150,7 @@ Index InputsSelectionResults::get_epochs_number() const
 }
 
 
-void InputsSelectionResults::set(const Index& maximum_epochs_number)
+void InputsSelectionResults::set(const Index maximum_epochs_number)
 {
     training_error_history.resize(maximum_epochs_number);
     training_error_history.setConstant(type(-1));
@@ -193,7 +193,7 @@ string InputsSelectionResults::write_stopping_condition() const
 }
 
 
-void InputsSelectionResults::resize_history(const Index& new_size)
+void InputsSelectionResults::resize_history(const Index new_size)
 {
     const Tensor1 old_training_error_history(training_error_history);
     const Tensor1 old_selection_error_history(selection_error_history);
@@ -231,7 +231,7 @@ void InputsSelectionResults::print() const
 }
 
 
-string InputsSelection::write_time(const type& time) const
+string InputsSelection::write_time(const type time) const
 {
     const int hours = int(time) / 3600;
     int seconds = int(time) % 3600;

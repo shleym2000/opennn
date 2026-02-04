@@ -27,7 +27,7 @@ public:
     Index get_clusters_number() const;
 
     void fit(const Tensor2&);
-    void set_cluster_number(const Index&);
+    void set_cluster_number(const Index);
     void set_centers_random(const Tensor2&);
 
 private:

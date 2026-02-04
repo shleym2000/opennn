@@ -145,13 +145,13 @@ void GeneticAlgorithm::set_default()
 }
 
 
-void GeneticAlgorithm::set_minimum_inputs_number(const Index& new_minimum_inputs_number)
+void GeneticAlgorithm::set_minimum_inputs_number(const Index new_minimum_inputs_number)
 {
     minimum_inputs_number = new_minimum_inputs_number;
 }
 
 
-void GeneticAlgorithm::set_maximum_inputs_number(const Index& new_maximum_inputs_number)
+void GeneticAlgorithm::set_maximum_inputs_number(const Index new_maximum_inputs_number)
 {
     const Dataset* dataset = training_strategy ? training_strategy->get_dataset() : nullptr;
     const Index inputs_number = dataset ? dataset->get_raw_variables_number("Input") : 0;
@@ -168,13 +168,13 @@ void GeneticAlgorithm::set_population(const Tensor<bool, 2>& new_population)
 }
 
 
-void GeneticAlgorithm::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void GeneticAlgorithm::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void GeneticAlgorithm::set_individuals_number(const Index& new_individuals_number)
+void GeneticAlgorithm::set_individuals_number(const Index new_individuals_number)
 {
     if(!training_strategy || !training_strategy->get_dataset())
         throw runtime_error("Training strategy or dataset is null");
@@ -199,13 +199,13 @@ void GeneticAlgorithm::set_initialization_method(const string& new_initializatio
 }
 
 
-void GeneticAlgorithm::set_mutation_rate(const type& new_mutation_rate)
+void GeneticAlgorithm::set_mutation_rate(const type new_mutation_rate)
 {
     mutation_rate = clamp(new_mutation_rate, type(0), type(1));
 }
 
 
-void GeneticAlgorithm::set_elitism_size(const Index& new_elitism_size)
+void GeneticAlgorithm::set_elitism_size(const Index new_elitism_size)
 {
     elitism_size = clamp<Index>(new_elitism_size, 0, get_individuals_number());
 }

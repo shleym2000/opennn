@@ -85,9 +85,9 @@ public:
 
     void set_convolution_type(const string&);
 
-    void set_row_stride(const Index&);
+    void set_row_stride(const Index);
 
-    void set_column_stride(const Index&);
+    void set_column_stride(const Index);
 
     void set_input_dimensions(const dimensions&) override;
 
@@ -137,8 +137,8 @@ protected:
 
     // Batch Normalization
 
-    TensorViewCuda scales_device;
-    TensorViewCuda offsets_device;
+    TensorViewCuda gammas_device;
+    TensorViewCuda betas_device;
 
     TensorCuda running_means_device;
     TensorCuda running_variances_device;
@@ -180,7 +180,7 @@ private:
 
 struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 {
-    ConvolutionalForwardPropagation(const Index& = 0, Layer* = nullptr);
+    ConvolutionalForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -199,7 +199,7 @@ struct ConvolutionalForwardPropagation final : LayerForwardPropagation
 
 struct ConvolutionalBackPropagation final : LayerBackPropagation
 {
-    ConvolutionalBackPropagation(const Index& = 0, Layer* = nullptr);
+    ConvolutionalBackPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -221,7 +221,7 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
 struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    ConvolutionalForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
+    ConvolutionalForwardPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -254,7 +254,7 @@ struct ConvolutionalForwardPropagationCuda : public LayerForwardPropagationCuda
 
 struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 {
-    ConvolutionalBackPropagationCuda(const Index& = 0, Layer* = nullptr);
+    ConvolutionalBackPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 

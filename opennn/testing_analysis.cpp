@@ -375,7 +375,7 @@ void TestingAnalysis::print_error_data_descriptives() const
 }
 
 
-vector<Histogram> TestingAnalysis::calculate_error_data_histograms(const Index& bins_number) const
+vector<Histogram> TestingAnalysis::calculate_error_data_histograms(const Index bins_number) const
 {
     const Tensor2 error_data = calculate_percentage_error_data();
 
@@ -390,7 +390,7 @@ vector<Histogram> TestingAnalysis::calculate_error_data_histograms(const Index& 
 }
 
 
-Tensor<Tensor<Index, 1>, 1> TestingAnalysis::calculate_maximal_errors(const Index& samples_number) const
+Tensor<Tensor<Index, 1>, 1> TestingAnalysis::calculate_maximal_errors(const Index samples_number) const
 {
     Tensor3 error_data = calculate_error_data();
 
@@ -840,7 +840,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_multiple_classification(co
 }
 
 
-vector<Tensor<Index, 2>> TestingAnalysis::calculate_multilabel_confusion(const type& decision_threshold) const
+vector<Tensor<Index, 2>> TestingAnalysis::calculate_multilabel_confusion(const type decision_threshold) const
 {
     check();
 
@@ -872,7 +872,7 @@ Tensor<Index, 1> TestingAnalysis::calculate_positives_negatives_rate(const Tenso
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type& decision_threshold) const
+Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_threshold) const
 {
     check();
 
@@ -1300,7 +1300,7 @@ vector<Histogram> TestingAnalysis::calculate_output_histogram(const Tensor2& out
 }
 
 
-TestingAnalysis::BinaryClassificationRates TestingAnalysis::calculate_binary_classification_rates(const type& decision_threshold) const
+TestingAnalysis::BinaryClassificationRates TestingAnalysis::calculate_binary_classification_rates(const type decision_threshold) const
 {
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
@@ -1780,7 +1780,7 @@ void TestingAnalysis::save_misclassified_samples_probability_histogram(const Ten
 }
 
 
-Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index& maximum_past_time_steps) const
+Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index maximum_past_time_steps) const
 {
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
@@ -1797,7 +1797,7 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index&
 }
 
 
-Tensor<Tensor1, 1> TestingAnalysis::calculate_inputs_errors_cross_correlation(const Index& past_time_steps) const
+Tensor<Tensor1, 1> TestingAnalysis::calculate_inputs_errors_cross_correlation(const Index past_time_steps) const
 {
     const Index targets_number = dataset->get_variables_number("Target");
 
@@ -1908,7 +1908,7 @@ string TestingAnalysis::test_transformer(const vector<string>& context_string, c
 }
 
 
-Tensor1 TestingAnalysis::calculate_binary_classification_tests(const type& decision_threshold) const
+Tensor1 TestingAnalysis::calculate_binary_classification_tests(const type decision_threshold) const
 {
     const Tensor<Index, 2> confusion = calculate_confusion(decision_threshold);
 
@@ -2188,7 +2188,7 @@ void TestingAnalysis::RocAnalysis::print() const
 
 #ifdef OPENNN_CUDA
 
-void TestingAnalysis::set_batch_size(const Index& new_batch_size)
+void TestingAnalysis::set_batch_size(const Index new_batch_size)
 {
     batch_size = new_batch_size;
 }
@@ -2199,7 +2199,7 @@ Index TestingAnalysis::get_batch_size()
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_threshold) const
+Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_threshold) const
 {
     check();
 
@@ -2219,7 +2219,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
     total_confusion_matrix.setZero();
 
     BatchCuda testing_batch_cuda(batch_size, dataset);
-    ForwardPropagationCuda testing_forward_propagation_cuda(batch_size, neural_network);
+    ForwardPropagationCuda testing_forward_propagation(batch_size, neural_network);
 
     neural_network->allocate_parameters_device();
     neural_network->copy_parameters_device();
@@ -2231,9 +2231,9 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
 
         if (current_batch_size != batch_size) {
             testing_batch_cuda.free();
-            testing_forward_propagation_cuda.free();
+            testing_forward_propagation.free();
             testing_batch_cuda.set(current_batch_size, dataset);
-            testing_forward_propagation_cuda.set(current_batch_size, neural_network);
+            testing_forward_propagation.set(current_batch_size, neural_network);
         }
 
         testing_batch_cuda.fill(current_batch_indices,
@@ -2242,10 +2242,10 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type& decision_
                                 target_variable_indices);
 
         neural_network->forward_propagate_cuda(testing_batch_cuda.get_input_views_device(),
-                                               testing_forward_propagation_cuda,
+                                               testing_forward_propagation,
                                                false);
 
-        const float* outputs_device = testing_forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
+        const float* outputs_device = testing_forward_propagation.get_last_trainable_layer_outputs_view_device().data;
 
         Tensor2 batch_outputs(current_batch_size, outputs_number);
         cudaMemcpy(batch_outputs.data(), outputs_device, current_batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToHost);

@@ -117,9 +117,9 @@ public:
     vector<vector<Descriptives>> calculate_error_data_descriptives() const;
     void print_error_data_descriptives() const;
 
-    vector<Histogram> calculate_error_data_histograms(const Index& = 10) const;
+    vector<Histogram> calculate_error_data_histograms(const Index = 10) const;
 
-    Tensor<Tensor<Index, 1>, 1> calculate_maximal_errors(const Index& = 10) const;
+    Tensor<Tensor<Index, 1>, 1> calculate_maximal_errors(const Index = 10) const;
 
     Tensor2 calculate_errors() const;
     Tensor1 calculate_errors(const Tensor2&, const Tensor2&) const;
@@ -153,7 +153,7 @@ public:
 
     // Binary classifcation
 
-    Tensor1 calculate_binary_classification_tests(const type& = 0.50) const;
+    Tensor1 calculate_binary_classification_tests(const type = 0.50) const;
 
     void print_binary_classification_tests() const;
 
@@ -161,9 +161,9 @@ public:
 
     Tensor<Index, 2> calculate_confusion_binary_classification(const Tensor2&, const Tensor2&, const type&) const;
     Tensor<Index, 2> calculate_confusion_multiple_classification(const Tensor2&, const Tensor2&) const;
-    vector<Tensor<Index, 2>> calculate_multilabel_confusion(const type&) const;
+    vector<Tensor<Index, 2>> calculate_multilabel_confusion(const type) const;
     Tensor<Index, 2> calculate_confusion(const Tensor2&, const Tensor2&, const type& = 0.50) const;
-    Tensor<Index, 2> calculate_confusion(const type& = 0.50) const;
+    Tensor<Index, 2> calculate_confusion(const type = 0.50) const;
 
     Tensor<Index, 1> calculate_positives_negatives_rate(const Tensor2&, const Tensor2&) const;
 
@@ -195,7 +195,7 @@ public:
 
     // Binary classification rates
 
-    BinaryClassificationRates calculate_binary_classification_rates(const type& = 0.50) const;
+    BinaryClassificationRates calculate_binary_classification_rates(const type = 0.50) const;
 
     vector<Index> calculate_true_positive_samples(const Tensor2&, const Tensor2&, const vector<Index>&, const type&) const;
     vector<Index> calculate_false_positive_samples(const Tensor2&, const Tensor2&, const vector<Index>&, const type&) const;
@@ -241,9 +241,9 @@ public:
 
     // Forecasting
 
-    Tensor<Tensor1, 1> calculate_error_autocorrelation(const Index& = 10) const;
+    Tensor<Tensor1, 1> calculate_error_autocorrelation(const Index = 10) const;
 
-    Tensor<Tensor1, 1> calculate_inputs_errors_cross_correlation(const Index& = 10) const;
+    Tensor<Tensor1, 1> calculate_inputs_errors_cross_correlation(const Index = 10) const;
 
     // Transformer
 
@@ -262,10 +262,10 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void set_batch_size(const Index&);
+    void set_batch_size(const Index);
     Index get_batch_size();
 
-    Tensor<Index, 2> calculate_confusion_cuda(const type & = 0.50) const;
+    Tensor<Index, 2> calculate_confusion_cuda(const type = 0.50) const;
 
 private:
 

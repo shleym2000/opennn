@@ -183,45 +183,45 @@ void CrossEntropyError2d::from_XML(const XMLDocument& document)
 #ifdef OPENNN_CUDA
 
 void CrossEntropyError2d::calculate_error_cuda(const BatchCuda& batch_cuda,
-                                               const ForwardPropagationCuda& forward_propagation_cuda,
-                                               BackPropagationCuda& back_propagation_cuda) const
+                                               const ForwardPropagationCuda& forward_propagation,
+                                               BackPropagationCuda& back_propagation) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
     outputs_number == 1
-        ? calculate_binary_error_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda)
-        : calculate_multiple_error_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
+        ? calculate_binary_error_cuda(batch_cuda, forward_propagation, back_propagation)
+        : calculate_multiple_error_cuda(batch_cuda, forward_propagation, back_propagation);
 }
 
 
 void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cuda,
-                                                      const ForwardPropagationCuda& forward_propagation_cuda,
-                                                      BackPropagationCuda& back_propagation_cuda) const
+                                                      const ForwardPropagationCuda& forward_propagation,
+                                                      BackPropagationCuda& back_propagation) const
 {
     // Batch
 
     const Index samples_number = batch_cuda.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device;
+    const type* targets = batch_cuda.targets_device.data;
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
+    const float* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagation
 
-    Tensor<type, 0>& error = back_propagation_cuda.error;
-    float* error_device = back_propagation_cuda.error_device;
-    float* errors = back_propagation_cuda.errors;
+    Tensor<type, 0>& error = back_propagation.error;
+    float* error_device = back_propagation.error_device;
+    float* errors = back_propagation.errors;
 
-    const size_t size = samples_number * forward_propagation_cuda.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
+    const size_t size = samples_number * forward_propagation.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
 
-    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation_cuda.output_deltas.get_descriptor();
-    const cudnnTensorDescriptor_t output_reduce_tensor_descriptor = back_propagation_cuda.output_reduce_tensor_descriptor;
+    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_deltas.get_descriptor();
+    const cudnnTensorDescriptor_t output_reduce_tensor_descriptor = back_propagation.output_reduce_tensor_descriptor;
 
-    const cudnnReduceTensorDescriptor_t reduce_tensor_descriptor = back_propagation_cuda.reduce_tensor_descriptor;
-    void* workspace = back_propagation_cuda.workspace;
-    const size_t workspace_size = back_propagation_cuda.workspace_size;
+    const cudnnReduceTensorDescriptor_t reduce_tensor_descriptor = back_propagation.reduce_tensor_descriptor;
+    void* workspace = back_propagation.workspace;
+    const size_t workspace_size = back_propagation.workspace_size;
 
     const float alpha = 1.0f;
     const float beta = 0.0f;
@@ -248,33 +248,33 @@ void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cud
 
 
 void CrossEntropyError2d::calculate_multiple_error_cuda(const BatchCuda& batch_cuda,
-                                                        const ForwardPropagationCuda& forward_propagation_cuda,
-                                                        BackPropagationCuda& back_propagation_cuda) const
+                                                        const ForwardPropagationCuda& forward_propagation,
+                                                        BackPropagationCuda& back_propagation) const
 {
     // Batch
 
     const Index samples_number = batch_cuda.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device;
+    const type* targets = batch_cuda.targets_device.data;
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
+    const float* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagation
 
-    Tensor<type, 0>& error = back_propagation_cuda.error;
-    float* error_device = back_propagation_cuda.error_device;
-    float* errors = back_propagation_cuda.errors;
+    Tensor<type, 0>& error = back_propagation.error;
+    float* error_device = back_propagation.error_device;
+    float* errors = back_propagation.errors;
 
-    const size_t size = samples_number * forward_propagation_cuda.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
+    const size_t size = samples_number * forward_propagation.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
 
-    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation_cuda.output_deltas.get_descriptor();
-    const cudnnTensorDescriptor_t output_reduce_tensor_descriptor = back_propagation_cuda.output_reduce_tensor_descriptor;
+    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_deltas.get_descriptor();
+    const cudnnTensorDescriptor_t output_reduce_tensor_descriptor = back_propagation.output_reduce_tensor_descriptor;
 
-    const cudnnReduceTensorDescriptor_t reduce_tensor_descriptor = back_propagation_cuda.reduce_tensor_descriptor;
-    void* workspace = back_propagation_cuda.workspace;
-    const size_t workspace_size = back_propagation_cuda.workspace_size;
+    const cudnnReduceTensorDescriptor_t reduce_tensor_descriptor = back_propagation.reduce_tensor_descriptor;
+    void* workspace = back_propagation.workspace;
+    const size_t workspace_size = back_propagation.workspace_size;
 
     constexpr type epsilon = numeric_limits<type>::epsilon();
 
@@ -301,36 +301,36 @@ void CrossEntropyError2d::calculate_multiple_error_cuda(const BatchCuda& batch_c
 
 
 void CrossEntropyError2d::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
-                                                      ForwardPropagationCuda& forward_propagation_cuda,
-                                                      BackPropagationCuda& back_propagation_cuda) const
+                                                      ForwardPropagationCuda& forward_propagation,
+                                                      BackPropagationCuda& back_propagation) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
     outputs_number == 1
-        ? calculate_binary_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda)
-        : calculate_multiple_output_delta_cuda(batch_cuda, forward_propagation_cuda, back_propagation_cuda);
+        ? calculate_binary_output_delta_cuda(batch_cuda, forward_propagation, back_propagation)
+        : calculate_multiple_output_delta_cuda(batch_cuda, forward_propagation, back_propagation);
 }
 
 
 void CrossEntropyError2d::calculate_binary_output_delta_cuda(const BatchCuda& batch_cuda,
-                                                             ForwardPropagationCuda& forward_propagation_cuda,
-                                                             BackPropagationCuda& back_propagation_cuda) const
+                                                             ForwardPropagationCuda& forward_propagation,
+                                                             BackPropagationCuda& back_propagation) const
 {
     // Batch
 
     const Index samples_number = batch_cuda.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device;
+    const type* targets = batch_cuda.targets_device.data;
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
+    const float* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
 
-    const size_t size = samples_number * forward_propagation_cuda.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
+    const size_t size = samples_number * forward_propagation.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
 
     // Back propagation
 
-    float* output_deltas = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
+    float* output_deltas = back_propagation.get_output_deltas_tensor_view_device().data;
 
     const type scaling_factor = 1.0f / static_cast<type>(samples_number);
 
@@ -341,24 +341,24 @@ void CrossEntropyError2d::calculate_binary_output_delta_cuda(const BatchCuda& ba
 
 
 void CrossEntropyError2d::calculate_multiple_output_delta_cuda(const BatchCuda& batch_cuda,
-                                                               ForwardPropagationCuda& forward_propagation_cuda,
-                                                               BackPropagationCuda& back_propagation_cuda) const
+                                                               ForwardPropagationCuda& forward_propagation,
+                                                               BackPropagationCuda& back_propagation) const
 {
     // Batch
 
     const Index samples_number = batch_cuda.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device;
+    const type* targets = batch_cuda.targets_device.data;
 
     // Forward propagation
 
-    const float* outputs = forward_propagation_cuda.get_last_trainable_layer_outputs_view_device().data;
+    const float* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
 
     // Back propagation
 
-    float* output_deltas = back_propagation_cuda.get_output_deltas_tensor_view_device().data;
+    float* output_deltas = back_propagation.get_output_deltas_tensor_view_device().data;
 
-    const size_t size = samples_number * forward_propagation_cuda.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
+    const size_t size = samples_number * forward_propagation.layers[neural_network->get_last_trainable_layer_index()]->layer->get_outputs_number();
 
     const float scale_factor = 1.0f / static_cast<float>(samples_number);
 

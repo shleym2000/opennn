@@ -31,7 +31,7 @@ public:
 
     vector<string> get_scalers() const;
 
-    void set(const Index& = 0, const string& = "unscaling_layer");
+    void set(const Index = 0, const string& = "unscaling_layer");
 
     void set_input_dimensions(const dimensions&) override;
     void set_output_dimensions(const dimensions&) override;
@@ -72,7 +72,7 @@ private:
 
 struct UnscalingForwardPropagation final : LayerForwardPropagation
 {
-    UnscalingForwardPropagation(const Index& = 0, Layer* = nullptr);
+    UnscalingForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -84,7 +84,7 @@ struct UnscalingForwardPropagation final : LayerForwardPropagation
 
 struct UnscalingForwardPropagationCuda final : public LayerForwardPropagationCuda
 {
-    UnscalingForwardPropagationCuda(const Index & = 0, Layer* = nullptr);
+    UnscalingForwardPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 

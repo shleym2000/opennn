@@ -109,7 +109,7 @@ class Transformer final : public NeuralNetwork
 {
 public:
 
-    Transformer(const Index& = 0,
+    Transformer(const Index = 0,
                 const Index& = 0,
                 const Index& = 0,
                 const Index& = 0,
@@ -118,7 +118,7 @@ public:
                 const Index& = 0,
                 const Index& = 0);
 
-    void set(const Index& = 0,
+    void set(const Index = 0,
              const Index& = 0,
              const Index& = 0,
              const Index& = 0,
@@ -132,7 +132,7 @@ public:
     Index get_embedding_dimension() const;
     Index get_heads_number() const;
 
-    void set_dropout_rate(const type&);
+    void set_dropout_rate(const type);
     void set_input_vocabulary(const vector<string>&);
     void set_output_vocabulary(const vector<string>&);
 

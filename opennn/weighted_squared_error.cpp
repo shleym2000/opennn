@@ -63,19 +63,19 @@ void WeightedSquaredError::set_default()
 }
 
 
-void WeightedSquaredError::set_positives_weight(const type& new_positives_weight)
+void WeightedSquaredError::set_positives_weight(const type new_positives_weight)
 {
     positives_weight = new_positives_weight;
 }
 
 
-void WeightedSquaredError::set_negatives_weight(const type& new_negatives_weight)
+void WeightedSquaredError::set_negatives_weight(const type new_negatives_weight)
 {
     negatives_weight = new_negatives_weight;
 }
 
 
-void WeightedSquaredError::set_weights(const type& new_positives_weight, const type& new_negatives_weight)
+void WeightedSquaredError::set_weights(const type new_positives_weight, const type& new_negatives_weight)
 {
     positives_weight = new_positives_weight;
     negatives_weight = new_negatives_weight;

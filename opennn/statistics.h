@@ -15,11 +15,11 @@ namespace opennn
 
 struct Descriptives
 {
-    Descriptives(const type& = type(NAN), const type& = type(NAN), const type& = type(NAN), const type& = type(NAN));
+    Descriptives(const type = type(NAN), const type& = type(NAN), const type& = type(NAN), const type& = type(NAN));
 
     Tensor1 to_tensor() const;
 
-    void set(const type& = type(NAN), const type& = type(NAN), const type& = type(NAN), const type& = type(NAN));
+    void set(const type = type(NAN), const type& = type(NAN), const type& = type(NAN), const type& = type(NAN));
 
     void save(const filesystem::path&) const;
 
@@ -40,13 +40,13 @@ struct Descriptives
 
 struct BoxPlot
 {
-    BoxPlot(const type& = type(NAN),
+    BoxPlot(const type = type(NAN),
             const type& = type(NAN),
             const type& = type(NAN),
             const type& = type(NAN),
             const type& = type(NAN));
 
-    void set(const type& = type(NAN),
+    void set(const type = type(NAN),
              const type& = type(NAN),
              const type& = type(NAN),
              const type& = type(NAN),
@@ -66,7 +66,7 @@ struct BoxPlot
 
 struct Histogram
 {
-    Histogram(const Index& = 0);
+    Histogram(const Index = 0);
 
     Histogram(const Tensor1&, const Tensor<Index, 1>&);
 
@@ -92,9 +92,9 @@ struct Histogram
 
     Tensor1 calculate_maximal_centers() const;
 
-    Index calculate_bin(const type&) const;
+    Index calculate_bin(const type) const;
 
-    Index calculate_frequency(const type&) const;
+    Index calculate_frequency(const type) const;
 
     void save(const filesystem::path&) const;
 

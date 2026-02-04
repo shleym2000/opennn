@@ -51,19 +51,19 @@ const type& AdaptiveMomentEstimation::get_loss_goal() const
 }
 
 
-void AdaptiveMomentEstimation::set_batch_size(const Index& new_batch_size)
+void AdaptiveMomentEstimation::set_batch_size(const Index new_batch_size)
 {
     batch_size = new_batch_size;
 }
 
 
-void AdaptiveMomentEstimation::set_beta_1(const type& new_beta_1)
+void AdaptiveMomentEstimation::set_beta_1(const type new_beta_1)
 {
     beta_1 = new_beta_1;
 }
 
 
-void AdaptiveMomentEstimation::set_beta_2(const type& new_beta_2)
+void AdaptiveMomentEstimation::set_beta_2(const type new_beta_2)
 {
     beta_2= new_beta_2;
 }
@@ -82,31 +82,31 @@ void AdaptiveMomentEstimation::set_display(const bool& new_display)
 }
 
 
-void AdaptiveMomentEstimation::set_learning_rate(const type& new_learning_rate)
+void AdaptiveMomentEstimation::set_learning_rate(const type new_learning_rate)
 {
     learning_rate = new_learning_rate;
 }
 
 
-void AdaptiveMomentEstimation::set_loss_goal(const type& new_loss_goal)
+void AdaptiveMomentEstimation::set_loss_goal(const type new_loss_goal)
 {
     training_loss_goal = new_loss_goal;
 }
 
 
-void AdaptiveMomentEstimation::set_accuracy_goal(const type& new_accuracy_goal)
+void AdaptiveMomentEstimation::set_accuracy_goal(const type new_accuracy_goal)
 {
     training_accuracy_goal = new_accuracy_goal;
 }
 
 
-void AdaptiveMomentEstimation::set_maximum_epochs_number(const Index& new_maximum_epochs_number)
+void AdaptiveMomentEstimation::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void AdaptiveMomentEstimation::set_maximum_time(const type& new_maximum_time)
+void AdaptiveMomentEstimation::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }
@@ -553,8 +553,8 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     BatchCuda training_batch_cuda(training_batch_samples_number, dataset);
     unique_ptr<BatchCuda> selection_batch_cuda;
 
-    ForwardPropagationCuda training_forward_propagation_cuda(training_batch_samples_number, neural_network);
-    unique_ptr<ForwardPropagationCuda> selection_forward_propagation_cuda;
+    ForwardPropagationCuda training_forward_propagation(training_batch_samples_number, neural_network);
+    unique_ptr<ForwardPropagationCuda> selection_forward_propagation;
 
     neural_network->copy_parameters_device();
 
@@ -562,14 +562,14 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     loss_index->set_normalization_coefficient();
 
-    BackPropagationCuda training_back_propagation_cuda(training_batch_samples_number, loss_index);
-    unique_ptr<BackPropagationCuda> selection_back_propagation_cuda;
+    BackPropagationCuda training_back_propagation(training_batch_samples_number, loss_index);
+    unique_ptr<BackPropagationCuda> selection_back_propagation;
 
     if (has_selection)
     {
         selection_batch_cuda = make_unique<BatchCuda>(selection_batch_samples_number, dataset);
-        selection_forward_propagation_cuda = make_unique<ForwardPropagationCuda>(selection_batch_samples_number, neural_network);
-        selection_back_propagation_cuda = make_unique<BackPropagationCuda>(selection_batch_samples_number, loss_index);
+        selection_forward_propagation = make_unique<ForwardPropagationCuda>(selection_batch_samples_number, neural_network);
+        selection_back_propagation = make_unique<BackPropagationCuda>(selection_batch_samples_number, loss_index);
     }
 
     type training_error = type(0);
@@ -623,22 +623,22 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
             // Neural network
 
             neural_network->forward_propagate_cuda(training_batch_cuda.get_input_views_device(),
-                                                   training_forward_propagation_cuda,
+                                                   training_forward_propagation,
                                                    is_training);
 
             // Loss index
 
             loss_index->back_propagate_cuda(training_batch_cuda,
-                                            training_forward_propagation_cuda,
-                                            training_back_propagation_cuda);
+                                            training_forward_propagation,
+                                            training_back_propagation);
 
-            training_error += training_back_propagation_cuda.error();
+            training_error += training_back_propagation.error();
 
-            if (is_classification_model)   training_accuracy += training_back_propagation_cuda.accuracy();
+            if (is_classification_model)   training_accuracy += training_back_propagation.accuracy();
 
             // Optimization algorithm
 
-            update_parameters_cuda(training_back_propagation_cuda, optimization_data_cuda);
+            update_parameters_cuda(training_back_propagation, optimization_data_cuda);
         }
 
         // Loss
@@ -669,19 +669,19 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
                 // Neural network
 
                 neural_network->forward_propagate_cuda(selection_batch_cuda->get_input_views_device(),
-                                                       *selection_forward_propagation_cuda,
+                                                       *selection_forward_propagation,
                                                        is_training);
 
                 // Loss
 
                 loss_index->calculate_error_cuda(*selection_batch_cuda,
-                                                 *selection_forward_propagation_cuda,
-                                                 *selection_back_propagation_cuda);
+                                                 *selection_forward_propagation,
+                                                 *selection_back_propagation);
 
-                selection_error += selection_back_propagation_cuda->error();
+                selection_error += selection_back_propagation->error();
 
                 if (is_classification_model)
-                    selection_accuracy += selection_back_propagation_cuda->accuracy();
+                    selection_accuracy += selection_back_propagation->accuracy();
             }
 
             selection_error /= type(selection_batches_number);
@@ -739,7 +739,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
         if (stop_training)
         {
-            results.loss = training_back_propagation_cuda.loss;
+            results.loss = training_back_propagation.loss;
 
             results.selection_failures = selection_failures;
 
@@ -766,15 +766,15 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 }
 
 
-void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_propagation_cuda,
+void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_propagation,
                                                       ADAMOptimizationDataCuda& optimization_data_cuda) const
 {
-    NeuralNetwork* neural_network = back_propagation_cuda.loss_index->get_neural_network();
+    NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
 
     const int total_parameters_size = static_cast<int>(neural_network->get_parameters().size());
 
     float* parameters_device_data = neural_network->get_parameters_device().data;
-    const float* gradients_device = back_propagation_cuda.neural_network.workspace.data;
+    const float* gradients_device = back_propagation.neural_network.workspace.data;
 
     optimization_data_cuda.iteration++;
     const int iteration = static_cast<int>(optimization_data_cuda.iteration);
@@ -785,8 +785,8 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     adam_update_device(
         total_parameters_size,
         parameters_device_data,
-        optimization_data_cuda.gradient_exponential_decay_device,
-        optimization_data_cuda.square_gradient_exponential_decay_device,
+        optimization_data_cuda.gradient_exponential_decay,
+        optimization_data_cuda.square_gradient_exponential_decay,
         gradients_device,
         beta_1,
         beta_2,
@@ -811,11 +811,11 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
     NeuralNetwork* neural_network = adaptive_moment_estimation->get_loss_index()->get_neural_network();
     const Index parameters_number = neural_network->get_parameters_number();
 
-    CHECK_CUDA(cudaMalloc(&gradient_exponential_decay_device, parameters_number * sizeof(float)));
-    CHECK_CUDA(cudaMalloc(&square_gradient_exponential_decay_device, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&gradient_exponential_decay, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&square_gradient_exponential_decay, parameters_number * sizeof(float)));
 
-    CHECK_CUDA(cudaMemset(gradient_exponential_decay_device, 0, parameters_number * sizeof(float)));
-    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay_device, 0, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMemset(gradient_exponential_decay, 0, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay, 0, parameters_number * sizeof(float)));
 }
 
 

@@ -58,13 +58,13 @@ public:
 
     void set_input_dimensions(const dimensions&) override;
 
-    void set_padding_height(const Index&);
-    void set_padding_width(const Index&);
+    void set_padding_height(const Index);
+    void set_padding_width(const Index);
 
-    void set_row_stride(const Index&);
-    void set_column_stride(const Index&);
+    void set_row_stride(const Index);
+    void set_column_stride(const Index);
 
-    void set_pool_size(const Index&, const Index&);
+    void set_pool_size(const Index, const Index&);
 
     void set_pooling_method(const string&);
 
@@ -145,7 +145,7 @@ private:
 
 struct PoolingForwardPropagation final : LayerForwardPropagation
 {
-    PoolingForwardPropagation(const Index& = 0, Layer* = nullptr);
+    PoolingForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -159,7 +159,7 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 
 struct PoolingBackPropagation final : LayerBackPropagation
 {
-    PoolingBackPropagation(const Index& = 0, Layer* = nullptr);
+    PoolingBackPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -173,7 +173,7 @@ struct PoolingBackPropagation final : LayerBackPropagation
 
 struct PoolingForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    PoolingForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
+    PoolingForwardPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -189,7 +189,7 @@ struct PoolingForwardPropagationCuda : public LayerForwardPropagationCuda
 
 struct PoolingBackPropagationCuda : public LayerBackPropagationCuda
 {
-    PoolingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
+    PoolingBackPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 

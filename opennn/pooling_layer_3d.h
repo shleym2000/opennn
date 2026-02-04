@@ -55,7 +55,7 @@ private:
 
 struct Pooling3dForwardPropagation final : LayerForwardPropagation
 {
-    Pooling3dForwardPropagation(const Index& = 0, Layer* = nullptr);
+    Pooling3dForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -65,7 +65,7 @@ struct Pooling3dForwardPropagation final : LayerForwardPropagation
 
 struct Pooling3dBackPropagation final : LayerBackPropagation
 {
-    Pooling3dBackPropagation(const Index& = 0, Layer* = nullptr);
+    Pooling3dBackPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 

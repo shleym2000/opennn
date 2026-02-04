@@ -54,15 +54,15 @@ public:
 
     void set_default();
 
-    void set_maximum_neurons(const Index&);
-    void set_minimum_neurons(const Index&);
-    void set_trials_number(const Index&);
+    void set_maximum_neurons(const Index);
+    void set_minimum_neurons(const Index);
+    void set_trials_number(const Index);
 
     void set_display(const bool&);
 
-    void set_selection_error_goal(const type&);
-    void set_maximum_epochs_number(const Index&);
-    void set_maximum_time(const type&);
+    void set_selection_error_goal(const type);
+    void set_maximum_epochs_number(const Index);
+    void set_maximum_time(const type);
 
     string write_stopping_condition(const TrainingResults&) const;
 
@@ -72,7 +72,7 @@ public:
 
     virtual NeuronsSelectionResults perform_neurons_selection() = 0;
 
-    string write_time(const type&) const;
+    string write_time(const type) const;
 
     string get_name() const
     {
@@ -117,9 +117,9 @@ protected:
 
 struct NeuronsSelectionResults
 {
-   NeuronsSelectionResults(const Index& maximum_epochs_number = 0);
+   NeuronsSelectionResults(const Index maximum_epochs_number = 0);
 
-   void resize_history(const Index& new_size);
+   void resize_history(const Index new_size);
 
    string write_stopping_condition() const;
 

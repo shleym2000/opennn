@@ -105,13 +105,13 @@ void OptimizationAlgorithm::set_display(const bool& new_display)
 }
 
 
-void OptimizationAlgorithm::set_display_period(const Index& new_display_period)
+void OptimizationAlgorithm::set_display_period(const Index new_display_period)
 {
     display_period = new_display_period;
 }
 
 
-void OptimizationAlgorithm::set_save_period(const Index& new_save_period)
+void OptimizationAlgorithm::set_save_period(const Index new_save_period)
 {
     save_period = new_save_period;
 }
@@ -328,10 +328,10 @@ void OptimizationAlgorithm::set_scaling()
     const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
 
     bool has_pure_targets = false;
-    for(const Index& t_idx : target_variable_indices)
+    for(const Index t_idx : target_variable_indices)
     {
         bool is_input = false;
-        for(const Index& i_idx : input_variable_indices)
+        for(const Index i_idx : input_variable_indices)
         {
             if(t_idx == i_idx)
             {
@@ -428,7 +428,7 @@ void OptimizationAlgorithm::set_unscaling()
     {
         bool is_input = false;
 
-        for(const Index& input_idx : input_indices)
+        for(const Index input_idx : input_indices)
         {
             if(target_indices[i] == input_idx)
             {
@@ -468,7 +468,7 @@ void OptimizationAlgorithm::set_vocabularies()
 }
 
 
-TrainingResults::TrainingResults(const Index& epochs_number)
+TrainingResults::TrainingResults(const Index epochs_number)
 {
     training_error_history.resize(1 + epochs_number);
     training_error_history.setConstant(type(-1.0));
@@ -528,7 +528,7 @@ Index TrainingResults::get_epochs_number() const
 }
 
 
-void TrainingResults::resize_training_error_history(const Index& new_size)
+void TrainingResults::resize_training_error_history(const Index new_size)
 {
     if(training_error_history.size() == 0)
     {
@@ -548,7 +548,7 @@ void TrainingResults::resize_training_error_history(const Index& new_size)
 }
 
 
-void TrainingResults::resize_selection_error_history(const Index& new_size)
+void TrainingResults::resize_selection_error_history(const Index new_size)
 {
     if(selection_error_history.size() == 0)
     {
@@ -568,7 +568,7 @@ void TrainingResults::resize_selection_error_history(const Index& new_size)
 }
 
 
-string OptimizationAlgorithm::write_time(const type& time) const
+string OptimizationAlgorithm::write_time(const type time) const
 {
     const int hours = int(time) / 3600;
     int seconds = int(time) % 3600;
@@ -615,7 +615,7 @@ void TrainingResults::print(const string &message) const
 }
 
 
-Tensor<string, 2> TrainingResults::write_override_results(const Index& precision) const
+Tensor<string, 2> TrainingResults::write_override_results(const Index precision) const
 {
     Tensor<string, 2> override_results(5, 2);
 

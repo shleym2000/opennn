@@ -171,10 +171,10 @@ public:
 public:
 
     void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                 const bool&)
     {
-        const Index batch_size = forward_propagation_cuda->batch_size;
+        const Index batch_size = forward_propagation->batch_size;
         const Index outputs_number = get_outputs_number();
 
         if constexpr (Rank == 4)
@@ -184,7 +184,7 @@ public:
             const Index channels = get_input_channels();
 
             FlattenForwardPropagationCuda<Rank>* fp_cuda =
-                static_cast<FlattenForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
+                static_cast<FlattenForwardPropagationCuda<Rank>*>(forward_propagation.get());
 
             type* reordered_inputs = fp_cuda->reordered_inputs.data;
             type* outputs_device = fp_cuda->outputs.data;
@@ -194,7 +194,7 @@ public:
             reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
         }
         else
-            CHECK_CUDA(cudaMemcpy(forward_propagation_cuda->outputs.data,
+            CHECK_CUDA(cudaMemcpy(forward_propagation->outputs.data,
                                   inputs_device[0].data, batch_size * outputs_number * sizeof(type),
                                   cudaMemcpyDeviceToDevice));
     }
@@ -203,11 +203,11 @@ public:
     void back_propagate_cuda(const vector<TensorViewCuda>&,
                              const vector<TensorViewCuda>& deltas_device,
                              unique_ptr<LayerForwardPropagationCuda>&,
-                             unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
+                             unique_ptr<LayerBackPropagationCuda>& back_propagation) const
     {
-        const Index batch_size = back_propagation_cuda->batch_size;
+        const Index batch_size = back_propagation->batch_size;
 
-        type* input_deltas = back_propagation_cuda->input_deltas[0].data;
+        type* input_deltas = back_propagation->input_deltas[0].data;
 
         const Index outputs_number = get_outputs_number();
 
@@ -225,7 +225,7 @@ private:
 template<int Rank>
 struct FlattenForwardPropagation final : LayerForwardPropagation
 {
-    FlattenForwardPropagation(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    FlattenForwardPropagation(const Index new_batch_size = 0, Layer* new_layer = nullptr)
     {
         set(new_batch_size, new_layer);
     }
@@ -246,7 +246,7 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
 template<int Rank>
 struct FlattenBackPropagation final : LayerBackPropagation
 {
-    FlattenBackPropagation(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    FlattenBackPropagation(const Index new_batch_size = 0, Layer* new_layer = nullptr)
     {
         set(new_batch_size, new_layer);
     }
@@ -279,7 +279,7 @@ struct FlattenBackPropagation final : LayerBackPropagation
 template<int Rank>
 struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    FlattenForwardPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    FlattenForwardPropagationCuda(const Index new_batch_size = 0, Layer* new_layer = nullptr)
     {
         set(new_batch_size, new_layer);
     }
@@ -304,7 +304,7 @@ struct FlattenForwardPropagationCuda : public LayerForwardPropagationCuda
 template<int Rank>
 struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
 {
-    FlattenBackPropagationCuda(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    FlattenBackPropagationCuda(const Index new_batch_size = 0, Layer* new_layer = nullptr)
     {
         set(new_batch_size, new_layer);
     }

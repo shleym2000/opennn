@@ -18,7 +18,7 @@ class ImageDataset : public Dataset
 
 public:
 
-    ImageDataset(const Index& = 0, const dimensions& = {0, 0, 0}, const dimensions& = {0});
+    ImageDataset(const Index = 0, const dimensions& = {0, 0, 0}, const dimensions& = {0});
 
     ImageDataset(const filesystem::path&);
 
@@ -48,12 +48,12 @@ public:
     void set_augmentation(const bool&);
     void set_random_reflection_axis_x(const bool&);
     void set_random_reflection_axis_y(const bool&);
-    void set_random_rotation_minimum(const type&);
-    void set_random_rotation_maximum(const type&);
-    void set_random_horizontal_translation_minimum(const type&);
-    void set_random_horizontal_translation_maximum(const type&);
-    void set_random_vertical_translation_minimum(const type&);
-    void set_random_vertical_translation_maximum(const type&);
+    void set_random_rotation_minimum(const type);
+    void set_random_rotation_maximum(const type);
+    void set_random_horizontal_translation_minimum(const type);
+    void set_random_horizontal_translation_maximum(const type);
+    void set_random_vertical_translation_minimum(const type);
+    void set_random_vertical_translation_maximum(const type);
 
     vector<Descriptives> scale_variables(const string&) override;
     void unscale_variables(const string&);

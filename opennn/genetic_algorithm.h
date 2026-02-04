@@ -47,20 +47,20 @@ public:
 
     void set_default();
 
-    void set_minimum_inputs_number(const Index&);
-    void set_maximum_inputs_number(const Index&);
+    void set_minimum_inputs_number(const Index);
+    void set_maximum_inputs_number(const Index);
 
     void set_population(const Tensor<bool, 2>&);
 
-    void set_individuals_number(const Index& new_individuals_number = 4);
+    void set_individuals_number(const Index new_individuals_number = 4);
 
     void set_initialization_method(const string&);
 
-    void set_mutation_rate(const type&);
+    void set_mutation_rate(const type);
 
-    void set_elitism_size(const Index&);
+    void set_elitism_size(const Index);
 
-    void set_maximum_epochs_number(const Index&);
+    void set_maximum_epochs_number(const Index);
 
     void set_fitness(const Tensor1&); // Used in testing
     void set_selection(const Tensor<bool, 1>&); // Used in testing

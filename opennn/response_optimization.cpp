@@ -71,7 +71,7 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
 }
 
 
-void ResponseOptimization::set_evaluations_number(const Index& new_evaluations_number)
+void ResponseOptimization::set_evaluations_number(const Index new_evaluations_number)
 {
     evaluations_number = new_evaluations_number;
 }
@@ -380,7 +380,7 @@ void ResponseOptimization::set_output_condition(const string& variable_name,
 }
 
 
-void ResponseOptimization::set_input_condition(const Index& index,
+void ResponseOptimization::set_input_condition(const Index index,
                                                const ResponseOptimization::Condition& condition,
                                                const Tensor1& values)
 {
@@ -435,7 +435,7 @@ void ResponseOptimization::set_input_condition(const Index& index,
 }
 
 
-void ResponseOptimization::set_output_condition(const Index& index,
+void ResponseOptimization::set_output_condition(const Index index,
                                                 const ResponseOptimization::Condition& condition,
                                                 const Tensor1& values)
 {

@@ -77,49 +77,49 @@ template<typename T, size_t N>
 using array = Eigen::array<T, N>;
 
 template <typename Index>
-Eigen::array<IndexPair<Index>, 1> axes(const Index& a, const Index& b)
+Eigen::array<IndexPair<Index>, 1> axes(const Index a, const Index& b)
 {
     return Eigen::array<IndexPair<Index>, 1>({IndexPair<Index>(a, b)});
 }
 
 
 template <typename Index>
-Eigen::array<IndexPair<Index>, 2> axes(const Index& a1, const Index& b1, const Index& a2, const Index& b2)
+Eigen::array<IndexPair<Index>, 2> axes(const Index a1, const Index& b1, const Index& a2, const Index& b2)
 {
     return Eigen::array<IndexPair<Index>, 2>({IndexPair<Index>(a1, b1), IndexPair<Index>(a2, b2)});
 }
 
 
-inline Eigen::array<Index, 1> array_1(const Index& a)
+inline Eigen::array<Index, 1> array_1(const Index a)
 {
     return Eigen::array<Index, 1>({a});
 }
 
 
-inline Eigen::array<Index, 2> array_2(const Index& a, const Index& b)
+inline Eigen::array<Index, 2> array_2(const Index a, const Index& b)
 {
     return Eigen::array<Index, 2>({a, b});
 }
 
 
-inline Eigen::array<Index, 3> array_3(const Index& a, const Index& b, const Index& c)
+inline Eigen::array<Index, 3> array_3(const Index a, const Index& b, const Index& c)
 {
     return Eigen::array<Index, 3>({a, b, c});
 }
 
 
-inline Eigen::array<Index, 4> array_4(const Index& a, const Index& b, const Index& c, const Index& d)
+inline Eigen::array<Index, 4> array_4(const Index a, const Index& b, const Index& c, const Index& d)
 {
     return Eigen::array<Index, 4>({a, b, c, d});
 }
 
 
-inline array<Index, 5> array_5(const Index& a, const Index& b, const Index& c, const Index& d, const Index& e)
+inline array<Index, 5> array_5(const Index a, const Index& b, const Index& c, const Index& d, const Index& e)
 {
     return array<Index, 5>({a, b, c, d, e});
 }
 
-type bound(const type& value, const type& minimum, const type& maximum);
+type bound(const type value, const type& minimum, const type& maximum);
 
 void set_row(Tensor2&, const Tensor1&, const Index&);
 
@@ -135,6 +135,16 @@ void sum_diagonal(Tensor2&, const type&);
 Tensor2 self_kronecker_product(const ThreadPoolDevice*, const Tensor1&);
 
 void divide_columns(const ThreadPoolDevice*, TensorMap2&, const Tensor1&);
+
+inline bool is_contiguous(const vector<Index>& v)
+{
+    for(Index i = 1; i < v.size(); ++i)
+        if(v[i] != v[i-1] + 1)
+            return false;
+
+    return true;
+}
+
 
 template <int Rank>
 bool is_binary(const Tensor<type, Rank>& tensor)
@@ -192,7 +202,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, const Inde
 
 Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, const Index&, const type&, const type&);
 
-//type l2_distance(const type&, const TensorMap<Tensor<type, 0> > &);
+//type l2_distance(const type, const TensorMap<Tensor<type, 0> > &);
 type l2_distance(const Tensor1&, const Tensor1&);
 
 Tensor<Index, 1> get_n_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
@@ -242,9 +252,9 @@ void push_back(Tensor<T, 1>& tensor, const T& value)
 string dimensions_to_string(const dimensions&, const string& = " ");
 dimensions string_to_dimensions(const string&, const string& = " ");
 
-dimensions prepend(const Index& x, const dimensions& d);
+dimensions prepend(const Index&, const dimensions&);
 
-Index get_size(const dimensions& d);
+Index get_size(const dimensions&);
 
 template <typename T>
 string vector_to_string(const vector<T>& x, const string& separator = " ")
@@ -495,9 +505,11 @@ struct TensorViewCuda
     }
 };
 
+
 struct TensorCuda
 {
     float* data = nullptr;
+
     shared_ptr<cudnnTensorStruct> descriptor_handle = nullptr;
 
     TensorCuda() = default;
@@ -509,12 +521,12 @@ struct TensorCuda
     TensorCuda& operator=(const TensorCuda&) = delete;
 
     TensorCuda(TensorCuda&& other) noexcept
-        : data(other.data), descriptor_handle(move(other.descriptor_handle))
+        : data(other.data), descriptor_handle(std::move(other.descriptor_handle))
     {
         other.data = nullptr;
     }
 
-    TensorCuda& operator=(TensorCuda&& other) noexcept
+    TensorCuda& operator = (TensorCuda&& other) noexcept
     {
         if (this != &other)
         {
@@ -523,10 +535,12 @@ struct TensorCuda
             descriptor_handle = std::move(other.descriptor_handle);
             other.data = nullptr;
         }
+
         return *this;
     }
 
-    cudnnTensorDescriptor_t get_descriptor() const {
+    cudnnTensorDescriptor_t get_descriptor() const
+    {
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 

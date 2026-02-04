@@ -160,7 +160,7 @@ const vector<unique_ptr<Layer>>& NeuralNetwork::get_layers() const
 }
 
 
-const unique_ptr<Layer>& NeuralNetwork::get_layer(const Index& layer_index) const
+const unique_ptr<Layer>& NeuralNetwork::get_layer(const Index layer_index) const
 {
     return layers[layer_index];
 }
@@ -319,7 +319,7 @@ void NeuralNetwork::set_threads_number(const int& new_threads_number)
 }
 
 
-void NeuralNetwork::set_layers_number(const Index& new_layers_number)
+void NeuralNetwork::set_layers_number(const Index new_layers_number)
 {
     layers.resize(new_layers_number);
     layer_input_indices.resize(new_layers_number);
@@ -332,7 +332,7 @@ void NeuralNetwork::set_layer_input_indices(const vector<vector<Index>>& new_lay
 }
 
 
-void NeuralNetwork::set_layer_input_indices(const Index& layer_index, const vector<Index>& new_layer_input_indices)
+void NeuralNetwork::set_layer_input_indices(const Index layer_index, const vector<Index>& new_layer_input_indices)
 {
     layer_input_indices[layer_index] = new_layer_input_indices;
 }
@@ -416,7 +416,14 @@ dimensions NeuralNetwork::get_output_dimensions() const
 
 Index NeuralNetwork::get_parameters_number() const
 {
-    return parameters.size();
+    Index parameters_number = 0;
+
+    const Index layers_number = get_layers_number();
+
+    for(Index i = 0; i < layers_number; i++)
+        parameters_number += layers[i]->get_parameters_number();
+
+    return parameters_number;
 }
 
 
@@ -717,7 +724,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 }
 
 
-Tensor2 NeuralNetwork::calculate_directional_inputs(const Index& direction,
+Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
                                                     const Tensor1& point,
                                                     const type& minimum,
                                                     const type& maximum,
@@ -1278,14 +1285,14 @@ vector<string> NeuralNetwork::get_names_string() const
 }
 
 
-NeuralNetworkBackPropagation::NeuralNetworkBackPropagation(const Index& new_batch_size, 
+NeuralNetworkBackPropagation::NeuralNetworkBackPropagation(const Index new_batch_size, 
                                                            NeuralNetwork* new_neural_network)
 {
     set(new_batch_size, new_neural_network);
 }
 
 
-void NeuralNetworkBackPropagation::set(const Index& new_batch_size, NeuralNetwork* new_neural_network)
+void NeuralNetworkBackPropagation::set(const Index new_batch_size, NeuralNetwork* new_neural_network)
 {
     batch_size = new_batch_size;
 
@@ -1367,13 +1374,13 @@ void NeuralNetworkBackPropagation::print() const
 }
 
 
-ForwardPropagation::ForwardPropagation(const Index& new_batch_size, NeuralNetwork* new_neural_network)
+ForwardPropagation::ForwardPropagation(const Index new_batch_size, NeuralNetwork* new_neural_network)
 {
     set(new_batch_size, new_neural_network);
 }
 
 
-void ForwardPropagation::set(const Index& new_samples_number, NeuralNetwork* new_neural_network)
+void ForwardPropagation::set(const Index new_samples_number, NeuralNetwork* new_neural_network)
 {
     samples_number = new_samples_number;
 
@@ -1484,7 +1491,7 @@ void ForwardPropagation::print() const
 }
 
 
-void NeuralNetworkBackPropagationLM::set(const Index& new_batch_size, 
+void NeuralNetworkBackPropagationLM::set(const Index new_batch_size, 
                                          NeuralNetwork* new_neural_network)
 {
     batch_size = new_batch_size;
@@ -1592,7 +1599,7 @@ vector<vector<TensorViewCuda*>> NeuralNetwork::get_layer_parameter_views_device(
 
 
 void NeuralNetwork::forward_propagate_cuda(const vector<TensorViewCuda>& input_views_device,
-                                           ForwardPropagationCuda& forward_propagation_cuda,
+                                           ForwardPropagationCuda& forward_propagation,
                                            const bool& is_training) const
 {
     const Index layers_number = get_layers_number();
@@ -1606,11 +1613,11 @@ void NeuralNetwork::forward_propagate_cuda(const vector<TensorViewCuda>& input_v
                                        : layers_number - 1;
 
     const vector<vector<TensorViewCuda>> layer_input_views_device
-        = forward_propagation_cuda.get_layer_input_views_device(input_views_device, is_training);
+        = forward_propagation.get_layer_input_views_device(input_views_device, is_training);
 
     for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate_cuda(layer_input_views_device[i],
-                                          forward_propagation_cuda.layers[i],
+                                          forward_propagation.layers[i],
                                           is_training);
 }
 
@@ -1620,11 +1627,11 @@ TensorViewCuda NeuralNetwork::calculate_outputs_cuda(TensorViewCuda input_device
     if (layers.empty())
         return TensorViewCuda();
 
-    ForwardPropagationCuda forward_propagation_cuda(batch_size, this);
+    ForwardPropagationCuda forward_propagation(batch_size, this);
 
-    forward_propagate_cuda({ input_device }, forward_propagation_cuda, false);
+    forward_propagate_cuda({ input_device }, forward_propagation, false);
 
-    return forward_propagation_cuda.get_last_trainable_layer_outputs_view_device();
+    return forward_propagation.get_last_trainable_layer_outputs_view_device();
 }
 
 
@@ -1646,13 +1653,13 @@ void NeuralNetwork::destroy_cuda() const
 }
 
 
-ForwardPropagationCuda::ForwardPropagationCuda(const Index& new_batch_size, NeuralNetwork* new_neural_network)
+ForwardPropagationCuda::ForwardPropagationCuda(const Index new_batch_size, NeuralNetwork* new_neural_network)
 {
     set(new_batch_size, new_neural_network);
 }
 
 
-void ForwardPropagationCuda::set(const Index& new_samples_number, NeuralNetwork* new_neural_network)
+void ForwardPropagationCuda::set(const Index new_samples_number, NeuralNetwork* new_neural_network)
 {
     samples_number = new_samples_number;
 
@@ -1769,13 +1776,13 @@ void ForwardPropagationCuda::free()
 }
 
 
-NeuralNetworkBackPropagationCuda::NeuralNetworkBackPropagationCuda(const Index& new_batch_size, NeuralNetwork* new_neural_network)
+NeuralNetworkBackPropagationCuda::NeuralNetworkBackPropagationCuda(const Index new_batch_size, NeuralNetwork* new_neural_network)
 {
     set(new_batch_size, new_neural_network);
 }
 
 
-void NeuralNetworkBackPropagationCuda::set(const Index& new_batch_size, NeuralNetwork* new_neural_network)
+void NeuralNetworkBackPropagationCuda::set(const Index new_batch_size, NeuralNetwork* new_neural_network)
 {
     batch_size = new_batch_size;
 

@@ -31,7 +31,7 @@ public:
 
     vector<TensorView*> get_parameter_views() override;
 
-    void set(const Index& = 0,
+    void set(const Index = 0,
              const Index& = 0,
              const Index& = 0,
              const string & = "embedding_layer");
@@ -39,7 +39,7 @@ public:
     void set_scale_embedding(const bool&);
     void set_add_positional_encoding(const bool&);
 
-    void set_dropout_rate(const type&);
+    void set_dropout_rate(const type);
 
     void set_parameters_random() override;
     void set_parameters_glorot() override;
@@ -73,7 +73,6 @@ public:
 
     vector<TensorViewCuda*> get_parameter_views_device() override;
 
-
 private:
 
     TensorViewCuda weights_device;
@@ -99,7 +98,7 @@ private:
 
 struct EmbeddingForwardPropagation final : LayerForwardPropagation
 {
-    EmbeddingForwardPropagation(const Index& = 0, Layer* = nullptr);
+    EmbeddingForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -109,7 +108,7 @@ struct EmbeddingForwardPropagation final : LayerForwardPropagation
 
 struct EmbeddingBackPropagation final : LayerBackPropagation
 {
-    EmbeddingBackPropagation(const Index& = 0, Layer* = nullptr);
+    EmbeddingBackPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -124,7 +123,7 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
 struct EmbeddingForwardPropagationCuda : public LayerForwardPropagationCuda
 {
-    EmbeddingForwardPropagationCuda(const Index& = 0, Layer* = nullptr);
+    EmbeddingForwardPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -134,7 +133,7 @@ struct EmbeddingForwardPropagationCuda : public LayerForwardPropagationCuda
 
 struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 {
-    EmbeddingBackPropagationCuda(const Index& = 0, Layer* = nullptr);
+    EmbeddingBackPropagationCuda(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 

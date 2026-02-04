@@ -216,7 +216,7 @@ Index KMeans::get_clusters_number() const
 }
 
 
-void KMeans::set_cluster_number(const Index& new_clusters_number)
+void KMeans::set_cluster_number(const Index new_clusters_number)
 {
     clusters_number = new_clusters_number;
 }

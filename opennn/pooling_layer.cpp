@@ -198,31 +198,31 @@ void Pooling::set_input_dimensions(const dimensions& new_input_dimensions)
 }
 
 
-void Pooling::set_padding_height(const Index& new_padding_height)
+void Pooling::set_padding_height(const Index new_padding_height)
 {
     padding_height = new_padding_height;
 }
 
 
-void Pooling::set_padding_width(const Index& new_padding_width)
+void Pooling::set_padding_width(const Index new_padding_width)
 {
     padding_width = new_padding_width;
 }
 
 
-void Pooling::set_row_stride(const Index& new_row_stride)
+void Pooling::set_row_stride(const Index new_row_stride)
 {
     row_stride = new_row_stride;
 }
 
 
-void Pooling::set_column_stride(const Index& new_column_stride)
+void Pooling::set_column_stride(const Index new_column_stride)
 {
     column_stride = new_column_stride;
 }
 
 
-void Pooling::set_pool_size(const Index& new_pool_rows_number,
+void Pooling::set_pool_size(const Index new_pool_rows_number,
                             const Index& new_pool_columns_number)
 {
     pool_height = new_pool_rows_number;
@@ -451,17 +451,17 @@ void Pooling::back_propagate_average_pooling(const Tensor4& inputs,
 #ifdef OPENNN_CUDA
 
 void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                     unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                     unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                      const bool& is_training)
 {
-    TensorViewCuda outputs = forward_propagation_cuda->outputs;
+    TensorViewCuda outputs = forward_propagation->outputs;
 
     // Forward propagation
 
-    PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
-        = static_cast<PoolingForwardPropagationCuda*>(forward_propagation_cuda.get());
+    PoolingForwardPropagationCuda* pooling_layer_forward_propagation
+        = static_cast<PoolingForwardPropagationCuda*>(forward_propagation.get());
 
-    const cudnnTensorDescriptor_t input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
+    const cudnnTensorDescriptor_t input_tensor_descriptor = pooling_layer_forward_propagation->input_tensor_descriptor;
 
     // Pooling
 
@@ -478,21 +478,21 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
 
 void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
                                   const vector<TensorViewCuda>& deltas_device,
-                                  unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
-                                  unique_ptr<LayerBackPropagationCuda>& back_propagation_cuda) const
+                                  unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
+                                  unique_ptr<LayerBackPropagationCuda>& back_propagation) const
 {
     // Forward propagation
     
-    const TensorViewCuda& outputs = forward_propagation_cuda->outputs;
+    const TensorViewCuda& outputs = forward_propagation->outputs;
 
-    const PoolingForwardPropagationCuda* pooling_layer_forward_propagation_cuda
-        = static_cast<PoolingForwardPropagationCuda*>(forward_propagation_cuda.get());
+    const PoolingForwardPropagationCuda* pooling_layer_forward_propagation
+        = static_cast<PoolingForwardPropagationCuda*>(forward_propagation.get());
 
-    const cudnnTensorDescriptor_t input_tensor_descriptor = pooling_layer_forward_propagation_cuda->input_tensor_descriptor;
+    const cudnnTensorDescriptor_t input_tensor_descriptor = pooling_layer_forward_propagation->input_tensor_descriptor;
 
     // Back propagation
 
-    type* input_deltas = back_propagation_cuda->input_deltas[0].data;
+    type* input_deltas = back_propagation->input_deltas[0].data;
 
     // Pooling
 
@@ -549,7 +549,7 @@ void Pooling::from_XML(const XMLDocument& document)
 }
 
 
-PoolingForwardPropagation::PoolingForwardPropagation(const Index& new_batch_size,
+PoolingForwardPropagation::PoolingForwardPropagation(const Index new_batch_size,
                                                      Layer* new_layer)
     : LayerForwardPropagation()
 {
@@ -593,7 +593,7 @@ void PoolingForwardPropagation::print() const
 }
 
 
-PoolingBackPropagation::PoolingBackPropagation(const Index& new_batch_size, Layer* new_layer)
+PoolingBackPropagation::PoolingBackPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerBackPropagation()
 {
     set(new_batch_size, new_layer);
@@ -631,7 +631,7 @@ void PoolingBackPropagation::print() const
 
 #ifdef OPENNN_CUDA
 
-PoolingForwardPropagationCuda::PoolingForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+PoolingForwardPropagationCuda::PoolingForwardPropagationCuda(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagationCuda()
 {
     set(new_batch_size, new_layer);
@@ -640,7 +640,7 @@ PoolingForwardPropagationCuda::PoolingForwardPropagationCuda(const Index& new_ba
 
 void PoolingForwardPropagationCuda::initialize()
 {
-    Pooling* pooling_layer = static_cast<Pooling*>(layer);
+    const Pooling* pooling_layer = static_cast<Pooling*>(layer);
 
     const Index input_height = pooling_layer->get_input_height();
     const Index input_width = pooling_layer->get_input_width();
@@ -694,7 +694,7 @@ void PoolingForwardPropagationCuda::free()
 }
 
 
-PoolingBackPropagationCuda::PoolingBackPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+PoolingBackPropagationCuda::PoolingBackPropagationCuda(const Index new_batch_size, Layer* new_layer)
     : LayerBackPropagationCuda()
 {
     set(new_batch_size, new_layer);

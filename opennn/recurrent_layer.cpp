@@ -332,7 +332,7 @@ void Recurrent::to_XML(XMLPrinter& printer) const
 }
 
 
-RecurrentForwardPropagation::RecurrentForwardPropagation(const Index& new_batch_size, Layer* new_layer) : LayerForwardPropagation()
+RecurrentForwardPropagation::RecurrentForwardPropagation(const Index new_batch_size, Layer* new_layer) : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
 }
@@ -403,7 +403,7 @@ void RecurrentBackPropagation::print() const
 }
 
 
-RecurrentBackPropagation::RecurrentBackPropagation(const Index& new_batch_size, Layer* new_layer)
+RecurrentBackPropagation::RecurrentBackPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerBackPropagation()
 {
     set(new_batch_size, new_layer);

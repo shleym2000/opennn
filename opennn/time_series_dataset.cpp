@@ -15,7 +15,7 @@
 namespace opennn
 {
 
-TimeSeriesDataset::TimeSeriesDataset(const Index& new_samples_number,
+TimeSeriesDataset::TimeSeriesDataset(const Index new_samples_number,
                                      const dimensions& new_input_dimensions,
                                      const dimensions& new_target_dimensions)
     :Dataset(new_samples_number, new_input_dimensions, new_target_dimensions)
@@ -125,19 +125,19 @@ TimeSeriesDataset::TimeSeriesData TimeSeriesDataset::get_data() const
 }
 
 
-void TimeSeriesDataset::set_past_time_steps(const Index& new_past_time_steps)
+void TimeSeriesDataset::set_past_time_steps(const Index new_past_time_steps)
 {
     past_time_steps = new_past_time_steps;
 }
 
 
-void TimeSeriesDataset::set_future_time_steps(const Index& new_future_time_steps)
+void TimeSeriesDataset::set_future_time_steps(const Index new_future_time_steps)
 {
     future_time_steps = new_future_time_steps;
 }
 
 
-void TimeSeriesDataset::set_time_raw_variable_index(const Index& new_time_raw_variable_index)
+void TimeSeriesDataset::set_time_raw_variable_index(const Index new_time_raw_variable_index)
 {
     time_raw_variable_index = new_time_raw_variable_index;
 }
@@ -490,7 +490,7 @@ void TimeSeriesDataset::fill_gaps()
 }
 
 
-Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index& past_time_steps) const
+Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index past_time_steps) const
 {
     const Index samples_number = get_samples_number();
 
@@ -572,7 +572,7 @@ Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index& past_time_ste
 }
 
 
-Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index& past_time_steps) const
+Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_steps) const
 {
     const Index samples_number = get_samples_number();
 
@@ -671,7 +671,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index& past_time_s
 }
 
 
-Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index& past_time_steps) const
+Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index past_time_steps) const
 {
     const Index samples_number = get_samples_number();
 

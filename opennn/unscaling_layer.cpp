@@ -137,7 +137,7 @@ void Unscaling::set_output_dimensions(const dimensions& new_output_dimensions)
 }
 
 
-void Unscaling::set(const Index& new_neurons_number, const string& new_label)
+void Unscaling::set(const Index new_neurons_number, const string& new_label)
 {
     descriptives.resize(new_neurons_number);
 
@@ -305,7 +305,7 @@ void Unscaling::from_XML(const XMLDocument& document)
 }
 
 
-UnscalingForwardPropagation::UnscalingForwardPropagation(const Index& new_batch_size, Layer* new_layer)
+UnscalingForwardPropagation::UnscalingForwardPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
@@ -333,17 +333,17 @@ REGISTER(LayerForwardPropagation, UnscalingForwardPropagation, "Unscaling")
 #ifdef OPENNN_CUDA
 
 void Unscaling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                        const bool&)
 {
     UnscalingForwardPropagationCuda* this_forward_propagation =
-        static_cast<UnscalingForwardPropagationCuda*>(forward_propagation_cuda.get());
+        static_cast<UnscalingForwardPropagationCuda*>(forward_propagation.get());
 
     // @todo: implement unscaling on GPU
 }
 
 
-UnscalingForwardPropagationCuda::UnscalingForwardPropagationCuda(const Index& new_batch_size, Layer* new_layer)
+UnscalingForwardPropagationCuda::UnscalingForwardPropagationCuda(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagationCuda()
 {
     set(new_batch_size, new_layer);

@@ -28,9 +28,9 @@ struct ForwardPropagation
 {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    ForwardPropagation(const Index& = 0, NeuralNetwork* = nullptr);
+    ForwardPropagation(const Index = 0, NeuralNetwork* = nullptr);
 
-    void set(const Index & = 0, NeuralNetwork* = nullptr);
+    void set(const Index = 0, NeuralNetwork* = nullptr);
 
     vector<vector<TensorView*>> get_layer_workspace_views();
 
@@ -59,11 +59,11 @@ struct ForwardPropagation
 
 struct ForwardPropagationCuda
 {
-    ForwardPropagationCuda(const Index & = 0, NeuralNetwork* = nullptr);
+    ForwardPropagationCuda(const Index = 0, NeuralNetwork* = nullptr);
 
     ~ForwardPropagationCuda() { free(); }
 
-    void set(const Index & = 0, NeuralNetwork* = nullptr);
+    void set(const Index = 0, NeuralNetwork* = nullptr);
 
     vector<vector<TensorViewCuda*>> get_layer_workspace_views_device();
 
@@ -132,7 +132,7 @@ public:
     Index get_output_index(const string&) const;
 
     const vector<unique_ptr<Layer>>& get_layers() const;
-    const unique_ptr<Layer>& get_layer(const Index&) const;
+    const unique_ptr<Layer>& get_layer(const Index) const;
     const unique_ptr<Layer>& get_layer(const string&) const;
 
     Index get_layer_index(const string&) const;
@@ -154,10 +154,10 @@ public:
 
     void set(const filesystem::path&);
 
-    void set_layers_number(const Index&);
+    void set_layers_number(const Index);
 
     void set_layer_input_indices(const vector<vector<Index>>&);
-    void set_layer_input_indices(const Index&, const vector<Index>&);
+    void set_layer_input_indices(const Index, const vector<Index>&);
 
     void set_layer_input_indices(const string&, const vector<string>&);
     void set_layer_input_indices(const string&, const initializer_list<string>&);
@@ -261,7 +261,7 @@ public:
 
     Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
-    Tensor2 calculate_directional_inputs(const Index&, const Tensor1&, const type&, const type&, const Index& = 101) const;
+    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, const type&, const type&, const Index& = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
@@ -325,8 +325,6 @@ public:
 
     TensorViewCuda calculate_outputs_cuda(TensorViewCuda, const Index&);
 
-
-
 protected:
 
     cublasHandle_t cublas_handle;
@@ -359,9 +357,9 @@ protected:
 
 struct NeuralNetworkBackPropagation
 {
-    NeuralNetworkBackPropagation(const Index& = 0, NeuralNetwork* = nullptr);
+    NeuralNetworkBackPropagation(const Index = 0, NeuralNetwork* = nullptr);
 
-    void set(const Index& = 0, NeuralNetwork* = nullptr);
+    void set(const Index = 0, NeuralNetwork* = nullptr);
 
     const vector<unique_ptr<LayerBackPropagation>>& get_layers() const;
 
@@ -385,9 +383,9 @@ struct NeuralNetworkBackPropagation
 
 struct NeuralNetworkBackPropagationCuda
 {
-    NeuralNetworkBackPropagationCuda(const Index& = 0, NeuralNetwork* = nullptr);
+    NeuralNetworkBackPropagationCuda(const Index = 0, NeuralNetwork* = nullptr);
 
-    void set(const Index& = 0, NeuralNetwork* = nullptr);
+    void set(const Index = 0, NeuralNetwork* = nullptr);
 
     const vector<unique_ptr<LayerBackPropagationCuda>>& get_layers() const;
 
@@ -416,7 +414,7 @@ struct NeuralNetworkBackPropagationLM
         neural_network = new_neural_network;
     }
 
-    void set(const Index& = 0, NeuralNetwork* = nullptr);
+    void set(const Index = 0, NeuralNetwork* = nullptr);
 
     const vector<unique_ptr<LayerBackPropagationLM>>& get_layers() const
     {

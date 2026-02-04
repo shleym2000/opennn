@@ -18,7 +18,7 @@ class TimeSeriesDataset final : public Dataset
 
 public:
 
-    TimeSeriesDataset(const Index& = 0,
+    TimeSeriesDataset(const Index = 0,
                       const dimensions& = {},
                       const dimensions& = {});
 
@@ -43,13 +43,13 @@ public:
     TimeSeriesData get_data() const;
     Tensor3 get_data(const string& sample_role, const string& variable_use) const;
 
-    void set_past_time_steps(const Index&);
-    void set_future_time_steps(const Index&);
-    void set_time_raw_variable_index(const Index&);
+    void set_past_time_steps(const Index);
+    void set_future_time_steps(const Index);
+    void set_time_raw_variable_index(const Index);
 
-    Tensor2 calculate_autocorrelations(const Index& = 10) const;
-    Tensor3 calculate_cross_correlations(const Index& = 10) const;
-    Tensor3 calculate_cross_correlations_spearman(const Index& = 10) const;
+    Tensor2 calculate_autocorrelations(const Index = 10) const;
+    Tensor3 calculate_cross_correlations(const Index = 10) const;
+    Tensor3 calculate_cross_correlations_spearman(const Index = 10) const;
 
     void print() const override;
 

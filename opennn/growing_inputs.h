@@ -27,13 +27,13 @@ public:
 
     void set_default();
 
-    void set_maximum_inputs_number(const Index&);
-    void set_minimum_inputs_number(const Index&);
+    void set_maximum_inputs_number(const Index);
+    void set_minimum_inputs_number(const Index);
 
-    void set_maximum_correlation(const type&);
-    void set_minimum_correlation(const type&);
+    void set_maximum_correlation(const type);
+    void set_minimum_correlation(const type);
 
-    void set_maximum_selection_failures(const Index&);
+    void set_maximum_selection_failures(const Index);
 
     InputsSelectionResults perform_input_selection() override;
 

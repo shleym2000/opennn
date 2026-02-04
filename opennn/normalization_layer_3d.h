@@ -29,7 +29,7 @@ public:
 
     vector<TensorView*> get_parameter_views() override;
 
-    void set(const Index& = 0, const Index& = 0, const string& = "normalization_layer_3d");
+    void set(const Index = 0, const Index& = 0, const string& = "normalization_layer_3d");
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
@@ -59,7 +59,7 @@ private:
 
 struct Normalization3dForwardPropagation final : LayerForwardPropagation
 {
-    Normalization3dForwardPropagation(const Index& = 0, Layer* = nullptr);
+    Normalization3dForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -72,7 +72,7 @@ struct Normalization3dForwardPropagation final : LayerForwardPropagation
 
 struct Normalization3dBackPropagation final : LayerBackPropagation
 {
-    Normalization3dBackPropagation(const Index& new_batch_size = 0,
+    Normalization3dBackPropagation(const Index new_batch_size = 0,
                                    Layer* new_layer = nullptr);
 
     vector<TensorView*> get_workspace_views() override;

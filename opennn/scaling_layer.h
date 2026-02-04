@@ -44,7 +44,7 @@ public:
         return descriptives;
     }
 
-    Descriptives get_descriptives(const Index& index) const
+    Descriptives get_descriptives(const Index index) const
     {
         return descriptives[index];
     }
@@ -158,7 +158,7 @@ public:
         descriptives = new_descriptives;
     }
 
-    void set_min_max_range(const type& min, const type& max)
+    void set_min_max_range(const type min, const type& max)
     {
         min_range = min;
         max_range = max;
@@ -412,17 +412,17 @@ public:
 #ifdef OPENNN_CUDA
 
     void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                unique_ptr<LayerForwardPropagationCuda>& forward_propagation_cuda,
+                                unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                 const bool&) override
     {
         ScalingForwardPropagationCuda<Rank>* scaling_forward_propagation =
-            static_cast<ScalingForwardPropagationCuda<Rank>*>(forward_propagation_cuda.get());
+            static_cast<ScalingForwardPropagationCuda<Rank>*>(forward_propagation.get());
 
         const Index outputs_number = get_outputs_number();
-        const size_t size = outputs_number * forward_propagation_cuda->batch_size;
+        const size_t size = outputs_number * forward_propagation->batch_size;
 
-        scale_2d_cuda(size, forward_propagation_cuda->batch_size, outputs_number,
-                      inputs_device[0].data, forward_propagation_cuda->outputs.data,
+        scale_2d_cuda(size, forward_propagation->batch_size, outputs_number,
+                      inputs_device[0].data, forward_propagation->outputs.data,
                       scaling_forward_propagation->scalers_device,
                       scaling_forward_propagation->minimums_device,
                       scaling_forward_propagation->maximums_device,
@@ -455,7 +455,7 @@ private:
 template<int Rank>
 struct ScalingForwardPropagation final : LayerForwardPropagation
 {
-    ScalingForwardPropagation(const Index& new_batch_size = 0, Layer* new_layer = nullptr)
+    ScalingForwardPropagation(const Index new_batch_size = 0, Layer* new_layer = nullptr)
     {
         set(new_batch_size, new_layer);
     }

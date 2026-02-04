@@ -69,7 +69,7 @@ private:
 
 struct RecurrentForwardPropagation final : LayerForwardPropagation
 {
-    RecurrentForwardPropagation(const Index& = 0, Layer* = nullptr);
+    RecurrentForwardPropagation(const Index = 0, Layer* = nullptr);
 
     void initialize() override;
 
@@ -86,7 +86,7 @@ struct RecurrentForwardPropagation final : LayerForwardPropagation
 
 struct RecurrentBackPropagation final : LayerBackPropagation
 {
-    RecurrentBackPropagation(const Index& = 0, Layer* = nullptr);
+    RecurrentBackPropagation(const Index = 0, Layer* = nullptr);
 
     vector<TensorView*> get_workspace_views() override;
 

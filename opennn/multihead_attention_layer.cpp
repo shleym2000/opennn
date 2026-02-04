@@ -108,7 +108,7 @@ vector<TensorView*> MultiHeadAttention::get_parameter_views()
 }
 
 
-void MultiHeadAttention::set(const Index& new_query_sequence_length,
+void MultiHeadAttention::set(const Index new_query_sequence_length,
                              const Index& new_source_sequence_length,
                              const Index& new_embedding_dimension,
                              const Index& new_heads_number,
@@ -147,7 +147,7 @@ void MultiHeadAttention::set(const Index& new_query_sequence_length,
 }
 
 
-void MultiHeadAttention::set_dropout_rate(const type& new_dropout_rate)
+void MultiHeadAttention::set_dropout_rate(const type new_dropout_rate)
 {
     dropout_rate = new_dropout_rate;
 }
@@ -467,7 +467,7 @@ void MultiHeadAttention::from_XML(const XMLDocument& document)
 }
 
 
-MultiHeadAttentionForwardPropagation::MultiHeadAttentionForwardPropagation(const Index& new_batch_size, Layer* new_layer)
+MultiHeadAttentionForwardPropagation::MultiHeadAttentionForwardPropagation(const Index new_batch_size, Layer* new_layer)
     : LayerForwardPropagation()
 {
     set(new_batch_size, new_layer);
@@ -476,7 +476,7 @@ MultiHeadAttentionForwardPropagation::MultiHeadAttentionForwardPropagation(const
 
 void MultiHeadAttentionForwardPropagation::initialize()
 {
-    MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);
+    const MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);
 
     const Index query_sequence_length = multihead_attention_layer->get_query_sequence_length();
     const Index source_sequence_length = multihead_attention_layer->get_source_sequence_length();
@@ -510,7 +510,7 @@ void MultiHeadAttentionForwardPropagation::print() const
 
 void MultiHeadAttentionBackPropagation::initialize()
 {
-    MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);
+    const MultiHeadAttention* multihead_attention_layer = static_cast<MultiHeadAttention*>(layer);
 
     const Index query_sequence_length = multihead_attention_layer->get_query_sequence_length();
     const Index source_sequence_length = multihead_attention_layer->get_source_sequence_length();
@@ -555,7 +555,7 @@ void MultiHeadAttentionBackPropagation::print() const
 }
 
 
-MultiHeadAttentionBackPropagation::MultiHeadAttentionBackPropagation(const Index& new_batch_size,
+MultiHeadAttentionBackPropagation::MultiHeadAttentionBackPropagation(const Index new_batch_size,
                                                                      Layer* new_layer)
     : LayerBackPropagation()
 {

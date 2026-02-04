@@ -25,7 +25,7 @@ LanguageDataset::LanguageDataset(const filesystem::path& new_data_path) : Datase
 }
 
 
-LanguageDataset::LanguageDataset(const Index& samples_number,
+LanguageDataset::LanguageDataset(const Index samples_number,
                                  const Index& input_sequence_length,
                                  const Index& input_vocabulary_size) : Dataset()
 {

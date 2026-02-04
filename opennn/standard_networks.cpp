@@ -610,7 +610,7 @@ TextClassificationNetwork::TextClassificationNetwork(const dimensions& input_dim
 }
 
 
-Transformer::Transformer(const Index& input_sequence_length,
+Transformer::Transformer(const Index input_sequence_length,
                          const Index& decoder_sequence_length,
                          const Index& input_vocabulary_size,
                          const Index& output_vocabulary_size,
@@ -630,7 +630,7 @@ Transformer::Transformer(const Index& input_sequence_length,
 }
 
 
-void Transformer::set(const Index& input_sequence_length,
+void Transformer::set(const Index input_sequence_length,
                       const Index& decoder_sequence_length,
                       const Index& input_vocabulary_size,
                       const Index& output_vocabulary_size,
@@ -793,7 +793,7 @@ void Transformer::set(const Index& input_sequence_length,
 }
 
 
-void Transformer::set_dropout_rate(const type& new_dropout_rate)
+void Transformer::set_dropout_rate(const type new_dropout_rate)
 {
 }
 

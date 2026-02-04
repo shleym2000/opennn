@@ -68,7 +68,7 @@ public:
     virtual void set_dataset(const Dataset*);
 
     void set_regularization_method(const string&);
-    void set_regularization_weight(const type&);
+    void set_regularization_weight(const type);
 
     void set_display(const bool&);
 
@@ -150,7 +150,7 @@ public:
 
     // Numerical differentiation
 
-    static type calculate_h(const type&);
+    static type calculate_h(const type);
 
     type calculate_numerical_error() const;
 
@@ -220,10 +220,10 @@ protected:
 
 struct BackPropagationLM
 {
-    BackPropagationLM(const Index& = 0, LossIndex* = nullptr);
+    BackPropagationLM(const Index = 0, LossIndex* = nullptr);
     virtual ~BackPropagationLM() = default;
 
-    void set(const Index& = 0, LossIndex* = nullptr);
+    void set(const Index = 0, LossIndex* = nullptr);
 
     void print() const;
 
@@ -258,10 +258,10 @@ struct BackPropagationLM
 
 struct BackPropagation
 {
-    BackPropagation(const Index& = 0, const LossIndex* = nullptr);
+    BackPropagation(const Index = 0, const LossIndex* = nullptr);
     virtual ~BackPropagation() = default;
 
-    void set(const Index& = 0, const LossIndex* = nullptr);
+    void set(const Index = 0, const LossIndex* = nullptr);
 
     vector<vector<TensorView>> get_layer_delta_views() const;
 
@@ -296,11 +296,11 @@ struct BackPropagation
 
 struct BackPropagationCuda
 {
-    BackPropagationCuda(const Index& = 0, LossIndex* = nullptr);
+    BackPropagationCuda(const Index = 0, LossIndex* = nullptr);
 
     ~BackPropagationCuda() { free(); }
 
-    void set(const Index& = 0, LossIndex* = nullptr);
+    void set(const Index = 0, LossIndex* = nullptr);
 
     vector<vector<TensorViewCuda>> get_layer_delta_views_device() const;
 

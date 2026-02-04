@@ -384,7 +384,7 @@ struct LayerForwardPropagation
     LayerForwardPropagation() {}
     virtual ~LayerForwardPropagation() = default;
 
-    void set(const Index& = 0, Layer* = nullptr);
+    void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
     virtual vector<TensorView*> get_workspace_views();
@@ -408,7 +408,7 @@ struct LayerBackPropagation
     LayerBackPropagation() {}
     virtual ~LayerBackPropagation() = default;
 
-    void set(const Index& = 0, Layer* = nullptr);
+    void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
     virtual vector<TensorView*> get_workspace_views() 
@@ -438,7 +438,7 @@ struct LayerBackPropagationLM
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 
-    virtual void set(const Index& = 0, Layer* = nullptr) = 0;
+    virtual void set(const Index = 0, Layer* = nullptr) = 0;
     //virtual void initialize() = 0;
 
     virtual vector<TensorView*> get_workspace_views()
@@ -467,7 +467,7 @@ struct LayerForwardPropagationCuda
     LayerForwardPropagationCuda() {}
     virtual ~LayerForwardPropagationCuda() {}
 
-    void set(const Index& = 0, Layer* = nullptr);
+    void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
     virtual vector<TensorViewCuda*> get_workspace_views_device();
@@ -491,7 +491,7 @@ struct LayerBackPropagationCuda
     LayerBackPropagationCuda() {}
     virtual ~LayerBackPropagationCuda() {}
 
-    void set(const Index& = 0, Layer* = nullptr);
+    void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
     virtual vector<TensorViewCuda*> get_workspace_views_device() 
