@@ -136,7 +136,7 @@ Tensor2 self_kronecker_product(const ThreadPoolDevice*, const Tensor1&);
 
 void divide_columns(const ThreadPoolDevice*, TensorMap2&, const Tensor1&);
 
-bool is_contiguous(const vector<Index>& v)
+inline bool is_contiguous(const vector<Index>& v)
 {
     for(Index i = 1; i < v.size(); ++i)
         if(v[i] != v[i-1] + 1)
