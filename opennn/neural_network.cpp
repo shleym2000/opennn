@@ -416,7 +416,14 @@ dimensions NeuralNetwork::get_output_dimensions() const
 
 Index NeuralNetwork::get_parameters_number() const
 {
-    return parameters.size();
+    Index parameters_number = 0;
+
+    const Index layers_number = get_layers_number();
+
+    for(Index i = 0; i < layers_number; i++)
+        parameters_number += layers[i]->get_parameters_number();
+
+    return parameters_number;
 }
 
 
