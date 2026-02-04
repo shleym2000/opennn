@@ -384,31 +384,46 @@ Tensor1 perform_Householder_QR_decomposition(const Tensor2& A, const Tensor1& b)
 void fill_tensor_data(const Tensor2& matrix,
                       const vector<Index>& row_indices,
                       const vector<Index>& column_indices,
-                      type* tensor_data)
+                      type* __restrict tensor_data)
 {
-    if(row_indices.empty() || column_indices.empty())
-        return;
+    if(row_indices.empty() || column_indices.empty()) return;
+
+    const bool contiguous = is_contiguous(row_indices);
 
     const Index rows_number = row_indices.size();
     const Index columns_number = column_indices.size();
 
-    const type* const matrix_data = matrix.data();
+    const type* __restrict matrix_data = matrix.data();
+    const Index matrix_rows_number = matrix.dimension(0);
 
-    // #pragma omp parallel for
-    for(Index j = 0; j < columns_number; j++)
+    const Index* __restrict row_indices_data = row_indices.data();
+    const Index* __restrict column_indices_data = column_indices.data();
+
+    if(contiguous)
     {
-        const type* const matrix_column = matrix_data + matrix.dimension(0) * column_indices[j];
+        const Index row_start = row_indices_data[0];
 
-        type* tensor_value = tensor_data + rows_number * j;
-
-        const Index* rows_indices_data = row_indices.data();
-
-        for(Index i = 0; i < rows_number; i++)
+        #pragma omp parallel for schedule(static)
+        for(Index j = 0; j < columns_number; ++j)
         {
-            const type* const matrix_value = matrix_column + *rows_indices_data;
-            rows_indices_data++;
-            *tensor_value = *matrix_value;
-            tensor_value++;
+            const type* __restrict matrix_column = matrix_data + matrix_rows_number * column_indices_data[j];
+
+            type* __restrict tensor_value = tensor_data + rows_number * j;
+
+            copy_n(matrix_column + row_start, rows_number, tensor_value);
+        }
+    }
+    else
+    {
+        #pragma omp parallel for schedule(static)
+        for(Index j = 0; j < columns_number; j++)
+        {
+            const type* __restrict matrix_column = matrix_data + matrix_rows_number * column_indices_data[j];
+
+            type* __restrict tensor_value = tensor_data + rows_number * j;
+
+            for(Index i = 0; i < rows_number; i++)
+                tensor_value[i] = matrix_column[row_indices_data[i]];
         }
     }
 }
