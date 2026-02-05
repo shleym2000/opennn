@@ -36,7 +36,7 @@ win32-g++{
 }
 
 win32-msvc* {
-    QMAKE_CXXFLAGS += /arch:AVX2 /O2
+    QMAKE_CXXFLAGS += /arch:AVX2 /O3
 }
 
 win32-g++ {

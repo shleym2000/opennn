@@ -688,7 +688,10 @@ public:
 
         auto outputs = tensor_map<Rank>(dense_forward_propagation->outputs);
 
-        calculate_combinations<Rank>(tensor_map<Rank>(input_views[0]), tensor_map<2>(weights), tensor_map<1>(biases), outputs);
+        calculate_combinations<Rank>(tensor_map<Rank>(input_views[0]),
+                                     tensor_map<2>(weights),
+                                     tensor_map<1>(biases),
+                                     outputs);
 
         if(batch_normalization)
         {
@@ -745,26 +748,23 @@ public:
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
-        TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
-
-        TensorMap2 weight_deltas = tensor_map<2>(dense2d_back_propagation->weight_deltas);
-
-        TensorMap2 input_deltas = tensor_map<2>(back_propagation->input_deltas[0]);
-
-        const bool& is_first_layer = dense2d_back_propagation->is_first_layer;
-
         if(activation_function != "Softmax")
             deltas.device(*device) = deltas * activation_derivatives;
 
         if (batch_normalization)
             apply_batch_normalization_backward(deltas, forward_propagation, back_propagation);
 
-        bias_deltas.device(*device) = deltas.sum(array_1(0));
+        TensorMap2 weight_deltas = tensor_map<2>(dense2d_back_propagation->weight_deltas);
+        TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
+        TensorMap2 input_deltas = tensor_map<2>(back_propagation->input_deltas[0]);
 
-        weight_deltas.device(*device) = inputs.contract(deltas, axes(0,0));
-
-        if(!is_first_layer)
-            input_deltas.device(*device) = deltas.contract(tensor_map<2>(weights), axes(1,1));
+        calculate_gradients<2>(inputs,
+                               deltas,
+                               tensor_map<2>(weights),
+                               weight_deltas,
+                               bias_deltas,
+                               input_deltas,
+                               dense2d_back_propagation->is_first_layer);
     }
 
 

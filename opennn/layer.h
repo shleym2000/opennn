@@ -307,24 +307,72 @@ protected:
         }
     }
 
+
     template <int Rank>
-    void calculate_combinations(
-        const TensorMap<Tensor<type, Rank>, Aligned16>& inputs,
-        const TensorMap2& weights,
-        const TensorMap1& biases,
-        TensorMap<Tensor<type, Rank>, Aligned16>& combinations) const
+    void calculate_combinations(const TensorMap<Tensor<type, Rank>, Aligned16>& inputs,
+                                const TensorMap2& weights,
+                                const TensorMap1& biases,
+                                TensorMap<Tensor<type, Rank>, Aligned16>& outputs) const
     {
-        const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
+        const Index inputs_size = weights.dimension(0);
+        const Index outputs_size = weights.dimension(1);
+        const Index total_rows = inputs.size() / inputs_size;
 
-        array<Index, Rank> reshape_dimensions;
-        reshape_dimensions.fill(1);
-        reshape_dimensions[Rank - 1] = biases.size();
+        Eigen::Map<const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+            inputs_matrix(inputs.data(), total_rows, inputs_size);
 
-        array<Index, Rank> broadcast_dims = combinations.dimensions();
-        broadcast_dims[Rank - 1] = 1;
+        Eigen::Map<const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+            weights_matrix(weights.data(), inputs_size, outputs_size);
 
-        combinations.device(*device) = inputs.contract(weights, contraction_axes) +
-                                       biases.reshape(reshape_dimensions).broadcast(broadcast_dims);
+        Eigen::Map<const Eigen::RowVector<type, Eigen::Dynamic>>
+            biases_vector(biases.data(), outputs_size);
+
+        Eigen::Map<Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+            outputs_matrix(outputs.data(), total_rows, outputs_size);
+
+        outputs_matrix.noalias() = (inputs_matrix * weights_matrix).rowwise() + biases_vector;
+    }
+
+
+    template <int Rank>
+    void calculate_gradients(const TensorMap<Tensor<type, Rank>, Aligned16>& inputs,
+                             const TensorMap<Tensor<type, Rank>, Aligned16>& deltas,
+                             const TensorMap2& weights,
+                             TensorMap2& weight_deltas,
+                             TensorMap1& bias_deltas,
+                             TensorMap<Tensor<type, Rank>, Aligned16>& input_deltas,
+                             const bool is_first_layer) const
+    {
+        const Index inputs_size = weights.dimension(0);
+        const Index outputs_size = weights.dimension(1);
+        const Index total_rows = inputs.size() / inputs_size;
+
+        Eigen::Map<const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+            inputs_matrix(inputs.data(), total_rows, inputs_size);
+
+        Eigen::Map<const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+            deltas_matrix(deltas.data(), total_rows, outputs_size);
+
+        Eigen::Map<Eigen::Vector<type, Eigen::Dynamic>>
+            bias_deltas_vector(bias_deltas.data(), outputs_size);
+
+        Eigen::Map<Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+            weight_deltas_matrix(weight_deltas.data(), inputs_size, outputs_size);
+
+        bias_deltas_vector.noalias() = deltas_matrix.colwise().sum();
+
+        weight_deltas_matrix.noalias() = inputs_matrix.transpose() * deltas_matrix;
+
+        if(!is_first_layer)
+        {
+            Eigen::Map<const Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+                weights_matrix(weights.data(), inputs_size, outputs_size);
+
+            Eigen::Map<Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Aligned16>>
+                input_deltas_matrix(input_deltas.data(), total_rows, inputs_size);
+
+            input_deltas_matrix.noalias() = deltas_matrix * weights_matrix.transpose();
+        }
     }
 
 #ifdef OPENNN_CUDA
