@@ -309,12 +309,11 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
     const Index samples_number = sample_indices.size();
     const Index batches_number = (samples_number + batch_size - 1) / batch_size;
 
-    // @todo this shuffle is not good, we should implement local shuffle
     vector<Index> samples_copy;
     if(shuffle)
     {
         samples_copy = sample_indices;
-        shuffle_vector(samples_copy);
+        shuffle_vector_blocks(samples_copy);
     }
 
     const vector<Index>& samples = shuffle ? samples_copy : sample_indices;
