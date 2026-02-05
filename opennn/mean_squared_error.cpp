@@ -174,7 +174,7 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     // Forward propagation
 
-    const type* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
+    const TensorViewCuda outputs = forward_propagation.get_last_trainable_layer_outputs_view_device();
 
     // Back propagatioin
 
@@ -184,20 +184,16 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_deltas.get_descriptor();
 
-    const cudnnOpTensorDescriptor_t operator_sum_descriptor = back_propagation.operator_sum_descriptor;
-
-    float alpha = 1.0f;
-    float alpha_minus_one = -1.0f;
-    const float beta = 0.0f;
+    const float alpha_minus_one = -1.0f;
 
     cudnnOpTensor(cudnn_handle,
-                  operator_sum_descriptor,
+                  back_propagation.operator_sum_descriptor,
                   &alpha_minus_one,
                   output_tensor_descriptor,
                   targets,
                   &alpha,
                   output_tensor_descriptor,
-                  outputs,
+                  outputs.data,
                   &beta,
                   output_tensor_descriptor,
                   errors_device);

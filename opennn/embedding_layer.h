@@ -141,7 +141,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 
     void print() const override;
 
-    TensorViewCuda weight_deltas_device;
+    TensorViewCuda weight_deltas;
 };
 
 #endif

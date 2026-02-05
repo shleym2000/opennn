@@ -9,6 +9,7 @@
 #pragma once
 
 #include "optimization_algorithm.h"
+#include "tensors.h"
 
 namespace opennn
 {
@@ -131,24 +132,23 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
     Index learning_rate_iteration = 0;
 };
 
+
 #ifdef OPENNN_CUDA
 
     struct ADAMOptimizationDataCuda final : public OptimizationAlgorithmData
     {
         ADAMOptimizationDataCuda(AdaptiveMomentEstimation* = nullptr);
 
-        ~ADAMOptimizationDataCuda() { free(); }
+        //~ADAMOptimizationDataCuda() { free(); }
 
         void set(AdaptiveMomentEstimation* = nullptr);
-
-        void free();
 
         void print() const;
 
         AdaptiveMomentEstimation* adaptive_moment_estimation = nullptr;
 
-        float* gradient_exponential_decay = nullptr;
-        float* square_gradient_exponential_decay = nullptr;
+        TensorCuda gradient_exponential_decay;
+        TensorCuda square_gradient_exponential_decay;
 
         Index iteration = 0;
 

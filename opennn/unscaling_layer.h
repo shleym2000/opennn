@@ -89,8 +89,6 @@ struct UnscalingForwardPropagationCuda final : public LayerForwardPropagationCud
     void initialize() override;
 
     void print() const override;
-
-    void free() override;
 };
 
 #endif

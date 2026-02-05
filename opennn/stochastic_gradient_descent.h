@@ -113,11 +113,9 @@ struct SGDOptimizationDataCuda final : public OptimizationAlgorithmData
 {
     SGDOptimizationDataCuda(StochasticGradientDescent* = nullptr);
 
-    ~SGDOptimizationDataCuda() { free(); }
+    //~SGDOptimizationDataCuda() { free(); }
 
     void set(StochasticGradientDescent* = nullptr);
-
-    void free();
 
     void print() const;
 

@@ -220,24 +220,21 @@ void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cud
     const cudnnTensorDescriptor_t output_reduce_tensor_descriptor = back_propagation.output_reduce_tensor_descriptor;
 
     const cudnnReduceTensorDescriptor_t reduce_tensor_descriptor = back_propagation.reduce_tensor_descriptor;
-    void* workspace = back_propagation.workspace;
-    const size_t workspace_size = back_propagation.workspace_size;
 
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
-
-    constexpr type epsilon = numeric_limits<type>::epsilon();
-
-    calculate_binary_cross_entropy_cuda(size, errors, targets, outputs, epsilon);
+    calculate_binary_cross_entropy_cuda(size, errors, targets, outputs, numeric_limits<type>::epsilon());
 
     cudnnReduceTensor(cudnn_handle,
                       reduce_tensor_descriptor,
-                      nullptr, 0,
-                      workspace, workspace_size,
+                      nullptr,
+                      0,
+                      back_propagation.workspace,
+                      back_propagation.workspace_size,
                       &alpha,
-                      output_tensor_descriptor, errors,
+                      output_tensor_descriptor,
+                      errors,
                       &beta,
-                      output_reduce_tensor_descriptor, error_device);
+                      output_reduce_tensor_descriptor,
+                      error_device);
 
     CHECK_CUDA(cudaMemcpy(error.data(), error_device, sizeof(float), cudaMemcpyDeviceToHost));
 

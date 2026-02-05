@@ -195,6 +195,9 @@ protected:
     cublasHandle_t cublas_handle = nullptr;
     cudnnHandle_t cudnn_handle = nullptr;
 
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
+
 #endif
 
     void print(){}

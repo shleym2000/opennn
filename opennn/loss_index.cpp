@@ -1636,13 +1636,6 @@ void BackPropagationCuda::free()
     cudaFree(workspace);
     workspace = nullptr;
 
-    //cudaFree(predictions);
-    //predictions = nullptr;
-    //cudaFree(matches);
-    //matches = nullptr;
-    //cudaFree(mask);
-    //mask = nullptr;
-
     cudnnDestroyReduceTensorDescriptor(reduce_tensor_descriptor);
     cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
     cudnnDestroyTensorDescriptor(output_reduce_tensor_descriptor);

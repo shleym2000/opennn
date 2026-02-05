@@ -450,7 +450,7 @@ void Pooling::back_propagate_average_pooling(const Tensor4& inputs,
 
 #ifdef OPENNN_CUDA
 
-void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
                                      unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                      const bool& is_training)
 {
@@ -469,15 +469,15 @@ void Pooling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device
         pooling_descriptor,
         &alpha,
         input_tensor_descriptor,
-        inputs_device[0].data,
+        inputs[0].data,
         &beta,
         outputs.get_descriptor(),
         outputs.data));
 }
 
 
-void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
-                                  const vector<TensorViewCuda>& deltas_device,
+void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs,
+                                  const vector<TensorViewCuda>& deltas,
                                   unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                   unique_ptr<LayerBackPropagationCuda>& back_propagation) const
 {
@@ -502,9 +502,9 @@ void Pooling::back_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
         outputs.get_descriptor(),
         outputs.data,
         outputs.get_descriptor(),
-        deltas_device[0].data,
+        deltas[0].data,
         input_tensor_descriptor,
-        inputs_device[0].data,
+        inputs[0].data,
         &beta,
         input_tensor_descriptor,
         input_deltas));

@@ -411,7 +411,7 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                 const bool&) override
     {
@@ -421,8 +421,11 @@ public:
         const Index outputs_number = get_outputs_number();
         const size_t size = outputs_number * forward_propagation->batch_size;
 
-        scale_2d_cuda(size, forward_propagation->batch_size, outputs_number,
-                      inputs_device[0].data, forward_propagation->outputs.data,
+        scale_2d_cuda(size,
+                      forward_propagation->batch_size,
+                      outputs_number,
+                      inputs[0].data,
+                      forward_propagation->outputs.data,
                       scaling_forward_propagation->scalers_device,
                       scaling_forward_propagation->minimums_device,
                       scaling_forward_propagation->maximums_device,

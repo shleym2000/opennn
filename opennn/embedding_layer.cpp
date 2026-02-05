@@ -331,7 +331,7 @@ void EmbeddingBackPropagation::print() const
 
 #ifdef OPENNN_CUDA
 
-void Embedding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+void Embedding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                        const bool& is_training)
 {
@@ -389,7 +389,7 @@ void EmbeddingBackPropagationCuda::initialize()
 
 vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_workspace_views_device()
 {
-    return {&weight_deltas_device};
+    return {&weight_deltas};
 }
 
 

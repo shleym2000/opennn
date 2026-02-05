@@ -813,11 +813,6 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 }
 
 
-void SGDOptimizationDataCuda::free()
-{
-}
-
-
 void SGDOptimizationDataCuda::print() const
 {    
     cout << "--- SGD Optimization Data (CUDA) ---" << endl;

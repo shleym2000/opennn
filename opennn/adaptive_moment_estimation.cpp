@@ -771,7 +771,7 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
 {
     NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
 
-    const int total_parameters_size = static_cast<int>(neural_network->get_parameters().size());
+    const int parameters_number = static_cast<int>(neural_network->get_parameters_number());
 
     float* parameters_device_data = neural_network->get_parameters_device().data;
     const float* gradients_device = back_propagation.neural_network.workspace.data;
@@ -783,18 +783,17 @@ void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_
     const float bias_correction_2 = 1.0f - powf(beta_2, static_cast<float>(iteration));
 
     adam_update_device(
-        total_parameters_size,
+        parameters_number,
         parameters_device_data,
-        optimization_data_cuda.gradient_exponential_decay,
-        optimization_data_cuda.square_gradient_exponential_decay,
+        optimization_data_cuda.gradient_exponential_decay.data,
+        optimization_data_cuda.square_gradient_exponential_decay.data,
         gradients_device,
         beta_1,
         beta_2,
         learning_rate,
         numeric_limits<float>::epsilon(),
         bias_correction_1,
-        bias_correction_2
-    );
+        bias_correction_2);
 }
 
 
@@ -811,16 +810,11 @@ void ADAMOptimizationDataCuda::set(AdaptiveMomentEstimation* new_adaptive_moment
     NeuralNetwork* neural_network = adaptive_moment_estimation->get_loss_index()->get_neural_network();
     const Index parameters_number = neural_network->get_parameters_number();
 
-    CHECK_CUDA(cudaMalloc(&gradient_exponential_decay, parameters_number * sizeof(float)));
-    CHECK_CUDA(cudaMalloc(&square_gradient_exponential_decay, parameters_number * sizeof(float)));
+    gradient_exponential_decay.resize({parameters_number});
+    square_gradient_exponential_decay.resize({parameters_number});
 
-    CHECK_CUDA(cudaMemset(gradient_exponential_decay, 0, parameters_number * sizeof(float)));
-    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay, 0, parameters_number * sizeof(float)));
-}
-
-
-void ADAMOptimizationDataCuda::free()
-{
+    CHECK_CUDA(cudaMemset(gradient_exponential_decay.data, 0, parameters_number * sizeof(float)));
+    CHECK_CUDA(cudaMemset(square_gradient_exponential_decay.data, 0, parameters_number * sizeof(float)));
 }
 
 

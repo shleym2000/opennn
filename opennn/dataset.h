@@ -644,7 +644,7 @@ struct BatchCuda
 {
     BatchCuda(const Index = 0, Dataset* = nullptr);
 
-    ~BatchCuda() { free(); }
+    //~BatchCuda() { free(); }
 
     void set(const Index, Dataset*);
 
@@ -667,7 +667,7 @@ struct BatchCuda
 
     void copy_device(const Index);
 
-    void free();
+//    void free();
 
     void print() const;
 
@@ -681,11 +681,11 @@ struct BatchCuda
 
     dimensions input_dimensions;
     dimensions decoder_dimensions;
-    dimensions target_dimensions;        
+    dimensions target_dimensions;
 
-    float* inputs_host = nullptr;
-    float* decoder_host = nullptr;
-    float* targets_host = nullptr;
+    vector<float> inputs_host;
+    vector<float> decoder_host;
+    vector<float> targets_host;
 
     TensorCuda inputs_device;
     TensorCuda decoder_device;

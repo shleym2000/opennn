@@ -332,7 +332,7 @@ REGISTER(LayerForwardPropagation, UnscalingForwardPropagation, "Unscaling")
 
 #ifdef OPENNN_CUDA
 
-void Unscaling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+void Unscaling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                        const bool&)
 {
@@ -363,12 +363,6 @@ void UnscalingForwardPropagationCuda::print() const
     cout << "Unscaling CUDA Outputs (pass-through):" << endl
         << matrix_from_device(outputs.data, batch_size, outputs_number) << endl;
 }
-
-
-void UnscalingForwardPropagationCuda::free()
-{
-}
-
 
 REGISTER(LayerForwardPropagationCuda, UnscalingForwardPropagationCuda, "Unscaling")
 

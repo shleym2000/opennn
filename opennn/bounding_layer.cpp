@@ -309,13 +309,10 @@ REGISTER(LayerForwardPropagation, BoundingForwardPropagation, "Bounding")
 
 #ifdef OPENNN_CUDA
 
-void Bounding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+void Bounding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                       const bool&)
 {
-    BoundingForwardPropagationCuda* this_forward_propagation =
-        static_cast<BoundingForwardPropagationCuda*>(forward_propagation.get());
-
     // @todo Implement bounding in CUDA
 }
 
@@ -339,11 +336,6 @@ void BoundingForwardPropagationCuda::print() const
 
     cout << "Bounding CUDA Outputs (pass-through):" << endl
         << matrix_from_device(outputs.data, batch_size, outputs_number) << endl;
-}
-
-
-void BoundingForwardPropagationCuda::free()
-{
 }
 
 REGISTER(LayerForwardPropagationCuda, BoundingForwardPropagationCuda, "Bounding")

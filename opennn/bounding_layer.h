@@ -102,8 +102,6 @@ struct BoundingForwardPropagationCuda final : public LayerForwardPropagationCuda
     void initialize() override;
 
     void print() const override;
-
-    void free() override;
 };
 
 #endif

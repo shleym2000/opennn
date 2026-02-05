@@ -119,19 +119,16 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                                 const bool&) override
     {
-        if (inputs_device.size() != 2)
+        if (inputs.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs for CUDA propagation.");
 
-        const size_t inputs_number = get_inputs_number();
-        const size_t total_elements = static_cast<size_t>(forward_propagation->batch_size) * inputs_number;
+        const size_t total_elements = static_cast<size_t>(forward_propagation->batch_size) * get_inputs_number();
 
-        float alpha = 1.0f;
-        float alpha_minus_one = -1.0f;
-        const float beta = 0.0f;
+        const float alpha_minus_one = -1.0f;
 
         // @todo substitute addition_cuda by cudnn function similar as follows
 /*
@@ -148,16 +145,19 @@ public:
                       errors_device);
 
 */
-        addition_cuda(total_elements, inputs_device[0].data, inputs_device[1].data, forward_propagation->outputs.data);
+        addition_cuda(total_elements,
+                      inputs[0].data,
+                      inputs[1].data,
+                      forward_propagation->outputs.data);
     }
 
 
     void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>& deltas_device,
+                             const vector<TensorViewCuda>& deltas,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation) const override
     {
-        if (deltas_device.size() != 1)
+        if (deltas.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input for CUDA.");
 
         AdditionBackPropagationCuda<Rank>* this_back_propagation =
@@ -166,8 +166,8 @@ public:
         const size_t inputs_number = get_inputs_number();
         const size_t total_elements = static_cast<size_t>(back_propagation->batch_size) * inputs_number;
 
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[0].data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[1].data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[0].data, deltas[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[1].data, deltas[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
     }
 
 #endif
