@@ -36,7 +36,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -94,19 +94,19 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor2 current_deltas;
+    Tensor2 current_gradients;
     Tensor2 current_targets;
 
-    Tensor2 combination_deltas;
-    Tensor2 current_combination_deltas;
+    Tensor2 combination_gradients;
+    Tensor2 current_combination_gradients;
 
-    Tensor2 combinations_bias_deltas;
-    Tensor3 combinations_input_weight_deltas;
-    Tensor3 combinations_recurrent_weight_deltas;
+    Tensor2 combinations_bias_gradients;
+    Tensor3 combinations_input_weight_gradients;
+    Tensor3 combinations_recurrent_weight_gradients;
 
-    TensorView bias_deltas;
-    TensorView input_weight_deltas;
-    TensorView recurrent_weight_deltas;
+    TensorView bias_gradients;
+    TensorView input_weight_gradients;
+    TensorView recurrent_weight_gradients;
 };
 
 #ifdef OPENNN_CUDA

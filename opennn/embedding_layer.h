@@ -36,8 +36,8 @@ public:
              const Index& = 0,
              const string & = "embedding_layer");
 
-    void set_scale_embedding(const bool&);
-    void set_add_positional_encoding(const bool&);
+    void set_scale_embedding(bool);
+    void set_add_positional_encoding(bool);
 
     void set_dropout_rate(const type);
 
@@ -46,7 +46,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -62,11 +62,11 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    void forward_propagate(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+                                bool) override;
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
+    void back_propagate(const vector<TensorViewCuda>&,
                              const vector<TensorViewCuda>&,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
@@ -116,7 +116,7 @@ struct EmbeddingBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    TensorView weight_deltas;
+    TensorView weight_gradients;
 };
 
 #ifdef OPENNN_CUDA
@@ -141,7 +141,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 
     void print() const override;
 
-    TensorViewCuda weight_deltas;
+    TensorViewCuda weight_gradients;
 };
 
 #endif

@@ -15,67 +15,67 @@
 namespace opennn
 {
 
-NeuronsSelection::NeuronsSelection(const TrainingStrategy* new_training_strategy)
+NeuronSelection::NeuronSelection(const TrainingStrategy* new_training_strategy)
 {
     set(new_training_strategy);
 }
 
 
-TrainingStrategy* NeuronsSelection::get_training_strategy() const
+TrainingStrategy* NeuronSelection::get_training_strategy() const
 {
     return training_strategy;
 }
 
 
-bool NeuronsSelection::has_training_strategy() const
+bool NeuronSelection::has_training_strategy() const
 {
     return training_strategy;
 }
 
 
-const Index& NeuronsSelection::get_maximum_neurons() const
+const Index& NeuronSelection::get_maximum_neurons() const
 {
     return maximum_neurons;
 }
 
 
-const Index& NeuronsSelection::get_minimum_neurons() const
+const Index& NeuronSelection::get_minimum_neurons() const
 {
     return minimum_neurons;
 }
 
 
-const Index& NeuronsSelection::get_trials_number() const
+const Index& NeuronSelection::get_trials_number() const
 {
     return trials_number;
 }
 
 
-const bool& NeuronsSelection::get_display() const
+bool NeuronSelection::get_display() const
 {
     return display;
 }
 
 
-const type& NeuronsSelection::get_selection_error_goal() const
+const type& NeuronSelection::get_selection_error_goal() const
 {
     return selection_error_goal;
 }
 
 
-const Index& NeuronsSelection::get_maximum_epochs_number() const
+const Index& NeuronSelection::get_maximum_epochs_number() const
 {
     return maximum_epochs_number;
 }
 
 
-const type& NeuronsSelection::get_maximum_time() const
+const type& NeuronSelection::get_maximum_time() const
 {
     return maximum_time;
 }
 
 
-void NeuronsSelection::set(const TrainingStrategy* new_training_strategy)
+void NeuronSelection::set(const TrainingStrategy* new_training_strategy)
 {
     training_strategy = const_cast<TrainingStrategy*>(new_training_strategy);
 
@@ -83,18 +83,18 @@ void NeuronsSelection::set(const TrainingStrategy* new_training_strategy)
 }
 
 
-void NeuronsSelection::set_training_strategy(TrainingStrategy* new_training_strategy)
+void NeuronSelection::set_training_strategy(TrainingStrategy* new_training_strategy)
 {
     training_strategy = new_training_strategy;
 }
 
 
-void NeuronsSelection::set_default()
+void NeuronSelection::set_default()
 {
     if(!(training_strategy && training_strategy->get_neural_network()))
         return;
 
-    const Index inputs_number = training_strategy->get_neural_network()->get_features_number();
+    const Index inputs_number = training_strategy->get_neural_network()->get_inputs_number();
     const Index outputs_number = training_strategy->get_neural_network()->get_outputs_number();
 
     minimum_neurons = 1;
@@ -108,67 +108,67 @@ void NeuronsSelection::set_default()
 }
 
 
-void NeuronsSelection::set_maximum_neurons(const Index new_maximum_neurons)
+void NeuronSelection::set_maximum_neurons(const Index new_maximum_neurons)
 {
     maximum_neurons = new_maximum_neurons;
 }
 
 
-void NeuronsSelection::set_minimum_neurons(const Index new_minimum_neurons)
+void NeuronSelection::set_minimum_neurons(const Index new_minimum_neurons)
 {
     minimum_neurons = new_minimum_neurons;
 }
 
 
-void NeuronsSelection::set_trials_number(const Index new_trials_number)
+void NeuronSelection::set_trials_number(const Index new_trials_number)
 {
     trials_number = new_trials_number;
 }
 
 
-void NeuronsSelection::set_display(const bool& new_display)
+void NeuronSelection::set_display(bool new_display)
 {
     display = new_display;
 }
 
 
-void NeuronsSelection::set_selection_error_goal(const type new_selection_error_goal)
+void NeuronSelection::set_selection_error_goal(const type new_selection_error_goal)
 {
     selection_error_goal = new_selection_error_goal;
 }
 
 
-void NeuronsSelection::set_maximum_epochs_number(const Index new_maximum_epochs_number)
+void NeuronSelection::set_maximum_epochs_number(const Index new_maximum_epochs_number)
 {
     maximum_epochs_number = new_maximum_epochs_number;
 }
 
 
-void NeuronsSelection::set_maximum_time(const type new_maximum_time)
+void NeuronSelection::set_maximum_time(const type new_maximum_time)
 {
     maximum_time = new_maximum_time;
 }
 
 
-string NeuronsSelection::write_stopping_condition(const TrainingResults& results) const
+string NeuronSelection::write_stopping_condition(const TrainingResults& results) const
 {
     return results.write_stopping_condition();
 }
 
 
-void NeuronsSelection::delete_selection_history()
+void NeuronSelection::delete_selection_history()
 {
     selection_error_history.resize(0);
 }
 
 
-void NeuronsSelection::delete_training_error_history()
+void NeuronSelection::delete_training_error_history()
 {
     training_error_history.resize(0);
 }
 
 
-void NeuronsSelection::check() const
+void NeuronSelection::check() const
 {
     // Optimization algorithm
 
@@ -206,7 +206,7 @@ void NeuronsSelection::check() const
 }
 
 
-string NeuronsSelection::write_time(const type time) const
+string NeuronSelection::write_time(const type time) const
 {
     const int total_seconds = static_cast<int>(time);
     const int hours = total_seconds / 3600;
@@ -266,19 +266,19 @@ string NeuronsSelectionResults::write_stopping_condition() const
 {
     switch(stopping_condition)
     {
-        case NeuronsSelection::StoppingCondition::MaximumTime:
+        case NeuronSelection::StoppingCondition::MaximumTime:
             return "MaximumTime";
 
-        case NeuronsSelection::StoppingCondition::SelectionErrorGoal:
+        case NeuronSelection::StoppingCondition::SelectionErrorGoal:
             return "SelectionErrorGoal";
 
-        case NeuronsSelection::StoppingCondition::MaximumEpochs:
+        case NeuronSelection::StoppingCondition::MaximumEpochs:
             return "MaximumEpochs";
 
-        case NeuronsSelection::StoppingCondition::MaximumSelectionFailures:
+        case NeuronSelection::StoppingCondition::MaximumSelectionFailures:
             return "MaximumSelectionFailures";
 
-        case NeuronsSelection::StoppingCondition::MaximumNeurons:
+        case NeuronSelection::StoppingCondition::MaximumNeurons:
             return "MaximumNeurons";
 
         default:

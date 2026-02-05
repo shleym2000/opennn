@@ -16,7 +16,7 @@ namespace opennn
 {
 
 GrowingNeurons::GrowingNeurons(const TrainingStrategy* new_training_strategy)
-    : NeuronsSelection(new_training_strategy)
+    : NeuronSelection(new_training_strategy)
 {
     set_default();
 }
@@ -293,7 +293,7 @@ void GrowingNeurons::load(const filesystem::path& file_name)
     from_XML(document);
 }
 
-REGISTER(NeuronsSelection, GrowingNeurons, "GrowingNeurons");
+REGISTER(NeuronSelection, GrowingNeurons, "GrowingNeurons");
 
 }
 

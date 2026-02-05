@@ -38,7 +38,7 @@ const Index& InputsSelection::get_trials_number() const
 }
 
 
-const bool& InputsSelection::get_display() const
+bool InputsSelection::get_display() const
 {
     return display;
 }
@@ -74,7 +74,7 @@ void InputsSelection::set_trials_number(const Index new_trials_number)
 }
 
 
-void InputsSelection::set_display(const bool& new_display)
+void InputsSelection::set_display(bool new_display)
 {
     display = new_display;
 }

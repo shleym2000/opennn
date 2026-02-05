@@ -35,7 +35,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,

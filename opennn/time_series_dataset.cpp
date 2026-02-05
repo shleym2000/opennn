@@ -26,8 +26,8 @@ TimeSeriesDataset::TimeSeriesDataset(const Index new_samples_number,
 
 TimeSeriesDataset::TimeSeriesDataset(const filesystem::path& data_path,
                                      const string& separator,
-                                     const bool& has_header,
-                                     const bool& has_sample_ids,
+                                     bool has_header,
+                                     bool has_sample_ids,
                                      const Codification& data_codification)
     :Dataset(data_path, separator, has_header, has_sample_ids, data_codification)
 {
@@ -719,7 +719,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
 vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample_indices,
                                                      const Index& batch_size,
-                                                     const bool& shuffle) const
+                                                     bool shuffle) const
 {
     // @todo copied from dataset
 

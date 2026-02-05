@@ -248,7 +248,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
 
         // Neural network
 
-        neural_network->forward_propagate(training_batch.get_input_views(),
+        neural_network->forward_propagate(training_batch.get_inputs(),
                                           training_forward_propagation,
                                           is_training);
 
@@ -264,7 +264,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
 
         if(has_selection)
         {
-            neural_network->forward_propagate(selection_batch.get_input_views(),
+            neural_network->forward_propagate(selection_batch.get_inputs(),
                                               selection_forward_propagation,
                                               is_training);
 
@@ -368,7 +368,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
     Tensor2& hessian = back_propagation_lm.hessian;
 
     Tensor1& potential_parameters = optimization_data.potential_parameters;
-    Tensor1& parameters_increment = optimization_data.parameters_increment;
+    Tensor1& parameter_updates = optimization_data.parameter_updates;
 
     const Index parameters_number = parameters.size();
 
@@ -378,11 +378,11 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
     {
         sum_diagonal(hessian, damping_parameter);
 
-        parameters_increment = perform_Householder_QR_decomposition(hessian, type(-1)*gradient);
+        parameter_updates = perform_Householder_QR_decomposition(hessian, type(-1)*gradient);
 
-        potential_parameters.device(*device) = parameters + parameters_increment;
+        potential_parameters.device(*device) = parameters + parameter_updates;
 
-        neural_network->forward_propagate(batch.get_input_views(),
+        neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters,
                                           forward_propagation);
 
@@ -433,15 +433,15 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
         {
             if (abs(gradient(i)) < NUMERIC_LIMITS_MIN)
             {
-                parameters_increment(i) = type(0);
+                parameter_updates(i) = type(0);
             }
             else
             {
-                parameters_increment(i) = gradient(i) > type(0)
+                parameter_updates(i) = gradient(i) > type(0)
                 ? -epsilon
                 : epsilon;
 
-                parameters(i) += parameters_increment(i);
+                parameters(i) += parameter_updates(i);
             }
         }
     }
@@ -521,7 +521,7 @@ void LevenbergMarquardtAlgorithmData::set(LevenbergMarquardtAlgorithm* new_Leven
     parameters_difference.resize(parameters_number);
 
     potential_parameters.resize(parameters_number);
-    parameters_increment.resize(parameters_number);
+    parameter_updates.resize(parameters_number);
 }
 
 REGISTER(OptimizationAlgorithm, LevenbergMarquardtAlgorithm, "LevenbergMarquardt");

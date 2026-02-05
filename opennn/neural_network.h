@@ -34,9 +34,9 @@ struct ForwardPropagation
 
     vector<vector<TensorView*>> get_layer_workspace_views();
 
-    TensorView get_last_trainable_layer_outputs_view() const;
+    TensorView get_last_trainable_layer_outputs() const;
 
-    vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, const bool&) const;
+    vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, bool) const;
 
     TensorView get_outputs()
     {
@@ -67,9 +67,9 @@ struct ForwardPropagationCuda
 
     vector<vector<TensorViewCuda*>> get_layer_workspace_views_device();
 
-    TensorViewCuda get_last_trainable_layer_outputs_view_device() const;
+    TensorViewCuda get_last_trainable_layer_outputs_device() const;
 
-    vector<vector<TensorViewCuda>> get_layer_input_views_device(const vector<TensorViewCuda>&, const bool&) const;
+    vector<vector<TensorViewCuda>> get_layer_input_views_device(const vector<TensorViewCuda>&, bool) const;
 
     TensorViewCuda get_outputs()
     {
@@ -144,7 +144,7 @@ public:
 
     Layer* get_first(const string&) const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     const vector<string>& get_input_vocabulary() const;
 
@@ -172,7 +172,7 @@ public:
 
     void set_threads_number(const int&);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     void set_input_vocabulary(const vector<string>&);
     void set_output_vocabulary(const vector<string>&);
@@ -187,7 +187,7 @@ public:
 
     // Architecture
 
-    Index get_features_number() const;
+    Index get_inputs_number() const;
     Index get_outputs_number() const;
 
     dimensions get_input_dimensions() const;
@@ -293,7 +293,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                           ForwardPropagation&,
-                          const bool& = false) const;
+                          bool = false) const;
 
     void forward_propagate(const vector<TensorView>&,
                           const Tensor1&,
@@ -319,9 +319,9 @@ public:
     void copy_parameters_device();
     void copy_parameters_host();
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    void forward_propagate(const vector<TensorViewCuda>&,
                                 ForwardPropagationCuda&,
-                                const bool& = false) const;
+                                bool = false) const;
 
     TensorViewCuda calculate_outputs_cuda(TensorViewCuda, const Index&);
 
@@ -338,7 +338,7 @@ protected:
 
     string name = "neural_network";
 
-    vector<string> feature_names;
+    vector<string> input_names;
 
     vector<string> output_names;
 

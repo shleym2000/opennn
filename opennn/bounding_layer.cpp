@@ -9,7 +9,6 @@
 #include "registry.h"
 #include "tensors.h"
 #include "bounding_layer.h"
-#include "tinyxml2.h"
 
 namespace opennn
 {
@@ -152,7 +151,7 @@ void Bounding::set_upper_bound(const Index index, const type& new_upper_bound)
 
 void Bounding::forward_propagate(const vector<TensorView>& input_views,
                                  unique_ptr<LayerForwardPropagation>& forward_propagation,
-                                 const bool&)
+                                 bool)
 {
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
@@ -192,7 +191,7 @@ string Bounding::get_bounding_method_string() const
 
 string Bounding::get_expression(const vector<string>& new_feature_names, const vector<string>& new_output_names) const
 {
-    const vector<string> feature_names = new_feature_names.empty()
+    const vector<string> input_names = new_feature_names.empty()
                                            ? get_default_feature_names()
                                            : new_feature_names;
 
@@ -211,7 +210,7 @@ string Bounding::get_expression(const vector<string>& new_feature_names, const v
     const dimensions output_dimensions = get_output_dimensions();
 
     for(Index i = 0; i < output_dimensions[0]; i++)
-        buffer << output_names[i] << " = max(" << lower_bounds[i] << ", " << feature_names[i] << ")\n"
+        buffer << output_names[i] << " = max(" << lower_bounds[i] << ", " << input_names[i] << ")\n"
                << output_names[i] << " = min(" << upper_bounds[i] << ", " << output_names[i] << ")\n";
 
     return buffer.str();
@@ -309,9 +308,9 @@ REGISTER(LayerForwardPropagation, BoundingForwardPropagation, "Bounding")
 
 #ifdef OPENNN_CUDA
 
-void Bounding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
+void Bounding::forward_propagate(const vector<TensorViewCuda>& inputs,
                                       unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                      const bool&)
+                                      bool)
 {
     // @todo Implement bounding in CUDA
 }

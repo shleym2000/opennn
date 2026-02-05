@@ -41,7 +41,7 @@ Dataset* TestingAnalysis::get_dataset() const
 }
 
 
-const bool& TestingAnalysis::get_display() const
+bool TestingAnalysis::get_display() const
 {
     return display;
 }
@@ -68,7 +68,7 @@ void TestingAnalysis::set_dataset(Dataset* new_dataset)
 }
 
 
-void TestingAnalysis::set_display(const bool& new_display)
+void TestingAnalysis::set_display(bool new_display)
 {
     display = new_display;
 }
@@ -1896,7 +1896,7 @@ pair<type, type> TestingAnalysis::test_transformer() const
 }
 
 
-string TestingAnalysis::test_transformer(const vector<string>& context_string, const bool& imported_vocabulary) const
+string TestingAnalysis::test_transformer(const vector<string>& context_string, bool imported_vocabulary) const
 {
     cout<<"Testing transformer..."<<endl;
 /*
@@ -2218,7 +2218,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
 
     total_confusion_matrix.setZero();
 
-    BatchCuda testing_batch_cuda(batch_size, dataset);
+    BatchCuda testing_batch(batch_size, dataset);
     ForwardPropagationCuda testing_forward_propagation(batch_size, neural_network);
 
     neural_network->allocate_parameters_device();
@@ -2231,22 +2231,22 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
 
         if (current_batch_size != batch_size)
         {
-        //    testing_batch_cuda.free();
+        //    testing_batch.free();
             testing_forward_propagation.free();
-            testing_batch_cuda.set(current_batch_size, dataset);
+            testing_batch.set(current_batch_size, dataset);
             testing_forward_propagation.set(current_batch_size, neural_network);
         }
 
-        testing_batch_cuda.fill(current_batch_indices,
-                                input_variable_indices,
-                                //decoder_variable_indices,
-                                target_variable_indices);
+        testing_batch.fill(current_batch_indices,
+                           input_variable_indices,
+                           //decoder_variable_indices,
+                           target_variable_indices);
 
-        neural_network->forward_propagate_cuda(testing_batch_cuda.get_input_views_device(),
-                                               testing_forward_propagation,
-                                               false);
+        neural_network->forward_propagate(testing_batch.get_inputs_device(),
+                                          testing_forward_propagation,
+                                          false);
 
-        const float* outputs_device = testing_forward_propagation.get_last_trainable_layer_outputs_view_device().data;
+        const float* outputs_device = testing_forward_propagation.get_last_trainable_layer_outputs_device().data;
 
         Tensor2 batch_outputs(current_batch_size, outputs_number);
         cudaMemcpy(batch_outputs.data(), outputs_device, current_batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToHost);

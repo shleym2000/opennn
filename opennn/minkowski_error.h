@@ -30,7 +30,7 @@ public:
                          const ForwardPropagation& forward_propagation,
                          BackPropagation& back_propagation) const override;
 
-    void calculate_output_delta(const Batch&,
+    void calculate_output_gradients(const Batch&,
                                 ForwardPropagation&,
                                 BackPropagation&) const override;
 
@@ -46,13 +46,13 @@ private:
 
     // Error
 
-    void calculate_error_cuda(const BatchCuda&,
+    void calculate_error(const BatchCuda&,
                               const ForwardPropagationCuda&,
                               BackPropagationCuda&) const override;
 
     // Gradient
 
-    void calculate_output_delta_cuda(const BatchCuda&,
+    void calculate_output_gradients(const BatchCuda&,
                                      ForwardPropagationCuda&,
                                      BackPropagationCuda&) const override;
 

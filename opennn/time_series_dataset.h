@@ -24,8 +24,8 @@ public:
 
     TimeSeriesDataset(const filesystem::path&,
                       const string&,
-                      const bool& = true,
-                      const bool& = false,
+                      bool = true,
+                      bool = false,
                       const Codification& = Codification::UTF8);
 
     struct TimeSeriesData {
@@ -69,7 +69,7 @@ public:
                             const vector<Index>&,
                             type*) const override;
 
-    vector<vector<Index>> get_batches(const vector<Index>&, const Index&, const bool&) const override;
+    vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const override;
 
 
 private:

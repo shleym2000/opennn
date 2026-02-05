@@ -30,15 +30,15 @@ Dataset::Dataset(const Index new_samples_number,
 
 Dataset::Dataset(const filesystem::path& data_path,
                  const string& separator,
-                 const bool& has_header,
-                 const bool& has_sample_ids,
+                 bool has_header,
+                 bool has_sample_ids,
                  const Codification& data_codification)
 {
     set(data_path, separator, has_header, has_sample_ids, data_codification);
 }
 
 
-const bool& Dataset::get_display() const
+bool Dataset::get_display() const
 {
     return display;
 }
@@ -304,7 +304,7 @@ vector<Index> Dataset::get_sample_roles_vector() const
 
 vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
                                            const Index& batch_size,
-                                           const bool& shuffle) const
+                                           bool shuffle) const
 {
     const Index samples_number = sample_indices.size();
     const Index batches_number = (samples_number + batch_size - 1) / batch_size;
@@ -1178,13 +1178,13 @@ const filesystem::path& Dataset::get_data_path() const
 }
 
 
-const bool& Dataset::get_header_line() const
+bool Dataset::get_header_line() const
 {
     return has_header;
 }
 
 
-const bool& Dataset::get_has_sample_ids() const
+bool Dataset::get_has_sample_ids() const
 {
     return has_sample_ids;
 }
@@ -1497,8 +1497,8 @@ const vector<vector<string>>& Dataset::get_data_file_preview() const
 
 void Dataset::set(const filesystem::path& new_data_path,
                   const string& new_separator,
-                  const bool& new_has_header,
-                  const bool& new_has_ids,
+                  bool new_has_header,
+                  bool new_has_ids,
                   const Dataset::Codification& new_codification)
 {
     set_default();
@@ -1577,7 +1577,7 @@ void Dataset::set(const filesystem::path& file_name)
 }
 
 
-void Dataset::set_display(const bool& new_display)
+void Dataset::set_display(bool new_display)
 {
     display = new_display;
 }
@@ -1619,13 +1619,13 @@ void Dataset::set_data_path(const filesystem::path& new_data_path)
 }
 
 
-void Dataset::set_has_header(const bool& new_has_header)
+void Dataset::set_has_header(bool new_has_header)
 {
     has_header = new_has_header;
 }
 
 
-void Dataset::set_has_ids(const bool& new_has_ids)
+void Dataset::set_has_ids(bool new_has_ids)
 {
     has_sample_ids = new_has_ids;
 }
@@ -2297,14 +2297,14 @@ void Dataset::print_input_target_raw_variables_correlations() const
     const Index inputs_number = get_variables_number("Input");
     const Index targets_number = get_raw_variables_number("Target");
 
-    const vector<string> feature_names = get_raw_variable_names("Input");
+    const vector<string> input_names = get_raw_variable_names("Input");
     const vector<string> targets_name = get_raw_variable_names("Target");
 
     const Tensor<Correlation, 2> correlations = calculate_input_target_raw_variable_pearson_correlations();
 
     for(Index j = 0; j < targets_number; j++)
         for(Index i = 0; i < inputs_number; i++)
-            cout << targets_name[j] << " - " << feature_names[i] << ": " << correlations(i, j).r << endl;
+            cout << targets_name[j] << " - " << input_names[i] << ": " << correlations(i, j).r << endl;
 }
 
 
@@ -2313,7 +2313,7 @@ void Dataset::print_top_input_target_raw_variables_correlations() const
     const Index inputs_number = get_raw_variables_number("Input");
     const Index targets_number = get_raw_variables_number("Target");
 
-    const vector<string> feature_names = get_variable_names("Input");
+    const vector<string> input_names = get_variable_names("Input");
     const vector<string> targets_name = get_variable_names("Target");
 
     const Tensor2 correlations = get_correlation_values(calculate_input_target_raw_variable_pearson_correlations());
@@ -2326,7 +2326,7 @@ void Dataset::print_top_input_target_raw_variables_correlations() const
 
     for(Index i = 0; i < inputs_number; i++)
         for(Index j = 0; j < targets_number; j++)
-            top_correlation.insert(pair<type, string>(correlations(i, j), feature_names[i] + " - " + targets_name[j]));
+            top_correlation.insert(pair<type, string>(correlations(i, j), input_names[i] + " - " + targets_name[j]));
 
     map<type, string>::iterator it;
 
@@ -4472,7 +4472,7 @@ bool Batch::is_empty() const
 
 
 
-vector<TensorView> Batch::get_input_views() const
+vector<TensorView> Batch::get_inputs() const
 {
     vector<TensorView> input_views = {{(type*)input_tensor.data(), input_dimensions}};
 
@@ -4484,7 +4484,7 @@ vector<TensorView> Batch::get_input_views() const
 }
 
 
-TensorView Batch::get_target_view() const
+TensorView Batch::get_targets() const
 {
     return {(type*)target_tensor.data() , target_dimensions};
 }
@@ -4620,13 +4620,13 @@ Tensor2 BatchCuda::get_targets_device() const
 }
 
 
-vector<TensorViewCuda> BatchCuda::get_input_views_device() const
+vector<TensorViewCuda> BatchCuda::get_inputs_device() const
 {
     return {{inputs_device.data, nullptr}};
 }
 
 
-TensorViewCuda BatchCuda::get_target_view_device() const
+TensorViewCuda BatchCuda::get_targets_device() const
 {
     return {targets_device.data , nullptr};
 }

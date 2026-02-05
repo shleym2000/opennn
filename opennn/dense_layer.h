@@ -88,13 +88,13 @@ struct DenseBackPropagation final : LayerBackPropagation
         const Index outputs_number = layer->get_outputs_number();
         const Index inputs_number = layer->get_input_dimensions()[0];
 
-        bias_deltas.dims = {outputs_number};
-        weight_deltas.dims = {inputs_number, outputs_number};
+        bias_gradients.dims = {outputs_number};
+        weight_gradients.dims = {inputs_number, outputs_number};
 
         if (dense_layer->get_batch_normalization())
         {
-            scales_deltas.dims = {outputs_number};
-            offsets_deltas.dims = {outputs_number};
+            gamma_gradients.dims = {outputs_number};
+            beta_gradients.dims = {outputs_number};
         }
 
         const dimensions input_shape = dense_layer->get_input_dimensions();
@@ -102,22 +102,22 @@ struct DenseBackPropagation final : LayerBackPropagation
         dimensions full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_memory.resize(1);
-        input_deltas_memory[0].resize(count_elements(full_input_dims));
-        input_deltas.resize(1);
-        input_deltas[0].data = input_deltas_memory[0].data();
-        input_deltas[0].dims = full_input_dims;
+        input_gradients_memory.resize(1);
+        input_gradients_memory[0].resize(count_elements(full_input_dims));
+        input_gradients.resize(1);
+        input_gradients[0].data = input_gradients_memory[0].data();
+        input_gradients[0].dims = full_input_dims;
     }
 
 
     vector<TensorView*> get_workspace_views() override
     {
-        vector<TensorView*> views = {&bias_deltas, &weight_deltas};
+        vector<TensorView*> views = {&bias_gradients, &weight_gradients};
 
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
 
         if (dense_layer->get_batch_normalization())
-            views.insert(views.end(), {&scales_deltas, &offsets_deltas});
+            views.insert(views.end(), {&gamma_gradients, &beta_gradients});
 
         return views;
     }
@@ -125,17 +125,17 @@ struct DenseBackPropagation final : LayerBackPropagation
 
     void print() const override
     {
-        cout << "Bias deltas:" << endl
-             << bias_deltas.data << endl
-             << "Weight deltas:" << endl
-             << weight_deltas.data << endl;
+        cout << "Bias output_gradients:" << endl
+             << bias_gradients.data << endl
+             << "Weight output_gradients:" << endl
+             << weight_gradients.data << endl;
     }
 
-    TensorView bias_deltas;
-    TensorView weight_deltas;
+    TensorView bias_gradients;
+    TensorView weight_gradients;
 
-    TensorView scales_deltas;
-    TensorView offsets_deltas;
+    TensorView gamma_gradients;
+    TensorView beta_gradients;
 };
 
 
@@ -157,7 +157,7 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         dimensions input_dims_vec = {batch_size};
         input_dims_vec.insert(input_dims_vec.end(), layer_input_dims.begin(), layer_input_dims.end());
 
-        input_deltas[0].dims = input_dims_vec;
+        input_gradients[0].dims = input_dims_vec;
 
         squared_errors_Jacobian.dims = {batch_size, parameters_number};
     }
@@ -172,7 +172,7 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         cout << "Squared errors Jacobian: " << endl;
         squared_errors_Jacobian.print();
         cout << "Input derivatives: " << endl;
-        input_deltas[0].print();
+        input_gradients[0].print();
     }
 
     TensorView squared_errors_Jacobian;
@@ -286,32 +286,32 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         vector<float> ones_host(total_rows, 1.0f);
         CHECK_CUDA(cudaMemcpy(ones, ones_host.data(), total_rows * sizeof(float), cudaMemcpyHostToDevice));
 
-        input_deltas.resize(1);
-        input_deltas[0].resize({ 1, inputs_number, total_rows, 1 });
+        input_gradients.resize(1);
+        input_gradients[0].resize({ 1, inputs_number, total_rows, 1 });
 
-        bias_deltas.set_descriptor({ 1, outputs_number, 1, 1 });
-        weight_deltas.set_descriptor({ 1, inputs_number * outputs_number, 1, 1 });
+        bias_gradients.set_descriptor({ 1, outputs_number, 1, 1 });
+        weight_gradients.set_descriptor({ 1, inputs_number * outputs_number, 1, 1 });
 
-        cudnnCreateTensorDescriptor(&deltas_tensor_descriptor);
-        cudnnSetTensor4dDescriptor(deltas_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, (int)total_rows, (int)outputs_number, 1, 1);
+        cudnnCreateTensorDescriptor(&gradients_tensor_descriptor);
+        cudnnSetTensor4dDescriptor(gradients_tensor_descriptor, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, (int)total_rows, (int)outputs_number, 1, 1);
 
         const Dense<Rank>* dense_layer = static_cast<Dense<Rank>*>(this->layer);
 
         if (dense_layer->get_batch_normalization())
         {
-            offsets_deltas.set_descriptor({1, outputs_number,1,1});
-            scales_deltas.set_descriptor({1, outputs_number,1,1});
+            beta_gradients.set_descriptor({1, outputs_number,1,1});
+            gamma_gradients.set_descriptor({1, outputs_number,1,1});
         }
     }
 
     vector<TensorViewCuda*> get_workspace_views_device() override
     {
-        vector<TensorViewCuda*> views = { &bias_deltas, &weight_deltas};
+        vector<TensorViewCuda*> views = { &bias_gradients, &weight_gradients};
 
         auto* dense_layer = static_cast<const Dense<Rank>*>(this->layer);
 
         if (dense_layer && dense_layer->get_batch_normalization())
-            views.insert(views.end(), { &scales_deltas, &offsets_deltas});
+            views.insert(views.end(), { &gamma_gradients, &beta_gradients});
 
         return views;
     }
@@ -322,18 +322,18 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         cudaFree(ones);
         ones = nullptr;
 
-        cudnnDestroyTensorDescriptor(deltas_tensor_descriptor);
-        deltas_tensor_descriptor = nullptr;
+        cudnnDestroyTensorDescriptor(gradients_tensor_descriptor);
+        gradients_tensor_descriptor = nullptr;
     }
 
-    TensorViewCuda bias_deltas;
-    TensorViewCuda weight_deltas;
+    TensorViewCuda bias_gradients;
+    TensorViewCuda weight_gradients;
 
     float* ones = nullptr;
 
-    TensorViewCuda scales_deltas;
-    TensorViewCuda offsets_deltas;
-    cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
+    TensorViewCuda gamma_gradients;
+    TensorViewCuda beta_gradients;
+    cudnnTensorDescriptor_t gradients_tensor_descriptor = nullptr;
 };
 
 #endif
@@ -351,7 +351,7 @@ public:
     Dense(const dimensions& new_input_dimensions = {0},
           const dimensions& new_output_dimensions = {0},
           const string& new_activation_function = "HyperbolicTangent",
-          const bool& new_batch_normalization = false,
+          bool new_batch_normalization = false,
           const string& new_label = "dense2d_layer")
     {
         set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_label);
@@ -416,7 +416,7 @@ public:
     void set(const dimensions& new_input_dimensions = {},
              const dimensions& new_output_dimensions = {},
              const string& new_activation_function = "HyperbolicTangent",
-             const bool& new_batch_normalization = false,
+             bool new_batch_normalization = false,
              const string& new_label = "dense_layer")
     {
         if (new_input_dimensions.size() != Rank - 1)
@@ -619,7 +619,7 @@ public:
     }
 
 
-    void set_batch_normalization(const bool& new_batch_normalization)
+    void set_batch_normalization(bool new_batch_normalization)
     {
         batch_normalization = new_batch_normalization;
     }
@@ -642,7 +642,7 @@ public:
     }
 */
 
-    void apply_batch_normalization_backward(TensorMap2& deltas,
+    void apply_batch_normalization_backward(TensorMap2& output_gradients,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             unique_ptr<LayerBackPropagation>& layer_back_propagation) const
     {
@@ -657,22 +657,22 @@ public:
         DenseBackPropagation<2>* dense2d_back_propagation =
             static_cast<DenseBackPropagation<2>*>(layer_back_propagation.get());
 
-        TensorMap1 scales_deltas = tensor_map<1>(dense2d_back_propagation->scales_deltas);
-        TensorMap1 offsets_deltas = tensor_map<1>(dense2d_back_propagation->offsets_deltas);
+        TensorMap1 gamma_gradients = tensor_map<1>(dense2d_back_propagation->gamma_gradients);
+        TensorMap1 beta_gradients = tensor_map<1>(dense2d_back_propagation->beta_gradients);
 
-        offsets_deltas.device(*device) = deltas.sum(array_1(0));
-        scales_deltas.device(*device) = (deltas * normalized_outputs).sum(array_1(0));
+        beta_gradients.device(*device) = output_gradients.sum(array_1(0));
+        gamma_gradients.device(*device) = (output_gradients * normalized_outputs).sum(array_1(0));
 /*
         const array<Index, 2> reshape_dims = { 1, get_outputs_number() };
         const array<Index, 2> broadcast_dims = { batch_size, 1 };
 
         const auto inv_m = type(1) / batch_size;
 
-        deltas.device(*device) =
-            ((deltas * type(batch_size))
-             - offsets_deltas.reshape(reshape_dims).broadcast(broadcast_dims)
+        output_gradients.device(*device) =
+            ((output_gradients * type(batch_size))
+             - beta_gradients.reshape(reshape_dims).broadcast(broadcast_dims)
              - normalized_outputs *
-                   scales_deltas.reshape(reshape_dims).broadcast(broadcast_dims)
+                   gamma_gradients.reshape(reshape_dims).broadcast(broadcast_dims)
              ) * inv_m
             / standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims)
             * gammas.reshape(reshape_dims).broadcast(broadcast_dims);
@@ -682,7 +682,7 @@ public:
 
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool& is_training) override
+                           bool is_training) override
     {
         auto* dense_forward_propagation = static_cast<DenseForwardPropagation<Rank>*>(layer_forward_propagation.get());
 
@@ -729,12 +729,12 @@ public:
 
 
     void back_propagate(const vector<TensorView>& input_views,
-                        const vector<TensorView>& delta_views,
+                        const vector<TensorView>& output_gradient_views,
                         unique_ptr<LayerForwardPropagation>& forward_propagation,
                         unique_ptr<LayerBackPropagation>& back_propagation) const override
     {
         const TensorMap2 inputs = tensor_map<2>(input_views[0]);
-        TensorMap2 deltas = tensor_map<2>(delta_views[0]);
+        TensorMap2 output_gradients = tensor_map<2>(output_gradient_views[0]);
 
         // Forward propagation
 
@@ -749,32 +749,32 @@ public:
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
         if(activation_function != "Softmax")
-            deltas.device(*device) = deltas * activation_derivatives;
+            output_gradients.device(*device) = output_gradients * activation_derivatives;
 
         if (batch_normalization)
-            apply_batch_normalization_backward(deltas, forward_propagation, back_propagation);
+            apply_batch_normalization_backward(output_gradients, forward_propagation, back_propagation);
 
-        TensorMap2 weight_deltas = tensor_map<2>(dense2d_back_propagation->weight_deltas);
-        TensorMap1 bias_deltas = tensor_map<1>(dense2d_back_propagation->bias_deltas);
-        TensorMap2 input_deltas = tensor_map<2>(back_propagation->input_deltas[0]);
+        TensorMap2 weight_gradients = tensor_map<2>(dense2d_back_propagation->weight_gradients);
+        TensorMap1 bias_gradients = tensor_map<1>(dense2d_back_propagation->bias_gradients);
+        TensorMap2 input_gradients = tensor_map<2>(back_propagation->input_gradients[0]);
 
         calculate_gradients<2>(inputs,
-                               deltas,
+                               output_gradients,
                                tensor_map<2>(weights),
-                               weight_deltas,
-                               bias_deltas,
-                               input_deltas,
+                               weight_gradients,
+                               bias_gradients,
+                               input_gradients,
                                dense2d_back_propagation->is_first_layer);
     }
 
 
     void back_propagate_lm(const vector<TensorView>& input_views,
-                           const vector<TensorView>& delta_views,
+                           const vector<TensorView>& output_gradient_views,
                            unique_ptr<LayerForwardPropagation>& forward_propagation,
                            unique_ptr<LayerBackPropagationLM>& back_propagation) const override
     {
         const auto inputs = tensor_map<Rank>(input_views[0]);
-        auto deltas = tensor_map<Rank>(delta_views[0]);
+        auto output_gradients = tensor_map<Rank>(output_gradient_views[0]);
 
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();
@@ -792,23 +792,23 @@ public:
 
         TensorMap2 squared_errors_Jacobian = tensor_map<2>(dense_lm->squared_errors_Jacobian);
 
-        auto input_deltas = tensor_map<Rank>(dense_lm->input_deltas[0]);
+        auto input_gradients = tensor_map<Rank>(dense_lm->input_gradients[0]);
 
-        const bool& is_first_layer = dense_lm->is_first_layer;
+        bool is_first_layer = dense_lm->is_first_layer;
 
         if(activation_function != "Softmax")
-            deltas.device(*device) = deltas * activation_derivatives;
+            output_gradients.device(*device) = output_gradients * activation_derivatives;
 
         if constexpr(Rank == 2)
             squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{samples_number, biases_number})
-                .device(*device) = deltas;
+                .device(*device) = output_gradients;
         else
             squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{samples_number, biases_number})
-                .device(*device) = deltas.sum(array<Index, Rank-2>{1});
+                .device(*device) = output_gradients.sum(array<Index, Rank-2>{1});
 
         for(Index j = 0; j < outputs_number; j++)
         {
-            const auto delta_j = deltas.chip(j, Rank - 1);
+            const auto delta_j = output_gradients.chip(j, Rank - 1);
 
             for(Index i = 0; i < inputs_number; i++)
             {
@@ -825,7 +825,7 @@ public:
         }
 
         if(!is_first_layer)
-            input_deltas.device(*device) = deltas.contract(tensor_map<2>(weights), axes(Rank - 1, 1));
+            input_gradients.device(*device) = output_gradients.contract(tensor_map<2>(weights), axes(Rank - 1, 1));
     }
 
 
@@ -887,7 +887,7 @@ public:
 
     string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& new_output_names = vector<string>()) const override
     {
-        const vector<string> feature_names = new_feature_names.empty()
+        const vector<string> input_names = new_feature_names.empty()
         ? get_default_feature_names()
         : new_feature_names;
 
@@ -907,9 +907,9 @@ public:
             buffer << output_names[j] << " = " << activation_function << "( " << biases(j) << " + ";
 
             for(Index i = 0; i < inputs_number - 1; i++)
-                buffer << "(" << weights_column(i) << "*" << feature_names[i] << ") + ";
+                buffer << "(" << weights_column(i) << "*" << input_names[i] << ") + ";
 
-            buffer << "(" << weights_column(inputs_number - 1) << "*" << feature_names[inputs_number - 1] << ") );\n";
+            buffer << "(" << weights_column(inputs_number - 1) << "*" << input_names[inputs_number - 1] << ") );\n";
         }
 */
         return buffer.str();
@@ -1022,9 +1022,9 @@ public:
     }
 
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool& is_training)
+                                bool is_training)
     {
         // Dense layer
 
@@ -1145,8 +1145,8 @@ public:
     }
 
 
-    void back_propagate_cuda(const vector<TensorViewCuda>& inputs,
-                             const vector<TensorViewCuda>& deltas,
+    void back_propagate(const vector<TensorViewCuda>& inputs,
+                             const vector<TensorViewCuda>& output_gradients,
                              unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
                              unique_ptr<LayerBackPropagationCuda>& bp_cuda) const
     {
@@ -1169,26 +1169,26 @@ public:
 
         // Back propagation
 
-        float* input_deltas = bp_cuda->input_deltas[0].data;
+        float* input_gradients = bp_cuda->input_gradients[0].data;
 
         auto* dense_layer_back_propagation = static_cast<DenseBackPropagationCuda<Rank>*>(bp_cuda.get());
 
         float* ones = dense_layer_back_propagation->ones;
 
-        float* bias_deltas = dense_layer_back_propagation->bias_deltas.data;
-        float* weight_deltas = dense_layer_back_propagation->weight_deltas.data;
+        float* bias_gradients = dense_layer_back_propagation->bias_gradients.data;
+        float* weight_gradients = dense_layer_back_propagation->weight_gradients.data;
 
-        const cudnnTensorDescriptor_t deltas_tensor_descriptor = dense_layer_back_propagation->deltas_tensor_descriptor;
+        const cudnnTensorDescriptor_t gradients_tensor_descriptor = dense_layer_back_propagation->gradients_tensor_descriptor;
 
         // Dropout
 
         if (get_dropout_rate() > type(0) && activation_function != "Softmax")
             CHECK_CUDNN(cudnnDropoutBackward(cudnn_handle,
                                              dense_forward_propagation->dropout_descriptor,
-                                             deltas_tensor_descriptor,
-                                             deltas[0].data,
-                                             deltas_tensor_descriptor,
-                                             deltas[0].data,
+                                             gradients_tensor_descriptor,
+                                             output_gradients[0].data,
+                                             gradients_tensor_descriptor,
+                                             output_gradients[0].data,
                                              dense_forward_propagation->dropout_reserve_space,
                                              dense_forward_propagation->dropout_reserve_space_size));
 
@@ -1198,28 +1198,28 @@ public:
             CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
                                                 activation_descriptor,
                                                 &alpha,
-                                                deltas_tensor_descriptor,
+                                                gradients_tensor_descriptor,
                                                 outputs_view.data,
-                                                deltas_tensor_descriptor,
-                                                deltas[0].data,
-                                                deltas_tensor_descriptor,
+                                                gradients_tensor_descriptor,
+                                                output_gradients[0].data,
+                                                gradients_tensor_descriptor,
                                                 combinations,
                                                 &beta,
-                                                deltas_tensor_descriptor,
-                                                deltas[0].data));
+                                                gradients_tensor_descriptor,
+                                                output_gradients[0].data));
         else if (activation_function != "Linear" && activation_function != "Softmax" && !use_combinations)
             CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
                                                 activation_descriptor,
                                                 &alpha,
-                                                deltas_tensor_descriptor,
+                                                gradients_tensor_descriptor,
                                                 outputs_view.data,
-                                                deltas_tensor_descriptor,
-                                                deltas[0].data,
-                                                deltas_tensor_descriptor,
+                                                gradients_tensor_descriptor,
+                                                output_gradients[0].data,
+                                                gradients_tensor_descriptor,
                                                 outputs_view.data,
                                                 &beta,
-                                                deltas_tensor_descriptor,
-                                                deltas[0].data));
+                                                gradients_tensor_descriptor,
+                                                output_gradients[0].data));
 
         // Batch Normalization
 
@@ -1231,14 +1231,14 @@ public:
                 &alpha, &beta,
                 dense_forward_propagation->outputs.get_descriptor(),
                 use_combinations ? combinations : outputs_view.data,
-                deltas_tensor_descriptor,
-                deltas[0].data,
-                deltas_tensor_descriptor,
-                deltas[0].data,
+                gradients_tensor_descriptor,
+                output_gradients[0].data,
+                gradients_tensor_descriptor,
+                output_gradients[0].data,
                 gammas_device.get_descriptor(),
                 gammas_device.data,
-                dense_layer_back_propagation->scales_deltas.data,
-                dense_layer_back_propagation->offsets_deltas.data,
+                dense_layer_back_propagation->gamma_gradients.data,
+                dense_layer_back_propagation->beta_gradients.data,
                 numeric_limits<type>::epsilon(),
                 dense_forward_propagation->batch_means.data,
                 dense_forward_propagation->bn_saved_inv_variance.data));
@@ -1250,12 +1250,12 @@ public:
                     1,
                     batch_size,
                     &alpha,
-                    deltas[0].data,
+                    output_gradients[0].data,
                     batch_size,
                     ones,
                     batch_size,
                     &beta,
-                    bias_deltas,
+                    bias_gradients,
                     outputs_number));
 
         // Weight derivatives
@@ -1267,10 +1267,10 @@ public:
                     &alpha,
                     inputs[0].data,
                     batch_size,
-                    deltas[0].data,
+                    output_gradients[0].data,
                     batch_size,
                     &beta,
-                    weight_deltas,
+                    weight_gradients,
                     inputs_number));
 
         // Input derivatives
@@ -1280,12 +1280,12 @@ public:
                     inputs_number,
                     outputs_number,
                     &alpha,
-                    deltas[0].data,
+                    output_gradients[0].data,
                     batch_size,
                     weights_device.data,
                     inputs_number,
                     &beta,
-                    input_deltas,
+                    input_gradients,
                     batch_size));
     }
 

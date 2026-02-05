@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "tinyxml2.h"
 #include "correlations.h"
 #include "statistics.h"
 #include "tensors.h"
 #include "strings_utilities.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
@@ -32,8 +29,8 @@ public:
 
     Dataset(const filesystem::path&,
             const string&,
-            const bool& = true,
-            const bool& = false,
+            bool = true,
+            bool = false,
             const Codification& = Codification::UTF8);
 
     // Enumerations
@@ -163,7 +160,7 @@ public:
 
     vector<string> get_variable_scalers(const string&) const;
 
-    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, const bool&) const;
+    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const;
 
     const Tensor2& get_data() const;
     Tensor2* get_data_p();
@@ -197,8 +194,8 @@ public:
 
     const filesystem::path& get_data_path() const;
 
-    const bool& get_header_line() const;
-    const bool& get_has_sample_ids() const;
+    bool get_header_line() const;
+    bool get_has_sample_ids() const;
 
     vector<string> get_sample_ids() const;
 
@@ -213,7 +210,7 @@ public:
 
     Index get_gmt() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     bool is_empty() const;
 
@@ -228,8 +225,8 @@ public:
 
     void set(const filesystem::path&,
              const string&,
-             const bool& = true,
-             const bool& = false,
+             bool = true,
+             bool = false,
              const Dataset::Codification& = Codification::UTF8);
 
     void set(const filesystem::path&);
@@ -296,8 +293,8 @@ public:
 
     void set_data_path(const filesystem::path&);
 
-    void set_has_header(const bool&);
-    void set_has_ids(const bool&);
+    void set_has_header(bool);
+    void set_has_ids(bool);
 
     void set_separator(const Separator&);
     void set_separator_string(const string&);
@@ -312,7 +309,7 @@ public:
 
     void set_gmt(const Index);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     bool is_sample_used(const Index) const;
 
@@ -609,8 +606,8 @@ struct Batch
               // const vector<Index>&,
               const vector<Index>& = vector<Index>());
 
-    vector<TensorView> get_input_views() const;
-    TensorView get_target_view() const;
+    vector<TensorView> get_inputs() const;
+    TensorView get_targets() const;
 
     Index get_samples_number() const;
 
@@ -656,8 +653,8 @@ struct BatchCuda
     //BatchCuda(const BatchCuda&) = delete;
     //BatchCuda& operator=(const BatchCuda&) = delete;
 
-    vector<TensorViewCuda> get_input_views_device() const;
-    TensorViewCuda get_target_view_device() const;
+    vector<TensorViewCuda> get_inputs_device() const;
+    TensorViewCuda get_targets_device() const;
 
     Index get_samples_number() const;
 

@@ -23,7 +23,7 @@ public:
                   const string& = "Linear",
                   const dimensions& = { 1, 1 },                     // Stride dimensions {row_stride,column_stride}
                   const string& = "Valid",                          // Convolution type (Valid || Same)
-                  const bool& = false,                              // Batch Normalization)
+                  bool = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
 
     bool get_batch_normalization() const;
@@ -76,12 +76,12 @@ public:
              const string& = "Linear",
              const dimensions& = {1, 1},
              const string& = "Valid",
-             const bool& = false,
+             bool = false,
              const string& = "convolutional_layer");
 
     void set_activation_function(const string&);
 
-    void set_batch_normalization(const bool&);
+    void set_batch_normalization(bool);
 
     void set_convolution_type(const string&);
 
@@ -99,7 +99,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     // Back propagation
 
@@ -117,14 +117,14 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    void forward_propagate(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+                                bool) override;
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>&,
-                             unique_ptr<LayerForwardPropagationCuda>&,
-                             unique_ptr<LayerBackPropagationCuda>&) const override;
+    void back_propagate(const vector<TensorViewCuda>&,
+                        const vector<TensorViewCuda>&,
+                        unique_ptr<LayerForwardPropagationCuda>&,
+                        unique_ptr<LayerBackPropagationCuda>&) const override;
 
     vector<TensorViewCuda*> get_parameter_views_device() override;
 
@@ -207,11 +207,11 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    TensorView bias_deltas;
-    TensorView weight_deltas;
+    TensorView bias_gradients;
+    TensorView weight_gradients;
 
-    TensorView scales_deltas;
-    TensorView offsets_deltas;
+    TensorView gamma_gradients;
+    TensorView beta_gradients;
 
     Tensor4 rotated_weights;
 };
@@ -264,23 +264,23 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 
     void free() override;
 
-    TensorViewCuda bias_deltas;
-    TensorViewCuda weight_deltas;
+    TensorViewCuda bias_gradients;
+    TensorViewCuda weight_gradients;
 
     void* backward_data_workspace = nullptr;
     void* backward_filter_workspace = nullptr;
     size_t backward_data_workspace_bytes = 0;
     size_t backward_filter_workspace_bytes = 0;
 
-    cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
+    cudnnTensorDescriptor_t gradients_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;
-    cudnnFilterDescriptor_t weight_deltas_filter_descriptor = nullptr;
+    cudnnFilterDescriptor_t weight_gradients_filter_descriptor = nullptr;
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
-    TensorViewCuda scales_deltas;
-    TensorViewCuda offsets_deltas;
+    TensorViewCuda gamma_gradients;
+    TensorViewCuda beta_gradients;
 };
 
 #endif

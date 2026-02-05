@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "tinyxml2.h"
 #include "statistics.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
@@ -43,7 +40,7 @@ public:
 
     bool has_loss_index() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     const Index& get_display_period() const;
 
@@ -59,7 +56,7 @@ public:
 
     virtual void set_loss_index(LossIndex*);
 
-    virtual void set_display(const bool&);
+    virtual void set_display(bool);
 
     void set_display_period(const Index);
 

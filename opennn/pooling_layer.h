@@ -70,15 +70,15 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void forward_propagate_max_pooling(const Tensor4&,
                                        unique_ptr<LayerForwardPropagation>&,
-                                       const bool&) const;
+                                       bool) const;
 
     void forward_propagate_average_pooling(const Tensor4&,
                                            unique_ptr<LayerForwardPropagation>&,
-                                           const bool&) const;
+                                           bool) const;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -103,11 +103,11 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    void forward_propagate(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+                                bool) override;
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
+    void back_propagate(const vector<TensorViewCuda>&,
                              const vector<TensorViewCuda>&,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>&) const override;
@@ -165,7 +165,7 @@ struct PoolingBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor4 deltas_by_pool_size;
+    Tensor4 gradients_by_pool_size;
 };
 
 

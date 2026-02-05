@@ -45,9 +45,9 @@ public:
     void set_image_height(const int&);
     void set_image_padding(const int&);
 
-    void set_augmentation(const bool&);
-    void set_random_reflection_axis_x(const bool&);
-    void set_random_reflection_axis_y(const bool&);
+    void set_augmentation(bool);
+    void set_random_reflection_axis_x(bool);
+    void set_random_reflection_axis_y(bool);
     void set_random_rotation_minimum(const type);
     void set_random_rotation_maximum(const type);
     void set_random_horizontal_translation_minimum(const type);

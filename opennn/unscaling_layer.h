@@ -45,11 +45,11 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 #ifdef OPENNN_CUDA
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
-                                unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+    void forward_propagate(const vector<TensorViewCuda>&,
+                           unique_ptr<LayerForwardPropagationCuda>&,
+                           bool) override;
 #endif
 
     void print() const override;

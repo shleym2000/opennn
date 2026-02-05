@@ -298,14 +298,14 @@ TensorMap3 tensor_map_(const TensorMap4&, const Index&);
 //TensorMap1 tensor_map_(const TensorMap2&, const Index&);
 
 template <Index rank>
-TensorMap<Tensor<type, rank>, Aligned16> tensor_map(const TensorView& tensor_view)
+TensorMap<Tensor<type, rank>, Aligned64> tensor_map(const TensorView& tensor_view)
 {
     if(!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
 
     if (reinterpret_cast<uintptr_t>(tensor_view.data) % 16 != 0)
         throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned. "
-                            "This will cause a crash with Aligned16 TensorMaps.");
+                            "This will cause a crash with Aligned64 TensorMaps.");
 
     if constexpr (rank == 2)
         if (tensor_view.rank() == 4)

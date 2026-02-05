@@ -43,7 +43,7 @@ public:
 
    void set_default();
 
-   void set_display(const bool&) override;
+   void set_display(bool) override;
 
    // Get
 

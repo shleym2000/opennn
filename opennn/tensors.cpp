@@ -662,7 +662,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 
 type* link(type *pointer, vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
@@ -672,6 +672,9 @@ type* link(type *pointer, vector<TensorView*> views)
             continue;
 
         view->data = pointer;
+
+        if (reinterpret_cast<uintptr_t>(pointer) % ALIGN_BYTES != 0)
+            throw runtime_error("Master pointer in link() is not 64-byte aligned.");
 
         pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
@@ -689,7 +692,7 @@ void link(type *pointer, vector<vector<TensorView*> > views)
 
 Index get_size(const vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
@@ -722,7 +725,7 @@ Index get_size(vector<vector<TensorView*> > views)
 
 type* link(type* pointer, vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
@@ -749,7 +752,7 @@ void link(type* pointer, vector<vector<TensorViewCuda*> > views)
 
 Index get_size(const vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 

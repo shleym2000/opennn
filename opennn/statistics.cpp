@@ -9,8 +9,6 @@
 #include "statistics.h"
 #include "tensors.h"
 
-using namespace std;
-
 namespace opennn
 {
 

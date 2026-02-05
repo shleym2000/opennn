@@ -10,9 +10,6 @@
 
 #include "pch.h"
 
-using namespace std;
-using namespace Eigen;
-
 namespace opennn
 {
     void set_seed(Index seed);

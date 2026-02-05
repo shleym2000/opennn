@@ -9,11 +9,6 @@
 #pragma once
 
 #include "pch.h"
-#include "../eigen/unsupported/Eigen/CXX11/Tensor"
-
-using type = float;
-using namespace std;
-using namespace Eigen;
 
 namespace opennn
 {

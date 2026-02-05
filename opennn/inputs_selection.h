@@ -8,10 +8,6 @@
 
 #pragma once
 
-#include "tinyxml2.h"
-
-using namespace tinyxml2;
-
 namespace opennn
 {
 
@@ -42,7 +38,7 @@ public:
 
     const Index& get_trials_number() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     const type& get_selection_error_goal() const;
     const Index& get_maximum_iterations_number() const;
@@ -55,7 +51,7 @@ public:
 
     void set_trials_number(const Index);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     void set_selection_error_goal(const type);
     void set_maximum_epochs_number(const Index);

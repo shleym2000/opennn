@@ -35,7 +35,7 @@ public:
 
     void set_loss_index(LossIndex*) override;
 
-    void set_display(const bool&) override;
+    void set_display(bool) override;
 
     void set_default();
 
@@ -143,7 +143,7 @@ struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
     Tensor1 old_parameters;
     Tensor1 parameters_difference;
 
-    Tensor1 parameters_increment;
+    Tensor1 parameter_updates;
 
     // Loss index data
 

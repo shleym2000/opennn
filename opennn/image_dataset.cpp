@@ -203,19 +203,19 @@ void ImageDataset::set_image_padding(const int& new_padding)
 }
 
 
-void ImageDataset::set_augmentation(const bool& new_augmentation)
+void ImageDataset::set_augmentation(bool new_augmentation)
 {
     augmentation = new_augmentation;
 }
 
 
-void ImageDataset::set_random_reflection_axis_x(const bool& new_random_reflection_axis_x)
+void ImageDataset::set_random_reflection_axis_x(bool new_random_reflection_axis_x)
 {
     random_reflection_axis_x = new_random_reflection_axis_x;
 }
 
 
-void ImageDataset::set_random_reflection_axis_y(const bool& new_random_reflection_axis_y)
+void ImageDataset::set_random_reflection_axis_y(bool new_random_reflection_axis_y)
 {
     random_reflection_axis_y = new_random_reflection_axis_y;
 }

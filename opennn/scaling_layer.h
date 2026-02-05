@@ -179,7 +179,7 @@ public:
 
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool&) override
+                           bool) override
     {
         const Index outputs_number = get_outputs_number();
 
@@ -210,7 +210,7 @@ public:
         }
     }
 
-    string write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_no_scaling_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
         const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
@@ -219,12 +219,12 @@ public:
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = " << feature_names[i] << ";\n";
+            buffer << output_names[i] << " = " << input_names[i] << ";\n";
 
         return buffer.str();
     }
 
-    string write_minimum_maximum_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_minimum_maximum_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
         const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
@@ -233,12 +233,12 @@ public:
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = 2*(" << feature_names[i] << "-(" << descriptives[i].minimum << "))/(" << descriptives[i].maximum << "-(" << descriptives[i].minimum << "))-1;\n";
+            buffer << output_names[i] << " = 2*(" << input_names[i] << "-(" << descriptives[i].minimum << "))/(" << descriptives[i].maximum << "-(" << descriptives[i].minimum << "))-1;\n";
 
         return buffer.str();
     }
 
-    string write_mean_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_mean_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
         const Index inputs_number = get_inputs_number();
 
@@ -247,12 +247,12 @@ public:
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = (" << feature_names[i] << "-(" << descriptives[i].mean << "))/" << descriptives[i].standard_deviation << ";\n";
+            buffer << output_names[i] << " = (" << input_names[i] << "-(" << descriptives[i].mean << "))/" << descriptives[i].standard_deviation << ";\n";
 
         return buffer.str();
     }
 
-    string write_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
         const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
 
@@ -261,14 +261,14 @@ public:
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = " << feature_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
+            buffer << output_names[i] << " = " << input_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
 
         return buffer.str();
     }
 
     string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& = vector<string>()) const override
     {
-        const vector<string> feature_names = new_feature_names.empty()
+        const vector<string> input_names = new_feature_names.empty()
                                                ? get_default_feature_names()
                                                : new_feature_names;
 
@@ -283,19 +283,19 @@ public:
             const string& scaler = scalers[i];
 
             if(scaler == "None")
-                buffer << "scaled_" << feature_names[i] << " = " << feature_names[i] << ";\n";
+                buffer << "scaled_" << input_names[i] << " = " << input_names[i] << ";\n";
             else if(scaler == "MinimumMaximum")
-                buffer << "scaled_" << feature_names[i]
-                       << " = " << feature_names[i] << "*(" << max_range << "-" << min_range << ")/("
+                buffer << "scaled_" << input_names[i]
+                       << " = " << input_names[i] << "*(" << max_range << "-" << min_range << ")/("
                        << descriptives[i].maximum << "-(" << descriptives[i].minimum << "))-" << descriptives[i].minimum << "*("
                        << max_range << "-" << min_range << ")/("
                        << descriptives[i].maximum << "-" << descriptives[i].minimum << ")+" << min_range << ";\n";
             else if(scaler == "MeanStandardDeviation")
-                buffer << "scaled_" << feature_names[i] << " = (" << feature_names[i] << "-" << descriptives[i].mean << ")/" << descriptives[i].standard_deviation << ";\n";
+                buffer << "scaled_" << input_names[i] << " = (" << input_names[i] << "-" << descriptives[i].mean << ")/" << descriptives[i].standard_deviation << ";\n";
             else if(scaler == "StandardDeviation")
-                buffer << "scaled_" << feature_names[i] << " = " << feature_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
+                buffer << "scaled_" << input_names[i] << " = " << input_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
             else if(scaler == "Logarithm")
-                buffer << "scaled_" << feature_names[i] << " = log(" << feature_names[i] << ");\n";
+                buffer << "scaled_" << input_names[i] << " = log(" << input_names[i] << ");\n";
             else
                 throw runtime_error("Unknown inputs scaling method.\n");
         }
@@ -411,9 +411,9 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool&) override
+                                bool) override
     {
         ScalingForwardPropagationCuda<Rank>* scaling_forward_propagation =
             static_cast<ScalingForwardPropagationCuda<Rank>*>(forward_propagation.get());

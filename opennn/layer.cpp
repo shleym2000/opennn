@@ -37,9 +37,9 @@ void LayerBackPropagation::set(const Index new_batch_size, Layer* new_layer)
 }
 
 
-vector<TensorView> LayerBackPropagation::get_input_deltas() const
+vector<TensorView> LayerBackPropagation::get_input_gradients() const
 {
-    return input_deltas;
+    return input_gradients;
 }
 
 
@@ -79,12 +79,12 @@ void LayerBackPropagationCuda::set(const Index new_batch_size, Layer* new_layer)
 }
 
 
-vector<TensorViewCuda> LayerBackPropagationCuda::get_input_deltas_views_device() const
+vector<TensorViewCuda> LayerBackPropagationCuda::get_input_gradients_views_device() const
 {
     vector<TensorViewCuda> views;
-    views.reserve(input_deltas.size());
+    views.reserve(input_gradients.size());
 
-    for (const TensorCuda& tensor : input_deltas)
+    for (const TensorCuda& tensor : input_gradients)
         views.push_back(tensor.view());
 
     return views;
@@ -105,7 +105,7 @@ Layer::Layer()
 Layer::~Layer() = default;
 
 
-const bool& Layer::get_display() const
+bool Layer::get_display() const
 {
     return display;
 }
@@ -129,7 +129,7 @@ void Layer::set_label(const string& new_label)
 }
 
 
-void Layer::set_display(const bool& new_display)
+void Layer::set_display(bool new_display)
 {
     display = new_display;
 }
@@ -199,12 +199,12 @@ vector<string> Layer::get_default_feature_names() const
 {
     const Index inputs_number = get_inputs_number();
 
-    vector<string> feature_names(inputs_number);
+    vector<string> input_names(inputs_number);
 
     for(Index i = 0; i < inputs_number; i++)
-        feature_names[i] = "input_" + to_string(i);
+        input_names[i] = "input_" + to_string(i);
 
-    return feature_names;
+    return input_names;
 }
 
 
@@ -227,12 +227,12 @@ bool Layer::get_is_trainable() const
 }
 
 
-void Layer::add_deltas(const vector<TensorView> &delta_views) const
+void Layer::add_gradients(const vector<TensorView> &output_gradient_views) const
 {
-    TensorMap3 deltas = tensor_map<3>(delta_views[0]);
+    TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
-    for(Index i = 1; i < Index(delta_views.size()); i++)
-        deltas.device(*device) += tensor_map<3>(delta_views[i]);
+    for(Index i = 1; i < Index(output_gradient_views.size()); i++)
+        output_gradients.device(*device) += tensor_map<3>(output_gradient_views[i]);
 }
 
 
@@ -253,7 +253,7 @@ Index Layer::get_outputs_number() const
 
 
 void Layer::forward_propagate(const vector<TensorView>&,
-                              unique_ptr<LayerForwardPropagation>&, const bool&)
+                              unique_ptr<LayerForwardPropagation>&, bool)
 {
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }
@@ -472,9 +472,9 @@ vector<TensorView*> LayerForwardPropagation::get_workspace_views()
     return {&outputs};
 }
 
-vector<TensorView> LayerBackPropagationLM::get_input_deltas() const
+vector<TensorView> LayerBackPropagationLM::get_input_gradients() const
 {
-    return input_deltas;
+    return input_gradients;
 }
 
 } 

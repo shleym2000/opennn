@@ -121,7 +121,7 @@ struct LevenbergMarquardtAlgorithmData final : public OptimizationAlgorithmData
     Tensor1 old_parameters;
     Tensor1 parameters_difference;
 
-    Tensor1 parameters_increment;
+    Tensor1 parameter_updates;
 
     // Loss index data
 

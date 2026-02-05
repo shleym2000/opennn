@@ -33,7 +33,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -84,7 +84,7 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
     TensorView gamma_derivatives;
     TensorView beta_derivatives;
 
-    Tensor3 scaled_deltas;
+    Tensor3 scaled_gradients;
     Tensor3 standard_deviation_derivatives;
     Tensor2 aux_2d;
 

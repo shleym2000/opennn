@@ -33,7 +33,7 @@ public:
     const type& get_initial_learning_rate() const;
     const type& get_initial_decay() const;
     const type& get_momentum() const;
-    const bool& get_nesterov() const;
+    bool get_nesterov() const;
 
     const type& get_loss_goal() const;
 
@@ -46,7 +46,7 @@ public:
     void set_initial_learning_rate(const type);
     void set_initial_decay(const type);
     void set_momentum(const type);
-    void set_nesterov(const bool&);
+    void set_nesterov(bool);
 
     void set_maximum_epochs_number(const Index);
 
@@ -102,7 +102,7 @@ struct StochasticGradientDescentData final : public OptimizationAlgorithmData
 
     Index iteration = 0;
 
-    Tensor1 parameters_increment;
+    Tensor1 parameter_updates;
     Tensor1 last_parameters_increment;
 };
 

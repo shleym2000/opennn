@@ -59,7 +59,7 @@ public:
 
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool&) override
+                           bool) override
     {
         if (input_views.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs.");
@@ -67,30 +67,30 @@ public:
         if (input_views[0].dims != input_views[1].dims)
             throw runtime_error("Input dimensions for " + name + " must be identical.");
 
-        const TensorMap<Tensor<type, Rank>, Aligned16> input_1 = tensor_map<Rank>(input_views[0]);
-        const TensorMap<Tensor<type, Rank>, Aligned16> input_2 = tensor_map<Rank>(input_views[1]);
+        const TensorMap<Tensor<type, Rank>, Aligned64> input_1 = tensor_map<Rank>(input_views[0]);
+        const TensorMap<Tensor<type, Rank>, Aligned64> input_2 = tensor_map<Rank>(input_views[1]);
 
-        TensorMap<Tensor<type, Rank>, Aligned16> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
+        TensorMap<Tensor<type, Rank>, Aligned64> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
 
         outputs.device(*device) = input_1 + input_2;
     }
 
 
     void back_propagate(const vector<TensorView>&,
-                        const vector<TensorView>& delta_views,
+                        const vector<TensorView>& output_gradient_views,
                         unique_ptr<LayerForwardPropagation>&,
                         unique_ptr<LayerBackPropagation>& back_propagation) const override
     {
-        if (delta_views.size() != 1)
+        if (output_gradient_views.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input.");
 
-        const TensorMap<Tensor<type, Rank>, Aligned16> deltas = tensor_map<Rank>(delta_views[0]);
+        const TensorMap<Tensor<type, Rank>, Aligned64> output_gradients = tensor_map<Rank>(output_gradient_views[0]);
 
-        TensorMap<Tensor<type, Rank>, Aligned16> input_deltas_0 = tensor_map<Rank>(back_propagation->input_deltas[0]);
-        TensorMap<Tensor<type, Rank>, Aligned16> input_deltas_1 = tensor_map<Rank>(back_propagation->input_deltas[1]);
+        TensorMap<Tensor<type, Rank>, Aligned64> input_gradients_0 = tensor_map<Rank>(back_propagation->input_gradients[0]);
+        TensorMap<Tensor<type, Rank>, Aligned64> input_gradients_1 = tensor_map<Rank>(back_propagation->input_gradients[1]);
 
-        input_deltas_0.device(*device) = deltas;
-        input_deltas_1.device(*device) = deltas;
+        input_gradients_0.device(*device) = output_gradients;
+        input_gradients_1.device(*device) = output_gradients;
     }
 
     void from_XML(const XMLDocument& document) override
@@ -119,9 +119,9 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool&) override
+                                bool) override
     {
         if (inputs.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs for CUDA propagation.");
@@ -152,12 +152,12 @@ public:
     }
 
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>& deltas,
+    void back_propagate(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>& output_gradients,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation) const override
     {
-        if (deltas.size() != 1)
+        if (output_gradients.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input for CUDA.");
 
         AdditionBackPropagationCuda<Rank>* this_back_propagation =
@@ -166,8 +166,8 @@ public:
         const size_t inputs_number = get_inputs_number();
         const size_t total_elements = static_cast<size_t>(back_propagation->batch_size) * inputs_number;
 
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[0].data, deltas[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[1].data, deltas[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_gradients[0].data, output_gradients[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_gradients[1].data, output_gradients[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
     }
 
 #endif
@@ -222,15 +222,15 @@ struct AdditionBackPropagation final : LayerBackPropagation
         dimensions full_dims = { batch_size };
         full_dims.insert(full_dims.end(), input_dimensions.begin(), input_dimensions.end());
 
-        input_deltas_memory.resize(2);
-        input_deltas_memory[0].resize(count_elements(full_dims));
-        input_deltas_memory[1].resize(count_elements(full_dims));
+        input_gradients_memory.resize(2);
+        input_gradients_memory[0].resize(count_elements(full_dims));
+        input_gradients_memory[1].resize(count_elements(full_dims));
 
-        input_deltas.resize(2);
-        input_deltas[0].data = input_deltas_memory[0].data();
-        input_deltas[0].dims = full_dims;
-        input_deltas[1].data = input_deltas_memory[1].data();
-        input_deltas[1].dims = full_dims;
+        input_gradients.resize(2);
+        input_gradients[0].data = input_gradients_memory[0].data();
+        input_gradients[0].dims = full_dims;
+        input_gradients[1].data = input_gradients_memory[1].data();
+        input_gradients[1].dims = full_dims;
     }
 
 
@@ -238,16 +238,16 @@ struct AdditionBackPropagation final : LayerBackPropagation
     {
         cout << "Addition Back Propagation:" << endl;
 
-        if(input_deltas.size() >= 1)
+        if(input_gradients.size() >= 1)
         {
-            cout << "Input 1 Deltas dimensions: " << input_deltas[0].dims << endl;
-            cout << input_deltas[0].data << endl;
+            cout << "Input 1 Deltas dimensions: " << input_gradients[0].dims << endl;
+            cout << input_gradients[0].data << endl;
         }
 
-        if(input_deltas.size() >= 2)
+        if(input_gradients.size() >= 2)
         {
-            cout << "Input 2 Deltas dimensions: " << input_deltas[1].dims << endl;
-            cout << input_deltas[1].data << endl;
+            cout << "Input 2 Deltas dimensions: " << input_gradients[1].dims << endl;
+            cout << input_gradients[1].data << endl;
         }
     }
 };
@@ -296,9 +296,9 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
         dimensions full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
 
-        input_deltas.resize(2);
-        input_deltas[0].resize(full_dims);
-        input_deltas[1].resize(full_dims);
+        input_gradients.resize(2);
+        input_gradients[0].resize(full_dims);
+        input_gradients[1].resize(full_dims);
     }
 
 

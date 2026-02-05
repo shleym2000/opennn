@@ -70,13 +70,13 @@ void Pooling3d::set_pooling_method(const string& new_pooling_method)
 
 void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                  const bool& is_training)
+                                  bool is_training)
 {
     const TensorMap3 inputs = tensor_map<3>(input_views[0]);
 
     TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
 
-    Pooling3dForwardPropagation* pooling_layer_forward_propagation =
+    Pooling3dForwardPropagation* pooling_forward_propagation =
         static_cast<Pooling3dForwardPropagation*>(layer_forward_propagation.get());
 
 
@@ -87,7 +87,7 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
 
     if (pooling_method == PoolingMethod::MaxPooling)
     {
-        Tensor<Index, 2>& maximal_indices = pooling_layer_forward_propagation->maximal_indices;
+        Tensor<Index, 2>& maximal_indices = pooling_forward_propagation->maximal_indices;
 
 #pragma omp parallel for
         for(Index batch_index = 0; batch_index < batch_size; ++batch_index)
@@ -122,12 +122,12 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
 
 
 void Pooling3d::back_propagate(const vector<TensorView>& input_views,
-                               const vector<TensorView>& delta_views,
+                               const vector<TensorView>& output_gradient_views,
                                unique_ptr<LayerForwardPropagation>& forward_propagation,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
     const TensorMap3 input_tensor_map  = tensor_map<3>(input_views[0]);
-    const TensorMap2 delta_tensor_map  = tensor_map<2>(delta_views[0]);
+    const TensorMap2 delta_tensor_map  = tensor_map<2>(output_gradient_views[0]);
 
     Pooling3dForwardPropagation* forward_layer  =
         static_cast<Pooling3dForwardPropagation*>(forward_propagation.get());

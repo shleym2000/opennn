@@ -9,16 +9,13 @@
 #pragma once
 
 #include "neurons_selection.h"
-#include "tinyxml2.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
 
 struct GrowingNeuronsResults;
 
-class GrowingNeurons final : public NeuronsSelection
+class GrowingNeurons final : public NeuronSelection
 {
 
 public:

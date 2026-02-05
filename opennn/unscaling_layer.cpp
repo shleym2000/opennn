@@ -80,7 +80,7 @@ vector<string> Unscaling::get_scalers() const
 string Unscaling::get_expression(const vector<string>& new_feature_names,
                                  const vector<string>& new_output_names) const
 {
-    const vector<string> feature_names = new_feature_names.empty()
+    const vector<string> input_names = new_feature_names.empty()
                                            ? get_default_feature_names()
                                            : new_feature_names;
 
@@ -99,19 +99,19 @@ string Unscaling::get_expression(const vector<string>& new_feature_names,
         const string& scaler = scalers[i];
 
         if(scaler == "None")
-            buffer << output_names[i] << " = " << feature_names[i] << ";\n";
+            buffer << output_names[i] << " = " << input_names[i] << ";\n";
         else if(scaler == "MinimumMaximum")
             if(abs(descriptives[i].minimum - descriptives[i].maximum) < NUMERIC_LIMITS_MIN)
                 buffer << output_names[i] << "=" << descriptives[i].minimum <<";\n";
             else
-                buffer << output_names[i] << "=" << feature_names[i] << "*(" << (descriptives[i].maximum - descriptives[i].minimum)/(max_range - min_range)
+                buffer << output_names[i] << "=" << input_names[i] << "*(" << (descriptives[i].maximum - descriptives[i].minimum)/(max_range - min_range)
                 << ")+" << (descriptives[i].minimum - min_range*(descriptives[i].maximum - descriptives[i].minimum)/(max_range - min_range)) << ";\n";
         else if(scaler == "MeanStandardDeviation")
-            buffer << output_names[i] << "=" << feature_names[i] << "*" << descriptives[i].standard_deviation <<"+"<< descriptives[i].mean <<";\n";
+            buffer << output_names[i] << "=" << input_names[i] << "*" << descriptives[i].standard_deviation <<"+"<< descriptives[i].mean <<";\n";
         else if(scaler == "StandardDeviation")
-            buffer << output_names[i] << "=" <<  feature_names[i] << "*" << descriptives[i].standard_deviation <<";\n";
+            buffer << output_names[i] << "=" <<  input_names[i] << "*" << descriptives[i].standard_deviation <<";\n";
         else if(scaler == "Logarithm")
-            buffer << output_names[i] << "=" << "exp(" << feature_names[i] << ");\n";
+            buffer << output_names[i] << "=" << "exp(" << input_names[i] << ");\n";
         else
             throw runtime_error("Unknown inputs scaling method.\n");
     }
@@ -186,7 +186,7 @@ void Unscaling::set_scalers(const string& new_scalers)
 
 void Unscaling::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
-                                  const bool&)
+                                  bool)
 {
     TensorMap2 outputs = tensor_map<2>(forward_propagation->outputs);
 
@@ -332,9 +332,9 @@ REGISTER(LayerForwardPropagation, UnscalingForwardPropagation, "Unscaling")
 
 #ifdef OPENNN_CUDA
 
-void Unscaling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
+void Unscaling::forward_propagate(const vector<TensorViewCuda>& inputs,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                       const bool&)
+                                       bool)
 {
     UnscalingForwardPropagationCuda* this_forward_propagation =
         static_cast<UnscalingForwardPropagationCuda*>(forward_propagation.get());

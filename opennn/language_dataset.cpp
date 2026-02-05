@@ -10,7 +10,6 @@
 #include "strings_utilities.h"
 #include "random_utilities.h"
 #include "tensors.h"
-#include "tinyxml2.h"
 
 namespace opennn
 {

@@ -1,22 +1,12 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   N E U R O N S   S E L E C T I O N   C L A S S   H E A D E R
+//   N E U R O N   S E L E C T I O N   C L A S S   H E A D E R
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
 #pragma once
-
-#include "../eigen/unsupported/Eigen/CXX11/Tensor"
-
-#include "tinyxml2.h"
-
-using namespace tinyxml2;
-
-using type = float;
-using namespace std;
-using namespace Eigen;
 
 namespace opennn
 {
@@ -25,14 +15,14 @@ class TrainingStrategy;
 struct TrainingResults;
 struct NeuronsSelectionResults;
 
-class NeuronsSelection
+class NeuronSelection
 {
 public:
 
     enum class StoppingCondition { MaximumTime, SelectionErrorGoal, MaximumEpochs, MaximumSelectionFailures, MaximumNeurons };
 
-    NeuronsSelection(const TrainingStrategy* = nullptr);
-    virtual ~NeuronsSelection() = default;
+    NeuronSelection(const TrainingStrategy* = nullptr);
+    virtual ~NeuronSelection() = default;
 
     TrainingStrategy* get_training_strategy() const;
 
@@ -42,7 +32,7 @@ public:
     const Index& get_minimum_neurons() const;
     const Index& get_trials_number() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     const type& get_selection_error_goal() const;
     const Index& get_maximum_epochs_number() const;
@@ -58,7 +48,7 @@ public:
     void set_minimum_neurons(const Index);
     void set_trials_number(const Index);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     void set_selection_error_goal(const type);
     void set_maximum_epochs_number(const Index);
@@ -145,7 +135,7 @@ struct NeuronsSelectionResults
 
    // Model selection
 
-   NeuronsSelection::StoppingCondition stopping_condition = NeuronsSelection::StoppingCondition::MaximumTime;
+   NeuronSelection::StoppingCondition stopping_condition = NeuronSelection::StoppingCondition::MaximumTime;
 
    string elapsed_time;
 };

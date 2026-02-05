@@ -95,7 +95,7 @@ public:
     
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool&) override
+                           bool) override
     {
         FlattenForwardPropagation<Rank>* forward_propagation =
             static_cast<FlattenForwardPropagation<Rank>*>(layer_forward_propagation.get());
@@ -109,17 +109,17 @@ public:
     // Back-propagation
     
     void back_propagate(const vector<TensorView>&,
-                        const vector<TensorView>& delta_views,
+                        const vector<TensorView>& output_gradient_views,
                         unique_ptr<LayerForwardPropagation>&,
                         unique_ptr<LayerBackPropagation>& layer_back_propagation) const override
     {
         FlattenBackPropagation<Rank>* flatten_back_propagation =
             static_cast<FlattenBackPropagation<Rank>*>(layer_back_propagation.get());
 
-        type* source_ptr = delta_views[0].data;
-        type* dest_ptr = flatten_back_propagation->input_deltas[0].data;
+        type* source_ptr = output_gradient_views[0].data;
+        type* dest_ptr = flatten_back_propagation->input_gradients[0].data;
 
-        const size_t bytes_to_copy = flatten_back_propagation->input_deltas[0].size() * sizeof(type);
+        const size_t bytes_to_copy = flatten_back_propagation->input_gradients[0].size() * sizeof(type);
 
         if (source_ptr && dest_ptr && source_ptr != dest_ptr)
             memcpy(dest_ptr, source_ptr, bytes_to_copy);
@@ -170,9 +170,9 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool&)
+                                bool)
     {
         const Index batch_size = forward_propagation->batch_size;
         const Index outputs_number = get_outputs_number();
@@ -205,18 +205,18 @@ public:
     }
 
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>& deltas,
+    void back_propagate(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>& output_gradients,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation) const
     {
         const Index batch_size = back_propagation->batch_size;
 
-        type* input_deltas = back_propagation->input_deltas[0].data;
+        type* input_gradients = back_propagation->input_gradients[0].data;
 
         const Index outputs_number = get_outputs_number();
 
-        reorganize_deltas_cuda(deltas[0].data, input_deltas, batch_size, outputs_number);
+        reorganize_gradients_cuda(output_gradients[0].data, input_gradients, batch_size, outputs_number);
     }
 
 #endif
@@ -265,16 +265,16 @@ struct FlattenBackPropagation final : LayerBackPropagation
         dimensions full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_memory.resize(1);
-        input_deltas_memory[0].resize(count_elements(full_input_dims));
-        input_deltas.resize(1);
-        input_deltas[0].data = input_deltas_memory[0].data();
-        input_deltas[0].dims = full_input_dims;
+        input_gradients_memory.resize(1);
+        input_gradients_memory[0].resize(count_elements(full_input_dims));
+        input_gradients.resize(1);
+        input_gradients[0].data = input_gradients_memory[0].data();
+        input_gradients[0].dims = full_input_dims;
     }
 
     void print() const override
     {
-        cout << "Flatten Deltas Dimensions:" << endl << input_deltas[0].dims << endl;
+        cout << "Flatten Deltas Dimensions:" << endl << input_gradients[0].dims << endl;
     }
 };
 
@@ -318,8 +318,8 @@ struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
     {
         const Index inputs_number = layer->get_inputs_number();
 
-        input_deltas.resize(1);
-        input_deltas[0].resize({ batch_size, inputs_number, 1, 1 });
+        input_gradients.resize(1);
+        input_gradients[0].resize({ batch_size, inputs_number, 1, 1 });
     }
 };
 

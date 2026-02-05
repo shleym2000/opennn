@@ -9,9 +9,6 @@
 #pragma once
 
 #include "neural_network.h"
-#include "tinyxml2.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
@@ -51,7 +48,7 @@ public:
 
     const type& get_regularization_weight() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     bool has_neural_network() const;
 
@@ -70,7 +67,7 @@ public:
     void set_regularization_method(const string&);
     void set_regularization_weight(const type);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     virtual void set_normalization_coefficient() {}
 
@@ -85,7 +82,7 @@ public:
     void add_regularization(BackPropagation&) const;
     void add_regularization_lm(BackPropagationLM&) const;
 
-    virtual void calculate_output_delta(const Batch&,
+    virtual void calculate_output_gradients(const Batch&,
                                         ForwardPropagation&,
                                         BackPropagation&) const = 0;
 
@@ -95,7 +92,7 @@ public:
 
     void add_regularization_gradient(Tensor1&) const;
 
-    void add_regularization_to_deltas(BackPropagation&) const;
+    void add_regularization_to_gradients(BackPropagation&) const;
 
     void back_propagate(const Batch&,
                         ForwardPropagation&,
@@ -115,7 +112,7 @@ public:
                                     const ForwardPropagation&,
                                     BackPropagationLM&) const {}
 
-    virtual void calculate_output_delta_lm(const Batch&,
+    virtual void calculate_output_gradients_lm(const Batch&,
                                            ForwardPropagation&,
                                            BackPropagationLM&) const {}
 
@@ -159,7 +156,7 @@ public:
     Tensor1 calculate_numerical_gradient();
     Tensor1 calculate_numerical_gradient_lm();
     Tensor2 calculate_numerical_jacobian();
-    Tensor1 calculate_numerical_input_deltas();
+    Tensor1 calculate_numerical_input_gradients();
     Tensor2 calculate_numerical_hessian();
     Tensor2 calculate_inverse_hessian();
 
@@ -172,11 +169,11 @@ public:
 
     cudnnHandle_t get_cudnn_handle();
 
-    virtual void calculate_error_cuda(const BatchCuda&,
+    virtual void calculate_error(const BatchCuda&,
                                       const ForwardPropagationCuda&,
                                       BackPropagationCuda&) const = 0;
 
-    virtual void calculate_output_delta_cuda(const BatchCuda&,
+    virtual void calculate_output_gradients(const BatchCuda&,
                                              ForwardPropagationCuda&,
                                              BackPropagationCuda&) const = 0;
 
@@ -184,7 +181,7 @@ public:
                                               ForwardPropagationCuda&,
                                               BackPropagationCuda&) const;
 
-    void back_propagate_cuda(const BatchCuda&,
+    void back_propagate(const BatchCuda&,
                              ForwardPropagationCuda&,
                              BackPropagationCuda&);
 
@@ -230,14 +227,14 @@ struct BackPropagationLM
 
     void print() const;
 
-    TensorView get_output_deltas_tensor_view() const;
+    TensorView get_output_gradients() const;
 
-    vector<vector<TensorView>> get_layer_delta_views() const;
+    vector<vector<TensorView>> get_layer_gradients() const;
 
     Index samples_number = 0;
 
-    Tensor1 output_deltas;
-    dimensions output_deltas_dimensions;
+    Tensor1 output_gradients;
+    dimensions output_gradient_dimensions;
 
     LossIndex* loss_index = nullptr;
 
@@ -266,9 +263,9 @@ struct BackPropagation
 
     void set(const Index = 0, const LossIndex* = nullptr);
 
-    vector<vector<TensorView>> get_layer_delta_views() const;
+    vector<vector<TensorView>> get_layer_gradients() const;
 
-    TensorView get_output_deltas_tensor_view() const;
+    TensorView get_output_gradients() const;
 
     void print() const;
 
@@ -281,8 +278,8 @@ struct BackPropagation
     Tensor<type,0> error;
     Tensor2 errors;
     Tensor2 errors_weights;
-    Tensor1 output_deltas;
-    dimensions output_deltas_dimensions;
+    Tensor1 output_gradients;
+    dimensions output_gradient_dimensions;
 
     Tensor<type, 0> accuracy;
     Tensor2 predictions;
@@ -307,7 +304,7 @@ struct BackPropagationCuda
 
     vector<vector<TensorViewCuda>> get_layer_delta_views_device() const;
 
-    TensorViewCuda get_output_deltas_tensor_view_device() const;
+    TensorViewCuda get_output_gradients_tensor_view_device() const;
 
     void print() const;
 
@@ -332,7 +329,7 @@ struct BackPropagationCuda
     size_t workspace_size = 0;
     cudnnTensorDescriptor_t output_reduce_tensor_descriptor = nullptr;
 
-    TensorCuda output_deltas;
+    TensorCuda output_gradients;
 
     Tensor<type, 0> accuracy;
     float* predictions = nullptr;

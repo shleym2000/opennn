@@ -33,7 +33,7 @@ bool ModelSelection::has_training_strategy() const
 }
 
 
-NeuronsSelection* ModelSelection::get_neurons_selection() const
+NeuronSelection* ModelSelection::get_neurons_selection() const
 {
     return neurons_selection.get();
 }
@@ -56,7 +56,7 @@ void ModelSelection::set_default()
 
 void ModelSelection::set_neurons_selection(const string& new_neurons_selection)
 {
-    neurons_selection = Registry<NeuronsSelection>::instance().create(new_neurons_selection);
+    neurons_selection = Registry<NeuronSelection>::instance().create(new_neurons_selection);
 
     neurons_selection->set(training_strategy);
 }
@@ -130,7 +130,7 @@ void ModelSelection::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("ModelSelection");
 
-    printer.OpenElement("NeuronsSelection");
+    printer.OpenElement("NeuronSelection");
 
     add_xml_element(printer, "NeuronsSelectionMethod", neurons_selection->get_name());
 
@@ -159,7 +159,7 @@ void ModelSelection::from_XML(const XMLDocument& document)
 
     // Neuron selection
 
-    const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronsSelection");
+    const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronSelection");
     if(!neurons_selection_element) throw runtime_error("Neuron selection element is nullptr.\n");
 
     const string selection_method = read_xml_string(neurons_selection_element, "NeuronsSelectionMethod");

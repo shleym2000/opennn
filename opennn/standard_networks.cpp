@@ -26,8 +26,6 @@
 #include "multihead_attention_layer.h"
 #include "strings_utilities.h"
 
-using namespace std;
-
 namespace opennn
 {
 
@@ -59,8 +57,8 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
     this->compile();
     this->set_parameters_glorot();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
@@ -91,8 +89,8 @@ ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
     this->compile();
     this->set_parameters_random();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
@@ -120,8 +118,8 @@ ForecastingNetwork::ForecastingNetwork(const dimensions& input_dimensions,
     this->compile();
     this->set_parameters_random();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
@@ -218,8 +216,8 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
     this->compile();
     this->set_parameters_random();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
@@ -647,7 +645,7 @@ void Transformer::set(const Index input_sequence_length,
     if (input_sequence_length == 0 || decoder_sequence_length == 0)
         return;
 
-    feature_names.resize(input_sequence_length + decoder_sequence_length);
+    input_names.resize(input_sequence_length + decoder_sequence_length);
 
     // Embedding Layers: vocabulary size, sequence length, embedding dimension
 
