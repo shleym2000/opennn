@@ -386,45 +386,23 @@ void fill_tensor_data(const Tensor2& matrix,
                       const vector<Index>& column_indices,
                       type* __restrict tensor_data)
 {
-    if(row_indices.empty() || column_indices.empty()) return;
-
-    const bool contiguous = is_contiguous(row_indices);
-
     const Index rows_number = row_indices.size();
     const Index columns_number = column_indices.size();
 
+    if(rows_number == 0 || columns_number == 0) return;
+
     const type* __restrict matrix_data = matrix.data();
-    const Index matrix_rows_number = matrix.dimension(0);
-
+    const Index matrix_rows_count = matrix.dimension(0);
     const Index* __restrict row_indices_data = row_indices.data();
-    const Index* __restrict column_indices_data = column_indices.data();
 
-    if(contiguous)
+    #pragma omp parallel for if(columns_number >= 32) schedule(static)
+    for(Index j = 0; j < columns_number; ++j)
     {
-        const Index row_start = row_indices_data[0];
+        const type* __restrict matrix_column = matrix_data + (matrix_rows_count * column_indices[j]);
+        type* __restrict tensor_value = tensor_data + (rows_number * j);
 
-        #pragma omp parallel for schedule(static)
-        for(Index j = 0; j < columns_number; ++j)
-        {
-            const type* __restrict matrix_column = matrix_data + matrix_rows_number * column_indices_data[j];
-
-            type* __restrict tensor_value = tensor_data + rows_number * j;
-
-            copy_n(matrix_column + row_start, rows_number, tensor_value);
-        }
-    }
-    else
-    {
-        #pragma omp parallel for schedule(static)
-        for(Index j = 0; j < columns_number; j++)
-        {
-            const type* __restrict matrix_column = matrix_data + matrix_rows_number * column_indices_data[j];
-
-            type* __restrict tensor_value = tensor_data + rows_number * j;
-
-            for(Index i = 0; i < rows_number; i++)
-                tensor_value[i] = matrix_column[row_indices_data[i]];
-        }
+        for(Index i = 0; i < rows_number; ++i)
+            tensor_value[i] = matrix_column[row_indices_data[i]];
     }
 }
 

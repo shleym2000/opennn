@@ -306,27 +306,36 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
                                            const Index& batch_size,
                                            const bool& shuffle) const
 {
-    if(!shuffle) return split_samples(sample_indices, batch_size);
-
     const Index samples_number = sample_indices.size();
-
     const Index batches_number = (samples_number + batch_size - 1) / batch_size;
 
+    // @todo this shuffle is not good, we should implement local shuffle
+    vector<Index> samples_copy;
+    if(shuffle)
+    {
+        samples_copy = sample_indices;
+        shuffle_vector(samples_copy);
+    }
+
+    const vector<Index>& samples = shuffle ? samples_copy : sample_indices;
+
     vector<vector<Index>> batches(batches_number);
-
-    vector<Index> samples_copy(sample_indices);
-
-    shuffle_vector(samples_copy);
-
-    #pragma omp parallel for
     for(Index i = 0; i < batches_number; i++)
     {
         const Index start_index = i * batch_size;
+        const Index end_index = min(start_index + batch_size, samples_number);
+        batches[i].resize(end_index - start_index);
+    }
 
+    #pragma omp parallel for if(batches_number > 64)
+    for(Index i = 0; i < batches_number; i++)
+    {
+        const Index start_index = i * batch_size;
         const Index end_index = min(start_index + batch_size, samples_number);
 
-        batches[i].assign(samples_copy.begin() + start_index,
-                          samples_copy.begin() + end_index);
+        vector<Index>& batch = batches[i];
+        for(Index j = 0; j < end_index - start_index; j++)
+            batch[j] = samples[start_index + j];
     }
 
     return batches;

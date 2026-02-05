@@ -25,7 +25,7 @@ void initialize_generator()
     }
     else
     {
-        int thread_id = omp_get_thread_num();
+        const int thread_id = omp_get_thread_num();
         generator.seed(static_cast<unsigned int>(global_seed + thread_id * 5489u));
     }
 
