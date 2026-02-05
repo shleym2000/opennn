@@ -15,7 +15,7 @@ namespace opennn
 {
 
 CrossEntropyError3d::CrossEntropyError3d(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "CrossEntropyError3d";
 }
@@ -205,7 +205,7 @@ void CrossEntropyError3d::calculate_output_gradients(const BatchCuda&,
 
 #endif
 
-REGISTER(LossIndex, CrossEntropyError3d, "CrossEntropyError3d");
+REGISTER(Loss, CrossEntropyError3d, "CrossEntropyError3d");
 
 }
 

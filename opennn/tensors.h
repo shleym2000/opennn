@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-inline Index count_elements(const dimensions& dims)
+inline Index count_elements(const shape& dims)
 {
     return accumulate(dims.begin(), dims.end(), 1, multiplies<Index>());
 }
@@ -21,46 +21,51 @@ inline Index count_elements(const dimensions& dims)
 struct TensorView
 {
     type* data = nullptr;
-    dimensions dims;
+    shape shape;
 
     TensorView() noexcept = default;
-    TensorView(type* new_data, dimensions new_dims) noexcept : data(new_data), dims(std::move(new_dims))
-    {}
 
-    Index rank() const { return dims.size(); }
+    TensorView(type* new_data, const ::shape& new_shape) noexcept
+    {
+        data = new_data;
+        shape = new_shape;
+    }
+
+    Index rank() const { return shape.size(); }
 
     Index size() const
     {
-        if (dims.empty()) return 0;
+        if (shape.empty()) return 0;
 
-        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
+        return accumulate(shape.begin(), shape.end(), static_cast<Index>(1), multiplies<Index>());
     }
 
     void print() const
     {
-        if(!data || dims.empty())
+        if(!data || shape.empty())
         {
             cout << "TensorView: Empty or Null" << endl;
             return;
         }
 
         cout << "Dims: (";
-        for(size_t i = 0; i < dims.size(); ++i)
-            cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
+        for(size_t i = 0; i < shape.size(); ++i)
+            cout << shape[i] << (i < shape.size() - 1 ? ", " : "");
 
         cout << ")" << endl;
 
         const Index total_size = size();
-        const Index last_dim_stride = dims.back();
+        const Index last_dim_stride = shape.back();
 
         for(Index i = 0; i < total_size; ++i)
         {
             cout << data[i] << " ";
 
-            if (dims.size() > 1 && (i + 1) % last_dim_stride == 0)
+            if (shape.size() > 1 && (i + 1) % last_dim_stride == 0)
                 cout << endl;
         }
-        if (dims.size() == 1 || total_size % last_dim_stride != 0)
+
+        if (shape.size() == 1 || total_size % last_dim_stride != 0)
             cout << endl;
     }
 };
@@ -239,12 +244,12 @@ void push_back(Tensor<T, 1>& tensor, const T& value)
     tensor = new_tensor;
 }
 
-string dimensions_to_string(const dimensions&, const string& = " ");
-dimensions string_to_dimensions(const string&, const string& = " ");
+string dimensions_to_string(const shape&, const string& = " ");
+shape string_to_dimensions(const string&, const string& = " ");
 
-dimensions prepend(const Index&, const dimensions&);
+shape prepend(const Index&, const shape&);
 
-Index get_size(const dimensions&);
+Index get_size(const shape&);
 
 template <typename T>
 string vector_to_string(const vector<T>& x, const string& separator = " ")
@@ -310,29 +315,29 @@ TensorMap<Tensor<type, rank>, Aligned64> tensor_map(const TensorView& tensor_vie
     if constexpr (rank == 2)
         if (tensor_view.rank() == 4)
             return TensorMap2(tensor_view.data,
-                              tensor_view.dims[0],
-                              tensor_view.size() / tensor_view.dims[0]);
+                              tensor_view.shape[0],
+                              tensor_view.size() / tensor_view.shape[0]);
 
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap1(tensor_view.data, tensor_view.dims[0]);
+        return TensorMap1(tensor_view.data, tensor_view.shape[0]);
     else if constexpr (rank == 2)
         return TensorMap2(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1]);
     else if constexpr (rank == 3)
         return TensorMap3(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1],
-                          tensor_view.dims[2]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2]);
     else if constexpr (rank == 4)
         return TensorMap4(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1],
-                          tensor_view.dims[2],
-                          tensor_view.dims[3]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2],
+                          tensor_view.shape[3]);
     else
         static_assert(rank >= 1 && rank <= 4, "Unsupported tensor rank");
 }
@@ -370,13 +375,13 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 
 
 template<class T, int n>
-Tensor<Index, 1> get_dimensions(const Tensor<T, n>& tensor)
+Tensor<Index, 1> get_shape(const Tensor<T, n>& tensor)
 {
-    Tensor<Index, 1> dimensions(n);
+    Tensor<Index, 1> shape(n);
 
-    memcpy(dimensions.data(), tensor.dimensions().data(), size_t(n)*sizeof(Index));
+    memcpy(shape.data(), tensor.dimensions().data(), size_t(n)*sizeof(Index));
 
-    return dimensions;
+    return shape;
 }
 
 
@@ -440,7 +445,7 @@ struct TensorViewCuda
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
-    void set_descriptor(const dimensions& dims)
+    void set_descriptor(const shape& dims)
     {
         if (descriptor_handle == nullptr)
         {
@@ -487,7 +492,7 @@ struct TensorCuda
     shared_ptr<cudnnTensorStruct> descriptor_handle = nullptr;
 
     TensorCuda() = default;
-    explicit TensorCuda(const dimensions& dims) { resize(dims); }
+    explicit TensorCuda(const shape& dims) { resize(dims); }
 
     ~TensorCuda() { if (data) cudaFree(data); }
 
@@ -518,7 +523,7 @@ struct TensorCuda
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
-    void resize(const dimensions& dims)
+    void resize(const shape& dims)
     {
         set_descriptor(dims);
         const size_t total_elements = size();
@@ -528,7 +533,7 @@ struct TensorCuda
         CHECK_CUDA(cudaMemset(data, 0, bytes));
     }
 
-    void set_descriptor(const dimensions& dims)
+    void set_descriptor(const shape& dims)
     {
         if (descriptor_handle == nullptr)
         {

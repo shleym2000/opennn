@@ -18,19 +18,19 @@ class Recurrent final : public Layer
 
 public:
 
-    Recurrent(const dimensions & = {0, 0}, const dimensions& = {0});
+    Recurrent(const shape & = {0, 0}, const shape& = {0});
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
     string get_activation_function() const;
 
-    void set(const dimensions& = {}, const dimensions& = {});
+    void set(const shape& = {}, const shape& = {});
 
-    void set_input_dimensions(const dimensions&) override;
-    void set_output_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
+    void set_output_shape(const shape&) override;
 
     void set_activation_function(const string&);
 
@@ -52,7 +52,7 @@ public:
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 
     TensorView biases;
     TensorView input_weights;

@@ -238,15 +238,15 @@ void Layer::add_gradients(const vector<TensorView> &output_gradient_views) const
 
 Index Layer::get_inputs_number() const
 {
-    const dimensions input_dimensions = get_input_dimensions();
+    const shape input_shape = get_input_shape();
 
-    return count_elements(input_dimensions);
+    return count_elements(input_shape);
 }
 
 
 Index Layer::get_outputs_number() const
 {
-    const dimensions output_dimensions = get_output_dimensions();
+    const shape output_dimensions = get_output_shape();
 
     return accumulate(output_dimensions.begin(), output_dimensions.end(), 1, multiplies<Index>());
 }
@@ -260,13 +260,13 @@ void Layer::forward_propagate(const vector<TensorView>&,
 
 
 
-void Layer::set_input_dimensions(const dimensions&)
+void Layer::set_input_shape(const shape&)
 {
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }
 
 
-void Layer::set_output_dimensions(const dimensions&)
+void Layer::set_output_shape(const shape&)
 {
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }

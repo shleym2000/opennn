@@ -18,10 +18,10 @@ class Convolutional final : public Layer
 
 public:
 
-    Convolutional(const dimensions& = {3, 3, 1},                    // Input dimensions {height,width,channels}
-                  const dimensions& = {3, 3, 1, 1},                 // Kernel dimensions {kernel_height,kernel_width,channels,kernels_number}
+    Convolutional(const shape& = {3, 3, 1},                    // Input shape {height,width,channels}
+                  const shape& = {3, 3, 1, 1},                 // Kernel shape {kernel_height,kernel_width,channels,kernels_number}
                   const string& = "Linear",
-                  const dimensions& = { 1, 1 },                     // Stride dimensions {row_stride,column_stride}
+                  const shape& = { 1, 1 },                     // Stride shape {row_stride,column_stride}
                   const string& = "Valid",                          // Convolution type (Valid || Same)
                   bool = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
@@ -32,8 +32,8 @@ public:
 
     const string& get_activation_function() const;
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     pair<Index, Index> get_padding() const;
 
@@ -71,10 +71,10 @@ public:
 
     // Set
 
-    void set(const dimensions& = {0, 0, 0},
-             const dimensions& = {3, 3, 1, 1},
+    void set(const shape& = {0, 0, 0},
+             const shape& = {3, 3, 1, 1},
              const string& = "Linear",
-             const dimensions& = {1, 1},
+             const shape& = {1, 1},
              const string& = "Valid",
              bool = false,
              const string& = "convolutional_layer");
@@ -89,7 +89,7 @@ public:
 
     void set_column_stride(const Index);
 
-    void set_input_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
 
     // Forward propagation
 
@@ -157,7 +157,7 @@ private:
     Index row_stride = 1;
     Index column_stride = 1;
 
-    dimensions input_dimensions;
+    shape input_shape;
 
     string convolution_type = "Valid";
 

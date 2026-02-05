@@ -24,13 +24,13 @@ public:
 
     const Index& get_neurons_increment() const;
 
-    const Index& get_maximum_selection_failures() const;
+    const Index& get_maximum_validation_failures() const;
 
     void set_default();
 
     void set_neurons_increment(const Index);
 
-    void set_maximum_selection_failures(const Index);
+    void set_maximum_validation_failures(const Index);
 
     NeuronsSelectionResults perform_neurons_selection() override;
 
@@ -47,7 +47,7 @@ private:
 
    Index neurons_increment = 0;
 
-   Index maximum_selection_failures = 0;
+   Index maximum_validation_failures = 0;
 
 };
 

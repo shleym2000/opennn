@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-Bounding::Bounding(const dimensions& output_dimensions, const string& new_name) : Layer()
+Bounding::Bounding(const shape& output_dimensions, const string& new_name) : Layer()
 {
     set(output_dimensions, new_name);
 }
@@ -25,7 +25,7 @@ const Bounding::BoundingMethod& Bounding::get_bounding_method() const
 }
 
 
-dimensions Bounding::get_input_dimensions() const
+shape Bounding::get_input_shape() const
 {
     return { lower_bounds.dimension(0) };
 }
@@ -43,7 +43,7 @@ const Tensor1& Bounding::get_lower_bounds() const
 }
 
 
-dimensions Bounding::get_output_dimensions() const
+shape Bounding::get_output_shape() const
 {
     return { lower_bounds.dimension(0) };
 }
@@ -61,9 +61,9 @@ const Tensor1& Bounding::get_upper_bounds() const
 }
 
 
-void Bounding::set(const dimensions& new_output_dimensions, const string& new_label)
+void Bounding::set(const shape& new_output_shape, const string& new_label)
 {
-    set_output_dimensions(new_output_dimensions);
+    set_output_shape(new_output_shape);
 
     label = new_label;
 
@@ -92,16 +92,16 @@ void Bounding::set_bounding_method(const string& new_method_string)
 }
 
 
-void Bounding::set_input_dimensions(const dimensions& new_input_dimensions)
+void Bounding::set_input_shape(const shape& new_input_shape)
 {
-    lower_bounds.resize(new_input_dimensions[0]);
-    upper_bounds.resize(new_input_dimensions[0]);
+    lower_bounds.resize(new_input_shape[0]);
+    upper_bounds.resize(new_input_shape[0]);
 }
 
 
 void Bounding::set_lower_bound(const Index index, const type& new_lower_bound)
 {
-    const dimensions output_dimensions = get_output_dimensions();
+    const shape output_dimensions = get_output_shape();
 
     if(lower_bounds.size() != output_dimensions[0])
     {
@@ -119,10 +119,10 @@ void Bounding::set_lower_bounds(const Tensor1& new_lower_bounds)
 }
 
 
-void Bounding::set_output_dimensions(const dimensions& new_output_dimensions)
+void Bounding::set_output_shape(const shape& new_output_shape)
 {
-    lower_bounds.resize(new_output_dimensions[0]);
-    upper_bounds.resize(new_output_dimensions[0]);
+    lower_bounds.resize(new_output_shape[0]);
+    upper_bounds.resize(new_output_shape[0]);
 
     lower_bounds.setConstant(-numeric_limits<type>::max());
     upper_bounds.setConstant(numeric_limits<type>::max());
@@ -137,7 +137,7 @@ void Bounding::set_upper_bounds(const Tensor1& new_upper_bounds)
 
 void Bounding::set_upper_bound(const Index index, const type& new_upper_bound)
 {
-    const dimensions output_dimensions = get_output_dimensions();
+    const shape output_dimensions = get_output_shape();
 
     if(upper_bounds.size() != output_dimensions[0])
     {
@@ -207,7 +207,7 @@ string Bounding::get_expression(const vector<string>& new_feature_names, const v
 
     buffer.precision(10);
 
-    const dimensions output_dimensions = get_output_dimensions();
+    const shape output_dimensions = get_output_shape();
 
     for(Index i = 0; i < output_dimensions[0]; i++)
         buffer << output_names[i] << " = max(" << lower_bounds[i] << ", " << input_names[i] << ")\n"
@@ -229,7 +229,7 @@ void Bounding::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Bounding");
 
-    const dimensions output_dimensions = get_input_dimensions();
+    const shape output_dimensions = get_input_shape();
 
     add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
 
@@ -290,16 +290,16 @@ BoundingForwardPropagation::BoundingForwardPropagation(const Index new_batch_siz
 
 void BoundingForwardPropagation::initialize()
 {
-    const Index neurons_number = static_cast<Bounding*>(layer)->get_output_dimensions()[0];
+    const Index neurons_number = static_cast<Bounding*>(layer)->get_output_shape()[0];
 
-    outputs.dims = {batch_size, neurons_number};
+    outputs.shape = {batch_size, neurons_number};
 }
 
 
 void BoundingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs.dims << endl;
+         << outputs.shape << endl;
 }
 
 REGISTER(Layer, Bounding, "Bounding")

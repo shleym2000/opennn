@@ -18,12 +18,12 @@ class MultiHeadAttention final : public Layer
 
 public:
 
-    MultiHeadAttention(const dimensions& = dimensions({0,0}),
+    MultiHeadAttention(const shape& = shape({0,0}),
                        const Index& = 0,
                        const string& = string());
 
-    MultiHeadAttention(const dimensions&,
-                       const dimensions&,
+    MultiHeadAttention(const shape&,
+                       const shape&,
                        const Index& = 0,
                        const string& = string());
 
@@ -35,9 +35,9 @@ public:
 
     type get_scaling_factor() const;
 
-    dimensions get_input_dimensions() const override;
+    shape get_input_shape() const override;
 
-    dimensions get_output_dimensions() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 

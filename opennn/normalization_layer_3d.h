@@ -18,14 +18,14 @@ class Normalization3d final : public Layer
 
 public:
 
-    Normalization3d(const dimensions& = dimensions({0,0}),
+    Normalization3d(const shape& = shape({0,0}),
                     const string& = "normalization_layer_3d");
 
     Index get_sequence_length() const;
     Index get_embedding_dimension() const;
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 

@@ -23,7 +23,7 @@ public:
     const Index& get_minimum_inputs_number() const override;
     const Index& get_maximum_inputs_number() const override;
 
-    const Index& get_maximum_selection_failures() const;
+    const Index& get_maximum_validation_failures() const;
 
     void set_default();
 
@@ -33,7 +33,7 @@ public:
     void set_maximum_correlation(const type);
     void set_minimum_correlation(const type);
 
-    void set_maximum_selection_failures(const Index);
+    void set_maximum_validation_failures(const Index);
 
     InputsSelectionResults perform_input_selection() override;
 
@@ -54,7 +54,7 @@ private:
     type minimum_correlation = 0;
     type maximum_correlation = 0;
 
-    Index maximum_selection_failures = 100;
+    Index maximum_validation_failures = 100;
 };
 
 }

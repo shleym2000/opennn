@@ -18,7 +18,7 @@ class Embedding final : public Layer
 
 public:
 
-    Embedding(const dimensions& = {0, 0},
+    Embedding(const shape& = {0, 0},
               const Index& = 0,
               const string& = "embedding_layer");
 
@@ -26,8 +26,8 @@ public:
     Index get_sequence_length() const;
     Index get_embedding_dimension() const;
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 

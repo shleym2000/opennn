@@ -18,7 +18,7 @@ class ImageDataset : public Dataset
 
 public:
 
-    ImageDataset(const Index = 0, const dimensions& = {0, 0, 0}, const dimensions& = {0});
+    ImageDataset(const Index = 0, const shape& = {0, 0, 0}, const shape& = {0});
 
     ImageDataset(const filesystem::path&);
 
@@ -55,10 +55,10 @@ public:
     void set_random_vertical_translation_minimum(const type);
     void set_random_vertical_translation_maximum(const type);
 
-    vector<Descriptives> scale_variables(const string&) override;
-    void unscale_variables(const string&);
+    vector<Descriptives> scale_features(const string&) override;
+    void unscale_features(const string&);
 
-    void read_bmp(const dimensions& new_input_dimensions = { 0, 0, 0 });
+    void read_bmp(const shape& new_input_shape = { 0, 0, 0 });
 
     void from_XML(const XMLDocument&) override;
     void to_XML(XMLPrinter&) const override;

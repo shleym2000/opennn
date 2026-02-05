@@ -26,13 +26,13 @@ struct BackPropagationCuda;
 #endif
 
 
-class LossIndex
+class Loss
 {
 
 public:
 
-    LossIndex(const NeuralNetwork* = nullptr, const Dataset* = nullptr);
-    virtual ~LossIndex() = default;
+    Loss(const NeuralNetwork* = nullptr, const Dataset* = nullptr);
+    virtual ~Loss() = default;
 
     enum class RegularizationMethod{L1, L2, ElasticNet, NoRegularization};
 
@@ -220,10 +220,10 @@ protected:
 
 struct BackPropagationLM
 {
-    BackPropagationLM(const Index = 0, LossIndex* = nullptr);
+    BackPropagationLM(const Index = 0, Loss* = nullptr);
     virtual ~BackPropagationLM() = default;
 
-    void set(const Index = 0, LossIndex* = nullptr);
+    void set(const Index = 0, Loss* = nullptr);
 
     void print() const;
 
@@ -234,9 +234,9 @@ struct BackPropagationLM
     Index samples_number = 0;
 
     Tensor1 output_gradients;
-    dimensions output_gradient_dimensions;
+    shape output_gradient_dimensions;
 
-    LossIndex* loss_index = nullptr;
+    Loss* loss_index = nullptr;
 
     Tensor<type, 0> error;
     type regularization = type(0);
@@ -258,10 +258,10 @@ struct BackPropagationLM
 
 struct BackPropagation
 {
-    BackPropagation(const Index = 0, const LossIndex* = nullptr);
+    BackPropagation(const Index = 0, const Loss* = nullptr);
     virtual ~BackPropagation() = default;
 
-    void set(const Index = 0, const LossIndex* = nullptr);
+    void set(const Index = 0, const Loss* = nullptr);
 
     vector<vector<TensorView>> get_layer_gradients() const;
 
@@ -271,7 +271,7 @@ struct BackPropagation
 
     Index samples_number = 0;
 
-    LossIndex* loss_index = nullptr;
+    Loss* loss_index = nullptr;
 
     NeuralNetworkBackPropagation neural_network;
 
@@ -279,7 +279,7 @@ struct BackPropagation
     Tensor2 errors;
     Tensor2 errors_weights;
     Tensor1 output_gradients;
-    dimensions output_gradient_dimensions;
+    shape output_gradient_dimensions;
 
     Tensor<type, 0> accuracy;
     Tensor2 predictions;
@@ -296,11 +296,11 @@ struct BackPropagation
 
 struct BackPropagationCuda
 {
-    BackPropagationCuda(const Index = 0, LossIndex* = nullptr);
+    BackPropagationCuda(const Index = 0, Loss* = nullptr);
 
     ~BackPropagationCuda() { free(); }
 
-    void set(const Index = 0, LossIndex* = nullptr);
+    void set(const Index = 0, Loss* = nullptr);
 
     vector<vector<TensorViewCuda>> get_layer_delta_views_device() const;
 
@@ -312,7 +312,7 @@ struct BackPropagationCuda
 
     Index samples_number = 0;
 
-    LossIndex* loss_index = nullptr;
+    Loss* loss_index = nullptr;
 
     NeuralNetworkBackPropagationCuda neural_network;
 

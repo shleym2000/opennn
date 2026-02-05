@@ -40,7 +40,7 @@ public:
 
     bool get_display() const;
 
-    const type& get_selection_error_goal() const;
+    const type& get_validation_error_goal() const;
     const Index& get_maximum_iterations_number() const;
     const type& get_maximum_time() const;
 
@@ -53,8 +53,8 @@ public:
 
     void set_display(bool);
 
-    void set_selection_error_goal(const type);
-    void set_maximum_epochs_number(const Index);
+    void set_validation_error_goal(const type);
+    void set_maximum_epochs(const Index);
     void set_maximum_time(const type);
 
     string write_stopping_condition(const TrainingResults&) const;
@@ -88,9 +88,9 @@ protected:
    
     // Stopping criteria
 
-    type selection_error_goal;
+    type validation_error_goal;
 
-    Index maximum_epochs_number;
+    Index maximum_epochs;
 
     type maximum_time;
 
@@ -120,11 +120,11 @@ struct InputsSelectionResults
 
     Tensor1 training_error_history;
 
-    Tensor1 selection_error_history;
+    Tensor1 validation_error_history;
 
-    // Mean Selection Error of different neural networks
+    // Mean Validation Error of different neural networks
 
-    Tensor1  mean_selection_error_history;
+    Tensor1  mean_validation_error_history;
 
     // Mean Training Error of different neural networks
 
@@ -132,7 +132,7 @@ struct InputsSelectionResults
 
     type optimum_training_error = numeric_limits<type>::max();
 
-    type optimum_selection_error = numeric_limits<type>::max();
+    type optimum_validation_error = numeric_limits<type>::max();
 
     vector<string> optimal_input_raw_variable_names;
 

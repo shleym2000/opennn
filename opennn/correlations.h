@@ -17,7 +17,7 @@ struct Correlation
 {
     enum class Method{Pearson, Spearman};
 
-    enum class Form{Linear, Logistic, Logarithmic, Exponential, Power};
+    enum class Form{Linear, Sigmoid, Logarithmic, Exponential, Power};
 
     Correlation() {}
 

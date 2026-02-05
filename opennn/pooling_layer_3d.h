@@ -20,16 +20,16 @@ public:
 
     enum class PoolingMethod{MaxPooling, AveragePooling};
 
-    Pooling3d(const dimensions& = {0, 0}, // Input dimensions {sequence_length, features}
+    Pooling3d(const shape& = {0, 0}, // Input shape {sequence_length, features}
               const PoolingMethod& = PoolingMethod::MaxPooling,
               const string& = "sequence_pooling_layer");
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
     PoolingMethod get_pooling_method() const;
     string write_pooling_method() const;
 
-    void set(const dimensions&, const PoolingMethod&, const string&);
+    void set(const shape&, const PoolingMethod&, const string&);
     void set_pooling_method(const PoolingMethod&);
     void set_pooling_method(const string&);
 
@@ -48,7 +48,7 @@ public:
     void print() const override;
 
 private:
-    dimensions input_dimensions;
+    shape input_shape;
     PoolingMethod pooling_method;
 };
 

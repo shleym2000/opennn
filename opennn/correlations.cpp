@@ -540,7 +540,7 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
         || is_constant(y_filtered))
     {
         correlation.r = type(NAN);
-        correlation.form = Correlation::Form::Logistic;
+        correlation.form = Correlation::Form::Sigmoid;
         return correlation;
     }
     const Tensor2 data = assemble_vector_vector(x_filtered, y_filtered);
@@ -551,10 +551,10 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
     dataset.set_raw_variable_scalers("MinimumMaximum");
 
     NeuralNetwork neural_network;
-    dimensions dim1 = { 1 };
-    dimensions dim2 = { 1 };
+    shape dim1 = { 1 };
+    shape dim2 = { 1 };
     neural_network.add_layer(make_unique<Scaling<2>>(dim1));
-    neural_network.add_layer(make_unique<Dense<2>>(dim1, dim2, "Logistic"));
+    neural_network.add_layer(make_unique<Dense<2>>(dim1, dim2, "Sigmoid"));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
     mean_squared_error.set_regularization_method("None");
@@ -563,11 +563,11 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
     levenberg_marquardt_algorithm.set_display(false);
     levenberg_marquardt_algorithm.train();
 
-    const Tensor2 inputs = dataset.get_data_variables("Input");
-    const Tensor2 targets = dataset.get_data_variables("Target");
+    const Tensor2 inputs = dataset.get_feature_data("Input");
+    const Tensor2 targets = dataset.get_feature_data("Target");
     const Tensor2 outputs = neural_network.calculate_outputs<2,2>(inputs);
 
-    // Logistic correlation
+    // Sigmoid correlation
     const array<Index, 1> vector{{x_filtered.size()}};
 
     correlation.r = linear_correlation(device, outputs.reshape(vector), targets.reshape(vector)).r;
@@ -580,7 +580,7 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
 
     correlation.upper_confidence = z_correlation_to_r_correlation(confidence_interval_z(1));
 
-    correlation.form = Correlation::Form::Logistic;
+    correlation.form = Correlation::Form::Sigmoid;
 
     const Tensor1 coefficients = neural_network.get_parameters();
 
@@ -614,7 +614,7 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
     {
         correlation.r = type(NAN);
 
-        correlation.form = Correlation::Form::Logistic;
+        correlation.form = Correlation::Form::Sigmoid;
 
         return correlation;
     }
@@ -629,10 +629,10 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
     dataset.set_raw_variable_scalers("MinimumMaximum");
 
     NeuralNetwork neural_network;
-    dimensions dim1 = { 1 };
-    dimensions dim2 = { 1 };
+    shape dim1 = { 1 };
+    shape dim2 = { 1 };
     neural_network.add_layer(make_unique<Scaling<2>>(dim1));
-    neural_network.add_layer(make_unique<Dense<2>>(dim1, dim2, "Logistic"));
+    neural_network.add_layer(make_unique<Dense<2>>(dim1, dim2, "Sigmoid"));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
     mean_squared_error.set_regularization_method("None");
@@ -641,11 +641,11 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
     levenberg_marquardt_algorithm.set_display(false);
     levenberg_marquardt_algorithm.train();
 
-    const Tensor2 inputs = dataset.get_data_variables("Input");
-    const Tensor2 targets = dataset.get_data_variables("Target");
+    const Tensor2 inputs = dataset.get_feature_data("Input");
+    const Tensor2 targets = dataset.get_feature_data("Target");
     const Tensor2 outputs = neural_network.calculate_outputs<2,2>(inputs);
 
-    // Logistic correlation
+    // Sigmoid correlation
 
     const array<Index, 1> vector{{x_filtered.size()}};
 
@@ -659,7 +659,7 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
 
     correlation.upper_confidence = z_correlation_to_r_correlation(confidence_interval_z(1));
 
-    correlation.form = Correlation::Form::Logistic;
+    correlation.form = Correlation::Form::Sigmoid;
 
     const Tensor1& coefficients = neural_network.get_parameters();
 
@@ -683,7 +683,7 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
                                                const Tensor2& y)
 {
     Correlation correlation;
-    correlation.form = Correlation::Form::Logistic;
+    correlation.form = Correlation::Form::Sigmoid;
 
     const pair<Tensor1, Tensor<type,2>> filtered_elements = opennn::filter_missing_values_vector_matrix(x, y);
 
@@ -724,13 +724,13 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
     // Dataset.print();
 
     dataset.set_sample_roles("Training");
-    dataset.set_dimensions("Input", {dataset.get_variables_number("Input")});
-    dataset.set_dimensions("Target", {dataset.get_variables_number("Target")});
+    dataset.set_shape("Input", {dataset.get_features_number("Input")});
+    dataset.set_shape("Target", {dataset.get_features_number("Target")});
 
-    const Index input_variables_number = dataset.get_variables_number("Input");
-    const Index target_variables_number = dataset.get_variables_number("Target");
+    const Index input_features_number = dataset.get_features_number("Input");
+    const Index target_features_number = dataset.get_features_number("Target");
 
-    ClassificationNetwork neural_network({ input_variables_number }, {1}, {target_variables_number});
+    ClassificationNetwork neural_network({ input_features_number }, {1}, {target_features_number});
 
     Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
@@ -747,10 +747,10 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
     quasi_newton_method.set_display_period(1000);
     quasi_newton_method.train();
 
-    // Logistic correlation
+    // Sigmoid correlation
 
-    const Tensor2 inputs = dataset.get_data_variables("Input");
-    const Tensor2 targets = dataset.get_data_variables("Target");
+    const Tensor2 inputs = dataset.get_feature_data("Input");
+    const Tensor2 targets = dataset.get_feature_data("Target");
 
     const Tensor2 outputs = neural_network.calculate_outputs<2,2>(inputs);
 
@@ -783,7 +783,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
                                                const Tensor2& y)
 {
     Correlation correlation;
-    correlation.form = Correlation::Form::Logistic;
+    correlation.form = Correlation::Form::Sigmoid;
 
     // Scrub missing values
 
@@ -837,10 +837,10 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     Dataset.set_sample_roles("Training");
 
-    const Index input_variables_number = Dataset.get_variables_number("Input");
-    const Index target_variables_number = Dataset.get_variables_number("Target");
+    const Index input_features_number = Dataset.get_features_number("Input");
+    const Index target_features_number = Dataset.get_features_number("Target");
 
-    ClassificationNetwork neural_network({input_variables_number }, {}, {target_variables_number});
+    ClassificationNetwork neural_network({input_features_number }, {}, {target_features_number});
 
     Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
@@ -854,15 +854,15 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
     mean_squared_error.set_regularization_method("None");
 
     QuasiNewtonMethod quasi_newton_method(&mean_squared_error);
-    quasi_newton_method.set_maximum_epochs_number(500);
+    quasi_newton_method.set_maximum_epochs(500);
     quasi_newton_method.set_display(false);
     quasi_newton_method.train();
 
-    // Logistic correlation
+    // Sigmoid correlation
 
-    const Tensor2 inputs = Dataset.get_data_variables("Input");
+    const Tensor2 inputs = Dataset.get_feature_data("Input");
 
-    const Tensor2 targets = Dataset.get_data_variables("Target");
+    const Tensor2 targets = Dataset.get_feature_data("Target");
 
     const Tensor2 outputs = neural_network.calculate_outputs<2,2>(inputs);
 
@@ -878,7 +878,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     correlation.upper_confidence = z_correlation_to_r_correlation(confidence_interval_z(1));
 
-    correlation.form = Correlation::Form::Logistic;
+    correlation.form = Correlation::Form::Sigmoid;
 
     return correlation;
 }
@@ -928,7 +928,7 @@ string Correlation::write_type() const
     switch(form)
     {
     case Form::Linear: return "linear";
-    case Form::Logistic: return "logistic";
+    case Form::Sigmoid: return "logistic";
     case Form::Logarithmic: return "logarithmic";
     case Form::Exponential: return "exponential";
     case Form::Power: return "power";

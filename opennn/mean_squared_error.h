@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-class MeanSquaredError final : public LossIndex
+class MeanSquaredError final : public Loss
 {
 
 public:

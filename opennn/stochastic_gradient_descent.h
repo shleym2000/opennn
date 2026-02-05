@@ -23,12 +23,12 @@ struct SGDOptimizationDataCuda;
 #endif
 
 
-class StochasticGradientDescent final : public OptimizationAlgorithm
+class StochasticGradientDescent final : public Optimizer
 {
 
 public:
 
-    StochasticGradientDescent(const LossIndex* = nullptr);
+    StochasticGradientDescent(const Loss* = nullptr);
 
     const type& get_initial_learning_rate() const;
     const type& get_initial_decay() const;
@@ -48,7 +48,7 @@ public:
     void set_momentum(const type);
     void set_nesterov(bool);
 
-    void set_maximum_epochs_number(const Index);
+    void set_maximum_epochs(const Index);
 
     void set_loss_goal(const type);
     void set_maximum_time(const type);
@@ -77,7 +77,7 @@ private:
 
     type training_loss_goal = type(0);
 
-    Index maximum_selection_failures = numeric_limits<Index>::max();
+    Index maximum_validation_failures = numeric_limits<Index>::max();
 
 #ifdef OPENNN_CUDA
 
@@ -92,7 +92,7 @@ public:
 };
 
 
-struct StochasticGradientDescentData final : public OptimizationAlgorithmData
+struct StochasticGradientDescentData final : public OptimizerData
 {
     StochasticGradientDescentData(StochasticGradientDescent* = nullptr);
 
@@ -109,7 +109,7 @@ struct StochasticGradientDescentData final : public OptimizationAlgorithmData
 
 #ifdef OPENNN_CUDA
 
-struct SGDOptimizationDataCuda final : public OptimizationAlgorithmData
+struct SGDOptimizationDataCuda final : public OptimizerData
 {
     SGDOptimizationDataCuda(StochasticGradientDescent* = nullptr);
 

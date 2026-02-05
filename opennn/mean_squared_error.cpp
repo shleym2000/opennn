@@ -16,7 +16,7 @@ namespace opennn
 {
 
 MeanSquaredError::MeanSquaredError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "MeanSquaredError";
 }
@@ -233,7 +233,7 @@ void MeanSquaredError::calculate_output_gradients(const BatchCuda& batch_cuda,
 
 #endif
 
-REGISTER(LossIndex, MeanSquaredError, "MeanSquaredError");
+REGISTER(Loss, MeanSquaredError, "MeanSquaredError");
 
 }
 

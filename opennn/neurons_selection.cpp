@@ -57,15 +57,15 @@ bool NeuronSelection::get_display() const
 }
 
 
-const type& NeuronSelection::get_selection_error_goal() const
+const type& NeuronSelection::get_validation_error_goal() const
 {
-    return selection_error_goal;
+    return validation_error_goal;
 }
 
 
 const Index& NeuronSelection::get_maximum_epochs_number() const
 {
-    return maximum_epochs_number;
+    return maximum_epochs;
 }
 
 
@@ -102,8 +102,8 @@ void NeuronSelection::set_default()
     trials_number = 1;
     display = true;
 
-    selection_error_goal = type(0);
-    maximum_epochs_number = 1000;
+    validation_error_goal = type(0);
+    maximum_epochs = 1000;
     maximum_time = type(3600);
 }
 
@@ -132,15 +132,15 @@ void NeuronSelection::set_display(bool new_display)
 }
 
 
-void NeuronSelection::set_selection_error_goal(const type new_selection_error_goal)
+void NeuronSelection::set_validation_error_goal(const type new_validation_error_goal)
 {
-    selection_error_goal = new_selection_error_goal;
+    validation_error_goal = new_validation_error_goal;
 }
 
 
-void NeuronSelection::set_maximum_epochs_number(const Index new_maximum_epochs_number)
+void NeuronSelection::set_maximum_epochs(const Index new_maximum_epochs)
 {
-    maximum_epochs_number = new_maximum_epochs_number;
+    maximum_epochs = new_maximum_epochs;
 }
 
 
@@ -158,7 +158,7 @@ string NeuronSelection::write_stopping_condition(const TrainingResults& results)
 
 void NeuronSelection::delete_selection_history()
 {
-    selection_error_history.resize(0);
+    validation_error_history.resize(0);
 }
 
 
@@ -177,7 +177,7 @@ void NeuronSelection::check() const
 
     // Loss index
 
-    const LossIndex* loss_index = training_strategy->get_loss_index();
+    const Loss* loss_index = training_strategy->get_loss_index();
 
     if(!loss_index)
         throw runtime_error("Pointer to loss index is nullptr.\n");
@@ -199,9 +199,9 @@ void NeuronSelection::check() const
     if(!dataset)
         throw runtime_error("Pointer to dataset is nullptr.\n");
 
-    const Index selection_samples_number = dataset->get_samples_number("Selection");
+    const Index validation_samples_number = dataset->get_samples_number("Validation");
 
-    if(selection_samples_number == 0)
+    if(validation_samples_number == 0)
         throw runtime_error("Number of selection samples is zero.\n");
 }
 
@@ -223,19 +223,19 @@ string NeuronSelection::write_time(const type time) const
 }
 
 
-NeuronsSelectionResults::NeuronsSelectionResults(const Index maximum_epochs_number)
+NeuronsSelectionResults::NeuronsSelectionResults(const Index maximum_epochs)
 {
-    neurons_number_history.resize(maximum_epochs_number);
+    neurons_number_history.resize(maximum_epochs);
     neurons_number_history.setZero();
 
-    training_error_history.resize(maximum_epochs_number);
+    training_error_history.resize(maximum_epochs);
     training_error_history.setConstant(type(-1));
 
-    selection_error_history.resize(maximum_epochs_number);
-    selection_error_history.setConstant(type(-1));
+    validation_error_history.resize(maximum_epochs);
+    validation_error_history.setConstant(type(-1));
 
     optimum_training_error = numeric_limits<type>::max();
-    optimum_selection_error = numeric_limits<type>::max();
+    optimum_validation_error = numeric_limits<type>::max();
 }
 
 
@@ -245,11 +245,11 @@ void NeuronsSelectionResults::resize_history(const Index new_size)
 
     const Tensor<Index, 1> old_neurons_number_history(neurons_number_history);
     const Tensor1 old_training_error_history(training_error_history);
-    const Tensor1 old_selection_error_history(selection_error_history);
+    const Tensor1 old_validation_error_history(validation_error_history);
 
     neurons_number_history.resize(new_size);
     training_error_history.resize(new_size);
-    selection_error_history.resize(new_size);
+    validation_error_history.resize(new_size);
 
     const Index copy_size = min(old_size, new_size);
 
@@ -257,7 +257,7 @@ void NeuronsSelectionResults::resize_history(const Index new_size)
     {
         neurons_number_history(i) = old_neurons_number_history(i);
         training_error_history(i) = old_training_error_history(i);
-        selection_error_history(i) = old_selection_error_history(i);
+        validation_error_history(i) = old_validation_error_history(i);
     }
 }
 
@@ -290,10 +290,10 @@ string NeuronsSelectionResults::write_stopping_condition() const
 void NeuronsSelectionResults::print() const
 {
     cout << endl
-         << "Neuron Selection Results" << endl
+         << "Neuron Validation Results" << endl
          << "Optimal neurons number: " << optimal_neurons_number << endl
          << "Optimum training error: " << optimum_training_error << endl
-         << "Optimum selection error: " << optimum_selection_error << endl;
+         << "Optimum selection error: " << optimum_validation_error << endl;
 }
 
 }

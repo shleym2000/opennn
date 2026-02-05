@@ -15,7 +15,7 @@ namespace opennn
 {
 
 CrossEntropyError2d::CrossEntropyError2d(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "CrossEntropyError2d";
 }
@@ -364,7 +364,7 @@ void CrossEntropyError2d::calculate_multiple_output_gradients(const BatchCuda& b
 
 #endif
 
-REGISTER(LossIndex, CrossEntropyError2d, "CrossEntropyError2d");
+REGISTER(Loss, CrossEntropyError2d, "CrossEntropyError2d");
 
 }
 

@@ -29,20 +29,20 @@ struct DenseForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
-        const dimensions output_dimensions = dense_layer->get_output_dimensions();
+        const shape output_dimensions = dense_layer->get_output_shape();
 
-        dimensions full_output_dims = {batch_size};
+        shape full_output_dims = {batch_size};
         full_output_dims.insert(full_output_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
-        outputs.dims = full_output_dims;
-        activation_derivatives.dims = full_output_dims;
+        outputs.shape = full_output_dims;
+        activation_derivatives.shape = full_output_dims;
 
         if (dense_layer->get_batch_normalization())
         {
             const Index outputs_number = dense_layer->get_outputs_number();
-            means.dims = {outputs_number};
-            standard_deviations.dims = {outputs_number};
-            normalized_outputs.dims = full_output_dims;
+            means.shape = {outputs_number};
+            standard_deviations.shape = {outputs_number};
+            normalized_outputs.shape = full_output_dims;
         }
     }
 
@@ -86,27 +86,27 @@ struct DenseBackPropagation final : LayerBackPropagation
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
 
         const Index outputs_number = layer->get_outputs_number();
-        const Index inputs_number = layer->get_input_dimensions()[0];
+        const Index inputs_number = layer->get_input_shape()[0];
 
-        bias_gradients.dims = {outputs_number};
-        weight_gradients.dims = {inputs_number, outputs_number};
+        bias_gradients.shape = {outputs_number};
+        weight_gradients.shape = {inputs_number, outputs_number};
 
         if (dense_layer->get_batch_normalization())
         {
-            gamma_gradients.dims = {outputs_number};
-            beta_gradients.dims = {outputs_number};
+            gamma_gradients.shape = {outputs_number};
+            beta_gradients.shape = {outputs_number};
         }
 
-        const dimensions input_shape = dense_layer->get_input_dimensions();
+        const shape input_shape = dense_layer->get_input_shape();
 
-        dimensions full_input_dims = { batch_size };
+        shape full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
         input_gradients_memory.resize(1);
         input_gradients_memory[0].resize(count_elements(full_input_dims));
         input_gradients.resize(1);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].dims = full_input_dims;
+        input_gradients[0].shape = full_input_dims;
     }
 
 
@@ -152,14 +152,14 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         batch_size = new_samples_number;
 
         const Index parameters_number = layer->get_parameters_number();
-        const dimensions layer_input_dims = layer->get_input_dimensions();
+        const shape layer_input_dims = layer->get_input_shape();
 
-        dimensions input_dims_vec = {batch_size};
+        shape input_dims_vec = {batch_size};
         input_dims_vec.insert(input_dims_vec.end(), layer_input_dims.begin(), layer_input_dims.end());
 
-        input_gradients[0].dims = input_dims_vec;
+        input_gradients[0].shape = input_dims_vec;
 
-        squared_errors_Jacobian.dims = {batch_size, parameters_number};
+        squared_errors_Jacobian.shape = {batch_size, parameters_number};
     }
 
     vector<TensorView*> get_workspace_views() override
@@ -193,11 +193,11 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void initialize() override
     {
-        const Index outputs_number = layer->get_output_dimensions().back();
+        const Index outputs_number = layer->get_output_shape().back();
 
         Index total_rows = batch_size;
         if constexpr (Rank == 3)
-            total_rows *= layer->get_input_dimensions()[0];
+            total_rows *= layer->get_input_shape()[0];
 
         auto* dense_layer = static_cast<Dense<Rank>*>(this->layer);
 
@@ -223,7 +223,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_batch_normalization())
         {
-            dimensions batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             batch_means.resize(batch_normalization_dims);
             bn_saved_inv_variance.resize(batch_normalization_dims);
@@ -275,12 +275,12 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const Index outputs_number = layer->get_output_dimensions().back();
-        const Index inputs_number = layer->get_input_dimensions().back();
+        const Index outputs_number = layer->get_output_shape().back();
+        const Index inputs_number = layer->get_input_shape().back();
 
         Index total_rows = batch_size;
         if constexpr (Rank == 3)
-            total_rows *= layer->get_input_dimensions()[0];
+            total_rows *= layer->get_input_shape()[0];
 
         CHECK_CUDA(cudaMalloc(&ones, total_rows * sizeof(float)));
         vector<float> ones_host(total_rows, 1.0f);
@@ -348,13 +348,13 @@ class Dense final : public Layer
 
 public:
 
-    Dense(const dimensions& new_input_dimensions = {0},
-          const dimensions& new_output_dimensions = {0},
+    Dense(const shape& new_input_shape = {0},
+          const shape& new_output_shape = {0},
           const string& new_activation_function = "HyperbolicTangent",
           bool new_batch_normalization = false,
           const string& new_label = "dense2d_layer")
     {
-        set(new_input_dimensions, new_output_dimensions, new_activation_function, new_batch_normalization, new_label);
+        set(new_input_shape, new_output_shape, new_activation_function, new_batch_normalization, new_label);
     }
 
 
@@ -372,13 +372,13 @@ public:
     }
 
 
-    dimensions get_input_dimensions() const override
+    shape get_input_shape() const override
     {
-        return { weights.dims[0] };
+        return { weights.shape[0] };
     }
 
 
-    dimensions get_output_dimensions() const override
+    shape get_output_shape() const override
     {
         return { biases.size() };
     }
@@ -413,20 +413,20 @@ public:
     }
 
 
-    void set(const dimensions& new_input_dimensions = {},
-             const dimensions& new_output_dimensions = {},
+    void set(const shape& new_input_shape = {},
+             const shape& new_output_shape = {},
              const string& new_activation_function = "HyperbolicTangent",
              bool new_batch_normalization = false,
              const string& new_label = "dense_layer")
     {
-        if (new_input_dimensions.size() != Rank - 1)
-            throw runtime_error("Input dimensions size must be " + to_string(Rank - 1));
+        if (new_input_shape.size() != Rank - 1)
+            throw runtime_error("Input shape size must be " + to_string(Rank - 1));
 
-        if (new_output_dimensions.size() != 1)
-            throw runtime_error("Output dimensions size is not 1");
+        if (new_output_shape.size() != 1)
+            throw runtime_error("Output shape size is not 1");
 
-        biases.dims = { new_output_dimensions[0] };
-        weights.dims = { new_input_dimensions[0], new_output_dimensions[0] };
+        biases.shape = { new_output_shape[0] };
+        weights.shape = { new_input_shape[0], new_output_shape[0] };
 
         set_activation_function(new_activation_function);
 
@@ -436,8 +436,8 @@ public:
 
         if (batch_normalization)
         {
-            gammas.dims = {outputs_number};
-            betas.dims = {outputs_number};
+            gammas.shape = {outputs_number};
+            betas.shape = {outputs_number};
             running_means.resize(outputs_number);
             running_standard_deviations.resize(outputs_number);
         }
@@ -449,11 +449,11 @@ public:
 #ifdef OPENNN_CUDA
 
         biases_device.set_descriptor({1, outputs_number, 1, 1});
-        weights_device.set_descriptor({ new_input_dimensions[0], outputs_number, 1, 1 });
+        weights_device.set_descriptor({ new_input_shape[0], outputs_number, 1, 1 });
 
         if (batch_normalization)
         {
-            dimensions batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             betas_device.set_descriptor(batch_normalization_dims);
             gammas_device.set_descriptor(batch_normalization_dims);
@@ -521,35 +521,35 @@ public:
     }
 
 
-    void set_input_dimensions(const dimensions& new_input_dimensions) override
+    void set_input_shape(const shape& new_input_shape) override
     {
-        const Index inputs_number = new_input_dimensions[0];
+        const Index inputs_number = new_input_shape[0];
         const Index outputs_number = get_outputs_number();
 
-        biases.dims = { outputs_number };
-        weights.dims = { inputs_number, outputs_number };
+        biases.shape = { outputs_number };
+        weights.shape = { inputs_number, outputs_number };
     }
 
 
-    void set_output_dimensions(const dimensions& new_output_dimensions) override
+    void set_output_shape(const shape& new_output_shape) override
     {
         const Index inputs_number = get_inputs_number();
-        const Index neurons_number = new_output_dimensions[0];
+        const Index neurons_number = new_output_shape[0];
 
-        biases.dims = { neurons_number };
-        weights.dims = { inputs_number, neurons_number };
+        biases.shape = { neurons_number };
+        weights.shape = { inputs_number, neurons_number };
     }
 
 
     void set_activation_function(const string& new_activation_function)
     {
         static const unordered_set<string> activation_functions =
-            {"Logistic", "HyperbolicTangent", "Linear", "RectifiedLinear", "ScaledExponentialLinear", "Softmax"};
+            {"Sigmoid", "HyperbolicTangent", "Linear", "RectifiedLinear", "ScaledExponentialLinear", "Softmax"};
 
         if (activation_functions.count(new_activation_function))
         {
-            if (get_output_dimensions()[0] == 1 && new_activation_function == "Softmax")
-                activation_function = "Logistic";
+            if (get_output_shape()[0] == 1 && new_activation_function == "Softmax")
+                activation_function = "Sigmoid";
             else
             activation_function = new_activation_function;
         }
@@ -569,7 +569,7 @@ public:
             activation_mode = CUDNN_ACTIVATION_IDENTITY;
             use_combinations = false;
         }
-        else if (activation_function == "Logistic")
+        else if (activation_function == "Sigmoid")
         {
             activation_mode = CUDNN_ACTIVATION_SIGMOID;
             use_combinations = false;
@@ -920,10 +920,10 @@ public:
     {
 /*
         cout << "Dense layer" << endl
-             << "Input dimensions: " << get_input_dimensions()[0] << endl
-             << "Output dimensions: " << get_output_dimensions()[0] << endl
-             << "Biases dimensions: " << biases.dimensions() << endl
-             << "Weights dimensions: " << weights.dimensions() << endl;
+             << "Input shape: " << get_input_shape()[0] << endl
+             << "Output shape: " << get_output_shape()[0] << endl
+             << "Biases shape: " << biases.dimensions() << endl
+             << "Weights shape: " << weights.dimensions() << endl;
 
         cout << "Activation function:" << endl;
         cout << activation_function << endl;
@@ -943,8 +943,8 @@ public:
         const Index inputs_number = read_xml_index(dense2d_layer_element, "InputsNumber");
         const Index neurons_number = read_xml_index(dense2d_layer_element, "NeuronsNumber");
 
-        set_input_dimensions({ inputs_number });
-        set_output_dimensions({ neurons_number });
+        set_input_shape({ inputs_number });
+        set_output_shape({ neurons_number });
 
         set_activation_function(read_xml_string(dense2d_layer_element, "Activation"));
 
@@ -971,8 +971,8 @@ public:
         printer.OpenElement(name.c_str());
 
         add_xml_element(printer, "Label", label);
-        add_xml_element(printer, "InputsNumber", to_string(get_input_dimensions()[0]));
-        add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
+        add_xml_element(printer, "InputsNumber", to_string(get_input_shape()[0]));
+        add_xml_element(printer, "NeuronsNumber", to_string(get_output_shape()[0]));
         add_xml_element(printer, "Activation", activation_function);
         add_xml_element(printer, "BatchNormalization", batch_normalization ? "true" : "false");
 

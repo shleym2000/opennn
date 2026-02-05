@@ -15,7 +15,7 @@ namespace opennn
 {
 
 NormalizedSquaredError::NormalizedSquaredError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "NormalizedSquaredError";
 
@@ -50,7 +50,7 @@ void NormalizedSquaredError::set_normalization_coefficient()
 
 void NormalizedSquaredError::set_time_series_normalization_coefficient()
 {
-    const Tensor2 targets = dataset->get_data_variables("Target");
+    const Tensor2 targets = dataset->get_feature_data("Target");
 
     const Index rows = targets.dimension(0)-1;
     const Index columns = targets.dimension(1);
@@ -76,14 +76,14 @@ type NormalizedSquaredError::calculate_time_series_normalization_coefficient(con
                                                                              const Tensor2& targets_t) const
 {
     const Index target_samples_number = targets_t_1.dimension(0);
-    const Index target_variables_number = targets_t_1.dimension(1);
+    const Index target_features_number = targets_t_1.dimension(1);
 
     type new_normalization_coefficient = type(0);
 
 #pragma omp parallel for reduction(+:new_normalization_coefficient)
 
     for(Index i = 0; i < target_samples_number; i++)
-        for(Index j = 0; j < target_variables_number; j++)
+        for(Index j = 0; j < target_features_number; j++)
             new_normalization_coefficient += (targets_t_1(i, j) - targets_t(i, j)) * (targets_t_1(i, j) - targets_t(i, j));
 
     return new_normalization_coefficient;
@@ -270,7 +270,7 @@ void NormalizedSquaredError::calculate_output_gradients(const BatchCuda&,
 
 #endif
 
-REGISTER(LossIndex, NormalizedSquaredError, "NormalizedSquaredError");
+REGISTER(Loss, NormalizedSquaredError, "NormalizedSquaredError");
 
 }
 

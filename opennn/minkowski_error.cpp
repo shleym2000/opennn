@@ -16,7 +16,7 @@ namespace opennn
 {
 
 MinkowskiError::MinkowskiError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     set_default();
 }
@@ -136,7 +136,7 @@ void MinkowskiError::calculate_output_gradients(const BatchCuda& batch_cuda,
 
 #endif
 
-REGISTER(LossIndex, MinkowskiError, "MinkowskiError");
+REGISTER(Loss, MinkowskiError, "MinkowskiError");
 
 }
 

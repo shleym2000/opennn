@@ -31,24 +31,24 @@ class Flatten final : public Layer
 
 public:
 
-    Flatten(const dimensions& new_input_dimensions = {} )
+    Flatten(const shape& new_input_shape = {} )
     {
-        set(new_input_dimensions);
+        set(new_input_shape);
     }
 
 
-    dimensions get_input_dimensions() const override
+    shape get_input_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
 
-    dimensions get_output_dimensions() const override
+    shape get_output_shape() const override
     {
-        if (input_dimensions.empty() || input_dimensions[0] == 0)
+        if (input_shape.empty() || input_shape[0] == 0)
             return {0};
 
-        return { (Index)accumulate(input_dimensions.begin(), input_dimensions.end(), (size_t)1, multiplies<size_t>()) };
+        return { (Index)accumulate(input_shape.begin(), input_shape.end(), (size_t)1, multiplies<size_t>()) };
     }
 
 
@@ -57,7 +57,7 @@ public:
         if constexpr (Rank < 2)
             throw logic_error("get_input_height() requires Rank ≥ 2.");
 
-        return input_dimensions[0];
+        return input_shape[0];
     }
 
 
@@ -66,7 +66,7 @@ public:
         if constexpr (Rank < 2)
             throw logic_error("get_input_width() requires Rank >= 2.");
 
-        return input_dimensions[1];
+        return input_shape[1];
     }
 
 
@@ -75,20 +75,20 @@ public:
         if constexpr (Rank < 3)
             throw logic_error("get_input_channels() requires Rank >= 3.");
 
-        return input_dimensions[2];
+        return input_shape[2];
     }
 
 
-    void set(const dimensions& new_input_dimensions)
+    void set(const shape& new_input_shape)
     {
-        if (new_input_dimensions.size() != Rank - 1)
-            throw runtime_error("Error: Input dimensions size must match layer Rank in FlattenLayer::set().");
+        if (new_input_shape.size() != Rank - 1)
+            throw runtime_error("Error: Input shape size must match layer Rank in FlattenLayer::set().");
 
         name = "Flatten" + to_string(Rank) + "d";
 
         set_label("flatten_layer");
 
-        input_dimensions = new_input_dimensions;
+        input_shape = new_input_shape;
     }
 
     // Forward propagation
@@ -162,8 +162,8 @@ public:
     void print() const override
     {
         cout << "Flatten layer" << endl
-             << "Input dimensions: " << input_dimensions << endl
-             << "Output dimensions: " << get_output_dimensions() << endl;
+             << "Input shape: " << input_shape << endl
+             << "Output shape: " << get_output_shape() << endl;
     }
 
 #ifdef OPENNN_CUDA
@@ -223,7 +223,7 @@ public:
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 };
 
 
@@ -237,13 +237,13 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
 
     void initialize() override
     {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-        outputs.dims = {batch_size, output_dimensions[0]};
+        const shape output_dimensions = layer->get_output_shape();
+        outputs.shape = {batch_size, output_dimensions[0]};
     }
 
     void print() const override
     {
-        cout << "Flatten Outputs Dimensions:" << endl << outputs.dims << endl;
+        cout << "Flatten Outputs Dimensions:" << endl << outputs.shape << endl;
     }
 };
 
@@ -260,21 +260,21 @@ struct FlattenBackPropagation final : LayerBackPropagation
     {
         const Flatten<Rank>* flatten_layer = static_cast<const Flatten<Rank>*>(layer);
 
-        const dimensions input_shape = flatten_layer->get_input_dimensions();
+        const shape input_shape = flatten_layer->get_input_shape();
 
-        dimensions full_input_dims = { batch_size };
+        shape full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
         input_gradients_memory.resize(1);
         input_gradients_memory[0].resize(count_elements(full_input_dims));
         input_gradients.resize(1);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].dims = full_input_dims;
+        input_gradients[0].shape = full_input_dims;
     }
 
     void print() const override
     {
-        cout << "Flatten Deltas Dimensions:" << endl << input_gradients[0].dims << endl;
+        cout << "Flatten Deltas Dimensions:" << endl << input_gradients[0].shape << endl;
     }
 };
 

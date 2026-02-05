@@ -28,28 +28,28 @@ class Addition final : public Layer
 
 public:
 
-    Addition(const dimensions& new_input_dimensions = {}, const string& new_name = "")
+    Addition(const shape& new_input_shape = {}, const string& new_name = "")
     {
-        set(new_input_dimensions, new_name);
+        set(new_input_shape, new_name);
     }
 
-    dimensions get_input_dimensions() const override
+    shape get_input_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
-    dimensions get_output_dimensions() const override
+    shape get_output_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
 
-    void set(const dimensions& new_input_dimensions, const string& new_label)
+    void set(const shape& new_input_shape, const string& new_label)
     {
-        if(!new_input_dimensions.empty() && new_input_dimensions.size() != Rank)
-            throw runtime_error("Input dimensions rank for AdditionLayer<" + to_string(Rank) + "> must be " + to_string(Rank));
+        if(!new_input_shape.empty() && new_input_shape.size() != Rank)
+            throw runtime_error("Input shape rank for AdditionLayer<" + to_string(Rank) + "> must be " + to_string(Rank));
 
-        input_dimensions = new_input_dimensions;
+        input_shape = new_input_shape;
 
         label = new_label;
 
@@ -58,19 +58,19 @@ public:
 
 
     void forward_propagate(const vector<TensorView>& input_views,
-                           unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
+                           unique_ptr<LayerForwardPropagation>& forward_propagation,
                            bool) override
     {
         if (input_views.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs.");
 
-        if (input_views[0].dims != input_views[1].dims)
-            throw runtime_error("Input dimensions for " + name + " must be identical.");
+        if (input_views[0].shape != input_views[1].shape)
+            throw runtime_error("Input shape for " + name + " must be identical.");
 
         const TensorMap<Tensor<type, Rank>, Aligned64> input_1 = tensor_map<Rank>(input_views[0]);
         const TensorMap<Tensor<type, Rank>, Aligned64> input_2 = tensor_map<Rank>(input_views[1]);
 
-        TensorMap<Tensor<type, Rank>, Aligned64> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
+        TensorMap<Tensor<type, Rank>, Aligned64> outputs = tensor_map<Rank>(forward_propagation->outputs);
 
         outputs.device(*device) = input_1 + input_2;
     }
@@ -99,9 +99,9 @@ public:
         if(!element) throw runtime_error(name + " element is nullptr.");
 
         const string new_label = read_xml_string(element, "Label");
-        const dimensions new_input_dimensions = string_to_dimensions(read_xml_string(element, "InputDimensions"));
+        const shape new_input_shape = string_to_dimensions(read_xml_string(element, "InputDimensions"));
 
-        set(new_input_dimensions, new_label);
+        set(new_input_shape, new_label);
     }
 
 
@@ -110,7 +110,7 @@ public:
         printer.OpenElement("Addition");
 
         add_xml_element(printer, "Label", label);
-        add_xml_element(printer, "InputDimensions", dimensions_to_string(input_dimensions));
+        add_xml_element(printer, "InputDimensions", dimensions_to_string(input_shape));
 
         printer.CloseElement();
     }
@@ -174,7 +174,7 @@ public:
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 };
 
 
@@ -190,18 +190,18 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
 
     void initialize() override
     {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-        dimensions full_dims = { batch_size };
+        const shape output_dimensions = layer->get_output_shape();
+        shape full_dims = { batch_size };
         full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
-        outputs.dims = full_dims;
+        outputs.shape = full_dims;
     }
 
 
     void print() const override
     {
         cout << "Addition Forward Propagation:" << endl;
-        cout << "Outputs dimensions: " << outputs.dims << endl;
+        cout << "Outputs shape: " << outputs.shape << endl;
         cout << "Outputs data:" << endl << outputs.data << endl;
     }
 };
@@ -218,9 +218,9 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
     void initialize() override
     {
-        const dimensions input_dimensions = layer->get_input_dimensions();
-        dimensions full_dims = { batch_size };
-        full_dims.insert(full_dims.end(), input_dimensions.begin(), input_dimensions.end());
+        const shape input_shape = layer->get_input_shape();
+        shape full_dims = { batch_size };
+        full_dims.insert(full_dims.end(), input_shape.begin(), input_shape.end());
 
         input_gradients_memory.resize(2);
         input_gradients_memory[0].resize(count_elements(full_dims));
@@ -228,9 +228,9 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
         input_gradients.resize(2);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].dims = full_dims;
+        input_gradients[0].shape = full_dims;
         input_gradients[1].data = input_gradients_memory[1].data();
-        input_gradients[1].dims = full_dims;
+        input_gradients[1].shape = full_dims;
     }
 
 
@@ -240,13 +240,13 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
         if(input_gradients.size() >= 1)
         {
-            cout << "Input 1 Deltas dimensions: " << input_gradients[0].dims << endl;
+            cout << "Input 1 Deltas shape: " << input_gradients[0].shape << endl;
             cout << input_gradients[0].data << endl;
         }
 
         if(input_gradients.size() >= 2)
         {
-            cout << "Input 2 Deltas dimensions: " << input_gradients[1].dims << endl;
+            cout << "Input 2 Deltas shape: " << input_gradients[1].shape << endl;
             cout << input_gradients[1].data << endl;
         }
     }
@@ -266,8 +266,8 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void initialize() override
     {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-        dimensions full_dims = { static_cast<Index>(batch_size) };
+        const shape output_dimensions = layer->get_output_shape();
+        shape full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
         outputs.set_descriptor(full_dims);
@@ -292,8 +292,8 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const dimensions input_dims = layer->get_input_dimensions();
-        dimensions full_dims = { static_cast<Index>(batch_size) };
+        const shape input_dims = layer->get_input_shape();
+        shape full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
 
         input_gradients.resize(2);

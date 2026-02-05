@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-class CrossEntropyError3d final : public LossIndex
+class CrossEntropyError3d final : public Loss
 {
 
 public:

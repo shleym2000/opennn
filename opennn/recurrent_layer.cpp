@@ -13,20 +13,20 @@
 namespace opennn
 {
 
-Recurrent::Recurrent(const dimensions& new_input_dimensions,
-                     const dimensions& new_output_dimensions) : Layer()
+Recurrent::Recurrent(const shape& new_input_shape,
+                     const shape& new_output_shape) : Layer()
 {
-    set(new_input_dimensions, new_output_dimensions);
+    set(new_input_shape, new_output_shape);
 }
 
 
-dimensions Recurrent::get_input_dimensions() const
+shape Recurrent::get_input_shape() const
 {
-    return input_dimensions;
+    return input_shape;
 }
 
 
-dimensions Recurrent::get_output_dimensions() const
+shape Recurrent::get_output_shape() const
 {
     return { biases.size() };
 }
@@ -44,19 +44,19 @@ string Recurrent::get_activation_function() const
 }
 
 
-void Recurrent::set(const dimensions& new_input_dimensions, const dimensions& new_output_dimensions)
+void Recurrent::set(const shape& new_input_shape, const shape& new_output_shape)
 {
-    set_input_dimensions(new_input_dimensions);
-    set_output_dimensions(new_output_dimensions);
+    set_input_shape(new_input_shape);
+    set_output_shape(new_output_shape);
 
-    const Index inputs_number = new_input_dimensions[1];
-    const Index outputs_number = new_output_dimensions[0];
+    const Index inputs_number = new_input_shape[1];
+    const Index outputs_number = new_output_shape[0];
 
-    biases.dims = {outputs_number};
+    biases.shape = {outputs_number};
 
-    input_weights.dims = {inputs_number, outputs_number};
+    input_weights.shape = {inputs_number, outputs_number};
 
-    recurrent_weights.dims = {outputs_number, outputs_number};
+    recurrent_weights.shape = {outputs_number, outputs_number};
 
     label = "recurrent_layer";
 
@@ -64,34 +64,34 @@ void Recurrent::set(const dimensions& new_input_dimensions, const dimensions& ne
 }
 
 
-void Recurrent::set_input_dimensions(const dimensions& new_input_dimensions)
+void Recurrent::set_input_shape(const shape& new_input_shape)
 {
-    if (new_input_dimensions.size() != 2)
-        throw runtime_error("Input dimensions rank is not 2 for Recurrent (time_steps, inputs).");
+    if (new_input_shape.size() != 2)
+        throw runtime_error("Input shape rank is not 2 for Recurrent (time_steps, inputs).");
 
-    input_dimensions = new_input_dimensions;
+    input_shape = new_input_shape;
 
-    const Index inputs_number = input_dimensions[1];
+    const Index inputs_number = input_shape[1];
     const Index outputs_number = get_outputs_number();
 
-    input_weights.dims = {inputs_number, outputs_number};
+    input_weights.shape = {inputs_number, outputs_number};
 }
 
 
-void Recurrent::set_output_dimensions(const dimensions& new_output_dimensions)
+void Recurrent::set_output_shape(const shape& new_output_shape)
 {
-    const Index inputs_number = input_weights.dims[0];
-    const Index outputs_number = new_output_dimensions[0];
+    const Index inputs_number = input_weights.shape[0];
+    const Index outputs_number = new_output_shape[0];
 
-    biases.dims = {outputs_number};
-    input_weights.dims = {inputs_number, outputs_number};
-    recurrent_weights.dims = {outputs_number, outputs_number};
+    biases.shape = {outputs_number};
+    input_weights.shape = {inputs_number, outputs_number};
+    recurrent_weights.shape = {outputs_number, outputs_number};
 }
 
 
 void Recurrent::set_activation_function(const string& new_activation_function)
 {
-    if(new_activation_function == "Logistic"
+    if(new_activation_function == "Sigmoid"
     || new_activation_function == "HyperbolicTangent"
     || new_activation_function == "Linear"
     || new_activation_function == "RectifiedLinear"
@@ -106,9 +106,9 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
                                   bool)
 {
-    const Index batch_size = input_views[0].dims[0];
-    const Index past_time_steps = input_views[0].dims[1];
-    const Index input_size = input_views[0].dims[2];
+    const Index batch_size = input_views[0].shape[0];
+    const Index past_time_steps = input_views[0].shape[1];
+    const Index input_size = input_views[0].shape[2];
 
     TensorMap3 inputs(input_views[0].data, batch_size, past_time_steps, input_size);
 
@@ -120,7 +120,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
     Tensor2& current_activation_derivatives = recurrent_forward->current_activation_derivatives;
     Tensor3& hidden_states = recurrent_forward->hidden_states;
 
-    const Index output_size = input_weights.dims[1];
+    const Index output_size = input_weights.shape[1];
 
     Tensor2 previous_hidden_states(batch_size, output_size);
 
@@ -152,9 +152,9 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
                                unique_ptr<LayerForwardPropagation>& forward_propagation,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const Index batch_size = input_views[0].dims[0];
-    const Index past_time_steps = input_views[0].dims[1];
-    const Index input_size = input_views[0].dims[2];
+    const Index batch_size = input_views[0].shape[0];
+    const Index past_time_steps = input_views[0].shape[1];
+    const Index input_size = input_views[0].shape[2];
     const Index output_size = get_outputs_number();
 
     Tensor2 initial_hidden_states(batch_size, output_size);
@@ -232,8 +232,8 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
 string Recurrent::get_expression(const vector<string>& input_names,
                                  const vector<string>& output_names) const
 {
-    const Index time_steps = input_dimensions[0];
-    const Index inputs_number = input_dimensions[1];
+    const Index time_steps = input_shape[0];
+    const Index inputs_number = input_shape[1];
     const Index outputs_number = get_outputs_number();
 
     ostringstream buffer;
@@ -286,12 +286,12 @@ void Recurrent::print() const
 {
 
     cout << "Recurrent layer" << endl
-         << "Time steps: " << get_input_dimensions()[0] << endl
-         << "Input dimensions: " << get_input_dimensions()[1] << endl
-         << "Output dimensions: " << get_output_dimensions()[0] << endl
-         << "Biases dimensions: " << biases.dims << endl
-         << "Input weights dimensions: " << input_weights.dims << endl
-         << "Recurrent weights dimensions: " << recurrent_weights.dims << endl;
+         << "Time steps: " << get_input_shape()[0] << endl
+         << "Input shape: " << get_input_shape()[1] << endl
+         << "Output shape: " << get_output_shape()[0] << endl
+         << "Biases shape: " << biases.shape << endl
+         << "Input weights shape: " << input_weights.shape << endl
+         << "Recurrent weights shape: " << recurrent_weights.shape << endl;
 /*
     cout << "Biases:" << endl
          << biases << endl
@@ -313,8 +313,8 @@ void Recurrent::from_XML(const XMLDocument& document)
         throw runtime_error("Recurrent layer element is nullptr.\n");
 
     set_label(read_xml_string(recurrent_layer_element,"Label"));
-    set_input_dimensions(string_to_dimensions(read_xml_string(recurrent_layer_element, "InputDimensions")));
-    set_output_dimensions({ read_xml_index(recurrent_layer_element, "NeuronsNumber") });
+    set_input_shape(string_to_dimensions(read_xml_string(recurrent_layer_element, "InputDimensions")));
+    set_output_shape({ read_xml_index(recurrent_layer_element, "NeuronsNumber") });
     set_activation_function(read_xml_string(recurrent_layer_element, "Activation"));
 }
 
@@ -324,8 +324,8 @@ void Recurrent::to_XML(XMLPrinter& printer) const
     printer.OpenElement("Recurrent");
 
     add_xml_element(printer, "Label", get_label());
-    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
-    add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions()[0]));
+    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_shape()));
+    add_xml_element(printer, "NeuronsNumber", to_string(get_output_shape()[0]));
     add_xml_element(printer, "Activation", activation_function);
 
     printer.CloseElement();
@@ -344,8 +344,8 @@ void RecurrentForwardPropagation::initialize()
         throw runtime_error("recurrrent layer is nullptr");
 
     const Index outputs_number = layer->get_outputs_number();
-    const Index inputs_number = layer->get_input_dimensions()[1];
-    const Index past_time_steps = layer->get_input_dimensions()[0];
+    const Index inputs_number = layer->get_input_shape()[1];
+    const Index past_time_steps = layer->get_input_shape()[0];
 
     current_inputs.resize(batch_size, past_time_steps, inputs_number);
 
@@ -353,7 +353,7 @@ void RecurrentForwardPropagation::initialize()
 
     activation_derivatives.resize(batch_size, past_time_steps, outputs_number);
 
-    outputs.dims = {batch_size, outputs_number};
+    outputs.shape = {batch_size, outputs_number};
 
     hidden_states.resize(batch_size, past_time_steps, outputs_number);
 
@@ -369,8 +369,8 @@ void RecurrentForwardPropagation::print() const
 void RecurrentBackPropagation::initialize()
 {
     const Index outputs_number = layer->get_outputs_number();
-    const Index inputs_number = layer->get_input_dimensions()[1];
-    const Index past_time_steps = layer->get_input_dimensions()[0];
+    const Index inputs_number = layer->get_input_shape()[1];
+    const Index past_time_steps = layer->get_input_shape()[0];
 
     combinations_bias_gradients.resize(outputs_number, outputs_number);
     combinations_input_weight_gradients.resize(inputs_number, outputs_number, outputs_number);
@@ -378,12 +378,12 @@ void RecurrentBackPropagation::initialize()
     combination_gradients.resize(batch_size, outputs_number);
     current_combination_gradients.resize(batch_size, outputs_number);
 
-    bias_gradients.dims = {outputs_number};
-    input_weight_gradients.dims = {inputs_number, outputs_number};
-    recurrent_weight_gradients.dims = {outputs_number, outputs_number};
+    bias_gradients.shape = {outputs_number};
+    input_weight_gradients.shape = {inputs_number, outputs_number};
+    recurrent_weight_gradients.shape = {outputs_number, outputs_number};
 
     input_gradients.resize(1);
-    input_gradients[0].dims = {batch_size, past_time_steps, inputs_number};
+    input_gradients[0].shape = {batch_size, past_time_steps, inputs_number};
 /*
     input_weight_gradients.setZero();
     recurrent_weight_gradients.setZero();

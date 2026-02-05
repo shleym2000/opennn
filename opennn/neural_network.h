@@ -166,7 +166,7 @@ public:
     void set_feature_names(const vector<string>&);
     void set_output_names(const vector<string>&);
 
-    void set_input_dimensions(const dimensions&);
+    void set_input_shape(const shape&);
 
     void set_default();
 
@@ -190,8 +190,8 @@ public:
     Index get_inputs_number() const;
     Index get_outputs_number() const;
 
-    dimensions get_input_dimensions() const;
-    dimensions get_output_dimensions() const;
+    shape get_input_shape() const;
+    shape get_output_shape() const;
 
     // Parameters
 
@@ -220,13 +220,13 @@ public:
 
         ForwardPropagation forward_propagation(batch_size, this);
 
-        dimensions input_dimensions;
-        input_dimensions.reserve(input_rank);
+        shape input_shape;
+        input_shape.reserve(input_rank);
 
         for(Index i = 0; i < input_rank; ++i)
-           input_dimensions.push_back(inputs.dimension(i));
+           input_shape.push_back(inputs.dimension(i));
 
-        const TensorView input_view((type*)inputs.data(), input_dimensions);
+        const TensorView input_view((type*)inputs.data(), input_shape);
 
         forward_propagate({input_view}, forward_propagation, false);
 
@@ -236,7 +236,7 @@ public:
         {
             if (output_view.rank() == 4)
             {
-                const Index batch_size = output_view.dims[0];
+                const Index batch_size = output_view.shape[0];
                 const Index features = output_view.size() / batch_size;
 
                 if (reinterpret_cast<uintptr_t>(output_view.data) % 16 != 0)

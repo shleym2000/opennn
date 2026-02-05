@@ -37,8 +37,8 @@ public:
 
     const string& get_name() const;
 
-    virtual void set_input_dimensions(const dimensions&);
-    virtual void set_output_dimensions(const dimensions&);
+    virtual void set_input_shape(const shape&);
+    virtual void set_output_shape(const shape&);
 
     void set_label(const string&);
 
@@ -57,8 +57,8 @@ public:
 
     //virtual pair
 
-    virtual dimensions get_input_dimensions() const = 0;
-    virtual dimensions get_output_dimensions() const = 0;
+    virtual shape get_input_shape() const = 0;
+    virtual shape get_output_shape() const = 0;
 
     Index get_inputs_number() const;
 
@@ -126,7 +126,7 @@ protected:
     {
         if (activation_function == "Linear")
             linear(activations, activation_derivatives);
-        else if (activation_function == "Logistic")
+        else if (activation_function == "Sigmoid")
             logistic(activations, activation_derivatives);
         else if (activation_function == "Softmax")
             softmax(activations);

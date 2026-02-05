@@ -13,16 +13,16 @@
 namespace opennn
 {
 
-Pooling::Pooling(const dimensions& new_input_dimensions,
-                 const dimensions& new_pool_dimensions,
-                 const dimensions& new_stride_dimensions,
-                 const dimensions& new_padding_dimensions,
+Pooling::Pooling(const shape& new_input_shape,
+                 const shape& new_pool_dimensions,
+                 const shape& new_stride_dimensions,
+                 const shape& new_padding_dimensions,
                  const string& new_pooling_method,
                  const string& new_name) : Layer()
 {
     name = "Pooling";
 
-    set(new_input_dimensions,
+    set(new_input_shape,
         new_pool_dimensions,
         new_stride_dimensions,
         new_padding_dimensions,
@@ -31,11 +31,11 @@ Pooling::Pooling(const dimensions& new_input_dimensions,
 }
 
 
-dimensions Pooling::get_output_dimensions() const
+shape Pooling::get_output_shape() const
 {
     const Index rows_number = get_output_height();
     const Index columns_number = get_output_width();
-    const Index channels = input_dimensions[2];
+    const Index channels = input_shape[2];
 
     return { rows_number, columns_number, channels };
 }
@@ -43,19 +43,19 @@ dimensions Pooling::get_output_dimensions() const
 
 Index Pooling::get_input_height() const
 {
-    return input_dimensions[0];
+    return input_shape[0];
 }
 
 
 Index Pooling::get_input_width() const
 {
-    return input_dimensions[1];
+    return input_shape[1];
 }
 
 
 Index Pooling::get_channels_number() const
 {
-    return input_dimensions[2];
+    return input_shape[2];
 }
 
 
@@ -113,49 +113,49 @@ string Pooling::get_pooling_method() const
 }
 
 
-dimensions Pooling::get_input_dimensions() const
+shape Pooling::get_input_shape() const
 {
-    return input_dimensions;
+    return input_shape;
 }
 
 
 void Pooling::print() const
 {
     cout << "Pooling layer" << endl
-         << "Input dimensions: " << input_dimensions << endl
-         << "Output dimensions: " << get_output_dimensions() << endl;
+         << "Input shape: " << input_shape << endl
+         << "Output shape: " << get_output_shape() << endl;
 }
 
 
-void Pooling::set(const dimensions& new_input_dimensions,
-                  const dimensions& new_pool_dimensions,
-                  const dimensions& new_stride_dimensions,
-                  const dimensions& new_padding_dimensions,
+void Pooling::set(const shape& new_input_shape,
+                  const shape& new_pool_dimensions,
+                  const shape& new_stride_dimensions,
+                  const shape& new_padding_dimensions,
                   const string& new_pooling_method,
                   const string& new_label)
 {
     if(new_pool_dimensions.size() != 2)
-        throw runtime_error("Pool dimensions must be 2");
+        throw runtime_error("Pool shape must be 2");
 
     if (new_stride_dimensions.size() != 2)
-        throw runtime_error("Stride dimensions must be 2");
+        throw runtime_error("Stride shape must be 2");
 
     if (new_padding_dimensions.size() != 2)
-        throw runtime_error("Padding dimensions must be 2");
+        throw runtime_error("Padding shape must be 2");
 
-    if (new_pool_dimensions[0] > new_input_dimensions[0] || new_pool_dimensions[1] > new_input_dimensions[1])
-        throw runtime_error("Pool dimensions cannot be bigger than input dimensions");
+    if (new_pool_dimensions[0] > new_input_shape[0] || new_pool_dimensions[1] > new_input_shape[1])
+        throw runtime_error("Pool shape cannot be bigger than input shape");
 
     if (new_stride_dimensions[0] <= 0 || new_stride_dimensions[1] <= 0)
-        throw runtime_error("Stride dimensions cannot be 0 or lower");
+        throw runtime_error("Stride shape cannot be 0 or lower");
 
-    if (new_stride_dimensions[0] > new_input_dimensions[0] || new_stride_dimensions[1] > new_input_dimensions[0])
-        throw runtime_error("Stride dimensions cannot be bigger than input dimensions");
+    if (new_stride_dimensions[0] > new_input_shape[0] || new_stride_dimensions[1] > new_input_shape[0])
+        throw runtime_error("Stride shape cannot be bigger than input shape");
 
     if (new_padding_dimensions[0] < 0 || new_padding_dimensions[1] < 0)
-        throw runtime_error("Padding dimensions cannot be lower than 0");
+        throw runtime_error("Padding shape cannot be lower than 0");
 
-    input_dimensions = new_input_dimensions;
+    input_shape = new_input_shape;
 
     set_pool_size(new_pool_dimensions[0], new_pool_dimensions[1]);
 
@@ -189,12 +189,12 @@ void Pooling::set(const dimensions& new_input_dimensions,
 }
 
 
-void Pooling::set_input_dimensions(const dimensions& new_input_dimensions)
+void Pooling::set_input_shape(const shape& new_input_shape)
 {
-    if (new_input_dimensions.size() != 3)
-        throw runtime_error("Input dimensions must be 3");
+    if (new_input_shape.size() != 3)
+        throw runtime_error("Input shape must be 3");
 
-    input_dimensions = new_input_dimensions;
+    input_shape = new_input_shape;
 }
 
 
@@ -517,7 +517,7 @@ void Pooling::to_XML(XMLPrinter& printer) const
     printer.OpenElement("Pooling");
 
     add_xml_element(printer, "Label", label);
-    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
+    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_shape()));
     add_xml_element(printer, "PoolHeight", to_string(get_pool_height()));
     add_xml_element(printer, "PoolWidth", to_string(get_pool_width()));
     add_xml_element(printer, "PoolingMethod", pooling_method);
@@ -538,7 +538,7 @@ void Pooling::from_XML(const XMLDocument& document)
         throw runtime_error("Pooling layer element is nullptr.\batch_index");
 
     set_label(read_xml_string(pooling_layer_element, "Label"));
-    set_input_dimensions(string_to_dimensions(read_xml_string(pooling_layer_element, "InputDimensions")));
+    set_input_shape(string_to_dimensions(read_xml_string(pooling_layer_element, "InputDimensions")));
     set_pool_size(read_xml_index(pooling_layer_element, "PoolHeight"), read_xml_index(pooling_layer_element, "PoolWidth"));
     set_pooling_method(read_xml_string(pooling_layer_element, "PoolingMethod"));
     set_column_stride(read_xml_index(pooling_layer_element, "ColumnStride"));
@@ -568,7 +568,7 @@ void PoolingForwardPropagation::initialize()
 
     const Index channels = pooling_layer->get_channels_number();
 
-    outputs.dims = {batch_size, output_height, output_width, channels};
+    outputs.shape = {batch_size, output_height, output_width, channels};
 
     image_patches.resize(batch_size,
                          pool_height,
@@ -588,7 +588,7 @@ void PoolingForwardPropagation::print() const
 {
     cout << "Pooling layer forward propagation" << endl
          << "Outputs:" << endl
-         << outputs.dims << endl;
+         << outputs.shape << endl;
 }
 
 
@@ -603,11 +603,11 @@ void PoolingBackPropagation::initialize()
 {
     const Pooling* pooling_layer = static_cast<Pooling*>(layer);
 
-    const dimensions& input_dimensions = pooling_layer->get_input_dimensions();
-    const dimensions& output_dimensions = pooling_layer->get_output_dimensions();
+    const shape& input_shape = pooling_layer->get_input_shape();
+    const shape& output_dimensions = pooling_layer->get_output_shape();
 
-    dimensions full_input_dims = { batch_size };
-    full_input_dims.insert(full_input_dims.end(), input_dimensions.begin(), input_dimensions.end());
+    shape full_input_dims = { batch_size };
+    full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
     if (pooling_layer->get_pooling_method() == "AveragePooling")
         gradients_by_pool_size.resize(batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]);
@@ -616,7 +616,7 @@ void PoolingBackPropagation::initialize()
     input_gradients_memory[0].resize(count_elements(full_input_dims));
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
-    input_gradients[0].dims = full_input_dims;
+    input_gradients[0].shape = full_input_dims;
 }
 
 
@@ -624,7 +624,7 @@ void PoolingBackPropagation::print() const
 {
     cout << "Pooling layer back propagation" << endl;
     cout << "Input output_gradients:" << endl
-         << input_gradients[0].dims << endl;
+         << input_gradients[0].shape << endl;
 }
 
 

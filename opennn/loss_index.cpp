@@ -14,7 +14,7 @@
 namespace opennn
 {
 
-LossIndex::LossIndex(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
+Loss::Loss(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
 {
     const unsigned int threads_number = thread::hardware_concurrency();
     thread_pool = make_unique<ThreadPool>(threads_number);
@@ -24,37 +24,37 @@ LossIndex::LossIndex(const NeuralNetwork* new_neural_network, const Dataset* new
 }
 
 
-const type& LossIndex::get_regularization_weight() const
+const type& Loss::get_regularization_weight() const
 {
     return regularization_weight;
 }
 
 
-bool LossIndex::get_display() const
+bool Loss::get_display() const
 {
     return display;
 }
 
 
-bool LossIndex::has_neural_network() const
+bool Loss::has_neural_network() const
 {
     return neural_network;
 }
 
 
-bool LossIndex::has_dataset() const
+bool Loss::has_dataset() const
 {
     return dataset;
 }
 
 
-string LossIndex::get_regularization_method() const
+string Loss::get_regularization_method() const
 {
     return regularization_method;
 }
 
 
-void LossIndex::set(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
+void Loss::set(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
 {
     neural_network = const_cast<NeuralNetwork*>(new_neural_network);
     dataset = const_cast<Dataset*>(new_dataset);
@@ -63,7 +63,7 @@ void LossIndex::set(const NeuralNetwork* new_neural_network, const Dataset* new_
 }
 
 
-void LossIndex::set_threads_number(const int& new_threads_number)
+void Loss::set_threads_number(const int& new_threads_number)
 {
     if(thread_pool != nullptr)
         thread_pool.reset();
@@ -75,37 +75,37 @@ void LossIndex::set_threads_number(const int& new_threads_number)
 }
 
 
-void LossIndex::set_neural_network(const NeuralNetwork* new_neural_network)
+void Loss::set_neural_network(const NeuralNetwork* new_neural_network)
 {
     neural_network = const_cast<NeuralNetwork*>(new_neural_network);
 }
 
 
-void LossIndex::set_dataset(const Dataset* new_dataset)
+void Loss::set_dataset(const Dataset* new_dataset)
 {
     dataset = const_cast<Dataset*>(new_dataset);
 }
 
 
-void LossIndex::set_regularization_method(const string& new_regularization_method)
+void Loss::set_regularization_method(const string& new_regularization_method)
 {
     regularization_method = new_regularization_method;
 }
 
 
-void LossIndex::set_regularization_weight(const type new_regularization_weight)
+void Loss::set_regularization_weight(const type new_regularization_weight)
 {
     regularization_weight = new_regularization_weight;
 }
 
 
-void LossIndex::set_display(bool new_display)
+void Loss::set_display(bool new_display)
 {
     display = new_display;
 }
 
 
-void LossIndex::calculate_errors_lm(const Batch& batch,
+void Loss::calculate_errors_lm(const Batch& batch,
                                     const ForwardPropagation & forward_propagation,
                                     BackPropagationLM & back_propagation) const
 {
@@ -122,7 +122,7 @@ void LossIndex::calculate_errors_lm(const Batch& batch,
 }
 
 
-void LossIndex::calculate_squared_errors_lm(const Batch&,
+void Loss::calculate_squared_errors_lm(const Batch&,
                                             const ForwardPropagation&,
                                             BackPropagationLM& back_propagation_lm) const
 {
@@ -134,7 +134,7 @@ void LossIndex::calculate_squared_errors_lm(const Batch&,
 }
 
 
-void LossIndex::back_propagate(const Batch& batch,
+void Loss::back_propagate(const Batch& batch,
                                ForwardPropagation& forward_propagation,
                                BackPropagation& back_propagation) const
 {
@@ -154,7 +154,7 @@ void LossIndex::back_propagate(const Batch& batch,
 }
 
 
-void LossIndex::add_regularization(BackPropagation& back_propagation) const
+void Loss::add_regularization(BackPropagation& back_propagation) const
 {
     if(regularization_method == "None" || regularization_weight == 0)
         return;
@@ -165,7 +165,7 @@ void LossIndex::add_regularization(BackPropagation& back_propagation) const
 }
 
 
-void LossIndex::add_regularization_lm(BackPropagationLM& back_propagation_lm) const
+void Loss::add_regularization_lm(BackPropagationLM& back_propagation_lm) const
 {
     if(regularization_method == "None")
         return;
@@ -199,7 +199,7 @@ void LossIndex::add_regularization_lm(BackPropagationLM& back_propagation_lm) co
 }
 
 
-void LossIndex::back_propagate_lm(const Batch& batch,
+void Loss::back_propagate_lm(const Batch& batch,
                                   ForwardPropagation& forward_propagation,
                                   BackPropagationLM& back_propagation_lm) const
 {
@@ -221,7 +221,7 @@ void LossIndex::back_propagate_lm(const Batch& batch,
 }
 
 
-void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
+void Loss::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
                                                             ForwardPropagation& forward_propagation,
                                                             BackPropagationLM& back_propagation_lm) const
 {
@@ -277,7 +277,7 @@ void LossIndex::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
 }
 
 
-void LossIndex::calculate_error_gradient_lm(const Batch&,
+void Loss::calculate_error_gradient_lm(const Batch&,
                                             BackPropagationLM& back_propagation_lm) const
 {
     const Tensor1& squared_errors = back_propagation_lm.squared_errors;
@@ -289,13 +289,13 @@ void LossIndex::calculate_error_gradient_lm(const Batch&,
 }
 
 
-string LossIndex::get_name() const
+string Loss::get_name() const
 {
     return name;
 }
 
 
-type LossIndex::calculate_regularization(const Tensor1& parameters) const
+type Loss::calculate_regularization(const Tensor1& parameters) const
 {
     if(regularization_method == "None")
     {
@@ -322,7 +322,7 @@ type LossIndex::calculate_regularization(const Tensor1& parameters) const
 }
 
 
-void LossIndex::calculate_layers_error_gradient(const Batch& batch,
+void Loss::calculate_layers_error_gradient(const Batch& batch,
                                                 ForwardPropagation& forward_propagation,
                                                 BackPropagation& back_propagation) const
 {
@@ -350,7 +350,7 @@ void LossIndex::calculate_layers_error_gradient(const Batch& batch,
 }
 
 
-void LossIndex::add_regularization_gradient(Tensor1& gradient) const
+void Loss::add_regularization_gradient(Tensor1& gradient) const
 {
     if (regularization_method == "None" || regularization_weight == 0)
         return;
@@ -378,7 +378,7 @@ void LossIndex::add_regularization_gradient(Tensor1& gradient) const
 }
 
 
-void LossIndex::add_regularization_to_gradients(BackPropagation& back_propagation) const
+void Loss::add_regularization_to_gradients(BackPropagation& back_propagation) const
 {
     if(regularization_method == "None" || regularization_weight == 0)
         return;
@@ -398,15 +398,15 @@ void LossIndex::add_regularization_to_gradients(BackPropagation& back_propagatio
 }
 
 
-void LossIndex::to_XML(XMLPrinter& file_stream) const
+void Loss::to_XML(XMLPrinter& file_stream) const
 {
-    file_stream.OpenElement("LossIndex");
+    file_stream.OpenElement("Loss");
 
     file_stream.CloseElement();
 }
 
 
-void LossIndex::regularization_from_XML(const XMLDocument& document)
+void Loss::regularization_from_XML(const XMLDocument& document)
 {
     const XMLElement* root_element = document.FirstChildElement("Regularization");
 
@@ -435,7 +435,7 @@ void LossIndex::regularization_from_XML(const XMLDocument& document)
 }
 
 
-void LossIndex::write_regularization_XML(XMLPrinter& file_stream) const
+void Loss::write_regularization_XML(XMLPrinter& file_stream) const
 {
     file_stream.OpenElement("Regularization");
 
@@ -453,7 +453,7 @@ void LossIndex::write_regularization_XML(XMLPrinter& file_stream) const
 }
 
 
-void LossIndex::from_XML(const XMLDocument& document)
+void Loss::from_XML(const XMLDocument& document)
 {
     const XMLElement* root_element = document.FirstChildElement("MeanSquaredError");
 
@@ -469,17 +469,17 @@ void LossIndex::from_XML(const XMLDocument& document)
 }
 
 
-BackPropagation::BackPropagation(const Index new_batch_size, const LossIndex* new_loss_index)
+BackPropagation::BackPropagation(const Index new_batch_size, const Loss* new_loss)
 {
-    set(new_batch_size, new_loss_index);
+    set(new_batch_size, new_loss);
 }
 
 
-void BackPropagation::set(const Index new_samples_number, const LossIndex* new_loss_index)
+void BackPropagation::set(const Index new_samples_number, const Loss* new_loss)
 {
     samples_number = new_samples_number;
 
-    loss_index = const_cast<LossIndex*>(new_loss_index);
+    loss_index = const_cast<Loss*>(new_loss);
 
     if(!loss_index) return;
 
@@ -487,7 +487,7 @@ void BackPropagation::set(const Index new_samples_number, const LossIndex* new_l
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    const dimensions output_dimensions = neural_network_ptr->get_output_dimensions();
+    const shape output_dimensions = neural_network_ptr->get_output_shape();
 
     const Index outputs_number = output_dimensions[0];
 
@@ -580,14 +580,14 @@ void BackPropagation::print() const
 }
 
 
-type LossIndex::calculate_numerical_error() const
+type Loss::calculate_numerical_error() const
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
     const vector<Index> training_indices = dataset->get_sample_indices("Training");
-    const vector<Index> input_indices = dataset->get_variable_indices("Input");
-    // const vector<Index> decoder_variable_indices = dataset->get_variable_indices("Decoder");
-    const vector<Index> target_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_indices = dataset->get_feature_indices("Input");
+    // const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
+    const vector<Index> target_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
 
@@ -606,20 +606,20 @@ type LossIndex::calculate_numerical_error() const
 }
 
 
-Tensor1 LossIndex::calculate_gradient()
+Tensor1 Loss::calculate_gradient()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
 
-    // const vector<Index> decoder_variable_indices = dataset->get_variable_indices("Decoder");
+    // const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
 
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
-    // batch.fill(sample_indices, input_variable_indices, decoder_variable_indices, target_variable_indices);
-    batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+    // batch.fill(sample_indices, input_feature_indices, decoder_feature_indices, target_feature_indices);
+    batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
@@ -637,17 +637,17 @@ Tensor1 LossIndex::calculate_gradient()
 }
 
 
-Tensor1 LossIndex::calculate_numerical_gradient()
+Tensor1 Loss::calculate_numerical_gradient()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
-    //const vector<Index> decoder_variable_indices = dataset->get_variable_indices("Decoder");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
+    //const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
 
     Batch batch(samples_number, dataset);
-    batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+    batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
@@ -702,16 +702,16 @@ Tensor1 LossIndex::calculate_numerical_gradient()
 }
 
 
-Tensor1 LossIndex::calculate_numerical_gradient_lm()
+Tensor1 Loss::calculate_numerical_gradient_lm()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
-    batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+    batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
@@ -775,21 +775,21 @@ Tensor1 LossIndex::calculate_numerical_gradient_lm()
 }
 
 
-Tensor1 LossIndex::calculate_numerical_input_gradients()
+Tensor1 Loss::calculate_numerical_input_gradients()
 {
 
     const Index samples_number = dataset->get_samples_number("Training");
-    const dimensions inputs_dimensions = dataset->get_dimensions("Input");
+    const shape inputs_dimensions = dataset->get_shape("Input");
 
     const Index values_number = neural_network->get_inputs_number()*samples_number;
 
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
-    // batch.fill(sample_indices, input_variable_indices, {}, target_variable_indices);
-    batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+    // batch.fill(sample_indices, input_feature_indices, {}, target_feature_indices);
+    batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
@@ -834,17 +834,17 @@ Tensor1 LossIndex::calculate_numerical_input_gradients()
 }
 
 
-Tensor2 LossIndex::calculate_numerical_jacobian()
+Tensor2 Loss::calculate_numerical_jacobian()
 {
     const Index samples_number = dataset->get_samples_number("Training");
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
 
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
-    // batch.fill(sample_indices, input_variable_indices, {}, target_variable_indices);
-    batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+    // batch.fill(sample_indices, input_feature_indices, {}, target_feature_indices);
+    batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
@@ -913,17 +913,17 @@ Tensor2 LossIndex::calculate_numerical_jacobian()
 }
 
 
-Tensor2 LossIndex::calculate_numerical_hessian()
+Tensor2 Loss::calculate_numerical_hessian()
 {
     const Index samples_number = dataset->get_samples_number("Training");
 
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
-    // batch.fill(sample_indices, input_variable_indices, {}, target_variable_indices);
-    batch.fill(sample_indices, input_variable_indices, target_variable_indices);
+    // batch.fill(sample_indices, input_feature_indices, {}, target_feature_indices);
+    batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
 
@@ -1136,7 +1136,7 @@ Tensor2 LossIndex::calculate_numerical_hessian()
 }
 
 
-Tensor2 LossIndex::calculate_inverse_hessian()
+Tensor2 Loss::calculate_inverse_hessian()
 {
     Tensor2 H = calculate_numerical_hessian();
 
@@ -1165,7 +1165,7 @@ Tensor2 LossIndex::calculate_inverse_hessian()
     return H_inv;
 }
 
-type LossIndex::calculate_h(const type x)
+type Loss::calculate_h(const type x)
 {
     const Index precision_digits = 6;
 
@@ -1252,9 +1252,9 @@ TensorView BackPropagationLM::get_output_gradients() const
 
 
 void BackPropagationLM::set(const Index new_samples_number,
-                            LossIndex *new_loss_index)
+                            Loss *new_loss)
 {
-    loss_index = new_loss_index;
+    loss_index = new_loss;
 
     samples_number = new_samples_number;
 
@@ -1271,7 +1271,7 @@ void BackPropagationLM::set(const Index new_samples_number,
 
     const Index outputs_number = neural_network_ptr->get_outputs_number();
 
-    const dimensions output_dimensions = neural_network_ptr->get_output_dimensions();
+    const shape output_dimensions = neural_network_ptr->get_output_shape();
 
     neural_network.set(samples_number, neural_network_ptr);
 
@@ -1309,15 +1309,15 @@ void BackPropagationLM::set(const Index new_samples_number,
 }
 
 
-BackPropagationLM::BackPropagationLM(const Index new_batch_size, LossIndex *new_loss_index)
+BackPropagationLM::BackPropagationLM(const Index new_batch_size, Loss *new_loss)
 {
-    set(new_batch_size, new_loss_index);
+    set(new_batch_size, new_loss);
 }
 
 
 #ifdef OPENNN_CUDA
 
-void LossIndex::back_propagate(const BatchCuda& batch_cuda,
+void Loss::back_propagate(const BatchCuda& batch_cuda,
                                     ForwardPropagationCuda& forward_propagation,
                                     BackPropagationCuda& back_propagation)
 {
@@ -1339,7 +1339,7 @@ void LossIndex::back_propagate(const BatchCuda& batch_cuda,
 }
 
 
-void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda,
+void Loss::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda,
                                                      ForwardPropagationCuda& forward_propagation,
                                                      BackPropagationCuda& back_propagation) const
 {
@@ -1367,7 +1367,7 @@ void LossIndex::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda
 }
 
 
-void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation) const
+void Loss::add_regularization_cuda(BackPropagationCuda& back_propagation) const
 {
     /*
     if (regularization_method == "None" || regularization_weight == 0.0f)
@@ -1461,20 +1461,20 @@ void LossIndex::add_regularization_cuda(BackPropagationCuda& back_propagation) c
 }
 
 
-void LossIndex::create_cuda()
+void Loss::create_cuda()
 {
     cublasCreate(&cublas_handle);
     cudnnCreate(&cudnn_handle);
 }
 
 
-void LossIndex::destroy_cuda()
+void Loss::destroy_cuda()
 {
     cublasDestroy(cublas_handle);
     cudnnDestroy(cudnn_handle);
 }
 
-cudnnHandle_t LossIndex::get_cudnn_handle()
+cudnnHandle_t Loss::get_cudnn_handle()
 {
     return cudnn_handle;
 }
@@ -1482,16 +1482,16 @@ cudnnHandle_t LossIndex::get_cudnn_handle()
 
 // CUDA structs
 
-BackPropagationCuda::BackPropagationCuda(const Index new_samples_number, LossIndex* new_loss_index)
+BackPropagationCuda::BackPropagationCuda(const Index new_samples_number, Loss* new_loss)
 {
-    set(new_samples_number, new_loss_index);
+    set(new_samples_number, new_loss);
 }
 
 
-void BackPropagationCuda::set(const Index new_samples_number, LossIndex* new_loss_index)
+void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
 {
     samples_number = new_samples_number;
-    loss_index = new_loss_index;
+    loss_index = new_loss;
 
     if(!loss_index) return;
 
@@ -1499,7 +1499,7 @@ void BackPropagationCuda::set(const Index new_samples_number, LossIndex* new_los
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    const dimensions output_dimensions = neural_network_ptr->get_output_dimensions();
+    const shape output_dimensions = neural_network_ptr->get_output_shape();
 
     const Index outputs_number = output_dimensions[0];
 
@@ -1516,7 +1516,7 @@ void BackPropagationCuda::set(const Index new_samples_number, LossIndex* new_los
 
     // Outputs_delta
 
-    dimensions output_gradient_dimensions = { samples_number };
+    shape output_gradient_dimensions = { samples_number };
     output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
 
     const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());

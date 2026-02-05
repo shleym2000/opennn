@@ -291,7 +291,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
 type l2_distance(const Tensor1&x, const Tensor1&y)
 {
     if(x.size() != y.size())
-        throw runtime_error("x and y vector must  have the same dimensions.\n");
+        throw runtime_error("x and y vector must  have the same shape.\n");
 
     Tensor<type, 0> distance;
 
@@ -543,7 +543,7 @@ Tensor2 assemble_matrix_matrix(const Tensor2& x, const Tensor2& y)
 }
 
 
-string dimensions_to_string(const dimensions& x, const string& separator)
+string dimensions_to_string(const shape& x, const string& separator)
 {
     const Index size = x.size();
 
@@ -559,9 +559,9 @@ string dimensions_to_string(const dimensions& x, const string& separator)
 }
 
 
-dimensions string_to_dimensions(const string& x, const string& separator)
+shape string_to_dimensions(const string& x, const string& separator)
 {
-    dimensions result;
+    shape result;
 
     if (x.empty())
         throw runtime_error("Error: Input string must not be empty.\n");
@@ -646,15 +646,15 @@ TensorMap2 tensor_map(const Tensor4& tensor, const Index& index_3, const Index& 
 }
 
 
-Index get_size(const dimensions &d)
+Index get_size(const shape &d)
 {
     return accumulate(d.begin(), d.end(), 1, multiplies<Index>());
 }
 
 
-dimensions prepend(const Index &x, const dimensions &d)
+shape prepend(const Index &x, const shape &d)
 {
-    dimensions result = {x};
+    shape result = {x};
     result.insert(result.end(), d.begin(), d.end());
     return result;
 }

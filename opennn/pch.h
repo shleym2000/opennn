@@ -120,7 +120,7 @@ using namespace std;
 using namespace Eigen;
 
 using type = float;
-using dimensions = vector<Index>;
+using shape = vector<Index>;
 
 #include "tinyxml2.h"
 

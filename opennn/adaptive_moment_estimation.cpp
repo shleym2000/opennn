@@ -14,8 +14,8 @@
 namespace opennn
 {
 
-AdaptiveMomentEstimation::AdaptiveMomentEstimation(const LossIndex* new_loss_index)
-    : OptimizationAlgorithm(new_loss_index)
+AdaptiveMomentEstimation::AdaptiveMomentEstimation(const Loss* new_loss)
+    : Optimizer(new_loss)
 {
     set_default();
 }
@@ -100,9 +100,9 @@ void AdaptiveMomentEstimation::set_accuracy_goal(const type new_accuracy_goal)
 }
 
 
-void AdaptiveMomentEstimation::set_maximum_epochs_number(const Index new_maximum_epochs_number)
+void AdaptiveMomentEstimation::set_maximum_epochs(const Index new_maximum_epochs)
 {
-    maximum_epochs_number = new_maximum_epochs_number;
+    maximum_epochs = new_maximum_epochs;
 }
 
 
@@ -117,7 +117,7 @@ TrainingResults AdaptiveMomentEstimation::train()
     if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
-    TrainingResults results(maximum_epochs_number + 1);
+    TrainingResults results(maximum_epochs + 1);
 
     check();
 
@@ -130,36 +130,36 @@ TrainingResults AdaptiveMomentEstimation::train()
     if(!dataset)
         throw runtime_error("Dataset is null.");
 
-    const bool has_selection = dataset->has_selection();
+    const bool has_validation = dataset->has_validation();
 
     const bool is_classification_model = is_instance_of<CrossEntropyError3d>(loss_index);
 
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
-    // const vector<Index> decoder_variable_indices = dataset->get_variable_indices("Decoder");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
+    // const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
 
-    const vector<Index> training_samples_indices = dataset->get_sample_indices("Training");
-    const vector<Index> selection_samples_indices = dataset->get_sample_indices("Selection");
+    const vector<Index> training_sample_indices = dataset->get_sample_indices("Training");
+    const vector<Index> validation_sample_indices = dataset->get_sample_indices("Validation");
 
     const Index training_samples_number = dataset->get_samples_number("Training");
-    const Index selection_samples_number = dataset->get_samples_number("Selection");
+    const Index validation_samples_number = dataset->get_samples_number("Validation");
 
-    const Index training_batch_samples_number = min(training_samples_number, batch_size);
+    const Index training_batch_size = min(training_samples_number, batch_size);
 
-    const Index selection_batch_samples_number = (selection_samples_number != 0)
-                                                 ? min(selection_samples_number, batch_size)
-                                                 : 0;
+    const Index validation_batch_size = (validation_samples_number != 0)
+                                         ? min(validation_samples_number, batch_size)
+                                         : 0;
 
-    const Index training_batches_number = (training_batch_samples_number != 0)
-        ? training_samples_number / training_batch_samples_number
+    const Index training_batches_number = (training_batch_size != 0)
+        ? training_samples_number / training_batch_size
         : 0;
 
-    const Index selection_batches_number = (selection_batch_samples_number != 0)
-       ? selection_samples_number / selection_batch_samples_number
+    const Index validation_batches_number = (validation_batch_size != 0)
+       ? validation_samples_number / validation_batch_size
        : 0;
 
     vector<vector<Index>> training_batches(training_batches_number);
-    vector<vector<Index>> selection_batches(selection_batches_number);
+    vector<vector<Index>> validation_batches(validation_batches_number);
 
     // Neural network
 
@@ -171,33 +171,33 @@ TrainingResults AdaptiveMomentEstimation::train()
 
     set_vocabularies();
 
-    Batch training_batch(training_batch_samples_number, dataset);
-    unique_ptr<Batch> selection_batch;
+    Batch training_batch(training_batch_size, dataset);
+    unique_ptr<Batch> validation_batch;
 
-    ForwardPropagation training_forward_propagation(training_batch_samples_number, neural_network);
-    unique_ptr<ForwardPropagation> selection_forward_propagation;
+    ForwardPropagation training_forward_propagation(training_batch_size, neural_network);
+    unique_ptr<ForwardPropagation> validation_forward_propagation;
 
     // Loss index
 
     loss_index->set_normalization_coefficient();
 
-    BackPropagation training_back_propagation(training_batch_samples_number, loss_index);
-    unique_ptr<BackPropagation> selection_back_propagation;
+    BackPropagation training_back_propagation(training_batch_size, loss_index);
+    unique_ptr<BackPropagation> validation_back_propagation;
 
-    if (has_selection)
+    if (has_validation)
     {
-        selection_batch = make_unique<Batch>(selection_batch_samples_number, dataset);
-        selection_forward_propagation = make_unique<ForwardPropagation>(selection_batch_samples_number, neural_network);
-        selection_back_propagation = make_unique<BackPropagation>(selection_batch_samples_number, loss_index);
+        validation_batch = make_unique<Batch>(validation_batch_size, dataset);
+        validation_forward_propagation = make_unique<ForwardPropagation>(validation_batch_size, neural_network);
+        validation_back_propagation = make_unique<BackPropagation>(validation_batch_size, loss_index);
     }
 
     type training_error = type(0);
     type training_accuracy = type(0);
 
-    type selection_error = type(0);
-    type selection_accuracy = type(0);
+    type validation_error = type(0);
+    type validation_accuracy = type(0);
 
-    Index selection_failures = 0;
+    Index validation_failures = 0;
 
     // Optimization algorithm
 
@@ -219,11 +219,11 @@ TrainingResults AdaptiveMomentEstimation::train()
     // Main loop
     optimization_data.iteration = 1;
 
-    for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
+    for(Index epoch = 0; epoch <= maximum_epochs; epoch++)
     {
         if(display && epoch%display_period == 0) cout << "Epoch: " << epoch << endl;
         
-        training_batches = dataset->get_batches(training_samples_indices, training_batch_samples_number, shuffle);
+        training_batches = dataset->get_batches(training_sample_indices, training_batch_size, shuffle);
         
         training_error = type(0);
 
@@ -234,9 +234,9 @@ TrainingResults AdaptiveMomentEstimation::train()
             // Dataset
 
             training_batch.fill(training_batches[iteration],
-                                input_variable_indices,
-                                // decoder_variable_indices,
-                                target_variable_indices);
+                                input_feature_indices,
+                                // decoder_feature_indices,
+                                target_feature_indices);
 
             // Neural network
 
@@ -265,48 +265,48 @@ TrainingResults AdaptiveMomentEstimation::train()
 
         results.training_error_history(epoch) = training_error;
 
-        if(has_selection)
+        if(has_validation)
         {
-            selection_batches = dataset->get_batches(selection_samples_indices, selection_batch_samples_number, shuffle);
+            validation_batches = dataset->get_batches(validation_sample_indices, validation_batch_size, shuffle);
 
-            selection_error = type(0);
+            validation_error = type(0);
 
             if(is_classification_model)
-                selection_accuracy = type(0);
+                validation_accuracy = type(0);
 
-            for(Index iteration = 0; iteration < selection_batches_number; iteration++)
+            for(Index iteration = 0; iteration < validation_batches_number; iteration++)
             {
                 // Dataset
 
-                selection_batch->fill(selection_batches[iteration],
-                                      input_variable_indices,
-                                      // decoder_variable_indices,
-                                      target_variable_indices);
+                validation_batch->fill(validation_batches[iteration],
+                                      input_feature_indices,
+                                      // decoder_feature_indices,
+                                      target_feature_indices);
 
                 // Neural network
 
-                neural_network->forward_propagate(selection_batch->get_inputs(),
-                                                  *selection_forward_propagation,
+                neural_network->forward_propagate(validation_batch->get_inputs(),
+                                                  *validation_forward_propagation,
                                                   is_training);
 
                 // Loss
 
-                loss_index->calculate_error(*selection_batch,
-                                            *selection_forward_propagation,
-                                            *selection_back_propagation);
+                loss_index->calculate_error(*validation_batch,
+                                            *validation_forward_propagation,
+                                            *validation_back_propagation);
 
-                selection_error += selection_back_propagation->error();
+                validation_error += validation_back_propagation->error();
 
                 if(is_classification_model)
-                    selection_accuracy += selection_back_propagation->accuracy(0);
+                    validation_accuracy += validation_back_propagation->accuracy(0);
             }
 
-            selection_error /= type(selection_batches_number);
-            if(is_classification_model) selection_accuracy /= type(selection_batches_number);
+            validation_error /= type(validation_batches_number);
+            if(is_classification_model) validation_accuracy /= type(validation_batches_number);
 
-            results.selection_error_history(epoch) = selection_error;
+            results.validation_error_history(epoch) = validation_error;
 
-            if(epoch != 0 && results.selection_error_history(epoch) > results.selection_error_history(epoch-1)) selection_failures++;
+            if(epoch != 0 && results.validation_error_history(epoch) > results.validation_error_history(epoch-1)) validation_failures++;
         }
 
         // Elapsed time
@@ -317,14 +317,14 @@ TrainingResults AdaptiveMomentEstimation::train()
         {
             cout << "Training error: " << training_error << endl;
             if(is_classification_model) cout << "Training accuracy: " << training_accuracy << endl;
-            if(has_selection) cout << "Selection error: " << selection_error << endl;
-            if(has_selection && is_classification_model) cout << "Selection accuracy: " << selection_accuracy << endl;
+            if(has_validation) cout << "Validation error: " << validation_error << endl;
+            if(has_validation && is_classification_model) cout << "Validation accuracy: " << validation_accuracy << endl;
             cout << "Elapsed time: " << write_time(elapsed_time) << endl;
         }
 
         stop_training = true;
 
-        if(epoch == maximum_epochs_number)
+        if(epoch == maximum_epochs)
         {
             if(display) cout << "Epoch " << epoch << "\nMaximum epochs number reached: " << epoch << endl;
             results.stopping_condition = StoppingCondition::MaximumEpochsNumber;
@@ -344,9 +344,9 @@ TrainingResults AdaptiveMomentEstimation::train()
             results.stopping_condition  = StoppingCondition::LossGoal;
             if(display) cout << "Epoch " << epoch << "\nAccuracy goal reached: " << training_accuracy << endl;
         }
-        else if(selection_failures >= maximum_selection_failures)
+        else if(validation_failures >= maximum_validation_failures)
         {
-            if(display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << selection_failures << endl;
+            if(display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << validation_failures << endl;
             results.stopping_condition = StoppingCondition::MaximumSelectionErrorIncreases;
         }
         else
@@ -358,11 +358,11 @@ TrainingResults AdaptiveMomentEstimation::train()
         {
             results.loss = training_back_propagation.loss;
 
-            results.selection_failures = selection_failures;
+            results.validation_failures = validation_failures;
 
             results.resize_training_error_history(epoch+1);
 
-            results.resize_selection_error_history(has_selection ? epoch + 1 : 0);
+            results.resize_validation_error_history(has_validation ? epoch + 1 : 0);
 
             results.elapsed_time = write_time(elapsed_time);
 
@@ -390,7 +390,7 @@ Tensor<string, 2> AdaptiveMomentEstimation::to_string_matrix() const
     {"Beta 2", to_string(double(beta_2))},
     {"Epsilon", to_string(numeric_limits<type>::epsilon())},
     {"Training loss goal", to_string(double(training_loss_goal))},
-    {"Maximum epochs number", to_string(maximum_epochs_number)},
+    {"Maximum epochs number", to_string(maximum_epochs)},
     {"Maximum time", write_time(maximum_time)},
     {"Batch samples number", to_string(batch_size)}});
 
@@ -433,7 +433,7 @@ void AdaptiveMomentEstimation::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "BatchSize", to_string(batch_size));
     add_xml_element(printer, "LossGoal", to_string(training_loss_goal));
-    add_xml_element(printer, "MaximumEpochsNumber", to_string(maximum_epochs_number));
+    add_xml_element(printer, "MaximumEpochsNumber", to_string(maximum_epochs));
     add_xml_element(printer, "MaximumTime", to_string(maximum_time));
     add_xml_element(printer, "HardwareUse", get_hardware_use());
 
@@ -451,7 +451,7 @@ void AdaptiveMomentEstimation::from_XML(const XMLDocument& document)
 
     set_batch_size(read_xml_index(root_element, "BatchSize"));
     set_loss_goal(read_xml_type(root_element, "LossGoal"));
-    set_maximum_epochs_number(read_xml_index(root_element, "MaximumEpochsNumber"));
+    set_maximum_epochs(read_xml_index(root_element, "MaximumEpochsNumber"));
     set_maximum_time(read_xml_type(root_element, "MaximumTime"));
     set_hardware_use(read_xml_string(root_element, "HardwareUse"));
 }
@@ -467,7 +467,7 @@ void AdaptiveMomentEstimationData::set(AdaptiveMomentEstimation* new_adaptive_mo
 {
     adaptive_moment_estimation = new_adaptive_moment_estimation;
 
-    LossIndex* loss_index = new_adaptive_moment_estimation->get_loss_index();
+    Loss* loss_index = new_adaptive_moment_estimation->get_loss_index();
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
     const Index parameters_number = neural_network->get_parameters_number();
@@ -496,7 +496,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
-    TrainingResults results(maximum_epochs_number + 1);
+    TrainingResults results(maximum_epochs + 1);
 
     check();
 
@@ -509,36 +509,36 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
     if(!dataset)
         throw runtime_error("Dataset is null.");
 
-    const bool has_selection = dataset->has_selection();
+    const bool has_validation = dataset->has_validation();
 
     const bool is_classification_model = is_instance_of<CrossEntropyError3d>(loss_index);
 
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
-    //const vector<Index> decoder_variable_indices = dataset->get_variable_indices("Decoder");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
+    //const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
 
-    const vector<Index> training_samples_indices = dataset->get_sample_indices("Training");
-    const vector<Index> selection_samples_indices = dataset->get_sample_indices("Selection");
+    const vector<Index> training_sample_indices = dataset->get_sample_indices("Training");
+    const vector<Index> validation_sample_indices = dataset->get_sample_indices("Validation");
 
     const Index training_samples_number = dataset->get_samples_number("Training");
-    const Index selection_samples_number = dataset->get_samples_number("Selection");
+    const Index validation_samples_number = dataset->get_samples_number("Validation");
 
-    const Index training_batch_samples_number = min(training_samples_number, batch_size);
+    const Index training_batch_size = min(training_samples_number, batch_size);
 
-    const Index selection_batch_samples_number = (selection_samples_number != 0)
-        ? min(selection_samples_number, batch_size)
+    const Index validation_batch_size = (validation_samples_number != 0)
+        ? min(validation_samples_number, batch_size)
         : 0;
 
-    const Index training_batches_number = (training_batch_samples_number != 0)
-        ? training_samples_number / training_batch_samples_number
+    const Index training_batches_number = (training_batch_size != 0)
+        ? training_samples_number / training_batch_size
         : 0;
 
-    const Index selection_batches_number = (selection_batch_samples_number != 0)
-        ? selection_samples_number / selection_batch_samples_number
+    const Index validation_batches_number = (validation_batch_size != 0)
+        ? validation_samples_number / validation_batch_size
         : 0;
 
     vector<vector<Index>> training_batches(training_batches_number);
-    vector<vector<Index>> selection_batches(selection_batches_number);
+    vector<vector<Index>> validation_batches(validation_batches_number);
 
     // Neural network
 
@@ -550,11 +550,11 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     set_vocabularies();
 
-    BatchCuda training_batch(training_batch_samples_number, dataset);
-    unique_ptr<BatchCuda> selection_batch;
+    BatchCuda training_batch(training_batch_size, dataset);
+    unique_ptr<BatchCuda> validation_batch;
 
-    ForwardPropagationCuda training_forward_propagation(training_batch_samples_number, neural_network);
-    unique_ptr<ForwardPropagationCuda> selection_forward_propagation;
+    ForwardPropagationCuda training_forward_propagation(training_batch_size, neural_network);
+    unique_ptr<ForwardPropagationCuda> validation_forward_propagation;
 
     neural_network->copy_parameters_device();
 
@@ -562,23 +562,23 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     loss_index->set_normalization_coefficient();
 
-    BackPropagationCuda training_back_propagation(training_batch_samples_number, loss_index);
-    unique_ptr<BackPropagationCuda> selection_back_propagation;
+    BackPropagationCuda training_back_propagation(training_batch_size, loss_index);
+    unique_ptr<BackPropagationCuda> validation_back_propagation;
 
-    if (has_selection)
+    if (has_validation)
     {
-        selection_batch = make_unique<BatchCuda>(selection_batch_samples_number, dataset);
-        selection_forward_propagation = make_unique<ForwardPropagationCuda>(selection_batch_samples_number, neural_network);
-        selection_back_propagation = make_unique<BackPropagationCuda>(selection_batch_samples_number, loss_index);
+        validation_batch = make_unique<BatchCuda>(validation_batch_size, dataset);
+        validation_forward_propagation = make_unique<ForwardPropagationCuda>(validation_batch_size, neural_network);
+        validation_back_propagation = make_unique<BackPropagationCuda>(validation_batch_size, loss_index);
     }
 
     type training_error = type(0);
     type training_accuracy = type(0);
 
-    type selection_error = type(0);
-    type selection_accuracy = type(0);
+    type validation_error = type(0);
+    type validation_accuracy = type(0);
 
-    Index selection_failures = 0;
+    Index validation_failures = 0;
 
     // Optimization algorithm
 
@@ -601,11 +601,11 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
     optimization_data.iteration = 1;
 
-    for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
+    for(Index epoch = 0; epoch <= maximum_epochs; epoch++)
     {
         if (display && epoch % display_period == 0) cout << "Epoch: " << epoch << endl;
 
-        training_batches = dataset->get_batches(training_samples_indices, training_batch_samples_number, shuffle);
+        training_batches = dataset->get_batches(training_sample_indices, training_batch_size, shuffle);
 
         training_error = type(0);
 
@@ -616,9 +616,9 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
             // Dataset
 
             training_batch.fill(training_batches[iteration],
-                                     input_variable_indices,
-                                     //decoder_variable_indices,
-                                     target_variable_indices);
+                                     input_feature_indices,
+                                     //decoder_feature_indices,
+                                     target_feature_indices);
 
             // Neural network
 
@@ -650,46 +650,46 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
         results.training_error_history(epoch) = training_error;
 
-        if (has_selection)
+        if (has_validation)
         {
-            selection_batches = dataset->get_batches(selection_samples_indices, selection_batch_samples_number, shuffle);
+            validation_batches = dataset->get_batches(validation_sample_indices, validation_batch_size, shuffle);
 
-            selection_error = type(0);
-            if (is_classification_model)    selection_accuracy = type(0);
+            validation_error = type(0);
+            if (is_classification_model)    validation_accuracy = type(0);
 
-            for(Index iteration = 0; iteration < selection_batches_number; iteration++)
+            for(Index iteration = 0; iteration < validation_batches_number; iteration++)
             {
                 // Dataset
 
-                selection_batch->fill(selection_batches[iteration],
-                                           input_variable_indices,
-                                           //decoder_variable_indices,
-                                           target_variable_indices);
+                validation_batch->fill(validation_batches[iteration],
+                                           input_feature_indices,
+                                           //decoder_feature_indices,
+                                           target_feature_indices);
 
                 // Neural network
 
-                neural_network->forward_propagate(selection_batch->get_inputs_device(),
-                                                       *selection_forward_propagation,
+                neural_network->forward_propagate(validation_batch->get_inputs_device(),
+                                                       *validation_forward_propagation,
                                                        is_training);
 
                 // Loss
 
-                loss_index->calculate_error(*selection_batch,
-                                                 *selection_forward_propagation,
-                                                 *selection_back_propagation);
+                loss_index->calculate_error(*validation_batch,
+                                                 *validation_forward_propagation,
+                                                 *validation_back_propagation);
 
-                selection_error += selection_back_propagation->error();
+                validation_error += validation_back_propagation->error();
 
                 if (is_classification_model)
-                    selection_accuracy += selection_back_propagation->accuracy();
+                    validation_accuracy += validation_back_propagation->accuracy();
             }
 
-            selection_error /= type(selection_batches_number);
-            if (is_classification_model) selection_accuracy /= type(selection_batches_number);
+            validation_error /= type(validation_batches_number);
+            if (is_classification_model) validation_accuracy /= type(validation_batches_number);
 
-            results.selection_error_history(epoch) = selection_error;
+            results.validation_error_history(epoch) = validation_error;
 
-            if (epoch != 0 && results.selection_error_history(epoch) > results.selection_error_history(epoch - 1)) selection_failures++;
+            if (epoch != 0 && results.validation_error_history(epoch) > results.validation_error_history(epoch - 1)) validation_failures++;
         }
 
         // Elapsed time
@@ -700,14 +700,14 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
         {
             cout << "Training error: " << training_error << endl;
             if (is_classification_model) cout << "Training accuracy: " << training_accuracy << endl;
-            if (has_selection) cout << "Selection error: " << selection_error << endl;
-            if (has_selection && is_classification_model) cout << "Selection accuracy: " << selection_accuracy << endl;
+            if (has_validation) cout << "Validation error: " << validation_error << endl;
+            if (has_validation && is_classification_model) cout << "Validation accuracy: " << validation_accuracy << endl;
             cout << "Elapsed time: " << write_time(elapsed_time) << endl;
         }
 
         stop_training = true;
 
-        if (epoch == maximum_epochs_number)
+        if (epoch == maximum_epochs)
         {
             if (display) cout << "Epoch " << epoch << "\nMaximum epochs number reached: " << epoch << endl;
             results.stopping_condition = StoppingCondition::MaximumEpochsNumber;
@@ -727,9 +727,9 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
             results.stopping_condition = StoppingCondition::LossGoal;
             if (display) cout << "Epoch " << epoch << "\nAccuracy goal reached: " << training_accuracy << endl;
         }
-        else if (selection_failures >= maximum_selection_failures)
+        else if (validation_failures >= maximum_validation_failures)
         {
-            if (display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << selection_failures << endl;
+            if (display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << validation_failures << endl;
             results.stopping_condition = StoppingCondition::MaximumSelectionErrorIncreases;
         }
         else
@@ -741,11 +741,11 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
         {
             results.loss = training_back_propagation.loss;
 
-            results.selection_failures = selection_failures;
+            results.validation_failures = validation_failures;
 
             results.resize_training_error_history(epoch + 1);
 
-            results.resize_selection_error_history(has_selection ? epoch + 1 : 0);
+            results.resize_validation_error_history(has_validation ? epoch + 1 : 0);
 
             results.elapsed_time = write_time(elapsed_time);
 
@@ -829,7 +829,7 @@ void ADAMOptimizationDataCuda::print() const
 
 #endif
 
-REGISTER(OptimizationAlgorithm, AdaptiveMomentEstimation, "AdaptiveMomentEstimation");
+REGISTER(Optimizer, AdaptiveMomentEstimation, "AdaptiveMomentEstimation");
 
 }
 

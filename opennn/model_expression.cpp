@@ -47,7 +47,7 @@ string ModelExpression::write_comments_c() const
 string ModelExpression::write_logistic_c() const
 {
     return
-        "float Logistic(float x) {\n"
+        "float Sigmoid(float x) {\n"
         "\tfloat z = 1.0f / (1.0f + expf(-x));\n"
         "\treturn z;\n"
         "}\n\n";
@@ -195,7 +195,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
         }
     }
 
-    if(expression.find("Logistic") != string::npos) logistic = true;
+    if(expression.find("Sigmoid") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) relu = true;
     if(expression.find("ExponentialLinear") != string::npos) exp_linear = true;
     if(expression.find("SELU") != string::npos) selu = true;
@@ -385,8 +385,8 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 
     if(expression.find("Linear") != string::npos)
         buffer << "function Linear($x) { return $x; }\n";
-    if(expression.find("Logistic") != string::npos)
-        buffer << "function Logistic($x) { return 1 / (1 + exp(-$x)); }\n";
+    if(expression.find("Sigmoid") != string::npos)
+        buffer << "function Sigmoid($x) { return 1 / (1 + exp(-$x)); }\n";
     if(expression.find("RectifiedLinear") != string::npos)
         buffer << "function RectifiedLinear($x) { return max(0, $x); }\n";
     if(expression.find("HyperbolicTangent") != string::npos)
@@ -506,7 +506,7 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 string ModelExpression::logistic_javascript() const
 {
     return
-        "function Logistic(x) {\n"
+        "function Sigmoid(x) {\n"
         "\tvar z = 1/(1+Math.exp(-x));\n"
         "\treturn z;\n"
         "}\n";
@@ -811,14 +811,14 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         }
     }
 
-    const int maximum_output_variable_numbers = 5;
+    const int maximum_output_feature_numbers = 5;
     bool logistic     = false;
     bool ReLU         = false;
     bool ExpLinear    = false;
     bool SExpLinear   = false;
     bool Softmax      = false;
 
-    if(expression.find("Logistic") != string::npos) logistic = true;
+    if(expression.find("Sigmoid") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) ReLU = true;
     if(expression.find("ExponentialLinear") != string::npos) ExpLinear = true;
     if(expression.find("SELU") != string::npos) SExpLinear = true;
@@ -939,7 +939,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     buffer << "</table>" << endl;
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
     {
         buffer << "<!-- HIDDEN INPUTS -->" << endl;
         for(Index i = 0; i < outputs_number; i++)
@@ -955,7 +955,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     // Outputs
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
     {
         buffer << "<tr style=\"height:3.5em\">" << endl
                << "<td> Target </td>" << endl
@@ -995,7 +995,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     buffer << "<script>" << endl;
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
     {
         buffer << "function updateSelectedCategory() {" << endl
                << "\tvar selectedCategory = document.getElementById(\"category_select\").value;" << endl
@@ -1033,7 +1033,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     buffer << "\n" << "\t" << "var outputs = calculate_outputs(inputs); " << endl;
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
         buffer << "\t" << "updateSelectedCategory();" << endl;
     else
         for(Index i = 0; i < outputs_number; i++)
@@ -1218,7 +1218,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
         }
     }
 
-    if(expression.find("Logistic") != string::npos) logistic = true;
+    if(expression.find("Sigmoid") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) relu = true;
     if(expression.find("ExponentialLinear") != string::npos) exp_linear = true;
     if(expression.find("SELU") != string::npos) selu = true;
@@ -1249,7 +1249,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     if(logistic)
         buffer << "\t@staticmethod\n"
-               << "\tdef Logistic (x):\n"
+               << "\tdef Sigmoid (x):\n"
                << "\t\t" << "z = 1/(1+np.exp(-x))\n"
                << "\t\t" << "return z\n\n";
 
@@ -1301,7 +1301,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
             replace_all_word_appearances(processed_line, fname, replace_reserved_keywords(fname));
 
         replace_all_word_appearances(processed_line, "Linear", "self.Linear");
-        replace_all_word_appearances(processed_line, "Logistic", "self.Logistic");
+        replace_all_word_appearances(processed_line, "Sigmoid", "self.Sigmoid");
         replace_all_word_appearances(processed_line, "RectifiedLinear", "self.RectifiedLinear");
         replace_all_word_appearances(processed_line, "ExponentialLinear", "self.ExponentialLinear");
         replace_all_word_appearances(processed_line, "SELU", "self.SELU");

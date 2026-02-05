@@ -34,7 +34,7 @@ public:
 
     bool get_display() const;
 
-    const type& get_selection_error_goal() const;
+    const type& get_validation_error_goal() const;
     const Index& get_maximum_epochs_number() const;
     const type& get_maximum_time() const;
 
@@ -50,8 +50,8 @@ public:
 
     void set_display(bool);
 
-    void set_selection_error_goal(const type);
-    void set_maximum_epochs_number(const Index);
+    void set_validation_error_goal(const type);
+    void set_maximum_epochs(const Index);
     void set_maximum_time(const type);
 
     string write_stopping_condition(const TrainingResults&) const;
@@ -83,7 +83,7 @@ protected:
 
     Tensor<Index, 1> neurons_history;
 
-    Tensor1 selection_error_history;
+    Tensor1 validation_error_history;
 
     Tensor1 training_error_history;
 
@@ -93,9 +93,9 @@ protected:
 
     Index trials_number = 1;
 
-    type selection_error_goal = 0;
+    type validation_error_goal = 0;
 
-    Index maximum_epochs_number = 10;
+    Index maximum_epochs = 10;
 
     type maximum_time = 0;
 
@@ -107,7 +107,7 @@ protected:
 
 struct NeuronsSelectionResults
 {
-   NeuronsSelectionResults(const Index maximum_epochs_number = 0);
+   NeuronsSelectionResults(const Index maximum_epochs = 0);
 
    void resize_history(const Index new_size);
 
@@ -127,11 +127,11 @@ struct NeuronsSelectionResults
 
    Tensor1 training_error_history;
 
-   Tensor1 selection_error_history;
+   Tensor1 validation_error_history;
 
    type optimum_training_error = type(10);
 
-   type optimum_selection_error = type(10);
+   type optimum_validation_error = type(10);
 
    // Model selection
 

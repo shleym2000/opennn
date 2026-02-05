@@ -13,22 +13,22 @@
 namespace opennn
 {
 
-MultiHeadAttention::MultiHeadAttention(const dimensions& new_input_dimensions,
+MultiHeadAttention::MultiHeadAttention(const shape& new_input_shape,
                                        const Index& new_heads_number,
                                        const string& new_name) : Layer()
 {
     // Self-attention
 
-    set(new_input_dimensions[0],    // query_sequence_length
-        new_input_dimensions[0],    // source_sequence_length
-        new_input_dimensions[1],    // embedding_dimension
+    set(new_input_shape[0],    // query_sequence_length
+        new_input_shape[0],    // source_sequence_length
+        new_input_shape[1],    // embedding_dimension
         new_heads_number,
         false,
         new_name);
 }
 
-MultiHeadAttention::MultiHeadAttention(const dimensions& new_query_dimensions,
-                                       const dimensions& new_source_dimensions,
+MultiHeadAttention::MultiHeadAttention(const shape& new_query_dimensions,
+                                       const shape& new_source_dimensions,
                                        const Index& new_heads_number,
                                        const string& new_name) : Layer()
 {
@@ -59,7 +59,7 @@ Index MultiHeadAttention::get_source_sequence_length() const
 
 Index MultiHeadAttention::get_embedding_dimension() const
 {
-    return query_biases.dims[0];
+    return query_biases.shape[0];
 }
 
 
@@ -87,13 +87,13 @@ Index MultiHeadAttention::get_head_dimension() const
 }
 
 
-dimensions MultiHeadAttention::get_input_dimensions() const
+shape MultiHeadAttention::get_input_shape() const
 {
     return { query_sequence_length, get_embedding_dimension() };
 }
 
 
-dimensions MultiHeadAttention::get_output_dimensions() const
+shape MultiHeadAttention::get_output_shape() const
 {
     return { query_sequence_length, get_embedding_dimension() };
 }
@@ -124,17 +124,17 @@ void MultiHeadAttention::set(const Index new_query_sequence_length,
     if (heads_number <= 0 || new_embedding_dimension % heads_number != 0)
         throw runtime_error("MultiHeadAttention Error: The embedding dimension must be divisible by the number of heads.");
 
-    query_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    query_biases.dims = {new_embedding_dimension};
+    query_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    query_biases.shape = {new_embedding_dimension};
 
-    key_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    key_biases.dims = {new_embedding_dimension};
+    key_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    key_biases.shape = {new_embedding_dimension};
 
-    value_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    value_biases.dims = {new_embedding_dimension};
+    value_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    value_biases.shape = {new_embedding_dimension};
 
-    projection_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    projection_biases.dims = {new_embedding_dimension};
+    projection_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    projection_biases.shape = {new_embedding_dimension};
 
     use_causal_mask = new_use_causal_mask;
 
@@ -426,8 +426,8 @@ void MultiHeadAttention::print() const
     cout << "Multi-head attention Layer" << endl
          << "Label: " << label << endl
          << "Type: Embedding" << endl
-         << "Input dimensions: " << get_input_dimensions() << endl
-         << "Output dimensions: " << get_output_dimensions();
+         << "Input shape: " << get_input_shape() << endl
+         << "Output shape: " << get_output_shape();
 }
 
 
@@ -496,13 +496,13 @@ void MultiHeadAttentionForwardPropagation::initialize()
 
     concatenated_attention_outputs.resize(batch_size, query_sequence_length, embedding_dimension);
 
-    outputs.dims = {batch_size, query_sequence_length, embedding_dimension};
+    outputs.shape = {batch_size, query_sequence_length, embedding_dimension};
 }
 
 
 void MultiHeadAttentionForwardPropagation::print() const
 {
-//    cout << "Output dimensions:" << output_dimensions << endl
+//    cout << "Output shape:" << output_dimensions << endl
 //    cout << "Outputs:" << endl;
     //cout << TensorMap<Tensor<type,3>>(outputs_data, output_dimensions(0), output_dimensions(1), output_dimensions(2)) << endl;
 }
@@ -518,19 +518,19 @@ void MultiHeadAttentionBackPropagation::initialize()
     const Index heads_number = multihead_attention_layer->get_heads_number();
     const Index head_dimension = multihead_attention_layer->get_head_dimension();
 
-    query_weight_gradients.dims = {embedding_dimension, embedding_dimension};
-    key_weight_gradients.dims = {embedding_dimension, embedding_dimension};
-    value_weight_gradients.dims = {embedding_dimension, embedding_dimension};
-    projection_weight_gradients.dims = {embedding_dimension, embedding_dimension};
+    query_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    key_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    value_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    projection_weight_gradients.shape = {embedding_dimension, embedding_dimension};
 
-    query_bias_gradients.dims = {embedding_dimension};
-    key_bias_gradients.dims = {embedding_dimension};
-    value_bias_gradients.dims = {embedding_dimension};
-    projection_bias_gradients.dims = {embedding_dimension};
+    query_bias_gradients.shape = {embedding_dimension};
+    key_bias_gradients.shape = {embedding_dimension};
+    value_bias_gradients.shape = {embedding_dimension};
+    projection_bias_gradients.shape = {embedding_dimension};
 
     input_gradients.resize(2);
-    input_gradients[0].dims = {batch_size, query_sequence_length, embedding_dimension};
-    input_gradients[1].dims = {batch_size, source_sequence_length, embedding_dimension};
+    input_gradients[0].shape = {batch_size, query_sequence_length, embedding_dimension};
+    input_gradients[1].shape = {batch_size, source_sequence_length, embedding_dimension};
 
     // Auxiliar
 

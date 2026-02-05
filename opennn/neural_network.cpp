@@ -276,23 +276,23 @@ void NeuralNetwork::set_output_names(const vector<string>& new_output_namess)
 }
 
 
-void NeuralNetwork::set_input_dimensions(const dimensions& new_input_dimensions)
+void NeuralNetwork::set_input_shape(const shape& new_input_shape)
 {
-    const Index total_inputs = count_elements(new_input_dimensions);
+    const Index total_inputs = count_elements(new_input_shape);
     input_names.resize(total_inputs);
 
     if(has("Scaling2d"))
     {
         Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(get_first("Scaling2d"));
-        scaling_layer->set_input_dimensions(new_input_dimensions);
+        scaling_layer->set_input_shape(new_input_shape);
     }
     else if(has("Scaling3d"))
     {
         Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(get_first("Scaling3d"));
-        scaling_layer->set_input_dimensions(new_input_dimensions);
+        scaling_layer->set_input_shape(new_input_shape);
     }
 
-    layers[get_first_trainable_layer_index()].get()->set_input_dimensions(new_input_dimensions);
+    layers[get_first_trainable_layer_index()].get()->set_input_shape(new_input_shape);
 }
 
 
@@ -377,9 +377,9 @@ Index NeuralNetwork::get_inputs_number() const
     if(has("Embedding"))
         return get_layer(0)->get_inputs_number();
 
-    const dimensions input_dimensions = layers[0]->get_input_dimensions();
+    const shape input_shape = layers[0]->get_input_shape();
 
-    return count_elements(input_dimensions);
+    return count_elements(input_shape);
 }
 
 
@@ -390,27 +390,27 @@ Index NeuralNetwork::get_outputs_number() const
 
     const Layer* last_layer = layers[layers.size() - 1].get();
 
-    const dimensions output_dimensions = last_layer->get_output_dimensions();
+    const shape output_dimensions = last_layer->get_output_shape();
 
     return count_elements(output_dimensions);
 }
 
 
-dimensions NeuralNetwork::get_input_dimensions() const
+shape NeuralNetwork::get_input_shape() const
 {
     if(layers.empty())
         return {};
 
-    return layers[0]->get_input_dimensions();
+    return layers[0]->get_input_shape();
 }
 
 
-dimensions NeuralNetwork::get_output_dimensions() const
+shape NeuralNetwork::get_output_shape() const
 {
     if(layers.empty()) 
         return {};
 
-    return layers[layers.size() - 1]->get_output_dimensions();
+    return layers[layers.size() - 1]->get_output_shape();
 }
 
 
@@ -659,7 +659,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         scaled_outputs.resize(inputs_dimensions[0], layers[0]->get_outputs_number());
 
-        outputs_dimensions = get_dimensions(scaled_outputs);
+        outputs_dimensions = get_shape(scaled_outputs);
 
         ForwardPropagation forward_propagation(inputs_dimensions[0], this);
 
@@ -685,7 +685,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         last_layer_outputs = scaled_outputs;
 
-        last_layer_outputs_dimensions = get_dimensions(last_layer_outputs);
+        last_layer_outputs_dimensions = get_shape(last_layer_outputs);
 
         for(Index i = 1; i < layers_number; i++)
         {
@@ -693,7 +693,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
             {
                 scaled_outputs.resize(inputs_dimensions[0], layers[0]->get_outputs_number());
 
-                outputs_dimensions = get_dimensions(scaled_outputs);
+                outputs_dimensions = get_shape(scaled_outputs);
 
                 TensorView inputs_tensor(last_layer_outputs.data(), {last_layer_outputs_dimensions[0], last_layer_outputs_dimensions[1]});
 
@@ -706,7 +706,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
                 scaled_outputs = tensor_map<2>(forward_propagation.layers[i]->get_outputs());
 
                 last_layer_outputs = scaled_outputs;
-                last_layer_outputs_dimensions = get_dimensions(last_layer_outputs);
+                last_layer_outputs_dimensions = get_shape(last_layer_outputs);
             }
         }
 
@@ -756,9 +756,9 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
 
     // Scaling4d* scaling_layer = static_cast<Scaling4d*>(get_first("Scaling4d"));
 
-    // const Index height = scaling_layer->get_input_dimensions()[0];
-    // const Index width = scaling_layer->get_input_dimensions()[1];
-    // const Index channels = scaling_layer->get_input_dimensions()[2];
+    // const Index height = scaling_layer->get_input_shape()[0];
+    // const Index width = scaling_layer->get_input_shape()[1];
+    // const Index channels = scaling_layer->get_input_shape()[2];
 
     // const Index current_height = image.dimension(0);
     // const Index current_width = image.dimension(1);
@@ -882,8 +882,8 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
             continue;
 
         information(dense2d_layer_index, 0) = label;
-        information(dense2d_layer_index, 1) = to_string(layers[i]->get_input_dimensions()[0]);
-        information(dense2d_layer_index, 2) = to_string(layers[i]->get_output_dimensions()[0]);
+        information(dense2d_layer_index, 1) = to_string(layers[i]->get_input_shape()[0]);
+        information(dense2d_layer_index, 2) = to_string(layers[i]->get_output_shape()[0]);
 
         const Dense<2>* dense2d_layer = static_cast<Dense<2>*>(layers[i].get());
 
@@ -1215,9 +1215,9 @@ void NeuralNetwork::save_outputs(Tensor3& inputs_3d, const filesystem::path& fil
 
     const Index batch_size = inputs_3d.dimension(0);
     const Index past_time_steps = inputs_3d.dimension(1);
-    const Index num_variables = inputs_3d.dimension(2);
+    const Index features_number = inputs_3d.dimension(2);
 
-    Tensor2 last_time_step_inputs(batch_size, num_variables);
+    Tensor2 last_time_step_inputs(batch_size, features_number);
 
     last_time_step_inputs = inputs_3d.chip(past_time_steps - 1, 1);
 
@@ -1243,7 +1243,7 @@ void NeuralNetwork::save_outputs(Tensor3& inputs_3d, const filesystem::path& fil
 
     for(Index i = 0; i < batch_size; ++i)
     {
-        for(Index j = 0; j < num_variables; ++j)
+        for(Index j = 0; j < features_number; ++j)
             file << last_time_step_inputs(i, j) << ";";
 
         for(Index j = 0; j < outputs_number; ++j)

@@ -16,16 +16,16 @@ namespace opennn
 {
 
 ImageDataset::ImageDataset(const Index new_samples_number,
-                           const dimensions& new_input_dimensions,
-                           const dimensions& new_target_dimensions)
+                           const shape& new_input_shape,
+                           const shape& new_target_shape)
 {
-    if (new_input_dimensions.size() != 3)
-        throw runtime_error("Input dimensions is not 3");
+    if (new_input_shape.size() != 3)
+        throw runtime_error("Input shape is not 3");
 
-    if (new_target_dimensions.size() != 1)
-        throw runtime_error("Target dimensions is not 1");
+    if (new_target_shape.size() != 1)
+        throw runtime_error("Target shape is not 1");
 
-    set(new_samples_number, new_input_dimensions, new_target_dimensions);
+    set(new_samples_number, new_input_shape, new_target_shape);
 }
 
 
@@ -39,25 +39,25 @@ ImageDataset::ImageDataset(const filesystem::path& new_data_path) : Dataset()
 
 Index ImageDataset::get_channels_number() const
 {
-    return input_dimensions[2];
+    return input_shape[2];
 }
 
 
 Index ImageDataset::get_image_width() const
 {
-    return input_dimensions[1];
+    return input_shape[1];
 }
 
 
 Index ImageDataset::get_image_height() const
 {
-    return input_dimensions[0];
+    return input_shape[0];
 }
 
 
 Index ImageDataset::get_image_size() const
 {
-    return input_dimensions[0] * input_dimensions[1] * input_dimensions[2];
+    return input_shape[0] * input_shape[1] * input_shape[2];
 }
 
 
@@ -123,11 +123,11 @@ type ImageDataset::get_random_vertical_translation_minimum() const
 
 void ImageDataset::set_data_random()
 {
-    const Index height = input_dimensions[0];
-    const Index width = input_dimensions[1];
-    const Index channels = input_dimensions[2];
+    const Index height = input_shape[0];
+    const Index width = input_shape[1];
+    const Index channels = input_shape[2];
 
-    const Index targets_number = target_dimensions[0];
+    const Index targets_number = target_shape[0];
     const Index inputs_number = height * width * channels;
     const Index samples_number = data.dimension(0);
 
@@ -181,19 +181,19 @@ void ImageDataset::set_data_random()
 
 void ImageDataset::set_channels_number(const int& new_channels)
 {
-    input_dimensions[2] = new_channels;
+    input_shape[2] = new_channels;
 }
 
 
 void ImageDataset::set_image_width(const int& new_width)
 {
-    input_dimensions[1] = new_width;
+    input_shape[1] = new_width;
 }
 
 
 void ImageDataset::set_image_height(const int& new_height)
 {
-    input_dimensions[0] = new_height;
+    input_shape[0] = new_height;
 }
 
 
@@ -296,12 +296,12 @@ Tensor2 ImageDataset::perform_augmentation(const Tensor2& input_tensor)
 {
     throw runtime_error("Image Augmentation is not yet implemented. Please check back in a future version.");
 /*
-    const dimensions input_dimensions = get_dimensions("Input");
+    const shape input_shape = get_shape("Input");
 
-    const Index samples_number = input_dimensions[0];
-//    const Index input_height = input_dimensions[0];
-//    const Index input_width = input_dimensions[1];
-//    const Index channels = input_dimensions[2];
+    const Index samples_number = input_shape[0];
+//    const Index input_height = input_shape[0];
+//    const Index input_width = input_shape[1];
+//    const Index channels = input_shape[2];
 
 //    TensorMap4 inputs(input_tensor.data(),
 //                                      samples_number,
@@ -400,7 +400,7 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
     set_data_path(read_xml_string(data_source_element, "Path"));
     set_has_ids(read_xml_bool(data_source_element, "HasSamplesId"));
 
-    set_dimensions("Input", { read_xml_index(data_source_element, "Height"),
+    set_shape("Input", { read_xml_index(data_source_element, "Height"),
                               read_xml_index(data_source_element, "Width"),
                               read_xml_index(data_source_element, "Channels") });
 
@@ -431,13 +431,13 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
 }
 
 
-vector<Descriptives> ImageDataset::scale_variables(const string&)
+vector<Descriptives> ImageDataset::scale_features(const string&)
 {
     TensorMap4 inputs_data(data.data(),
                            get_samples_number(),
-                           input_dimensions[0],
-                           input_dimensions[1],
-                           input_dimensions[2]);
+                           input_shape[0],
+                           input_shape[1],
+                           input_shape[2]);
 
     inputs_data.device(*device) = inputs_data / type(255);
 
@@ -445,19 +445,19 @@ vector<Descriptives> ImageDataset::scale_variables(const string&)
 }
 
 
-void ImageDataset::unscale_variables(const string&)
+void ImageDataset::unscale_features(const string&)
 {
     TensorMap4 inputs_data(data.data(),
                                            get_samples_number(),
-                                           input_dimensions[0],
-                                           input_dimensions[1],
-                                           input_dimensions[2]);
+                                           input_shape[0],
+                                           input_shape[1],
+                                           input_shape[2]);
 
     inputs_data.device(*device) = inputs_data * type(255);
 }
 
 
-void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
+void ImageDataset::read_bmp(const shape& new_input_shape)
 {
     chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
     
@@ -502,13 +502,13 @@ void ImageDataset::read_bmp(const dimensions& new_input_dimensions)
     width = image_data.dimension(1);
     image_channels = image_data.dimension(2);
 
-    if (new_input_dimensions[2] != image_channels && new_input_dimensions[2] != 0)
-        throw runtime_error("Different number of channels in new_input_dimensions \n");
+    if (new_input_shape[2] != image_channels && new_input_shape[2] != 0)
+        throw runtime_error("Different number of channels in new_input_shape \n");
 
-    if (new_input_dimensions[0] != 0 && new_input_dimensions[1] != 0)
+    if (new_input_shape[0] != 0 && new_input_shape[1] != 0)
     {
-        height = new_input_dimensions[0];
-        width = new_input_dimensions[1];
+        height = new_input_shape[0];
+        width = new_input_shape[1];
     }
 
     const Index inputs_number = height * width * image_channels;

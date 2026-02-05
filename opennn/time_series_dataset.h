@@ -19,8 +19,8 @@ class TimeSeriesDataset final : public Dataset
 public:
 
     TimeSeriesDataset(const Index = 0,
-                      const dimensions& = {},
-                      const dimensions& = {});
+                      const shape& = {},
+                      const shape& = {});
 
     TimeSeriesDataset(const filesystem::path&,
                       const string&,
@@ -41,7 +41,7 @@ public:
     const Index& get_time_raw_variable_index() const;
 
     TimeSeriesData get_data() const;
-    Tensor3 get_data(const string& sample_role, const string& variable_use) const;
+    Tensor3 get_data(const string& sample_role, const string& feature_use) const;
 
     void set_past_time_steps(const Index);
     void set_future_time_steps(const Index);

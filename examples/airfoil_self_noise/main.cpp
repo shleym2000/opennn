@@ -38,7 +38,7 @@ int main()
 
         // Neural Network
 
-        ApproximationNetwork approximation_network(dataset.get_input_dimensions(), {neurons_number}, dataset.get_target_dimensions());
+        ApproximationNetwork approximation_network(dataset.get_input_shape(), {neurons_number}, dataset.get_target_shape());
 
         Bounding* bounding_layer = (Bounding*)approximation_network.get_first("Bounding");
 

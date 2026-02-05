@@ -20,22 +20,22 @@ class Pooling final : public Layer
 
 public:
 
-    Pooling(const dimensions& = {2, 2, 1}, // Input dimensions {height,width,channels}
-            const dimensions& = { 2, 2 },  // Pool dimensions {pool_height,pool_width}
-            const dimensions& = { 2, 2 },  // Stride dimensions {row_stride, column_stride}
-            const dimensions& = { 0, 0 },  // Padding dimensions {padding_height, padding_width}
+    Pooling(const shape& = {2, 2, 1}, // Input shape {height,width,channels}
+            const shape& = { 2, 2 },  // Pool shape {pool_height,pool_width}
+            const shape& = { 2, 2 },  // Stride shape {row_stride, column_stride}
+            const shape& = { 0, 0 },  // Padding shape {padding_height, padding_width}
             const string& = "MaxPooling",
             const string& = "pooling_layer");
 
-    void set(const dimensions & = { 0, 0, 0 },
-             const dimensions & = { 1, 1 },
-             const dimensions & = { 1, 1 },
-             const dimensions & = { 0, 0 },
+    void set(const shape & = { 0, 0, 0 },
+             const shape & = { 1, 1 },
+             const shape & = { 1, 1 },
+             const shape & = { 0, 0 },
              const string & = "MaxPooling",
              const string & = "pooling_layer");
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     Index get_input_height() const;
     Index get_input_width() const;
@@ -56,7 +56,7 @@ public:
 
     string get_pooling_method() const;
 
-    void set_input_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
 
     void set_padding_height(const Index);
     void set_padding_width(const Index);
@@ -116,7 +116,7 @@ public:
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 
     Index pool_height = 1;
 

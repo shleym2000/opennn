@@ -35,13 +35,13 @@ NeuralNetwork* TrainingStrategy::get_neural_network() const
 }
 
 
-LossIndex* TrainingStrategy::get_loss_index() const
+Loss* TrainingStrategy::get_loss_index() const
 {
     return loss_index.get();
 }
 
 
-OptimizationAlgorithm* TrainingStrategy::get_optimization_algorithm() const
+Optimizer* TrainingStrategy::get_optimization_algorithm() const
 {
     return optimization_algorithm.get();
 }
@@ -68,9 +68,9 @@ void TrainingStrategy::set(const NeuralNetwork* new_neural_network, const Datase
 }
 
 
-void TrainingStrategy::set_loss_index(const string& new_loss_index)
+void TrainingStrategy::set_loss_index(const string& new_loss)
 {
-    loss_index = Registry<LossIndex>::instance().create(new_loss_index);
+    loss_index = Registry<Loss>::instance().create(new_loss);
 
     loss_index->set(neural_network, dataset);
 
@@ -85,7 +85,7 @@ void TrainingStrategy::set_loss_index(const string& new_loss_index)
 
 void TrainingStrategy::set_optimization_algorithm(const string& new_optimization_algorithm)
 {
-    optimization_algorithm = Registry<OptimizationAlgorithm>::instance().create(new_optimization_algorithm);
+    optimization_algorithm = Registry<Optimizer>::instance().create(new_optimization_algorithm);
 
     optimization_algorithm->set(loss_index.get());
 }
@@ -125,7 +125,7 @@ void TrainingStrategy::set_default()
         set_optimization_algorithm("AdaptiveMomentEstimation");
 
         AdaptiveMomentEstimation* adaptive_moment_estimation = dynamic_cast<AdaptiveMomentEstimation*>(get_optimization_algorithm());
-        adaptive_moment_estimation->set_maximum_epochs_number(100);
+        adaptive_moment_estimation->set_maximum_epochs(100);
         adaptive_moment_estimation->set_display_period(10);
 
         return;
@@ -159,7 +159,7 @@ void TrainingStrategy::set_default()
         set_optimization_algorithm("AdaptiveMomentEstimation");
 
         AdaptiveMomentEstimation* adaptive_moment_estimation = dynamic_cast<AdaptiveMomentEstimation*>(get_optimization_algorithm());
-        adaptive_moment_estimation->set_maximum_epochs_number(100);
+        adaptive_moment_estimation->set_maximum_epochs(100);
         adaptive_moment_estimation->set_display_period(10);
 
         return;
@@ -187,7 +187,7 @@ void TrainingStrategy::set_default()
 
     // Binary classification
 
-    else if(output_activation == "Logistic")
+    else if(output_activation == "Sigmoid")
     {
         set_loss_index("WeightedSquaredError");
         set_optimization_algorithm("QuasiNewtonMethod");
@@ -271,7 +271,7 @@ void TrainingStrategy::to_XML(XMLPrinter& printer) const
 
     printer.OpenElement("TrainingStrategy");
 
-    printer.OpenElement("LossIndex");
+    printer.OpenElement("Loss");
 
     add_xml_element(printer, "LossMethod", loss_index->get_name());
 
@@ -281,7 +281,7 @@ void TrainingStrategy::to_XML(XMLPrinter& printer) const
 
     printer.CloseElement();
 
-    printer.OpenElement("OptimizationAlgorithm");
+    printer.OpenElement("Optimizer");
 
     add_xml_element(printer, "OptimizationMethod", optimization_algorithm->get_name());
 
@@ -302,7 +302,7 @@ void TrainingStrategy::from_XML(const XMLDocument& document)
 
     // Loss index
 
-    const XMLElement* loss_index_element = root_element->FirstChildElement("LossIndex");
+    const XMLElement* loss_index_element = root_element->FirstChildElement("Loss");
     if(!loss_index_element) throw runtime_error("Loss index element is nullptr.\n");
 
     // Loss method
@@ -323,8 +323,8 @@ void TrainingStrategy::from_XML(const XMLDocument& document)
 
     // Optimization algorithm
 
-    const XMLElement* optimization_algorithm_element = root_element->FirstChildElement("OptimizationAlgorithm");
-    if(!optimization_algorithm_element) throw runtime_error("OptimizationAlgorithm element is nullptr.\n");
+    const XMLElement* optimization_algorithm_element = root_element->FirstChildElement("Optimizer");
+    if(!optimization_algorithm_element) throw runtime_error("Optimizer element is nullptr.\n");
 
     // Optimization method
 

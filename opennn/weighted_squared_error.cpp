@@ -16,7 +16,7 @@ namespace opennn
 {
 
 WeightedSquaredError::WeightedSquaredError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     set_default();
 }
@@ -142,9 +142,9 @@ void WeightedSquaredError::set_normalization_coefficient()
 
     if(target_raw_variables.size() == 1 && target_raw_variables[0].is_binary())
     {
-        const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+        const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
-        const Index negatives = dataset->calculate_used_negatives(target_variable_indices[0]);
+        const Index negatives = dataset->calculate_used_negatives(target_feature_indices[0]);
 
         normalization_coefficient = type(negatives)*negatives_weight*type(0.5);
 
@@ -218,7 +218,7 @@ void WeightedSquaredError::calculate_output_gradients(const Batch& batch,
 
     // Batch
 
-    const Index batch_size = batch.target_dimensions[0];
+    const Index batch_size = batch.target_shape[0];
 
     // Back propagation
 
@@ -278,7 +278,7 @@ void WeightedSquaredError::calculate_output_gradients(const BatchCuda&,
 
 #endif
 
-REGISTER(LossIndex, WeightedSquaredError, "WeightedSquaredError");
+REGISTER(Loss, WeightedSquaredError, "WeightedSquaredError");
 
 }
 

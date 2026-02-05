@@ -14,14 +14,14 @@
 namespace opennn
 {
 
-Unscaling::Unscaling(const dimensions& new_input_dimensions, const string& label)
+Unscaling::Unscaling(const shape& new_input_shape, const string& label)
     : Layer()
 {
-    set(new_input_dimensions[0], label);
+    set(new_input_shape[0], label);
 }
 
 
-dimensions Unscaling::get_input_dimensions() const
+shape Unscaling::get_input_shape() const
 {
     const Index neurons_number = descriptives.size();
 
@@ -29,7 +29,7 @@ dimensions Unscaling::get_input_dimensions() const
 }
 
 
-dimensions Unscaling::get_output_dimensions() const
+shape Unscaling::get_output_shape() const
 {
     const Index neurons_number = descriptives.size();
 
@@ -125,15 +125,15 @@ string Unscaling::get_expression(const vector<string>& new_feature_names,
 }
 
 
-void Unscaling::set_input_dimensions(const dimensions& new_input_dimensions)
+void Unscaling::set_input_shape(const shape& new_input_shape)
 {
-    descriptives.resize(new_input_dimensions[0]);
+    descriptives.resize(new_input_shape[0]);
 }
 
 
-void Unscaling::set_output_dimensions(const dimensions& new_output_dimensions)
+void Unscaling::set_output_shape(const shape& new_output_shape)
 {
-    descriptives.resize(new_output_dimensions[0]);
+    descriptives.resize(new_output_shape[0]);
 }
 
 
@@ -243,7 +243,7 @@ void Unscaling::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Unscaling");
 
-    const dimensions output_dimensions = get_output_dimensions();
+    const shape output_dimensions = get_output_shape();
 
     add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
 
@@ -314,16 +314,16 @@ UnscalingForwardPropagation::UnscalingForwardPropagation(const Index new_batch_s
 
 void UnscalingForwardPropagation::initialize()
 {
-    const dimensions output_dimensions = static_cast<Unscaling*>(layer)->get_output_dimensions();
+    const shape output_dimensions = static_cast<Unscaling*>(layer)->get_output_shape();
 
-    outputs.dims = {batch_size, output_dimensions[0]};
+    outputs.shape = {batch_size, output_dimensions[0]};
 }
 
 
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs.dims << endl;
+         << outputs.shape << endl;
 }
 
 REGISTER(Layer, Unscaling, "Unscaling")
