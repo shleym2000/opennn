@@ -121,8 +121,8 @@ protected:
 
     template <int Rank>
     void calculate_activations(const string& activation_function,
-                               TensorMap<Tensor<type, Rank>, Aligned64> activations,
-                               TensorMap<Tensor<type, Rank>, Aligned64> activation_derivatives) const
+                               TensorMap<Tensor<type, Rank>, AlignedMax> activations,
+                               TensorMap<Tensor<type, Rank>, AlignedMax> activation_derivatives) const
     {
         if (activation_function == "Linear")
             linear(activations, activation_derivatives);
@@ -144,7 +144,7 @@ protected:
 
 
     template <int Rank>
-    void binary(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx, type threshold) const
+    void binary(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx, type threshold) const
     {
         y.device(*device) = (y < threshold).select(type(0), type(1));
 
@@ -155,7 +155,7 @@ protected:
 
 
     template <int Rank>
-    void linear(TensorMap<Tensor<type, Rank>, Aligned64>, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
+    void linear(TensorMap<Tensor<type, Rank>, AlignedMax>, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -164,7 +164,7 @@ protected:
 
 
     template <int Rank>
-    void exponential_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
+    void exponential_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
     {
         const type alpha = type(1);
 
@@ -177,7 +177,7 @@ protected:
 
 
     template <int Rank>
-    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
+    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
     {
         y.device(*device) = y.tanh();
 
@@ -188,7 +188,7 @@ protected:
 
 
     template <int Rank>
-    void logistic(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
+    void logistic(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
     {
         y.device(*device) = (type(1) + (-y).exp()).inverse();
 
@@ -199,7 +199,7 @@ protected:
 
 
     template <int Rank>
-    void rectified_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
+    void rectified_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
     {
         y.device(*device) = y.cwiseMax(type(0));
 
@@ -210,7 +210,7 @@ protected:
 
 
     template <int Rank>
-    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx, type slope) const
+    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx, type slope) const
     {
         y.device(*device) = (y > type(0)).select(y, slope * y);
 
@@ -221,7 +221,7 @@ protected:
 
 
     template <int Rank>
-    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
+    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -244,8 +244,8 @@ protected:
 
     template <int Rank>
     void normalize_batch(
-        TensorMap<Tensor<type, Rank>, Aligned64>& outputs,
-        TensorMap<Tensor<type, Rank>, Aligned64>& normalized_outputs,
+        TensorMap<Tensor<type, Rank>, AlignedMax>& outputs,
+        TensorMap<Tensor<type, Rank>, AlignedMax>& normalized_outputs,
         TensorMap1 batch_means,
         TensorMap1 batch_variances,
         Tensor1 running_means,
@@ -291,7 +291,7 @@ protected:
 
 
     template <int Rank>
-    void dropout(TensorMap<Tensor<type, Rank>, Aligned64> tensor, const type& dropout_rate) const
+    void dropout(TensorMap<Tensor<type, Rank>, AlignedMax> tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
@@ -306,25 +306,25 @@ protected:
 
 
     template <int Rank>
-    void calculate_combinations(const TensorMap<Tensor<type, Rank>, Aligned64>& inputs,
+    void calculate_combinations(const TensorMap<Tensor<type, Rank>, AlignedMax>& inputs,
                                 const TensorMap2& weights,
                                 const TensorMap1& biases,
-                                TensorMap<Tensor<type, Rank>, Aligned64>& outputs) const
+                                TensorMap<Tensor<type, Rank>, AlignedMax>& outputs) const
     {
         const Index inputs_size = weights.dimension(0);
         const Index outputs_size = weights.dimension(1);
         const Index total_rows = inputs.size() / inputs_size;
 
-        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
             inputs_matrix(inputs.data(), total_rows, inputs_size);
 
-        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
             weights_matrix(weights.data(), inputs_size, outputs_size);
 
         const Map<const Eigen::RowVector<type, Dynamic>>
             biases_vector(biases.data(), outputs_size);
 
-        Map<Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+        Map<Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
             outputs_matrix(outputs.data(), total_rows, outputs_size);
 
         outputs_matrix.noalias() = (inputs_matrix * weights_matrix).rowwise() + biases_vector;
@@ -332,28 +332,28 @@ protected:
 
 
     template <int Rank>
-    void calculate_gradients(const TensorMap<Tensor<type, Rank>, Aligned64>& inputs,
-                             const TensorMap<Tensor<type, Rank>, Aligned64>& output_gradients,
+    void calculate_gradients(const TensorMap<Tensor<type, Rank>, AlignedMax>& inputs,
+                             const TensorMap<Tensor<type, Rank>, AlignedMax>& output_gradients,
                              const TensorMap2& weights,
                              TensorMap2& weight_gradients,
                              TensorMap1& bias_gradients,
-                             TensorMap<Tensor<type, Rank>, Aligned64>& input_gradients,
+                             TensorMap<Tensor<type, Rank>, AlignedMax>& input_gradients,
                              const bool is_first_layer) const
     {
         const Index inputs_size = weights.dimension(0);
         const Index outputs_size = weights.dimension(1);
         const Index total_rows = inputs.size() / inputs_size;
 
-        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
             inputs_matrix(inputs.data(), total_rows, inputs_size);
 
-        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
             gradients_matrix(output_gradients.data(), total_rows, outputs_size);
 
         Map<Eigen::Vector<type, Dynamic>>
             bias_gradients_vector(bias_gradients.data(), outputs_size);
 
-        Map<Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+        Map<Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
             weight_gradients_matrix(weight_gradients.data(), inputs_size, outputs_size);
 
         bias_gradients_vector.noalias() = gradients_matrix.colwise().sum();
@@ -362,10 +362,10 @@ protected:
 
         if(!is_first_layer)
         {
-            const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
                 weights_matrix(weights.data(), inputs_size, outputs_size);
 
-            Map<Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            Map<Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
                 input_gradients_matrix(input_gradients.data(), total_rows, inputs_size);
 
             input_gradients_matrix.noalias() = gradients_matrix * weights_matrix.transpose();

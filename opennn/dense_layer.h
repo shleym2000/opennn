@@ -834,8 +834,7 @@ public:
                                            Tensor2& global_jacobian) const override
     {
         const Index batch_size = back_propagation->batch_size;
-        constexpr Index ALIGNMENT = 64;
-        constexpr Index MASK = ~(ALIGNMENT - 1);
+        constexpr Index MASK = ~(EIGEN_MAX_ALIGN_BYTES - 1);
 
         Index global_offset = start_column_index;
         Index local_offset = 0;
@@ -851,7 +850,7 @@ public:
                 .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, biases_size});
 
         local_offset += biases_size;
-        global_offset += (biases_size + ALIGNMENT - 1) & MASK;
+        global_offset += (biases_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
 
         const Index weights_size = weights.size();
 
@@ -861,7 +860,7 @@ public:
                 .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, weights_size});
 
         local_offset += weights_size;
-        global_offset += (weights_size + ALIGNMENT - 1) & MASK;
+        global_offset += (weights_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
 
         if(!batch_normalization) return;
 
@@ -872,7 +871,7 @@ public:
                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, gammas_size});
 
         local_offset += gammas_size;
-        global_offset += (gammas_size + ALIGNMENT - 1) & MASK;
+        global_offset += (gammas_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
 
         const Index betas_size = betas.size();
 
@@ -881,7 +880,7 @@ public:
                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, betas_size});
 
         local_offset += betas_size;
-        global_offset += (betas_size + ALIGNMENT - 1) & MASK;
+        global_offset += (betas_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
     }
 
 

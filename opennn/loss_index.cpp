@@ -252,8 +252,7 @@ void Loss::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
 
     const vector<Index> layer_parameter_numbers = neural_network->get_layer_parameter_numbers();
 
-    constexpr Index ALIGNMENT = 64;
-    constexpr Index MASK = ~(ALIGNMENT - 1);
+    constexpr Index MASK = ~(EIGEN_MAX_ALIGN_BYTES - 1);
 
     Index index = 0;
 
@@ -270,7 +269,7 @@ void Loss::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
             const Index view_size = tensor_view->size();
 
             if(view_size > 0)
-                index += (view_size + ALIGNMENT - 1) & MASK;
+                index += (view_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
         }
     }
 

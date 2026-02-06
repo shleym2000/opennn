@@ -662,8 +662,7 @@ shape prepend(const Index &x, const shape &d)
 
 type* link(type *pointer, vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 64;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for(TensorView* view : views)
@@ -673,8 +672,8 @@ type* link(type *pointer, vector<TensorView*> views)
 
         view->data = pointer;
 
-        if (reinterpret_cast<uintptr_t>(pointer) % ALIGN_BYTES != 0)
-            throw runtime_error("Master pointer in link() is not 64-byte aligned.");
+        if (reinterpret_cast<uintptr_t>(pointer) % EIGEN_MAX_ALIGN_BYTES != 0)
+            throw runtime_error("Master pointer in link() is not aligned.");
 
         pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
@@ -692,8 +691,7 @@ void link(type *pointer, vector<vector<TensorView*> > views)
 
 Index get_size(const vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 64;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
@@ -725,8 +723,7 @@ Index get_size(vector<vector<TensorView*> > views)
 
 type* link(type* pointer, vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 64;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for (TensorViewCuda* view : views)
@@ -752,8 +749,7 @@ void link(type* pointer, vector<vector<TensorViewCuda*> > views)
 
 Index get_size(const vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 64;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
