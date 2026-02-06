@@ -124,23 +124,23 @@ public:
 
     Tensor<Index, 1> get_sample_role_numbers() const;
 
-    inline Index get_raw_variables_number() const { return raw_variables.size(); }
-    Index get_raw_variables_number(const string&) const;
-    Index get_used_raw_variables_number() const;
+    inline Index get_variables_number() const { return variables.size(); }
+    Index get_variables_number(const string&) const;
+    Index get_used_variables_number() const;
 
-    const vector<Variable>& get_raw_variables() const;
-    vector<Variable> get_raw_variables(const string&) const;
+    const vector<Variable>& get_variables() const;
+    vector<Variable> get_variables(const string&) const;
 
-    Index get_raw_variable_index(const string&) const;
-    Index get_raw_variable_index(const Index) const;
+    Index get_variable_index(const string&) const;
+    Index get_variable_index(const Index) const;
 
-    vector<Index> get_raw_variable_indices(const string&) const;
-    vector<Index> get_used_raw_variables_indices() const;
+    vector<Index> get_variable_indices(const string&) const;
+    vector<Index> get_used_variables_indices() const;
 
-    vector<string> get_raw_variable_names() const;
-    vector<string> get_raw_variable_names(const string&) const;
+    vector<string> get_variable_names() const;
+    vector<string> get_variable_names(const string&) const;
 
-    VariableType get_raw_variable_type(const Index index) const {return raw_variables[index].type;}
+    VariableType get_variable_type(const Index index) const {return variables[index].type;}
 
     // Variables get
 
@@ -174,10 +174,10 @@ public:
     Tensor2 get_sample_input_data(const Index) const;
     Tensor2 get_sample_target_data(const Index) const;
 
-    Tensor2 get_raw_variable_data(const Index) const;
-    Tensor2 get_raw_variable_data(const Index, const vector<Index>&) const;
-    //Tensor2 get_raw_variable_data(const Tensor<Index, 1>&) const;
-    Tensor2 get_raw_variable_data(const string&) const;
+    Tensor2 get_variable_data(const Index) const;
+    Tensor2 get_variable_data(const Index, const vector<Index>&) const;
+    //Tensor2 get_variable_data(const Tensor<Index, 1>&) const;
+    Tensor2 get_variable_data(const string&) const;
 
     string get_sample_category(const Index, const Index&) const;
     Tensor1 get_sample(const Index) const;
@@ -244,38 +244,38 @@ public:
     void set_sample_roles(const vector<string>&);
     void set_sample_roles(const vector<Index>&, const string&);
 
-    // Raw variables set
+    // Variables set
 
-    void set_raw_variables(const vector<Variable>&);
+    void set_variables(const vector<Variable>&);
 
-    void set_default_raw_variable_names();
+    void set_default_variable_names();
 
-    void set_default_raw_variables_roles();
-    void set_default_raw_variables_roles_forecasting();
-    virtual void set_raw_variable_roles(const vector<string>&);
+    void set_default_variables_roles();
+    void set_default_variables_roles_forecasting();
+    virtual void set_variable_roles(const vector<string>&);
 
-    void set_raw_variables(const string&);
-    void set_raw_variable_indices(const vector<Index>&, const vector<Index>&);
-    void set_input_raw_variables_unused();
+    void set_variables(const string&);
+    void set_variable_indices(const vector<Index>&, const vector<Index>&);
+    void set_input_variables_unused();
 
-    void set_raw_variable_role(const Index, const string&);
-    void set_raw_variable_role(const string&, const string&);
+    void set_variable_role(const Index, const string&);
+    void set_variable_role(const string&, const string&);
 
-    void set_raw_variable_type(const Index, const VariableType&);
-    void set_raw_variable_type(const string&, const VariableType&);
+    void set_variable_type(const Index, const VariableType&);
+    void set_variable_type(const string&, const VariableType&);
 
-    void set_raw_variable_types(const VariableType&);
+    void set_variable_types(const VariableType&);
 
-    void set_raw_variable_names(const vector<string>&);
+    void set_variable_names(const vector<string>&);
 
-    void set_raw_variables_number(const Index);
+    void set_variables_number(const Index);
 
-    void set_raw_variable_scalers(const string&);
+    void set_variable_scalers(const string&);
 
-    void set_raw_variable_scalers(const vector<string>&);
+    void set_variable_scalers(const vector<string>&);
 
-    void set_binary_raw_variables();
-    void unuse_constant_raw_variables();
+    void set_binary_variables();
+    void unuse_constant_variables();
 
     // Variables set
 
@@ -313,10 +313,10 @@ public:
 
     bool is_sample_used(const Index) const;
 
-    bool has_binary_raw_variables() const;
-    bool has_categorical_raw_variables() const;
-    bool has_binary_or_categorical_raw_variables() const;
-    bool has_time_raw_variable() const;
+    bool has_binary_variables() const;
+    bool has_categorical_variables() const;
+    bool has_binary_or_categorical_variables() const;
+    bool has_time_variable() const;
 
     bool has_validation() const;
 
@@ -336,8 +336,8 @@ public:
 
     //Tensor<Index, 1> unuse_repeated_samples();
 
-    vector<string> unuse_uncorrelated_raw_variables(const type = type(0.25));
-    vector<string> unuse_collinear_raw_variables(const type = type(0.95));
+    vector<string> unuse_uncorrelated_variables(const type = type(0.25));
+    vector<string> unuse_collinear_variables(const type = type(0.95));
 
     // Initialization
 
@@ -348,11 +348,11 @@ public:
     vector<Descriptives> calculate_feature_descriptives() const;
     //vector<Descriptives> calculate_used_variable_descriptives() const;
 
-    //vector<Descriptives> calculate_raw_variable_descriptives() const;
+    //vector<Descriptives> calculate_variable_descriptives() const;
 
-    vector<Descriptives> calculate_raw_variable_descriptives_positive_samples() const;
-    vector<Descriptives> calculate_raw_variable_descriptives_negative_samples() const;
-    vector<Descriptives> calculate_raw_variable_descriptives_categories(const Index) const;
+    vector<Descriptives> calculate_variable_descriptives_positive_samples() const;
+    vector<Descriptives> calculate_variable_descriptives_negative_samples() const;
+    vector<Descriptives> calculate_variable_descriptives_categories(const Index) const;
 
     vector<Descriptives> calculate_feature_descriptives(const string&) const;
 
@@ -367,17 +367,17 @@ public:
 
     // Distribution
 
-    vector<Histogram> calculate_raw_variable_distributions(const Index = 10) const;
+    vector<Histogram> calculate_variable_distributions(const Index = 10) const;
 
     // Box plots
 
-    vector<BoxPlot> calculate_raw_variables_box_plots() const;
+    vector<BoxPlot> calculate_variables_box_plots() const;
 
     // Inputs correlations
 
-    Tensor<Correlation, 2> calculate_input_raw_variable_pearson_correlations() const;
+    Tensor<Correlation, 2> calculate_input_variable_pearson_correlations() const;
 
-    Tensor<Correlation, 2> calculate_input_raw_variable_spearman_correlations() const;
+    Tensor<Correlation, 2> calculate_input_variable_spearman_correlations() const;
 
     void print_inputs_correlations() const;
 
@@ -385,14 +385,14 @@ public:
 
     // Input-target correlations
 
-    Tensor<Correlation, 2> calculate_input_target_raw_variable_pearson_correlations() const;
-    Tensor<Correlation, 2> calculate_input_target_raw_variable_spearman_correlations() const;
+    Tensor<Correlation, 2> calculate_input_target_variable_pearson_correlations() const;
+    Tensor<Correlation, 2> calculate_input_target_variable_spearman_correlations() const;
 
     Tensor<Index, 1> calculate_correlations_rank() const;
 
-    void print_input_target_raw_variables_correlations() const;
+    void print_input_target_variables_correlations() const;
 
-    void print_top_input_target_raw_variables_correlations() const;
+    void print_top_input_target_variables_correlations() const;
 
     // Filtering
 
@@ -400,7 +400,7 @@ public:
 
     // Scaling2d
 
-    void set_default_raw_variables_scalers();
+    void set_default_variables_scalers();
 
     // Data scaling
 
@@ -442,7 +442,7 @@ public:
     void save(const filesystem::path&) const;
     void load(const filesystem::path&);
 
-    void print_raw_variables() const;
+    void print_variables() const;
 
     void print_data() const;
     void print_data_preview() const;
@@ -473,8 +473,8 @@ public:
     void scrub_missing_values();
     void calculate_missing_values_statistics();
 
-    Tensor<Index, 1> count_nans_per_raw_variable() const;
-    Index count_raw_variables_with_nan() const;
+    Tensor<Index, 1> count_nans_per_variable() const;
+    Index count_variables_with_nan() const;
     Index count_rows_with_nan() const;
     Index count_nan() const;
 
@@ -541,9 +541,9 @@ protected:
 
     vector<string> sample_ids;
 
-    // Raw variables
+    // Variables
 
-    vector<Variable> raw_variables;
+    vector<Variable> variables;
 
     // Data File
 
@@ -553,7 +553,7 @@ protected:
 
     string missing_values_label = "NA";
 
-    Tensor<bool, 1> nans_raw_variables;
+    Tensor<bool, 1> nans_variables;
 
     bool has_header = false;
 
@@ -571,7 +571,7 @@ protected:
 
     Index missing_values_number = 0;
 
-    Tensor<Index, 1> raw_variables_missing_values_number;
+    Tensor<Index, 1> variables_missing_values_number;
 
     Index rows_missing_values_number = 0;
 
@@ -582,12 +582,12 @@ protected:
     const vector<string> positive_words = {"1", "yes", "positive", "+", "true", "good", "si", "sí", "Sí"};
     const vector<string> negative_words = {"0", "no", "negative", "-", "false", "bad", "not", "No"};
 
-    void raw_variables_to_XML(XMLPrinter&) const;
+    void variables_to_XML(XMLPrinter&) const;
     void samples_to_XML(XMLPrinter&) const;
     void missing_values_to_XML(XMLPrinter&) const;
     void preview_data_to_XML(XMLPrinter&) const;
 
-    void raw_variables_from_XML(const XMLElement*);
+    void variables_from_XML(const XMLElement*);
     void samples_from_XML(const XMLElement*);
     void missing_values_from_XML(const XMLElement*);
     void preview_data_from_XML(const XMLElement*);

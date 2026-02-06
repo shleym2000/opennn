@@ -1227,9 +1227,9 @@ Tensor2 TestingAnalysis::perform_lift_chart_analysis() const
 Tensor2 TestingAnalysis::calculate_lift_chart(const Tensor2& cumulative_gain) const
 {
     const Index rows_number = cumulative_gain.dimension(0);
-    const Index raw_variables_number = cumulative_gain.dimension(1);
+    const Index variables_number = cumulative_gain.dimension(1);
 
-    Tensor2 lift_chart(rows_number, raw_variables_number);
+    Tensor2 lift_chart(rows_number, variables_number);
 
     lift_chart(0,0) = type(0);
     lift_chart(0,1) = type(1);
@@ -1439,7 +1439,7 @@ void TestingAnalysis::save_confusion(const filesystem::path& file_name) const
 {
     const Tensor<Index, 2> confusion = calculate_confusion();
 
-    const Index raw_variables_number = confusion.dimension(0);
+    const Index variables_number = confusion.dimension(0);
 
     ofstream file(file_name);
 
@@ -1457,12 +1457,12 @@ void TestingAnalysis::save_confusion(const filesystem::path& file_name) const
 
     file << endl;
 
-    for(Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
         file << target_variable_names[i] << ",";
 
-        for(Index j = 0; j < raw_variables_number; j++)
-            j == raw_variables_number - 1
+        for(Index j = 0; j < variables_number; j++)
+            j == variables_number - 1
                 ? file << confusion(i, j) << endl
                 : file << confusion(i, j) << ",";
     }

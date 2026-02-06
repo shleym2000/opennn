@@ -370,13 +370,13 @@ void translate_image_x(const ThreadPoolDevice* device,
     for(Index i = 0; i < limit_column * channels; i++)
     {
         const Index channel = i % channels;
-        const Index raw_variable = i / channels;
+        const Index variable = i / channels;
 
-        const TensorMap<const Tensor2> input_column_map(input.data() + raw_variable*height + channel*input_size,
+        const TensorMap<const Tensor2> input_column_map(input.data() + variable*height + channel*input_size,
                                                                 height,
                                                                 1);
 
-        TensorMap2 output_column_map(output.data() + (raw_variable + shift)*height + channel*input_size,
+        TensorMap2 output_column_map(output.data() + (variable + shift)*height + channel*input_size,
                                                      height,
                                                      1);
 

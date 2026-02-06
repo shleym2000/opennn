@@ -106,7 +106,7 @@ string ModelExpression::write_softmax_c() const
 }
 
 
-string ModelExpression::get_expression_c(const vector<Dataset::Variable>& raw_variables) const
+string ModelExpression::get_expression_c(const vector<Dataset::Variable>& variables) const
 {
     // Data
 
@@ -114,15 +114,15 @@ string ModelExpression::get_expression_c(const vector<Dataset::Variable>& raw_va
 
     vector<string> input_names = neural_network->get_feature_names();
     if(input_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                input_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Input" || variable.role == "InputTarget")
+                input_names.push_back(variable.name);
 
     vector<string> output_names = neural_network->get_output_names();
     if(output_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Target" || raw_variable.role == "InputTarget")
-                output_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Target" || variable.role == "InputTarget")
+                output_names.push_back(variable.name);
 
     vector<string> fixed_feature_names = fix_feature_names(input_names);
     vector<string> fixed_output_names = fix_output_names(output_names);
@@ -347,7 +347,7 @@ string ModelExpression::write_subheader_api() const{
 }
 
 
-string ModelExpression::get_expression_api(const vector<Dataset::Variable>& raw_variables) const
+string ModelExpression::get_expression_api(const vector<Dataset::Variable>& variables) const
 {
     // Data
 
@@ -355,15 +355,15 @@ string ModelExpression::get_expression_api(const vector<Dataset::Variable>& raw_
 
     vector<string> input_names = neural_network->get_feature_names();
     if(input_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                input_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Input" || variable.role == "InputTarget")
+                input_names.push_back(variable.name);
 
     vector<string> output_names = neural_network->get_output_names();
     if(output_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Target" || raw_variable.role == "InputTarget")
-                output_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Target" || variable.role == "InputTarget")
+                output_names.push_back(variable.name);
 
     const vector<string> fixed_feature_names = fix_feature_names(input_names);
     const vector<string> fixed_output_names = fix_output_names(output_names);
@@ -736,21 +736,21 @@ string ModelExpression::subheader_javascript() const
 }
 
 
-string ModelExpression::get_expression_javascript(const vector<Dataset::Variable>& raw_variables) const
+string ModelExpression::get_expression_javascript(const vector<Dataset::Variable>& variables) const
 {
     // Prepare data
 
     vector<string> input_names = neural_network->get_feature_names();
     if(input_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                input_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Input" || variable.role == "InputTarget")
+                input_names.push_back(variable.name);
 
     vector<string> output_names = neural_network->get_output_names();
     if(output_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Target" || raw_variable.role == "InputTarget")
-                output_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Target" || variable.role == "InputTarget")
+                output_names.push_back(variable.name);
 
     const Index inputs_number = input_names.size();
     const Index outputs_number = output_names.size();
@@ -850,7 +850,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::Variable
             inputs_descriptives = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"))->get_descriptives();
             is_scaling_3d = true;
 
-            for(const Dataset::Variable& var : raw_variables)
+            for(const Dataset::Variable& var : variables)
                 if(var.role == "Input" || var.role == "InputTarget")
                     descriptive_names.push_back(var.name);
         }
@@ -1143,7 +1143,7 @@ string ModelExpression::write_subheader_python() const
 }
 
 
-string ModelExpression::get_expression_python(const vector<Dataset::Variable>& raw_variables) const
+string ModelExpression::get_expression_python(const vector<Dataset::Variable>& variables) const
 {
     // Data
 
@@ -1151,9 +1151,9 @@ string ModelExpression::get_expression_python(const vector<Dataset::Variable>& r
 
     vector<string> input_names = neural_network->get_feature_names();
     if(input_names.empty())
-        for(const Dataset::Variable& raw_variable : raw_variables)
-            if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                input_names.push_back(raw_variable.name);
+        for(const Dataset::Variable& variable : variables)
+            if(variable.role == "Input" || variable.role == "InputTarget")
+                input_names.push_back(variable.name);
 
     vector<string> original_outputs = neural_network->get_output_names();
     vector<string> outputs = fix_output_names(original_outputs);
@@ -1344,16 +1344,16 @@ string ModelExpression::get_expression_python(const vector<Dataset::Variable>& r
     buffer << "def main():\n"
            << "\n\t# Introduce your input values here\n";
 
-    vector<string> fixed_raw_names = fix_feature_names(input_names);
+    vector<string> fixed_variable_names = fix_feature_names(input_names);
 
     for(Index i = 0; i < inputs_number; ++i)
-        buffer << "\t" << fixed_raw_names[i] << " = 0  # " << input_names[i] << "\n";
+        buffer << "\t" << fixed_variable_names[i] << " = 0  # " << input_names[i] << "\n";
 
     buffer << "\n\t# --- Data conversion (DO NOT modify) ---\n";
     buffer << "\tinputs = []\n\n";
 
     for(Index i = 0; i < inputs_number; ++i)
-        buffer << "\tinputs.append(" << fixed_raw_names[i] << ")\n";
+        buffer << "\tinputs.append(" << fixed_variable_names[i] << ")\n";
 
     buffer << "\n\t" << "nn = NeuralNetwork()\n"
            << "\t" << "outputs = nn.calculate_outputs(inputs)\n"
@@ -1515,40 +1515,40 @@ vector<string> ModelExpression::fix_output_names(const vector<string>& output_na
 }
 
 
-void ModelExpression::save_python(const filesystem::path& file_name, const vector<Dataset::Variable>& raw_variables) const
+void ModelExpression::save_python(const filesystem::path& file_name, const vector<Dataset::Variable>& variables) const
 {
     ofstream file(file_name);
 
     if(!file.is_open())
         return;
 
-    file << get_expression_python(raw_variables);
+    file << get_expression_python(variables);
 }
 
 
-void ModelExpression::save_c(const filesystem::path& file_name, const vector<Dataset::Variable>& raw_variables) const
+void ModelExpression::save_c(const filesystem::path& file_name, const vector<Dataset::Variable>& variables) const
 {
     ofstream file(file_name);
 
     if(!file.is_open())
         return;
 
-    file << get_expression_c(raw_variables);
+    file << get_expression_c(variables);
 }
 
 
-void ModelExpression::save_javascript(const filesystem::path& file_name, const vector<Dataset::Variable>& raw_variables) const
+void ModelExpression::save_javascript(const filesystem::path& file_name, const vector<Dataset::Variable>& variables) const
 {
     ofstream file(file_name);
 
     if(!file.is_open())
         return;
 
-    file << get_expression_javascript(raw_variables);
+    file << get_expression_javascript(variables);
 }
 
 
-void ModelExpression::save_api(const filesystem::path& file_name, const vector<Dataset::Variable>& raw_variables) const
+void ModelExpression::save_api(const filesystem::path& file_name, const vector<Dataset::Variable>& variables) const
 {
     ofstream file(file_name);
 
@@ -1556,7 +1556,7 @@ void ModelExpression::save_api(const filesystem::path& file_name, const vector<D
         return;
 
 
-    file << get_expression_api(raw_variables);
+    file << get_expression_api(variables);
 }
 
 }

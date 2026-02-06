@@ -86,10 +86,10 @@ void WeightedSquaredError::set_weights()
 {
     if(!dataset) return;
 
-    const vector<Dataset::Variable>& target_raw_variables
-        = dataset->get_raw_variables("Target");
+    const vector<Dataset::Variable>& target_variables
+        = dataset->get_variables("Target");
 
-    if(target_raw_variables.empty())
+    if(target_variables.empty())
     {
         positives_weight = type(1);
         negatives_weight = type(1);
@@ -97,7 +97,7 @@ void WeightedSquaredError::set_weights()
         return;
     }
 
-    if(target_raw_variables.size() == 1 && target_raw_variables[0].is_binary())
+    if(target_variables.size() == 1 && target_variables[0].is_binary())
     {
         const Tensor<Index, 1> target_distribution = dataset->calculate_target_distribution();
 
@@ -131,16 +131,16 @@ void WeightedSquaredError::set_normalization_coefficient()
         return;
     }
 
-    const vector<Dataset::Variable>& target_raw_variables
-        = dataset->get_raw_variables("Target");
+    const vector<Dataset::Variable>& target_variables
+        = dataset->get_variables("Target");
 
-    if(target_raw_variables.empty())
+    if(target_variables.empty())
     {
         normalization_coefficient = type(1);
         return;
     }
 
-    if(target_raw_variables.size() == 1 && target_raw_variables[0].is_binary())
+    if(target_variables.size() == 1 && target_variables[0].is_binary())
     {
         const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 

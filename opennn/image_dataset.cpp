@@ -282,7 +282,7 @@ void ImageDataset::to_XML(XMLPrinter& printer) const
 
     printer.CloseElement();
 
-    raw_variables_to_XML(printer);
+    variables_to_XML(printer);
 
     samples_to_XML(printer);
 
@@ -417,11 +417,11 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
     set_random_vertical_translation_minimum(type(atof(read_xml_string(data_source_element, "RandomVerticalTranslationMinimum").c_str())));
     set_random_vertical_translation_maximum(type(atof(read_xml_string(data_source_element, "RandomVerticalTranslationMaximum").c_str())));
 
-    // Raw Variables
+    // Variables
 
-    const XMLElement* raw_variables_element = image_dataset_element->FirstChildElement("Variables");
+    const XMLElement* variables_element = image_dataset_element->FirstChildElement("Variables");
 
-    raw_variables_from_XML(raw_variables_element);
+    variables_from_XML(variables_element);
 
     // Samples
 
@@ -512,7 +512,7 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
     }
 
     const Index inputs_number = height * width * image_channels;
-    const Index raw_variables_number = inputs_number + 1;
+    const Index variables_number = inputs_number + 1;
 
     const Index pixels_number = height * width * image_channels;
 
@@ -527,7 +527,7 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
     for(Index i = 0; i < targets_number; i++)
         categories[i] = directory_path[i].filename().string();
 
-    raw_variables[raw_variables_number-1].set_categories(categories);
+    variables[variables_number-1].set_categories(categories);
 
     data.setZero();
 

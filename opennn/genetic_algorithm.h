@@ -86,7 +86,7 @@ public:
 
     vector<Index> get_selected_individual_indices() const;
 
-    vector<Index> get_raw_variable_indices(const Tensor<bool, 1>&);
+    vector<Index> get_variable_indices(const Tensor<bool, 1>&);
 
     InputsSelectionResults perform_input_selection() override;
 
@@ -106,8 +106,8 @@ private:
 
     Tensor<Tensor1, 1> parameters;
 
-    vector<Index> original_input_raw_variable_indices;
-    vector<Index> original_target_raw_variable_indices;
+    vector<Index> original_input_variable_indices;
+    vector<Index> original_target_variable_indices;
     
     Tensor<bool, 2> population;
 
