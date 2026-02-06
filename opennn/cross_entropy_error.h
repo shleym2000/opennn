@@ -66,11 +66,11 @@ public:
                               const ForwardPropagationCuda&,
                               BackPropagationCuda&) const override;
 
-    void calculate_binary_error_cuda(const BatchCuda&,
+    void calculate_binary_error(const BatchCuda&,
                                      const ForwardPropagationCuda&,
                                      BackPropagationCuda&) const;
 
-    void calculate_multiple_error_cuda(const BatchCuda&,
+    void calculate_multiple_error(const BatchCuda&,
                                        const ForwardPropagationCuda&,
                                        BackPropagationCuda&) const;
 

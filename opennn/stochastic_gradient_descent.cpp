@@ -642,7 +642,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
             // Gradient
 
-            update_parameters_cuda(training_back_propagation, optimization_data);
+            update_parameters(training_back_propagation, optimization_data);
 
             //if(display && epoch % display_period == 0)      display_progress_bar(iteration, batches_number - 1);
         }
@@ -757,7 +757,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
 }
 
 
-void StochasticGradientDescent::update_parameters_cuda(BackPropagationCuda& back_propagation,
+void StochasticGradientDescent::update_parameters(BackPropagationCuda& back_propagation,
                                                        SGDOptimizationDataCuda& optimization_data) const
 {
 

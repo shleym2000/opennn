@@ -85,7 +85,7 @@ public:
 
     TrainingResults train_cuda() override;
 
-    void update_parameters_cuda(BackPropagationCuda&, SGDOptimizationDataCuda&) const;
+    void update_parameters(BackPropagationCuda&, SGDOptimizationDataCuda&) const;
 
 #endif
 

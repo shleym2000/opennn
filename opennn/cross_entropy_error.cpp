@@ -182,27 +182,27 @@ void CrossEntropyError2d::from_XML(const XMLDocument& document)
 
 #ifdef OPENNN_CUDA
 
-void CrossEntropyError2d::calculate_error(const BatchCuda& batch_cuda,
+void CrossEntropyError2d::calculate_error(const BatchCuda& batch,
                                                const ForwardPropagationCuda& forward_propagation,
                                                BackPropagationCuda& back_propagation) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
     outputs_number == 1
-        ? calculate_binary_error_cuda(batch_cuda, forward_propagation, back_propagation)
-        : calculate_multiple_error_cuda(batch_cuda, forward_propagation, back_propagation);
+        ? calculate_binary_error(batch, forward_propagation, back_propagation)
+        : calculate_multiple_error(batch, forward_propagation, back_propagation);
 }
 
 
-void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cuda,
+void CrossEntropyError2d::calculate_binary_error(const BatchCuda& batch,
                                                       const ForwardPropagationCuda& forward_propagation,
                                                       BackPropagationCuda& back_propagation) const
 {
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device.data;
+    const type* targets = batch.targets_device.data;
 
     // Forward propagation
 
@@ -244,15 +244,15 @@ void CrossEntropyError2d::calculate_binary_error_cuda(const BatchCuda& batch_cud
 }
 
 
-void CrossEntropyError2d::calculate_multiple_error_cuda(const BatchCuda& batch_cuda,
+void CrossEntropyError2d::calculate_multiple_error(const BatchCuda& batch,
                                                         const ForwardPropagationCuda& forward_propagation,
                                                         BackPropagationCuda& back_propagation) const
 {
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device.data;
+    const type* targets = batch.targets_device.data;
 
     // Forward propagation
 
@@ -297,27 +297,27 @@ void CrossEntropyError2d::calculate_multiple_error_cuda(const BatchCuda& batch_c
 }
 
 
-void CrossEntropyError2d::calculate_output_gradients(const BatchCuda& batch_cuda,
+void CrossEntropyError2d::calculate_output_gradients(const BatchCuda& batch,
                                                       ForwardPropagationCuda& forward_propagation,
                                                       BackPropagationCuda& back_propagation) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
     outputs_number == 1
-        ? calculate_binary_output_gradients(batch_cuda, forward_propagation, back_propagation)
-        : calculate_multiple_output_gradients(batch_cuda, forward_propagation, back_propagation);
+        ? calculate_binary_output_gradients(batch, forward_propagation, back_propagation)
+        : calculate_multiple_output_gradients(batch, forward_propagation, back_propagation);
 }
 
 
-void CrossEntropyError2d::calculate_binary_output_gradients(const BatchCuda& batch_cuda,
+void CrossEntropyError2d::calculate_binary_output_gradients(const BatchCuda& batch,
                                                              ForwardPropagationCuda& forward_propagation,
                                                              BackPropagationCuda& back_propagation) const
 {
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device.data;
+    const type* targets = batch.targets_device.data;
 
     // Forward propagation
 
@@ -337,15 +337,15 @@ void CrossEntropyError2d::calculate_binary_output_gradients(const BatchCuda& bat
 }
 
 
-void CrossEntropyError2d::calculate_multiple_output_gradients(const BatchCuda& batch_cuda,
+void CrossEntropyError2d::calculate_multiple_output_gradients(const BatchCuda& batch,
                                                                ForwardPropagationCuda& forward_propagation,
                                                                BackPropagationCuda& back_propagation) const
 {
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device.data;
+    const type* targets = batch.targets_device.data;
 
     // Forward propagation
 

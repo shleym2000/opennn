@@ -1316,17 +1316,17 @@ BackPropagationLM::BackPropagationLM(const Index new_batch_size, Loss *new_loss)
 
 #ifdef OPENNN_CUDA
 
-void Loss::back_propagate(const BatchCuda& batch_cuda,
+void Loss::back_propagate(const BatchCuda& batch,
                                     ForwardPropagationCuda& forward_propagation,
                                     BackPropagationCuda& back_propagation)
 {
-    if (batch_cuda.is_empty()) return;
+    if (batch.is_empty()) return;
 
     // Loss index
 
-    calculate_error(batch_cuda, forward_propagation, back_propagation);
+    calculate_error(batch, forward_propagation, back_propagation);
 
-    calculate_layers_error_gradient_cuda(batch_cuda, forward_propagation, back_propagation);
+    calculate_layers_error_gradient_cuda(batch, forward_propagation, back_propagation);
 
     // Loss
 
@@ -1338,7 +1338,7 @@ void Loss::back_propagate(const BatchCuda& batch_cuda,
 }
 
 
-void Loss::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda,
+void Loss::calculate_layers_error_gradient_cuda(const BatchCuda& batch,
                                                      ForwardPropagationCuda& forward_propagation,
                                                      BackPropagationCuda& back_propagation) const
 {
@@ -1351,12 +1351,12 @@ void Loss::calculate_layers_error_gradient_cuda(const BatchCuda& batch_cuda,
     const Index last_trainable_layer_index = neural_network->get_last_trainable_layer_index();
 
     const vector<vector<TensorViewCuda>> layer_input_views
-        = forward_propagation.get_layer_input_views_device(batch_cuda.get_inputs_device(), true);
+        = forward_propagation.get_layer_input_views_device(batch.get_inputs_device(), true);
 
     const vector<vector<TensorViewCuda>> layer_delta_views
         = back_propagation.get_layer_delta_views_device();
 
-    calculate_output_gradients(batch_cuda, forward_propagation, back_propagation);
+    calculate_output_gradients(batch, forward_propagation, back_propagation);
 
     for (Index i = last_trainable_layer_index; i >= first_trainable_layer_index; i--)
         layers[i]->back_propagate(layer_input_views[i],

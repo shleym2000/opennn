@@ -24,7 +24,7 @@ __global__ void reorder_inputs_kernel(const float* __restrict__ source, float* _
 }
 
 
-void reorder_inputs_cuda(const float* source, float* destination, int N,int C,int H,int W)
+void reorder_inputs(const float* source, float* destination, int N,int C,int H,int W)
 {
     int total = N * H * W * C;
     const int threads_per_block = 256;
@@ -52,7 +52,7 @@ __global__ void invert_reorder_inputs_kernel(const float* __restrict__ source, f
 }
 
 
-void invert_reorder_inputs_cuda(const float* source, float* destination, int N, int C, int H, int W)
+void invert_reorder_inputs(const float* source, float* destination, int N, int C, int H, int W)
 {
     int total = N * C * H * W;
     const int threads_per_block = 256;
