@@ -103,7 +103,7 @@ struct StochasticGradientDescentData final : public OptimizerData
     Index iteration = 0;
 
     Tensor1 parameter_updates;
-    Tensor1 last_parameters_increment;
+    Tensor1 last_parameter_updates;
 };
 
 

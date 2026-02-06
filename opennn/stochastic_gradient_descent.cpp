@@ -140,7 +140,7 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
     Tensor1& gradient = back_propagation.neural_network.workspace;
 
     Tensor1& parameter_updates = optimization_data.parameter_updates;
-    Tensor1& last_parameters_increment = optimization_data.last_parameters_increment;
+    Tensor1& last_parameter_updates = optimization_data.last_parameter_updates;
 
     if (momentum <= type(0))
     {
@@ -149,14 +149,14 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
     }
     else if (momentum > type(0) && !nesterov)
     {
-        parameter_updates.device(*device) = gradient*(-learning_rate) + momentum*last_parameters_increment;
-        last_parameters_increment.device(*device) = parameter_updates;
+        parameter_updates.device(*device) = gradient*(-learning_rate) + momentum*last_parameter_updates;
+        last_parameter_updates.device(*device) = parameter_updates;
         parameters.device(*device) += parameter_updates;
     }
     else if (momentum > type(0) && nesterov)
     {
-        parameter_updates.device(*device) = gradient*(-learning_rate) + momentum*last_parameters_increment;
-        last_parameters_increment.device(*device) = parameter_updates;
+        parameter_updates.device(*device) = gradient*(-learning_rate) + momentum*last_parameter_updates;
+        last_parameter_updates.device(*device) = parameter_updates;
         parameters.device(*device) += parameter_updates*momentum - gradient*learning_rate;
     }
 }
@@ -487,8 +487,8 @@ void StochasticGradientDescentData::set(StochasticGradientDescent* new_stochasti
     parameter_updates.resize(parameters_number);
     parameter_updates.setZero();
 
-    last_parameters_increment.resize(parameters_number);
-    last_parameters_increment.setZero();
+    last_parameter_updates.resize(parameters_number);
+    last_parameter_updates.setZero();
 }
 
 
