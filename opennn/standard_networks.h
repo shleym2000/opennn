@@ -18,9 +18,9 @@ class ApproximationNetwork : public NeuralNetwork
 
 public:
 
-    ApproximationNetwork(const dimensions& input_dimensions,
-                         const dimensions& complexity_dimensions,
-                         const dimensions& output_dimensions);
+    ApproximationNetwork(const shape& input_shape,
+                         const shape& complexity_dimensions,
+                         const shape& output_dimensions);
 };
 
 
@@ -29,9 +29,9 @@ class ClassificationNetwork : public NeuralNetwork
 
 public:
 
-    ClassificationNetwork(const dimensions& input_dimensions,
-                          const dimensions& complexity_dimensions,
-                          const dimensions& output_dimensions);
+    ClassificationNetwork(const shape& input_shape,
+                          const shape& complexity_dimensions,
+                          const shape& output_dimensions);
 };
 
 
@@ -40,9 +40,9 @@ class ForecastingNetwork : public NeuralNetwork
 
 public:
 
-    ForecastingNetwork(const dimensions& input_dimensions,
-                       const dimensions& complexity_dimensions,
-                       const dimensions& output_dimensions);
+    ForecastingNetwork(const shape& input_shape,
+                       const shape& complexity_dimensions,
+                       const shape& output_dimensions);
 };
 
 
@@ -51,9 +51,9 @@ class AutoAssociationNetwork : public NeuralNetwork
 
 public:
 
-    AutoAssociationNetwork(const dimensions& input_dimensions,
-                           const dimensions& complexity_dimensions,
-                           const dimensions& output_dimensions);
+    AutoAssociationNetwork(const shape& input_shape,
+                           const shape& complexity_dimensions,
+                           const shape& output_dimensions);
 };
 
 
@@ -62,9 +62,9 @@ class ImageClassificationNetwork : public NeuralNetwork
 
 public:
 
-    ImageClassificationNetwork(const dimensions& input_dimensions,
-                               const dimensions& complexity_dimensions,
-                               const dimensions& output_dimensions);
+    ImageClassificationNetwork(const shape& input_shape,
+                               const shape& complexity_dimensions,
+                               const shape& output_dimensions);
 };
 
 
@@ -73,10 +73,10 @@ class SimpleResNet : public NeuralNetwork
 
 public:
 
-    SimpleResNet(const dimensions& input_dimensions,
+    SimpleResNet(const shape& input_shape,
                  const vector<Index>& blocks_per_stage,
-                 const dimensions& initial_filters,
-                 const dimensions& output_dimensions);
+                 const shape& initial_filters,
+                 const shape& output_dimensions);
 };
 
 
@@ -84,11 +84,11 @@ class VGG16 final : public NeuralNetwork
 {
 public:
 
-    VGG16(const dimensions& input_dimensions, const dimensions& target_dimensions);
+    VGG16(const shape& input_shape, const shape& target_shape);
 
     VGG16(const filesystem::path&);
 
-    void set(const dimensions& input_dimensions, const dimensions& target_dimensions);
+    void set(const shape& input_shape, const shape& target_shape);
 
 };
 
@@ -98,9 +98,9 @@ class TextClassificationNetwork : public NeuralNetwork
 
 public:
 
-    TextClassificationNetwork(const dimensions& input_dimensions,
-                              const dimensions& complexity_dimensions,
-                              const dimensions& output_dimensions,
+    TextClassificationNetwork(const shape& input_shape,
+                              const shape& complexity_dimensions,
+                              const shape& output_dimensions,
                               const vector<string>& new_input_vocabulary = vector<string>());
 };
 

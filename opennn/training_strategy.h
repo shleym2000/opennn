@@ -14,8 +14,8 @@
 namespace opennn
 {
 
-class LossIndex;
-class OptimizationAlgorithm;
+class Loss;
+class Optimizer;
 
 struct TrainingResults;
 
@@ -29,8 +29,8 @@ public:
     Dataset* get_dataset();
     NeuralNetwork* get_neural_network() const;
 
-    LossIndex* get_loss_index() const;
-    OptimizationAlgorithm* get_optimization_algorithm() const;
+    Loss* get_loss_index() const;
+    Optimizer* get_optimization_algorithm() const;
 
     bool has_neural_network() const;
     bool has_dataset() const;
@@ -72,9 +72,9 @@ private:
 
     NeuralNetwork* neural_network = nullptr;
 
-    unique_ptr<LossIndex> loss_index;
+    unique_ptr<Loss> loss_index;
 
-    unique_ptr<OptimizationAlgorithm> optimization_algorithm;
+    unique_ptr<Optimizer> optimization_algorithm;
 };
 
 }

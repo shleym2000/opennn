@@ -38,9 +38,9 @@ int main()
         // Neural network
 
         ImageClassificationNetwork image_classification_network(
-            image_dataset.get_dimensions("Input"),
+            image_dataset.get_shape("Input"),
             {64,128,32},
-            image_dataset.get_dimensions("Target"));
+            image_dataset.get_shape("Target"));
 
         // Training strategy
 
@@ -53,7 +53,7 @@ int main()
         AdaptiveMomentEstimation* adam = dynamic_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
         adam->set_display_period(1);
         adam->set_batch_size(16);
-        adam->set_maximum_epochs_number(5);
+        adam->set_maximum_epochs(5);
 
         training_strategy.train_cuda();
 

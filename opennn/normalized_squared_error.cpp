@@ -15,7 +15,7 @@ namespace opennn
 {
 
 NormalizedSquaredError::NormalizedSquaredError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "NormalizedSquaredError";
 
@@ -50,7 +50,7 @@ void NormalizedSquaredError::set_normalization_coefficient()
 
 void NormalizedSquaredError::set_time_series_normalization_coefficient()
 {
-    const Tensor2 targets = dataset->get_data_variables("Target");
+    const Tensor2 targets = dataset->get_feature_data("Target");
 
     const Index rows = targets.dimension(0)-1;
     const Index columns = targets.dimension(1);
@@ -76,14 +76,14 @@ type NormalizedSquaredError::calculate_time_series_normalization_coefficient(con
                                                                              const Tensor2& targets_t) const
 {
     const Index target_samples_number = targets_t_1.dimension(0);
-    const Index target_variables_number = targets_t_1.dimension(1);
+    const Index target_features_number = targets_t_1.dimension(1);
 
     type new_normalization_coefficient = type(0);
 
 #pragma omp parallel for reduction(+:new_normalization_coefficient)
 
     for(Index i = 0; i < target_samples_number; i++)
-        for(Index j = 0; j < target_variables_number; j++)
+        for(Index j = 0; j < target_features_number; j++)
             new_normalization_coefficient += (targets_t_1(i, j) - targets_t(i, j)) * (targets_t_1(i, j) - targets_t(i, j));
 
     return new_normalization_coefficient;
@@ -128,13 +128,13 @@ void NormalizedSquaredError::calculate_error(const Batch& batch,
 
     const Index samples_number = batch.get_samples_number();
 
-    const TensorView targets_view = batch.get_target_view();
+    const TensorView targets_view = batch.get_targets();
 
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -168,7 +168,7 @@ void NormalizedSquaredError::calculate_error_lm(const Batch&,
 }
 
 
-void NormalizedSquaredError::calculate_output_delta(const Batch& batch,
+void NormalizedSquaredError::calculate_output_gradients(const Batch& batch,
                                                     ForwardPropagation&,
                                                     BackPropagation& back_propagation) const
 {
@@ -184,29 +184,29 @@ void NormalizedSquaredError::calculate_output_delta(const Batch& batch,
 
     const Tensor2& errors = back_propagation.errors;
 
-    const TensorView delta_views = back_propagation.get_output_deltas_tensor_view();
+    const TensorView output_gradient_views = back_propagation.get_output_gradients();
 
-    TensorMap2 deltas = tensor_map<2>(delta_views);
+    TensorMap2 output_gradients = tensor_map<2>(output_gradient_views);
 
     const type coefficient = type(2*total_samples_number) / (type(samples_number)*normalization_coefficient);
 
-    deltas.device(*device) = coefficient*errors;
+    output_gradients.device(*device) = coefficient*errors;
 }
 
 
-void NormalizedSquaredError::calculate_output_delta_lm(const Batch&,
+void NormalizedSquaredError::calculate_output_gradients_lm(const Batch&,
                                                        ForwardPropagation&,
                                                        BackPropagationLM & back_propagation) const
 {
     const Tensor2& errors = back_propagation.errors;
     const Tensor1& squared_errors = back_propagation.squared_errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
+    const TensorView output_gradients_pair = back_propagation.get_output_gradients();
 
-    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_gradients = tensor_map<2>(output_gradients_pair);
 
-    output_deltas.device(*device) = errors;
-    divide_columns(device.get(), output_deltas, squared_errors);
+    output_gradients.device(*device) = errors;
+    divide_columns(device.get(), output_gradients, squared_errors);
 }
 
 
@@ -253,24 +253,24 @@ void NormalizedSquaredError::from_XML(const XMLDocument& document)
 
 #ifdef OPENNN_CUDA
 
-void NormalizedSquaredError::calculate_error_cuda(const BatchCuda&,
+void NormalizedSquaredError::calculate_error(const BatchCuda&,
                                                   const ForwardPropagationCuda&,
                                                   BackPropagationCuda&) const
 {
-    throw runtime_error("CUDA calculate_error_cuda not implemented for loss index type: NormalizedSquaredError");
+    throw runtime_error("CUDA calculate_error not implemented for loss index type: NormalizedSquaredError");
 }
 
 
-void NormalizedSquaredError::calculate_output_delta_cuda(const BatchCuda&,
+void NormalizedSquaredError::calculate_output_gradients(const BatchCuda&,
                                                          ForwardPropagationCuda&,
                                                          BackPropagationCuda&) const
 {
-    throw runtime_error("CUDA calculate_output_delta_cuda not implemented for loss index type: NormalizedSquaredError");
+    throw runtime_error("CUDA calculate_output_gradients not implemented for loss index type: NormalizedSquaredError");
 }
 
 #endif
 
-REGISTER(LossIndex, NormalizedSquaredError, "NormalizedSquaredError");
+REGISTER(Loss, NormalizedSquaredError, "NormalizedSquaredError");
 
 }
 

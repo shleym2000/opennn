@@ -521,7 +521,7 @@ Tensor<ResponseOptimization::Condition, 1> ResponseOptimization::get_conditions(
 
 Tensor2 ResponseOptimization::calculate_inputs() const
 {
-    const Index inputs_number = neural_network->get_features_number();
+    const Index inputs_number = neural_network->get_inputs_number();
 
     Tensor2 inputs(evaluations_number, inputs_number);
     inputs.setZero();
@@ -624,7 +624,7 @@ Tensor2 ResponseOptimization::calculate_inputs() const
 
 Tensor<type,2> ResponseOptimization::calculate_envelope(const Tensor<type,2>& inputs, const Tensor<type,2>& outputs) const
 {
-    const Index inputs_number = neural_network->get_features_number();
+    const Index inputs_number = neural_network->get_inputs_number();
 
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -841,7 +841,7 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
                                                           Tensor<type,1>& sense,
                                                           Tensor<Index,1>& objective_indices) const
 {
-    const Index inputs_number  = neural_network->get_features_number();
+    const Index inputs_number  = neural_network->get_inputs_number();
 
     const Index raw_inputs_number  = dataset->get_raw_variables_number("Input");
     const Index raw_outputs_number = dataset->get_raw_variables_number("Target");
@@ -1058,7 +1058,7 @@ ResponseOptimization::Pareto ResponseOptimization::perform_pareto() const
 
     const Index pareto_rows_dimension = envelope.dimension(0);
 
-    const Index input_number_dimension  = neural_network->get_features_number();
+    const Index input_number_dimension  = neural_network->get_inputs_number();
 
     Tensor<type,2> inputs_filtered(pareto_rows_dimension, input_number_dimension);
 
@@ -1076,15 +1076,15 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 {
     constexpr type epsilon = numeric_limits<type>::epsilon();
 
-    const vector<string> feature_names  = dataset->get_raw_variable_names("Input");
+    const vector<string> input_names  = dataset->get_raw_variable_names("Input");
 
     const vector<string> output_names = dataset->get_raw_variable_names("Target");
 
-    const Index raw_inputs_number = feature_names.size();
+    const Index raw_inputs_number = input_names.size();
 
     const Index raw_outputs_number = output_names.size();
 
-    const Index inputs_number = neural_network->get_features_number();
+    const Index inputs_number = neural_network->get_inputs_number();
 
     const Index outputs_number = neural_network->get_outputs_number();
 

@@ -38,9 +38,9 @@ const Index& GrowingInputs::get_maximum_inputs_number() const
 }
 
 
-const Index& GrowingInputs::get_maximum_selection_failures() const
+const Index& GrowingInputs::get_maximum_validation_failures() const
 {
-    return maximum_selection_failures;
+    return maximum_validation_failures;
 }
 
 
@@ -48,10 +48,10 @@ void GrowingInputs::set_default()
 {
     name = "GrowingInputs";
 
-    maximum_selection_failures = 100;
+    maximum_validation_failures = 100;
     minimum_inputs_number = 1;
     trials_number = 3;
-    maximum_epochs_number = 1000;
+    maximum_epochs = 1000;
     maximum_time = type(3600);
 
     training_strategy && training_strategy->has_neural_network()
@@ -88,9 +88,9 @@ void GrowingInputs::set_maximum_correlation(const type new_maximum_correlation)
 }
 
 
-void GrowingInputs::set_maximum_selection_failures(const Index new_maximum_selection_failures)
+void GrowingInputs::set_maximum_validation_failures(const Index new_maximum_validation_failures)
 {
-    maximum_selection_failures = new_maximum_selection_failures;
+    maximum_validation_failures = new_maximum_validation_failures;
 }
 
 
@@ -110,10 +110,10 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     // Loss index
 
-    const LossIndex* loss_index = training_strategy->get_loss_index();
+    const Loss* loss_index = training_strategy->get_loss_index();
     training_strategy->get_optimization_algorithm()->set_display(false);
 
-    type previus_selection_error = numeric_limits<type>::max();
+    type previus_validation_error = numeric_limits<type>::max();
     type previus_training_error = numeric_limits<type>::max();
 
     TimeSeriesDataset* time_series_dataset = dynamic_cast<TimeSeriesDataset*>(dataset);
@@ -151,7 +151,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     // Training strategy
 
-    Index selection_failures = 0;
+    Index validation_failures = 0;
     TrainingResults training_results;
 
     // Model selection
@@ -183,7 +183,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
             dataset->set_raw_variable_role(current_raw_var_index, "Input");
 
         const Index input_raw_variables_number = dataset->get_raw_variables_number("Input");
-        const Index input_variables_number = dataset->get_variables_number("Input");
+        const Index input_features_number = dataset->get_features_number("Input");
 
         if(input_raw_variables_number < minimum_inputs_number)
         {
@@ -194,13 +194,13 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
         if(time_series_dataset)
         {
             const Index past_time_steps = time_series_dataset->get_past_time_steps();
-            neural_network->set_input_dimensions({ past_time_steps, input_variables_number });
-            dataset->set_dimensions("Input", { past_time_steps, input_variables_number });
+            neural_network->set_input_shape({ past_time_steps, input_features_number });
+            dataset->set_shape("Input", { past_time_steps, input_features_number });
         }
         else
         {
-            neural_network->set_input_dimensions({ input_variables_number });
-            dataset->set_dimensions("Input", { input_variables_number });
+            neural_network->set_input_shape({ input_features_number });
+            dataset->set_shape("Input", { input_features_number });
         }
 
         if(display)
@@ -215,38 +215,38 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
         }
 
         type minimum_training_error = numeric_limits<type>::max();
-        type minimum_selection_error = numeric_limits<type>::max();
+        type minimum_validation_error = numeric_limits<type>::max();
 
         for(Index j = 0; j < trials_number; j++)
         {
             neural_network->set_parameters_random();
             training_results = training_strategy->train();
 
-            if(training_results.get_selection_error() < minimum_selection_error)
+            if(training_results.get_validation_error() < minimum_validation_error)
             {
                 minimum_training_error = training_results.get_training_error();
-                minimum_selection_error = training_results.get_selection_error();
+                minimum_validation_error = training_results.get_validation_error();
             }
 
-            if(minimum_selection_error < input_selection_results.optimum_selection_error)
+            if(minimum_validation_error < input_selection_results.optimum_validation_error)
             {
                 input_selection_results.optimal_input_raw_variables_indices = dataset->get_raw_variable_indices("Input");
                 input_selection_results.optimal_input_raw_variable_names = dataset->get_raw_variable_names("Input");
                 //neural_network->get_parameters(input_selection_results.optimal_parameters);
                 input_selection_results.optimum_training_error = training_results.get_training_error();
-                input_selection_results.optimum_selection_error = training_results.get_selection_error();
+                input_selection_results.optimum_validation_error = training_results.get_validation_error();
             }
 
             if(display)
                 cout << "Trial number: " << j + 1 << endl
                 << "   Training error: " << training_results.get_training_error() << endl
-                << "   Selection error: " << training_results.get_selection_error() << endl;
+                << "   Validation error: " << training_results.get_validation_error() << endl;
         }
 
         if(previus_training_error < minimum_training_error)
         {
-            if(display) cout << "Selection failure" << endl;
-            selection_failures++;
+            if(display) cout << "Validation failure" << endl;
+            validation_failures++;
 
             if(dataset->get_raw_variables()[current_raw_var_index].role == "InputTarget")
                 dataset->set_raw_variable_role(current_raw_var_index, "Target");
@@ -256,10 +256,10 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
         else
         {
             previus_training_error = minimum_training_error;
-            previus_selection_error = minimum_selection_error;
+            previus_validation_error = minimum_validation_error;
 
             input_selection_results.training_error_history(epoch) = minimum_training_error;
-            input_selection_results.selection_error_history(epoch) = minimum_selection_error;
+            input_selection_results.validation_error_history(epoch) = minimum_validation_error;
 
             epoch++;
         }
@@ -276,21 +276,21 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
             input_selection_results.stopping_condition = InputsSelection::StoppingCondition::MaximumTime;
             stop = true;
         }
-        else if(input_selection_results.optimum_selection_error <= selection_error_goal)
+        else if(input_selection_results.optimum_validation_error <= validation_error_goal)
         {
-            if(display) cout << "\nSelection error reached: " << input_selection_results.optimum_selection_error << endl;
+            if(display) cout << "\nSelection error reached: " << input_selection_results.optimum_validation_error << endl;
             input_selection_results.stopping_condition = InputsSelection::StoppingCondition::SelectionErrorGoal;
             stop = true;
         }
-        else if(epoch >= maximum_epochs_number)
+        else if(epoch >= maximum_epochs)
         {
             if(display) cout << "\nMaximum number of epochs reached." << endl;
             input_selection_results.stopping_condition = InputsSelection::StoppingCondition::MaximumEpochs;
             stop = true;
         }
-        else if(selection_failures >= maximum_selection_failures)
+        else if(validation_failures >= maximum_validation_failures)
         {
-            if(display) cout << "\nMaximum selection failures (" << selection_failures << ") reached." << endl;
+            if(display) cout << "\nMaximum selection failures (" << validation_failures << ") reached." << endl;
             input_selection_results.stopping_condition = InputsSelection::StoppingCondition::MaximumSelectionFailures;
             stop = true;
         }
@@ -310,27 +310,27 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
     dataset->set_raw_variable_indices(input_selection_results.optimal_input_raw_variables_indices,
         target_raw_variable_indices);
 
-    const Index optimal_processed_variables_number = dataset->get_variables_number("Input");
+    const Index optimal_processed_variables_number = dataset->get_features_number("Input");
 
     if(time_series_dataset)
     {
         const Index past_time_steps = time_series_dataset->get_past_time_steps();
-        dataset->set_dimensions("Input", { past_time_steps, optimal_processed_variables_number });
-        neural_network->set_input_dimensions({ past_time_steps, optimal_processed_variables_number });
+        dataset->set_shape("Input", { past_time_steps, optimal_processed_variables_number });
+        neural_network->set_input_shape({ past_time_steps, optimal_processed_variables_number });
 
         if(time_raw_variable_indices.size() == 1)
             dataset->set_raw_variable_role(time_raw_variable_indices[0], "Time");
     }
     else
     {
-        dataset->set_dimensions("Input", { optimal_processed_variables_number });
-        neural_network->set_input_dimensions({ optimal_processed_variables_number });
+        dataset->set_shape("Input", { optimal_processed_variables_number });
+        neural_network->set_input_shape({ optimal_processed_variables_number });
     }
 
     dataset->print();
 
-    const vector<string> input_variable_scalers = dataset->get_variable_scalers("Input");
-    const vector<Descriptives> input_variable_descriptives = dataset->calculate_variable_descriptives("Input");
+    const vector<string> input_variable_scalers = dataset->get_feature_scalers("Input");
+    const vector<Descriptives> input_variable_descriptives = dataset->calculate_feature_descriptives("Input");
 
     set_maximum_inputs_number(dataset->get_raw_variables_number("Input"));
 
@@ -353,7 +353,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
         neural_network->set_feature_names(final_feature_names);
     }
     else
-        neural_network->set_feature_names(dataset->get_variable_names("Input"));
+        neural_network->set_feature_names(dataset->get_feature_names("Input"));
 
     if(neural_network->has("Scaling2d"))
     {
@@ -382,12 +382,12 @@ Tensor<string, 2> GrowingInputs::to_string_matrix() const
 
     string_matrix.setValues({
     {"Trials number", to_string(trials_number)},
-    {"Selection error goal", to_string(selection_error_goal)},
-    {"Maximum selection failures", to_string(maximum_selection_failures)},
+    {"Validation error goal", to_string(validation_error_goal)},
+    {"Maximum selection failures", to_string(maximum_validation_failures)},
     {"Maximum inputs number", to_string(maximum_inputs_number)},
     {"Minimum correlations", to_string(minimum_correlation)},
     {"Maximum correlation", to_string(maximum_correlation)},
-    {"Maximum iterations number", to_string(maximum_epochs_number)},
+    {"Maximum iterations number", to_string(maximum_epochs)},
     {"Maximum time", to_string(maximum_time)}});
 
     return string_matrix;
@@ -399,13 +399,13 @@ void GrowingInputs::to_XML(XMLPrinter& printer) const
     printer.OpenElement("GrowingInputs");
 
     add_xml_element(printer, "TrialsNumber", to_string(trials_number));
-    add_xml_element(printer, "SelectionErrorGoal", to_string(selection_error_goal));
-    add_xml_element(printer, "MaximumSelectionFailures", to_string(maximum_selection_failures));
+    add_xml_element(printer, "SelectionErrorGoal", to_string(validation_error_goal));
+    add_xml_element(printer, "MaximumSelectionFailures", to_string(maximum_validation_failures));
     add_xml_element(printer, "MinimumInputsNumber", to_string(minimum_inputs_number));
     add_xml_element(printer, "MaximumInputsNumber", to_string(maximum_inputs_number));
     add_xml_element(printer, "MinimumCorrelation", to_string(minimum_correlation));
     add_xml_element(printer, "MaximumCorrelation", to_string(maximum_correlation));
-    add_xml_element(printer, "MaximumEpochsNumber", to_string(maximum_epochs_number));
+    add_xml_element(printer, "MaximumEpochsNumber", to_string(maximum_epochs));
     add_xml_element(printer, "MaximumTime", to_string(maximum_time));
 
     printer.CloseElement();  
@@ -420,14 +420,14 @@ void GrowingInputs::from_XML(const XMLDocument& document)
         throw runtime_error("GrowingInputs element is nullptr.\n");
 
     set_trials_number(read_xml_index(root_element, "TrialsNumber"));
-    set_selection_error_goal(read_xml_type(root_element, "SelectionErrorGoal"));
-    set_maximum_epochs_number(read_xml_index(root_element, "MaximumEpochsNumber"));
+    set_validation_error_goal(read_xml_type(root_element, "SelectionErrorGoal"));
+    set_maximum_epochs(read_xml_index(root_element, "MaximumEpochsNumber"));
     set_maximum_correlation(read_xml_type(root_element, "MaximumCorrelation"));
     set_minimum_correlation(read_xml_type(root_element, "MinimumCorrelation"));
     set_maximum_time(read_xml_type(root_element, "MaximumTime"));
     set_minimum_inputs_number(read_xml_index(root_element, "MinimumInputsNumber"));
     set_maximum_inputs_number(read_xml_index(root_element, "MaximumInputsNumber"));
-    set_maximum_selection_failures(read_xml_index(root_element, "MaximumSelectionFailures"));
+    set_maximum_validation_failures(read_xml_index(root_element, "MaximumSelectionFailures"));
 }
 
 

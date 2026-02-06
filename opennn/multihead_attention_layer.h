@@ -18,12 +18,12 @@ class MultiHeadAttention final : public Layer
 
 public:
 
-    MultiHeadAttention(const dimensions& = dimensions({0,0}),
+    MultiHeadAttention(const shape& = shape({0,0}),
                        const Index& = 0,
                        const string& = string());
 
-    MultiHeadAttention(const dimensions&,
-                       const dimensions&,
+    MultiHeadAttention(const shape&,
+                       const shape&,
                        const Index& = 0,
                        const string& = string());
 
@@ -35,9 +35,9 @@ public:
 
     type get_scaling_factor() const;
 
-    dimensions get_input_dimensions() const override;
+    shape get_input_shape() const override;
 
-    dimensions get_output_dimensions() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
@@ -45,7 +45,7 @@ public:
              const Index& = 0,
              const Index& = 0,
              const Index& = 0,
-             const bool& = false,
+             bool = false,
              const string& = "multihead_attention_layer");
 
     void set_dropout_rate(const type);
@@ -54,7 +54,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -189,30 +189,30 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor4 attention_weight_deltas;
-    Tensor4 attention_output_deltas;
-    Tensor3 concatenated_attention_output_deltas;
+    Tensor4 attention_weight_gradients;
+    Tensor4 attention_output_gradients;
+    Tensor3 concatenated_attention_output_gradients;
 
-    Tensor4 query_deltas;
-    Tensor4 key_deltas;
-    Tensor4 value_deltas;
+    Tensor4 query_gradients;
+    Tensor4 key_gradients;
+    Tensor4 value_gradients;
 
-    TensorView query_weight_deltas;
-    TensorView key_weight_deltas;
-    TensorView value_weight_deltas;
-    TensorView projection_weight_deltas;
+    TensorView query_weight_gradients;
+    TensorView key_weight_gradients;
+    TensorView value_weight_gradients;
+    TensorView projection_weight_gradients;
 
-    TensorView query_bias_deltas;
-    TensorView key_bias_deltas;
-    TensorView value_bias_deltas;
-    TensorView projection_bias_deltas;
+    TensorView query_bias_gradients;
+    TensorView key_bias_gradients;
+    TensorView value_bias_gradients;
+    TensorView projection_bias_gradients;
 
     Tensor1 aux_rows;
 
-//    Tensor3 input_query_deltas;
-//    Tensor3 input_source_deltas;
+//    Tensor3 input_query_gradients;
+//    Tensor3 input_source_gradients;
 
-    Tensor4 softmax_deltas;
+    Tensor4 softmax_gradients;
 };
 
 #ifdef OPENNN_CUDA

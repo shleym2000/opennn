@@ -9,6 +9,7 @@
 #pragma once
 
 #include "optimization_algorithm.h"
+#include "tensors.h"
 
 namespace opennn
 {
@@ -21,12 +22,12 @@ struct BackPropagationCuda;
 struct ADAMOptimizationDataCuda;
 #endif
 
-class AdaptiveMomentEstimation final : public OptimizationAlgorithm
+class AdaptiveMomentEstimation final : public Optimizer
 {
     
 public:
 
-   AdaptiveMomentEstimation(const LossIndex* = nullptr);
+   AdaptiveMomentEstimation(const Loss* = nullptr);
    
    const type& get_learning_rate() const;
    const type& get_beta_1() const;
@@ -42,7 +43,7 @@ public:
 
    void set_default();
 
-   void set_display(const bool&) override;
+   void set_display(bool) override;
 
    // Get
 
@@ -56,7 +57,7 @@ public:
 
    // Training parameters
 
-   void set_maximum_epochs_number(const Index);
+   void set_maximum_epochs(const Index);
 
    // Stopping criteria
 
@@ -94,7 +95,7 @@ private:
    
    type training_accuracy_goal = type(1);
 
-   Index maximum_selection_failures = numeric_limits<Index>::max();
+   Index maximum_validation_failures = numeric_limits<Index>::max();
 
    Index batch_size = 1000;
 
@@ -111,7 +112,7 @@ private:
 };
 
 
-struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
+struct AdaptiveMomentEstimationData final : public OptimizerData
 {
     AdaptiveMomentEstimationData(AdaptiveMomentEstimation* = nullptr);
 
@@ -131,24 +132,23 @@ struct AdaptiveMomentEstimationData final : public OptimizationAlgorithmData
     Index learning_rate_iteration = 0;
 };
 
+
 #ifdef OPENNN_CUDA
 
-    struct ADAMOptimizationDataCuda final : public OptimizationAlgorithmData
+    struct ADAMOptimizationDataCuda final : public OptimizerData
     {
         ADAMOptimizationDataCuda(AdaptiveMomentEstimation* = nullptr);
 
-        ~ADAMOptimizationDataCuda() { free(); }
+        //~ADAMOptimizationDataCuda() { free(); }
 
         void set(AdaptiveMomentEstimation* = nullptr);
-
-        void free();
 
         void print() const;
 
         AdaptiveMomentEstimation* adaptive_moment_estimation = nullptr;
 
-        float* gradient_exponential_decay = nullptr;
-        float* square_gradient_exponential_decay = nullptr;
+        TensorCuda gradient_exponential_decay;
+        TensorCuda square_gradient_exponential_decay;
 
         Index iteration = 0;
 

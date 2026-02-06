@@ -16,7 +16,7 @@ namespace opennn
 {
 
 WeightedSquaredError::WeightedSquaredError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     set_default();
 }
@@ -142,9 +142,9 @@ void WeightedSquaredError::set_normalization_coefficient()
 
     if(target_raw_variables.size() == 1 && target_raw_variables[0].is_binary())
     {
-        const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+        const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
-        const Index negatives = dataset->calculate_used_negatives(target_variable_indices[0]);
+        const Index negatives = dataset->calculate_used_negatives(target_feature_indices[0]);
 
         normalization_coefficient = type(negatives)*negatives_weight*type(0.5);
 
@@ -177,13 +177,13 @@ void WeightedSquaredError::calculate_error(const Batch& batch,
 
     const Index samples_number = batch.get_samples_number();
 
-    const TensorView targets_view = batch.get_target_view();
+    const TensorView targets_view = batch.get_targets();
 
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
     // Back propagation
@@ -208,7 +208,7 @@ void WeightedSquaredError::calculate_error(const Batch& batch,
 }
 
 
-void WeightedSquaredError::calculate_output_delta(const Batch& batch,
+void WeightedSquaredError::calculate_output_gradients(const Batch& batch,
                                                   ForwardPropagation&,
                                                   BackPropagation& back_propagation) const
 {
@@ -218,7 +218,7 @@ void WeightedSquaredError::calculate_output_delta(const Batch& batch,
 
     // Batch
 
-    const Index batch_size = batch.target_dimensions[0];
+    const Index batch_size = batch.target_shape[0];
 
     // Back propagation
 
@@ -226,13 +226,13 @@ void WeightedSquaredError::calculate_output_delta(const Batch& batch,
 
     const Tensor2& errors_weights = back_propagation.errors_weights;
 
-    const TensorView delta_views = back_propagation.get_output_deltas_tensor_view();
+    const TensorView output_gradient_views = back_propagation.get_output_gradients();
 
-    TensorMap2 deltas = tensor_map<2>(delta_views);
+    TensorMap2 output_gradients = tensor_map<2>(output_gradient_views);
 
     const type coefficient = type(2*total_samples_number)/(type(batch_size)*normalization_coefficient);
 
-    deltas.device(*device) = coefficient * (errors_weights * errors);
+    output_gradients.device(*device) = coefficient * (errors_weights * errors);
 }
 
 
@@ -261,24 +261,24 @@ void WeightedSquaredError::from_XML(const XMLDocument& document)
 
 #ifdef OPENNN_CUDA
 
-void WeightedSquaredError::calculate_error_cuda(const BatchCuda&,
+void WeightedSquaredError::calculate_error(const BatchCuda&,
                                                 const ForwardPropagationCuda&,
                                                 BackPropagationCuda&) const
 {
-    throw runtime_error("CUDA calculate_error_cuda not implemented for loss index type: WeightedSquaredError");
+    throw runtime_error("CUDA calculate_error not implemented for loss index type: WeightedSquaredError");
 }
 
 
-void WeightedSquaredError::calculate_output_delta_cuda(const BatchCuda&,
+void WeightedSquaredError::calculate_output_gradients(const BatchCuda&,
                                                        ForwardPropagationCuda&,
                                                        BackPropagationCuda&) const
 {
-    throw runtime_error("CUDA calculate_output_delta_cuda not implemented for loss index type: WeightedSquaredError");
+    throw runtime_error("CUDA calculate_output_gradients not implemented for loss index type: WeightedSquaredError");
 }
 
 #endif
 
-REGISTER(LossIndex, WeightedSquaredError, "WeightedSquaredError");
+REGISTER(Loss, WeightedSquaredError, "WeightedSquaredError");
 
 }
 

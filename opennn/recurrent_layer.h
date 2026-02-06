@@ -18,25 +18,25 @@ class Recurrent final : public Layer
 
 public:
 
-    Recurrent(const dimensions & = {0, 0}, const dimensions& = {0});
+    Recurrent(const shape & = {0, 0}, const shape& = {0});
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
     string get_activation_function() const;
 
-    void set(const dimensions& = {}, const dimensions& = {});
+    void set(const shape& = {}, const shape& = {});
 
-    void set_input_dimensions(const dimensions&) override;
-    void set_output_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
+    void set_output_shape(const shape&) override;
 
     void set_activation_function(const string&);
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -52,7 +52,7 @@ public:
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 
     TensorView biases;
     TensorView input_weights;
@@ -94,19 +94,19 @@ struct RecurrentBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    Tensor2 current_deltas;
+    Tensor2 current_gradients;
     Tensor2 current_targets;
 
-    Tensor2 combination_deltas;
-    Tensor2 current_combination_deltas;
+    Tensor2 combination_gradients;
+    Tensor2 current_combination_gradients;
 
-    Tensor2 combinations_bias_deltas;
-    Tensor3 combinations_input_weight_deltas;
-    Tensor3 combinations_recurrent_weight_deltas;
+    Tensor2 combinations_bias_gradients;
+    Tensor3 combinations_input_weight_gradients;
+    Tensor3 combinations_recurrent_weight_gradients;
 
-    TensorView bias_deltas;
-    TensorView input_weight_deltas;
-    TensorView recurrent_weight_deltas;
+    TensorView bias_gradients;
+    TensorView input_weight_gradients;
+    TensorView recurrent_weight_gradients;
 };
 
 #ifdef OPENNN_CUDA

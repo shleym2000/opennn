@@ -30,7 +30,7 @@ public:
     TrainingStrategy* get_training_strategy() const;
     bool has_training_strategy() const;
 
-    NeuronsSelection* get_neurons_selection() const;
+    NeuronSelection* get_neurons_selection() const;
     InputsSelection* get_inputs_selection() const;
 
     // Set
@@ -64,7 +64,7 @@ private:
 
     TrainingStrategy* training_strategy = nullptr;
 
-    unique_ptr<NeuronsSelection> neurons_selection;
+    unique_ptr<NeuronSelection> neurons_selection;
 
     unique_ptr<InputsSelection> inputs_selection;
 };

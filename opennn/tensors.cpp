@@ -291,7 +291,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
 type l2_distance(const Tensor1&x, const Tensor1&y)
 {
     if(x.size() != y.size())
-        throw runtime_error("x and y vector must  have the same dimensions.\n");
+        throw runtime_error("x and y vector must  have the same shape.\n");
 
     Tensor<type, 0> distance;
 
@@ -543,7 +543,7 @@ Tensor2 assemble_matrix_matrix(const Tensor2& x, const Tensor2& y)
 }
 
 
-string dimensions_to_string(const dimensions& x, const string& separator)
+string dimensions_to_string(const shape& x, const string& separator)
 {
     const Index size = x.size();
 
@@ -559,9 +559,9 @@ string dimensions_to_string(const dimensions& x, const string& separator)
 }
 
 
-dimensions string_to_dimensions(const string& x, const string& separator)
+shape string_to_dimensions(const string& x, const string& separator)
 {
-    dimensions result;
+    shape result;
 
     if (x.empty())
         throw runtime_error("Error: Input string must not be empty.\n");
@@ -646,15 +646,15 @@ TensorMap2 tensor_map(const Tensor4& tensor, const Index& index_3, const Index& 
 }
 
 
-Index get_size(const dimensions &d)
+Index get_size(const shape &d)
 {
     return accumulate(d.begin(), d.end(), 1, multiplies<Index>());
 }
 
 
-dimensions prepend(const Index &x, const dimensions &d)
+shape prepend(const Index &x, const shape &d)
 {
-    dimensions result = {x};
+    shape result = {x};
     result.insert(result.end(), d.begin(), d.end());
     return result;
 }
@@ -662,7 +662,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 
 type* link(type *pointer, vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
@@ -672,6 +672,9 @@ type* link(type *pointer, vector<TensorView*> views)
             continue;
 
         view->data = pointer;
+
+        if (reinterpret_cast<uintptr_t>(pointer) % ALIGN_BYTES != 0)
+            throw runtime_error("Master pointer in link() is not 64-byte aligned.");
 
         pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
@@ -689,7 +692,7 @@ void link(type *pointer, vector<vector<TensorView*> > views)
 
 Index get_size(const vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
@@ -722,7 +725,7 @@ Index get_size(vector<vector<TensorView*> > views)
 
 type* link(type* pointer, vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
@@ -749,7 +752,7 @@ void link(type* pointer, vector<vector<TensorViewCuda*> > views)
 
 Index get_size(const vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
+    constexpr Index ALIGN_BYTES = 64;
     constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 

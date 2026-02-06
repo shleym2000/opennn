@@ -33,7 +33,7 @@ bool ModelSelection::has_training_strategy() const
 }
 
 
-NeuronsSelection* ModelSelection::get_neurons_selection() const
+NeuronSelection* ModelSelection::get_neurons_selection() const
 {
     return neurons_selection.get();
 }
@@ -56,7 +56,7 @@ void ModelSelection::set_default()
 
 void ModelSelection::set_neurons_selection(const string& new_neurons_selection)
 {
-    neurons_selection = Registry<NeuronsSelection>::instance().create(new_neurons_selection);
+    neurons_selection = Registry<NeuronSelection>::instance().create(new_neurons_selection);
 
     neurons_selection->set(training_strategy);
 }
@@ -85,7 +85,7 @@ void ModelSelection::check() const
 
     // Loss index
 
-    const LossIndex* loss_index = training_strategy->get_loss_index();
+    const Loss* loss_index = training_strategy->get_loss_index();
 
     if(!loss_index)
         throw runtime_error("Pointer to loss index is nullptr.\n");
@@ -107,9 +107,9 @@ void ModelSelection::check() const
     if(!dataset)
         throw runtime_error("Pointer to dataset is nullptr.\n");
 
-    const Index selection_samples_number = dataset->get_samples_number("Selection");
+    const Index validation_samples_number = dataset->get_samples_number("Validation");
 
-    if(selection_samples_number == 0)
+    if(validation_samples_number == 0)
         throw runtime_error("Number of selection samples is zero.\n");
 }
 
@@ -130,7 +130,7 @@ void ModelSelection::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("ModelSelection");
 
-    printer.OpenElement("NeuronsSelection");
+    printer.OpenElement("NeuronSelection");
 
     add_xml_element(printer, "NeuronsSelectionMethod", neurons_selection->get_name());
 
@@ -155,11 +155,11 @@ void ModelSelection::from_XML(const XMLDocument& document)
     const XMLElement* root_element = document.FirstChildElement("ModelSelection");
 
     if(!root_element) 
-        throw runtime_error("Model Selection element is nullptr.\n");
+        throw runtime_error("Model Validation element is nullptr.\n");
 
     // Neuron selection
 
-    const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronsSelection");
+    const XMLElement* neurons_selection_element = root_element->FirstChildElement("NeuronSelection");
     if(!neurons_selection_element) throw runtime_error("Neuron selection element is nullptr.\n");
 
     const string selection_method = read_xml_string(neurons_selection_element, "NeuronsSelectionMethod");
@@ -178,7 +178,7 @@ void ModelSelection::from_XML(const XMLDocument& document)
     }
     else throw runtime_error(selection_method + " element is nullptr.\n");
 
-    // Input Selection
+    // Input Validation
 
     const XMLElement* inputs_selection_element = root_element->FirstChildElement("InputsSelection");
     if(!inputs_selection_element) throw runtime_error("Input selection element is nullptr.\n");

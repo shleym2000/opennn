@@ -18,12 +18,12 @@ class Convolutional final : public Layer
 
 public:
 
-    Convolutional(const dimensions& = {3, 3, 1},                    // Input dimensions {height,width,channels}
-                  const dimensions& = {3, 3, 1, 1},                 // Kernel dimensions {kernel_height,kernel_width,channels,kernels_number}
+    Convolutional(const shape& = {3, 3, 1},                    // Input shape {height,width,channels}
+                  const shape& = {3, 3, 1, 1},                 // Kernel shape {kernel_height,kernel_width,channels,kernels_number}
                   const string& = "Linear",
-                  const dimensions& = { 1, 1 },                     // Stride dimensions {row_stride,column_stride}
+                  const shape& = { 1, 1 },                     // Stride shape {row_stride,column_stride}
                   const string& = "Valid",                          // Convolution type (Valid || Same)
-                  const bool& = false,                              // Batch Normalization)
+                  bool = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
 
     bool get_batch_normalization() const;
@@ -32,8 +32,8 @@ public:
 
     const string& get_activation_function() const;
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     pair<Index, Index> get_padding() const;
 
@@ -71,17 +71,17 @@ public:
 
     // Set
 
-    void set(const dimensions& = {0, 0, 0},
-             const dimensions& = {3, 3, 1, 1},
+    void set(const shape& = {0, 0, 0},
+             const shape& = {3, 3, 1, 1},
              const string& = "Linear",
-             const dimensions& = {1, 1},
+             const shape& = {1, 1},
              const string& = "Valid",
-             const bool& = false,
+             bool = false,
              const string& = "convolutional_layer");
 
     void set_activation_function(const string&);
 
-    void set_batch_normalization(const bool&);
+    void set_batch_normalization(bool);
 
     void set_convolution_type(const string&);
 
@@ -89,7 +89,7 @@ public:
 
     void set_column_stride(const Index);
 
-    void set_input_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
 
     // Forward propagation
 
@@ -99,7 +99,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     // Back propagation
 
@@ -117,14 +117,14 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    void forward_propagate(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+                                bool) override;
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>&,
-                             unique_ptr<LayerForwardPropagationCuda>&,
-                             unique_ptr<LayerBackPropagationCuda>&) const override;
+    void back_propagate(const vector<TensorViewCuda>&,
+                        const vector<TensorViewCuda>&,
+                        unique_ptr<LayerForwardPropagationCuda>&,
+                        unique_ptr<LayerBackPropagationCuda>&) const override;
 
     vector<TensorViewCuda*> get_parameter_views_device() override;
 
@@ -157,7 +157,7 @@ private:
     Index row_stride = 1;
     Index column_stride = 1;
 
-    dimensions input_dimensions;
+    shape input_shape;
 
     string convolution_type = "Valid";
 
@@ -207,11 +207,11 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
     void print() const override;
 
-    TensorView bias_deltas;
-    TensorView weight_deltas;
+    TensorView bias_gradients;
+    TensorView weight_gradients;
 
-    TensorView scales_deltas;
-    TensorView offsets_deltas;
+    TensorView gamma_gradients;
+    TensorView beta_gradients;
 
     Tensor4 rotated_weights;
 };
@@ -264,23 +264,23 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 
     void free() override;
 
-    TensorViewCuda bias_deltas_device;
-    TensorViewCuda weight_deltas_device;
+    TensorViewCuda bias_gradients;
+    TensorViewCuda weight_gradients;
 
     void* backward_data_workspace = nullptr;
     void* backward_filter_workspace = nullptr;
     size_t backward_data_workspace_bytes = 0;
     size_t backward_filter_workspace_bytes = 0;
 
-    cudnnTensorDescriptor_t deltas_tensor_descriptor = nullptr;
+    cudnnTensorDescriptor_t gradients_tensor_descriptor = nullptr;
 
     cudnnFilterDescriptor_t kernel_descriptor = nullptr;
-    cudnnFilterDescriptor_t weight_deltas_filter_descriptor = nullptr;
+    cudnnFilterDescriptor_t weight_gradients_filter_descriptor = nullptr;
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
-    TensorViewCuda scales_deltas_device;
-    TensorViewCuda offsets_deltas_device;
+    TensorViewCuda gamma_gradients;
+    TensorViewCuda beta_gradients;
 };
 
 #endif

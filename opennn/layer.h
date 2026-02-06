@@ -8,11 +8,8 @@
 
 #pragma once
 
-#include "tinyxml2.h"
 #include "tensors.h"
 #include "random_utilities.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
@@ -36,16 +33,16 @@ public:
 
     const string& get_label() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     const string& get_name() const;
 
-    virtual void set_input_dimensions(const dimensions&);
-    virtual void set_output_dimensions(const dimensions&);
+    virtual void set_input_shape(const shape&);
+    virtual void set_output_shape(const shape&);
 
     void set_label(const string&);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     virtual void set_parameters_random();
 
@@ -60,8 +57,8 @@ public:
 
     //virtual pair
 
-    virtual dimensions get_input_dimensions() const = 0;
-    virtual dimensions get_output_dimensions() const = 0;
+    virtual shape get_input_shape() const = 0;
+    virtual shape get_output_shape() const = 0;
 
     Index get_inputs_number() const;
 
@@ -73,7 +70,7 @@ public:
 
     virtual void forward_propagate(const vector<TensorView>&,
                                    unique_ptr<LayerForwardPropagation>&,
-                                   const bool&) = 0;
+                                   bool) = 0;
 
     // Back propagation
 
@@ -124,12 +121,12 @@ protected:
 
     template <int Rank>
     void calculate_activations(const string& activation_function,
-                               TensorMap<Tensor<type, Rank>, Aligned16> activations,
-                               TensorMap<Tensor<type, Rank>, Aligned16> activation_derivatives) const
+                               TensorMap<Tensor<type, Rank>, Aligned64> activations,
+                               TensorMap<Tensor<type, Rank>, Aligned64> activation_derivatives) const
     {
         if (activation_function == "Linear")
             linear(activations, activation_derivatives);
-        else if (activation_function == "Logistic")
+        else if (activation_function == "Sigmoid")
             logistic(activations, activation_derivatives);
         else if (activation_function == "Softmax")
             softmax(activations);
@@ -147,7 +144,7 @@ protected:
 
 
     template <int Rank>
-    void binary(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx, type threshold) const
+    void binary(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx, type threshold) const
     {
         y.device(*device) = (y < threshold).select(type(0), type(1));
 
@@ -158,7 +155,7 @@ protected:
 
 
     template <int Rank>
-    void linear(TensorMap<Tensor<type, Rank>, Aligned16>, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
+    void linear(TensorMap<Tensor<type, Rank>, Aligned64>, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -167,7 +164,7 @@ protected:
 
 
     template <int Rank>
-    void exponential_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
+    void exponential_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
     {
         const type alpha = type(1);
 
@@ -180,7 +177,7 @@ protected:
 
 
     template <int Rank>
-    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
+    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
     {
         y.device(*device) = y.tanh();
 
@@ -191,7 +188,7 @@ protected:
 
 
     template <int Rank>
-    void logistic(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
+    void logistic(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
     {
         y.device(*device) = (type(1) + (-y).exp()).inverse();
 
@@ -202,7 +199,7 @@ protected:
 
 
     template <int Rank>
-    void rectified_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
+    void rectified_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
     {
         y.device(*device) = y.cwiseMax(type(0));
 
@@ -213,7 +210,7 @@ protected:
 
 
     template <int Rank>
-    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx, type slope) const
+    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx, type slope) const
     {
         y.device(*device) = (y > type(0)).select(y, slope * y);
 
@@ -224,7 +221,7 @@ protected:
 
 
     template <int Rank>
-    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>, Aligned16> y, TensorMap<Tensor<type, Rank>, Aligned16> dy_dx) const
+    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>, Aligned64> y, TensorMap<Tensor<type, Rank>, Aligned64> dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -243,19 +240,19 @@ protected:
 
     void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 
-    void add_deltas(const vector<TensorView>& delta_views) const;
+    void add_gradients(const vector<TensorView>& output_gradient_views) const;
 
     template <int Rank>
     void normalize_batch(
-        TensorMap<Tensor<type, Rank>, Aligned16>& outputs,
-        TensorMap<Tensor<type, Rank>, Aligned16>& normalized_outputs,
+        TensorMap<Tensor<type, Rank>, Aligned64>& outputs,
+        TensorMap<Tensor<type, Rank>, Aligned64>& normalized_outputs,
         TensorMap1 batch_means,
         TensorMap1 batch_variances,
         Tensor1 running_means,
         Tensor1 running_variances,
         const TensorMap1 gammas,
         const TensorMap1 betas,
-        const bool& is_training,
+        bool is_training,
         const type momentum = type(0.9),
         const type epsilon = type(1e-5)) const
     {
@@ -294,7 +291,7 @@ protected:
 
 
     template <int Rank>
-    void dropout(TensorMap<Tensor<type, Rank>, Aligned16> tensor, const type& dropout_rate) const
+    void dropout(TensorMap<Tensor<type, Rank>, Aligned64> tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
@@ -307,24 +304,72 @@ protected:
         }
     }
 
+
     template <int Rank>
-    void calculate_combinations(
-        const TensorMap<Tensor<type, Rank>, Aligned16>& inputs,
-        const TensorMap2& weights,
-        const TensorMap1& biases,
-        TensorMap<Tensor<type, Rank>, Aligned16>& combinations) const
+    void calculate_combinations(const TensorMap<Tensor<type, Rank>, Aligned64>& inputs,
+                                const TensorMap2& weights,
+                                const TensorMap1& biases,
+                                TensorMap<Tensor<type, Rank>, Aligned64>& outputs) const
     {
-        const array<IndexPair<Index>, 1> contraction_axes = { IndexPair<Index>(Rank - 1, 0) };
+        const Index inputs_size = weights.dimension(0);
+        const Index outputs_size = weights.dimension(1);
+        const Index total_rows = inputs.size() / inputs_size;
 
-        array<Index, Rank> reshape_dimensions;
-        reshape_dimensions.fill(1);
-        reshape_dimensions[Rank - 1] = biases.size();
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            inputs_matrix(inputs.data(), total_rows, inputs_size);
 
-        array<Index, Rank> broadcast_dims = combinations.dimensions();
-        broadcast_dims[Rank - 1] = 1;
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            weights_matrix(weights.data(), inputs_size, outputs_size);
 
-        combinations.device(*device) = inputs.contract(weights, contraction_axes) +
-                                       biases.reshape(reshape_dimensions).broadcast(broadcast_dims);
+        const Map<const Eigen::RowVector<type, Dynamic>>
+            biases_vector(biases.data(), outputs_size);
+
+        Map<Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            outputs_matrix(outputs.data(), total_rows, outputs_size);
+
+        outputs_matrix.noalias() = (inputs_matrix * weights_matrix).rowwise() + biases_vector;
+    }
+
+
+    template <int Rank>
+    void calculate_gradients(const TensorMap<Tensor<type, Rank>, Aligned64>& inputs,
+                             const TensorMap<Tensor<type, Rank>, Aligned64>& output_gradients,
+                             const TensorMap2& weights,
+                             TensorMap2& weight_gradients,
+                             TensorMap1& bias_gradients,
+                             TensorMap<Tensor<type, Rank>, Aligned64>& input_gradients,
+                             const bool is_first_layer) const
+    {
+        const Index inputs_size = weights.dimension(0);
+        const Index outputs_size = weights.dimension(1);
+        const Index total_rows = inputs.size() / inputs_size;
+
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            inputs_matrix(inputs.data(), total_rows, inputs_size);
+
+        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            gradients_matrix(output_gradients.data(), total_rows, outputs_size);
+
+        Map<Eigen::Vector<type, Dynamic>>
+            bias_gradients_vector(bias_gradients.data(), outputs_size);
+
+        Map<Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+            weight_gradients_matrix(weight_gradients.data(), inputs_size, outputs_size);
+
+        bias_gradients_vector.noalias() = gradients_matrix.colwise().sum();
+
+        weight_gradients_matrix.noalias() = inputs_matrix.transpose() * gradients_matrix;
+
+        if(!is_first_layer)
+        {
+            const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+                weights_matrix(weights.data(), inputs_size, outputs_size);
+
+            Map<Matrix<type, Dynamic, Dynamic, ColMajor, Aligned64>>
+                input_gradients_matrix(input_gradients.data(), total_rows, inputs_size);
+
+            input_gradients_matrix.noalias() = gradients_matrix * weights_matrix.transpose();
+        }
     }
 
 #ifdef OPENNN_CUDA
@@ -336,14 +381,14 @@ public:
 
     cudnnHandle_t get_cudnn_handle();
 
-    virtual void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    virtual void forward_propagate(const vector<TensorViewCuda>&,
                                         unique_ptr<LayerForwardPropagationCuda>&,
-                                        const bool&)
+                                        bool)
     {
         throw runtime_error("CUDA forward propagation not implemented for layer type: " + get_name());
     }
 
-    virtual void back_propagate_cuda(const vector<TensorViewCuda>&,
+    virtual void back_propagate(const vector<TensorViewCuda>&,
                                      const vector<TensorViewCuda>&,
                                      unique_ptr<LayerForwardPropagationCuda>&,
                                      unique_ptr<LayerBackPropagationCuda>&) const 
@@ -416,7 +461,7 @@ struct LayerBackPropagation
         return vector<TensorView*>();
     };
 
-    vector<TensorView> get_input_deltas() const;
+    vector<TensorView> get_input_gradients() const;
 
     virtual void print() const {}
 
@@ -426,8 +471,10 @@ struct LayerBackPropagation
 
     bool is_first_layer = false;
 
-    vector<TensorView> input_deltas;
-    vector<Tensor1> input_deltas_memory;
+    vector<TensorView> input_gradients;
+
+    // @todo what is this?
+    vector<Tensor1> input_gradients_memory;
 };
 
 
@@ -446,7 +493,7 @@ struct LayerBackPropagationLM
         return vector<TensorView*>();
     };
 
-    vector<TensorView> get_input_deltas() const;
+    vector<TensorView> get_input_gradients() const;
 
     virtual void print() const {}
 
@@ -456,7 +503,7 @@ struct LayerBackPropagationLM
 
     bool is_first_layer = false;
 
-    vector<TensorView> input_deltas;
+    vector<TensorView> input_gradients;
 };
 
 
@@ -499,7 +546,7 @@ struct LayerBackPropagationCuda
 		return vector<TensorViewCuda*>();
     };
 
-    vector<TensorViewCuda> get_input_deltas_views_device() const;
+    vector<TensorViewCuda> get_input_gradients_views_device() const;
 
     virtual void print() const {}
 
@@ -511,7 +558,7 @@ struct LayerBackPropagationCuda
 
     bool is_first_layer = false;
 
-    vector<TensorCuda> input_deltas;
+    vector<TensorCuda> input_gradients;
 };
 
 #endif

@@ -28,28 +28,28 @@ class Addition final : public Layer
 
 public:
 
-    Addition(const dimensions& new_input_dimensions = {}, const string& new_name = "")
+    Addition(const shape& new_input_shape = {}, const string& new_name = "")
     {
-        set(new_input_dimensions, new_name);
+        set(new_input_shape, new_name);
     }
 
-    dimensions get_input_dimensions() const override
+    shape get_input_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
-    dimensions get_output_dimensions() const override
+    shape get_output_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
 
-    void set(const dimensions& new_input_dimensions, const string& new_label)
+    void set(const shape& new_input_shape, const string& new_label)
     {
-        if(!new_input_dimensions.empty() && new_input_dimensions.size() != Rank)
-            throw runtime_error("Input dimensions rank for AdditionLayer<" + to_string(Rank) + "> must be " + to_string(Rank));
+        if(!new_input_shape.empty() && new_input_shape.size() != Rank)
+            throw runtime_error("Input shape rank for AdditionLayer<" + to_string(Rank) + "> must be " + to_string(Rank));
 
-        input_dimensions = new_input_dimensions;
+        input_shape = new_input_shape;
 
         label = new_label;
 
@@ -58,39 +58,39 @@ public:
 
 
     void forward_propagate(const vector<TensorView>& input_views,
-                           unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool&) override
+                           unique_ptr<LayerForwardPropagation>& forward_propagation,
+                           bool) override
     {
         if (input_views.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs.");
 
-        if (input_views[0].dims != input_views[1].dims)
-            throw runtime_error("Input dimensions for " + name + " must be identical.");
+        if (input_views[0].shape != input_views[1].shape)
+            throw runtime_error("Input shape for " + name + " must be identical.");
 
-        const TensorMap<Tensor<type, Rank>, Aligned16> input_1 = tensor_map<Rank>(input_views[0]);
-        const TensorMap<Tensor<type, Rank>, Aligned16> input_2 = tensor_map<Rank>(input_views[1]);
+        const TensorMap<Tensor<type, Rank>, Aligned64> input_1 = tensor_map<Rank>(input_views[0]);
+        const TensorMap<Tensor<type, Rank>, Aligned64> input_2 = tensor_map<Rank>(input_views[1]);
 
-        TensorMap<Tensor<type, Rank>, Aligned16> outputs = tensor_map<Rank>(layer_forward_propagation->outputs);
+        TensorMap<Tensor<type, Rank>, Aligned64> outputs = tensor_map<Rank>(forward_propagation->outputs);
 
         outputs.device(*device) = input_1 + input_2;
     }
 
 
     void back_propagate(const vector<TensorView>&,
-                        const vector<TensorView>& delta_views,
+                        const vector<TensorView>& output_gradient_views,
                         unique_ptr<LayerForwardPropagation>&,
                         unique_ptr<LayerBackPropagation>& back_propagation) const override
     {
-        if (delta_views.size() != 1)
+        if (output_gradient_views.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input.");
 
-        const TensorMap<Tensor<type, Rank>, Aligned16> deltas = tensor_map<Rank>(delta_views[0]);
+        const TensorMap<Tensor<type, Rank>, Aligned64> output_gradients = tensor_map<Rank>(output_gradient_views[0]);
 
-        TensorMap<Tensor<type, Rank>, Aligned16> input_deltas_0 = tensor_map<Rank>(back_propagation->input_deltas[0]);
-        TensorMap<Tensor<type, Rank>, Aligned16> input_deltas_1 = tensor_map<Rank>(back_propagation->input_deltas[1]);
+        TensorMap<Tensor<type, Rank>, Aligned64> input_gradients_0 = tensor_map<Rank>(back_propagation->input_gradients[0]);
+        TensorMap<Tensor<type, Rank>, Aligned64> input_gradients_1 = tensor_map<Rank>(back_propagation->input_gradients[1]);
 
-        input_deltas_0.device(*device) = deltas;
-        input_deltas_1.device(*device) = deltas;
+        input_gradients_0.device(*device) = output_gradients;
+        input_gradients_1.device(*device) = output_gradients;
     }
 
     void from_XML(const XMLDocument& document) override
@@ -99,9 +99,9 @@ public:
         if(!element) throw runtime_error(name + " element is nullptr.");
 
         const string new_label = read_xml_string(element, "Label");
-        const dimensions new_input_dimensions = string_to_dimensions(read_xml_string(element, "InputDimensions"));
+        const shape new_input_shape = string_to_dimensions(read_xml_string(element, "InputDimensions"));
 
-        set(new_input_dimensions, new_label);
+        set(new_input_shape, new_label);
     }
 
 
@@ -110,7 +110,7 @@ public:
         printer.OpenElement("Addition");
 
         add_xml_element(printer, "Label", label);
-        add_xml_element(printer, "InputDimensions", dimensions_to_string(input_dimensions));
+        add_xml_element(printer, "InputDimensions", dimensions_to_string(input_shape));
 
         printer.CloseElement();
     }
@@ -119,19 +119,16 @@ public:
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool&) override
+                                bool) override
     {
-        if (inputs_device.size() != 2)
+        if (inputs.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs for CUDA propagation.");
 
-        const size_t inputs_number = get_inputs_number();
-        const size_t total_elements = static_cast<size_t>(forward_propagation->batch_size) * inputs_number;
+        const size_t total_elements = static_cast<size_t>(forward_propagation->batch_size) * get_inputs_number();
 
-        float alpha = 1.0f;
-        float alpha_minus_one = -1.0f;
-        const float beta = 0.0f;
+        const float alpha_minus_one = -1.0f;
 
         // @todo substitute addition_cuda by cudnn function similar as follows
 /*
@@ -148,16 +145,19 @@ public:
                       errors_device);
 
 */
-        addition_cuda(total_elements, inputs_device[0].data, inputs_device[1].data, forward_propagation->outputs.data);
+        addition_cuda(total_elements,
+                      inputs[0].data,
+                      inputs[1].data,
+                      forward_propagation->outputs.data);
     }
 
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>& deltas_device,
+    void back_propagate(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>& output_gradients,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation) const override
     {
-        if (deltas_device.size() != 1)
+        if (output_gradients.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input for CUDA.");
 
         AdditionBackPropagationCuda<Rank>* this_back_propagation =
@@ -166,15 +166,15 @@ public:
         const size_t inputs_number = get_inputs_number();
         const size_t total_elements = static_cast<size_t>(back_propagation->batch_size) * inputs_number;
 
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[0].data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
-        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_deltas[1].data, deltas_device[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_gradients[0].data, output_gradients[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
+        CHECK_CUDA(cudaMemcpy(this_back_propagation->input_gradients[1].data, output_gradients[0].data, total_elements * sizeof(type), cudaMemcpyDeviceToDevice));
     }
 
 #endif
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 };
 
 
@@ -190,18 +190,18 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
 
     void initialize() override
     {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-        dimensions full_dims = { batch_size };
+        const shape output_dimensions = layer->get_output_shape();
+        shape full_dims = { batch_size };
         full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
-        outputs.dims = full_dims;
+        outputs.shape = full_dims;
     }
 
 
     void print() const override
     {
         cout << "Addition Forward Propagation:" << endl;
-        cout << "Outputs dimensions: " << outputs.dims << endl;
+        cout << "Outputs shape: " << outputs.shape << endl;
         cout << "Outputs data:" << endl << outputs.data << endl;
     }
 };
@@ -218,19 +218,19 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
     void initialize() override
     {
-        const dimensions input_dimensions = layer->get_input_dimensions();
-        dimensions full_dims = { batch_size };
-        full_dims.insert(full_dims.end(), input_dimensions.begin(), input_dimensions.end());
+        const shape input_shape = layer->get_input_shape();
+        shape full_dims = { batch_size };
+        full_dims.insert(full_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_memory.resize(2);
-        input_deltas_memory[0].resize(count_elements(full_dims));
-        input_deltas_memory[1].resize(count_elements(full_dims));
+        input_gradients_memory.resize(2);
+        input_gradients_memory[0].resize(count_elements(full_dims));
+        input_gradients_memory[1].resize(count_elements(full_dims));
 
-        input_deltas.resize(2);
-        input_deltas[0].data = input_deltas_memory[0].data();
-        input_deltas[0].dims = full_dims;
-        input_deltas[1].data = input_deltas_memory[1].data();
-        input_deltas[1].dims = full_dims;
+        input_gradients.resize(2);
+        input_gradients[0].data = input_gradients_memory[0].data();
+        input_gradients[0].shape = full_dims;
+        input_gradients[1].data = input_gradients_memory[1].data();
+        input_gradients[1].shape = full_dims;
     }
 
 
@@ -238,16 +238,16 @@ struct AdditionBackPropagation final : LayerBackPropagation
     {
         cout << "Addition Back Propagation:" << endl;
 
-        if(input_deltas.size() >= 1)
+        if(input_gradients.size() >= 1)
         {
-            cout << "Input 1 Deltas dimensions: " << input_deltas[0].dims << endl;
-            cout << input_deltas[0].data << endl;
+            cout << "Input 1 Deltas shape: " << input_gradients[0].shape << endl;
+            cout << input_gradients[0].data << endl;
         }
 
-        if(input_deltas.size() >= 2)
+        if(input_gradients.size() >= 2)
         {
-            cout << "Input 2 Deltas dimensions: " << input_deltas[1].dims << endl;
-            cout << input_deltas[1].data << endl;
+            cout << "Input 2 Deltas shape: " << input_gradients[1].shape << endl;
+            cout << input_gradients[1].data << endl;
         }
     }
 };
@@ -266,8 +266,8 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void initialize() override
     {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-        dimensions full_dims = { static_cast<Index>(batch_size) };
+        const shape output_dimensions = layer->get_output_shape();
+        shape full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
         outputs.set_descriptor(full_dims);
@@ -292,13 +292,13 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const dimensions input_dims = layer->get_input_dimensions();
-        dimensions full_dims = { static_cast<Index>(batch_size) };
+        const shape input_dims = layer->get_input_shape();
+        shape full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
 
-        input_deltas.resize(2);
-        input_deltas[0].resize(full_dims);
-        input_deltas[1].resize(full_dims);
+        input_gradients.resize(2);
+        input_gradients[0].resize(full_dims);
+        input_gradients[1].resize(full_dims);
     }
 
 

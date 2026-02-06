@@ -23,17 +23,17 @@ struct SGDOptimizationDataCuda;
 #endif
 
 
-class StochasticGradientDescent final : public OptimizationAlgorithm
+class StochasticGradientDescent final : public Optimizer
 {
 
 public:
 
-    StochasticGradientDescent(const LossIndex* = nullptr);
+    StochasticGradientDescent(const Loss* = nullptr);
 
     const type& get_initial_learning_rate() const;
     const type& get_initial_decay() const;
     const type& get_momentum() const;
-    const bool& get_nesterov() const;
+    bool get_nesterov() const;
 
     const type& get_loss_goal() const;
 
@@ -46,9 +46,9 @@ public:
     void set_initial_learning_rate(const type);
     void set_initial_decay(const type);
     void set_momentum(const type);
-    void set_nesterov(const bool&);
+    void set_nesterov(bool);
 
-    void set_maximum_epochs_number(const Index);
+    void set_maximum_epochs(const Index);
 
     void set_loss_goal(const type);
     void set_maximum_time(const type);
@@ -77,7 +77,7 @@ private:
 
     type training_loss_goal = type(0);
 
-    Index maximum_selection_failures = numeric_limits<Index>::max();
+    Index maximum_validation_failures = numeric_limits<Index>::max();
 
 #ifdef OPENNN_CUDA
 
@@ -92,7 +92,7 @@ public:
 };
 
 
-struct StochasticGradientDescentData final : public OptimizationAlgorithmData
+struct StochasticGradientDescentData final : public OptimizerData
 {
     StochasticGradientDescentData(StochasticGradientDescent* = nullptr);
 
@@ -102,22 +102,20 @@ struct StochasticGradientDescentData final : public OptimizationAlgorithmData
 
     Index iteration = 0;
 
-    Tensor1 parameters_increment;
+    Tensor1 parameter_updates;
     Tensor1 last_parameters_increment;
 };
 
 
 #ifdef OPENNN_CUDA
 
-struct SGDOptimizationDataCuda final : public OptimizationAlgorithmData
+struct SGDOptimizationDataCuda final : public OptimizerData
 {
     SGDOptimizationDataCuda(StochasticGradientDescent* = nullptr);
 
-    ~SGDOptimizationDataCuda() { free(); }
+    //~SGDOptimizationDataCuda() { free(); }
 
     void set(StochasticGradientDescent* = nullptr);
-
-    void free();
 
     void print() const;
 

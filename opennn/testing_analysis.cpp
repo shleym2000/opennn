@@ -41,7 +41,7 @@ Dataset* TestingAnalysis::get_dataset() const
 }
 
 
-const bool& TestingAnalysis::get_display() const
+bool TestingAnalysis::get_display() const
 {
     return display;
 }
@@ -68,7 +68,7 @@ void TestingAnalysis::set_dataset(Dataset* new_dataset)
 }
 
 
-void TestingAnalysis::set_display(const bool& new_display)
+void TestingAnalysis::set_display(bool new_display)
 {
     display = new_display;
 }
@@ -94,7 +94,7 @@ Tensor<Correlation, 1> TestingAnalysis::linear_correlation() const
 
 Tensor<Correlation, 1> TestingAnalysis::linear_correlation(const Tensor2& target, const Tensor2& output) const
 {
-    const Index outputs_number = dataset->get_variables_number("Target");
+    const Index outputs_number = dataset->get_features_number("Target");
 
     Tensor<Correlation, 1> linear_correlation(outputs_number);
 
@@ -109,7 +109,7 @@ void TestingAnalysis::print_linear_correlations() const
 {
     const Tensor<Correlation, 1> linear_correlations = linear_correlation();
 
-    const vector<string> targets_name = dataset->get_variable_names("Target");
+    const vector<string> targets_name = dataset->get_feature_names("Target");
 
     const Index targets_number = linear_correlations.size();
 
@@ -182,9 +182,9 @@ pair<Tensor<type,2>, Tensor<type,2>> TestingAnalysis::get_targets_and_outputs(co
         output_data = neural_network->calculate_outputs<3, 2>(input_data);
 
         const vector<Index> sample_indices = time_series_dataset->get_sample_indices(sample_role);
-        const vector<Index> variable_indices = time_series_dataset->get_variable_indices("Target");
-        target_data.resize(static_cast<Index>(sample_indices.size()), static_cast<Index>(variable_indices.size()));
-        time_series_dataset->fill_target_tensor(sample_indices, variable_indices, target_data.data());
+        const vector<Index> feature_indices = time_series_dataset->get_feature_indices("Target");
+        target_data.resize(static_cast<Index>(sample_indices.size()), static_cast<Index>(feature_indices.size()));
+        time_series_dataset->fill_target_tensor(sample_indices, feature_indices, target_data.data());
     }
     else
     {
@@ -355,9 +355,9 @@ vector<vector<Descriptives>> TestingAnalysis::calculate_error_data_descriptives(
 
 void TestingAnalysis::print_error_data_descriptives() const
 {
-    const Index targets_number = dataset->get_variables_number("Target");
+    const Index targets_number = dataset->get_features_number("Target");
 
-    const vector<string> targets_name = dataset->get_variable_names("Target");
+    const vector<string> targets_name = dataset->get_feature_names("Target");
 
     const vector<vector<Descriptives>> error_data_statistics = calculate_error_data_descriptives();
 
@@ -417,17 +417,17 @@ Tensor<Tensor<Index, 1>, 1> TestingAnalysis::calculate_maximal_errors(const Inde
 Tensor2 TestingAnalysis::calculate_errors() const
 {
     const Tensor1 training_errors = calculate_errors("Training");
-    const Tensor1 selection_errors = calculate_errors("Selection");
+    const Tensor1 validation_errors = calculate_errors("Validation");
     const Tensor1 testing_errors = calculate_errors("Testing");
 
     Tensor2 errors(5, 3);
 
     errors.setValues({
-        {training_errors(0), selection_errors(0), testing_errors(0)},
-        {training_errors(1), selection_errors(1), testing_errors(1)},
-        {training_errors(2), selection_errors(2), testing_errors(2)},
-        {training_errors(3), selection_errors(3), testing_errors(3)},
-        {training_errors(4), selection_errors(4), testing_errors(4)}
+        {training_errors(0), validation_errors(0), testing_errors(0)},
+        {training_errors(1), validation_errors(1), testing_errors(1)},
+        {training_errors(2), validation_errors(2), testing_errors(2)},
+        {training_errors(3), validation_errors(3), testing_errors(3)},
+        {training_errors(4), validation_errors(4), testing_errors(4)}
     });
 
     return errors;
@@ -437,19 +437,19 @@ Tensor2 TestingAnalysis::calculate_errors() const
 Tensor2 TestingAnalysis::calculate_binary_classification_errors() const
 {
     const Tensor1 training_errors = calculate_binary_classification_errors("Training");
-    const Tensor1 selection_errors = calculate_binary_classification_errors("Selection");
+    const Tensor1 validation_errors = calculate_binary_classification_errors("Validation");
     const Tensor1 testing_errors = calculate_binary_classification_errors("Testing");
 
     Tensor2 errors(7, 3);
 
     errors.setValues({
-        {training_errors(0), selection_errors(0), testing_errors(0)},
-        {training_errors(1), selection_errors(1), testing_errors(1)},
-        {training_errors(2), selection_errors(2), testing_errors(2)},
-        {training_errors(3), selection_errors(3), testing_errors(3)},
-        {training_errors(4), selection_errors(4), testing_errors(4)},
-        {training_errors(5), selection_errors(5), testing_errors(5)},
-        {training_errors(6), selection_errors(6), testing_errors(6)}
+        {training_errors(0), validation_errors(0), testing_errors(0)},
+        {training_errors(1), validation_errors(1), testing_errors(1)},
+        {training_errors(2), validation_errors(2), testing_errors(2)},
+        {training_errors(3), validation_errors(3), testing_errors(3)},
+        {training_errors(4), validation_errors(4), testing_errors(4)},
+        {training_errors(5), validation_errors(5), testing_errors(5)},
+        {training_errors(6), validation_errors(6), testing_errors(6)}
     });
 
     return errors;
@@ -459,18 +459,18 @@ Tensor2 TestingAnalysis::calculate_binary_classification_errors() const
 Tensor2 TestingAnalysis::calculate_multiple_classification_errors() const
 {
     const Tensor1 training_errors = calculate_multiple_classification_errors("Training");
-    const Tensor1 selection_errors = calculate_multiple_classification_errors("Selection");
+    const Tensor1 validation_errors = calculate_multiple_classification_errors("Validation");
     const Tensor1 testing_errors = calculate_multiple_classification_errors("Testing");
 
     Tensor2 errors(6, 3);
 
     errors.setValues({
-        {training_errors(0), selection_errors(0), testing_errors(0)},
-        {training_errors(1), selection_errors(1), testing_errors(1)},
-        {training_errors(2), selection_errors(2), testing_errors(2)},
-        {training_errors(3), selection_errors(3), testing_errors(3)},
-        {training_errors(4), selection_errors(4), testing_errors(4)},
-        {training_errors(5), selection_errors(5), testing_errors(5)}
+        {training_errors(0), validation_errors(0), testing_errors(0)},
+        {training_errors(1), validation_errors(1), testing_errors(1)},
+        {training_errors(2), validation_errors(2), testing_errors(2)},
+        {training_errors(3), validation_errors(3), testing_errors(3)},
+        {training_errors(4), validation_errors(4), testing_errors(4)},
+        {training_errors(5), validation_errors(5), testing_errors(5)}
     });
     return errors;
 }
@@ -882,22 +882,22 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 
     const Index samples_number = targets.dimension(0);
 
-    const dimensions input_dimensions = dataset->get_dimensions("Input");
+    const shape input_shape = dataset->get_shape("Input");
 
-    if(input_dimensions.size() == 1)
+    if(input_shape.size() == 1)
     {
         const Tensor2 outputs = neural_network->calculate_outputs<2,2>(inputs);
 
         return calculate_confusion(outputs, targets, decision_threshold);
     }
-    else if(input_dimensions.size() == 3)
+    else if(input_shape.size() == 3)
     {
         type* input_data = inputs.data();
 
         Tensor4 inputs_4d(samples_number,
-                          input_dimensions[0],
-                          input_dimensions[1],
-                          input_dimensions[2]);
+                          input_shape[0],
+                          input_shape[1],
+                          input_shape[2]);
 
         memcpy(inputs_4d.data(), input_data, samples_number * inputs.dimension(1)*sizeof(type));
 
@@ -1443,7 +1443,7 @@ void TestingAnalysis::save_confusion(const filesystem::path& file_name) const
 
     ofstream file(file_name);
 
-    const vector<string> target_variable_names = dataset->get_variable_names("Target");
+    const vector<string> target_variable_names = dataset->get_feature_names("Target");
 
     file << ",";
 
@@ -1547,7 +1547,7 @@ Tensor<string, 2> TestingAnalysis::calculate_well_classified_samples(const Tenso
     Index number_of_well_classified = 0;
     string class_name;
 
-    const vector<string> target_variables_names = dataset->get_variable_names("Target");
+    const vector<string> target_variables_names = dataset->get_feature_names("Target");
 
     for(Index i = 0; i < samples_number; i++)
     {
@@ -1784,7 +1784,7 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index 
 {
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
-    const Index targets_number = dataset->get_variables_number("Target");
+    const Index targets_number = dataset->get_features_number("Target");
 
     const Tensor2 error = outputs - targets;
 
@@ -1799,7 +1799,7 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index 
 
 Tensor<Tensor1, 1> TestingAnalysis::calculate_inputs_errors_cross_correlation(const Index past_time_steps) const
 {
-    const Index targets_number = dataset->get_variables_number("Target");
+    const Index targets_number = dataset->get_features_number("Target");
 
     const Tensor2 inputs = dataset->get_data("Testing", "Input");
 
@@ -1896,7 +1896,7 @@ pair<type, type> TestingAnalysis::test_transformer() const
 }
 
 
-string TestingAnalysis::test_transformer(const vector<string>& context_string, const bool& imported_vocabulary) const
+string TestingAnalysis::test_transformer(const vector<string>& context_string, bool imported_vocabulary) const
 {
     cout<<"Testing transformer..."<<endl;
 /*
@@ -2022,7 +2022,7 @@ void TestingAnalysis::print_binary_classification_tests() const
 
 Tensor2 TestingAnalysis::calculate_multiple_classification_tests() const
 {
-    const Index targets_number = dataset->get_variables_number("Target");
+    const Index targets_number = dataset->get_features_number("Target");
 
     Tensor<type,2> multiple_classification_tests(targets_number + 2, 3);
 
@@ -2206,9 +2206,9 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
     const vector<Index> testing_indices = dataset->get_sample_indices("Testing");
     const vector<vector<Index>> testing_batches = dataset->get_batches(testing_indices, batch_size, false);
 
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
-    //const vector<Index> decoder_variable_indices = dataset->get_variable_indices("Decoder");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
+    //const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
 
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -2218,7 +2218,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
 
     total_confusion_matrix.setZero();
 
-    BatchCuda testing_batch_cuda(batch_size, dataset);
+    BatchCuda testing_batch(batch_size, dataset);
     ForwardPropagationCuda testing_forward_propagation(batch_size, neural_network);
 
     neural_network->allocate_parameters_device();
@@ -2229,28 +2229,29 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
         const Index current_batch_size = current_batch_indices.size();
         if (current_batch_size == 0) continue;
 
-        if (current_batch_size != batch_size) {
-            testing_batch_cuda.free();
+        if (current_batch_size != batch_size)
+        {
+        //    testing_batch.free();
             testing_forward_propagation.free();
-            testing_batch_cuda.set(current_batch_size, dataset);
+            testing_batch.set(current_batch_size, dataset);
             testing_forward_propagation.set(current_batch_size, neural_network);
         }
 
-        testing_batch_cuda.fill(current_batch_indices,
-                                input_variable_indices,
-                                //decoder_variable_indices,
-                                target_variable_indices);
+        testing_batch.fill(current_batch_indices,
+                           input_feature_indices,
+                           //decoder_feature_indices,
+                           target_feature_indices);
 
-        neural_network->forward_propagate_cuda(testing_batch_cuda.get_input_views_device(),
-                                               testing_forward_propagation,
-                                               false);
+        neural_network->forward_propagate(testing_batch.get_inputs_device(),
+                                          testing_forward_propagation,
+                                          false);
 
-        const float* outputs_device = testing_forward_propagation.get_last_trainable_layer_outputs_view_device().data;
+        const float* outputs_device = testing_forward_propagation.get_last_trainable_layer_outputs_device().data;
 
         Tensor2 batch_outputs(current_batch_size, outputs_number);
         cudaMemcpy(batch_outputs.data(), outputs_device, current_batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToHost);
 
-        const Tensor2 batch_targets = dataset->get_data_from_indices(current_batch_indices, target_variable_indices);
+        const Tensor2 batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
         Tensor<Index, 2> batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
         total_confusion_matrix += batch_confusion;
     }

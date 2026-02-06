@@ -38,21 +38,21 @@ const Index& InputsSelection::get_trials_number() const
 }
 
 
-const bool& InputsSelection::get_display() const
+bool InputsSelection::get_display() const
 {
     return display;
 }
 
 
-const type& InputsSelection::get_selection_error_goal() const
+const type& InputsSelection::get_validation_error_goal() const
 {
-    return selection_error_goal;
+    return validation_error_goal;
 }
 
 
 const Index& InputsSelection::get_maximum_iterations_number() const
 {
-    return maximum_epochs_number;
+    return maximum_epochs;
 }
 
 
@@ -74,21 +74,21 @@ void InputsSelection::set_trials_number(const Index new_trials_number)
 }
 
 
-void InputsSelection::set_display(const bool& new_display)
+void InputsSelection::set_display(bool new_display)
 {
     display = new_display;
 }
 
 
-void InputsSelection::set_selection_error_goal(const type new_selection_error_goal)
+void InputsSelection::set_validation_error_goal(const type new_validation_error_goal)
 {
-    selection_error_goal = new_selection_error_goal;
+    validation_error_goal = new_validation_error_goal;
 }
 
 
-void InputsSelection::set_maximum_epochs_number(const Index new_maximum_epochs_number)
+void InputsSelection::set_maximum_epochs(const Index new_maximum_epochs)
 {
-    maximum_epochs_number = new_maximum_epochs_number;
+    maximum_epochs = new_maximum_epochs;
     
 }
 
@@ -112,7 +112,7 @@ void InputsSelection::check() const
 
     // Loss index
 
-    const LossIndex* loss_index = training_strategy->get_loss_index();
+    const Loss* loss_index = training_strategy->get_loss_index();
 
     // Neural network
 
@@ -131,16 +131,16 @@ void InputsSelection::check() const
 
     const Dataset* dataset = loss_index->get_dataset();
 
-    const Index selection_samples_number = dataset->get_samples_number("Selection");
+    const Index validation_samples_number = dataset->get_samples_number("Validation");
 
-    if(selection_samples_number == 0)
+    if(validation_samples_number == 0)
         throw runtime_error("Number of selection samples is zero.\n");
 }
 
 
-InputsSelectionResults::InputsSelectionResults(const Index maximum_epochs_number)
+InputsSelectionResults::InputsSelectionResults(const Index maximum_epochs)
 {
-    set(maximum_epochs_number);
+    set(maximum_epochs);
 }
 
 
@@ -150,18 +150,18 @@ Index InputsSelectionResults::get_epochs_number() const
 }
 
 
-void InputsSelectionResults::set(const Index maximum_epochs_number)
+void InputsSelectionResults::set(const Index maximum_epochs)
 {
-    training_error_history.resize(maximum_epochs_number);
+    training_error_history.resize(maximum_epochs);
     training_error_history.setConstant(type(-1));
 
-    selection_error_history.resize(maximum_epochs_number);
-    selection_error_history.setConstant(type(-1));
+    validation_error_history.resize(maximum_epochs);
+    validation_error_history.setConstant(type(-1));
 
-    mean_selection_error_history.resize(maximum_epochs_number);
-    mean_selection_error_history.setConstant(type(-1));
+    mean_validation_error_history.resize(maximum_epochs);
+    mean_validation_error_history.setConstant(type(-1));
 
-    mean_training_error_history.resize(maximum_epochs_number);
+    mean_training_error_history.resize(maximum_epochs);
     mean_training_error_history.setConstant(type(-1));
 }
 
@@ -196,22 +196,22 @@ string InputsSelectionResults::write_stopping_condition() const
 void InputsSelectionResults::resize_history(const Index new_size)
 {
     const Tensor1 old_training_error_history(training_error_history);
-    const Tensor1 old_selection_error_history(selection_error_history);
+    const Tensor1 old_validation_error_history(validation_error_history);
 
-    const Tensor1 old_mean_selection_history(mean_selection_error_history);
+    const Tensor1 old_mean_selection_history(mean_validation_error_history);
     const Tensor1 old_mean_training_history(mean_training_error_history);
 
     training_error_history.resize(new_size);
-    selection_error_history.resize(new_size);
+    validation_error_history.resize(new_size);
     mean_training_error_history.resize(new_size);
-    mean_selection_error_history.resize(new_size);
+    mean_validation_error_history.resize(new_size);
 
     for(Index i = 0; i < new_size; i++)
     {
         training_error_history(i) = old_training_error_history(i);
-        selection_error_history(i) = old_selection_error_history(i);
+        validation_error_history(i) = old_validation_error_history(i);
         mean_training_error_history(i) = old_mean_training_history(i);
-        mean_selection_error_history(i) = old_mean_selection_history(i);
+        mean_validation_error_history(i) = old_mean_selection_history(i);
     }
 }
 
@@ -219,7 +219,7 @@ void InputsSelectionResults::resize_history(const Index new_size)
 void InputsSelectionResults::print() const
 {
     cout << endl
-         << "Input Selection Results" << endl
+         << "Input Validation Results" << endl
          << "Optimal inputs number: " << optimal_input_raw_variable_names.size() << endl
          << "Inputs: " << endl;
 
@@ -227,7 +227,7 @@ void InputsSelectionResults::print() const
         cout << "   " << optimal_input_raw_variable_names[i] << endl;
 
     cout << "Optimum training error: " << optimum_training_error << endl
-         << "Optimum selection error: " << optimum_selection_error << endl;
+         << "Optimum selection error: " << optimum_validation_error << endl;
 }
 
 

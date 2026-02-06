@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "tinyxml2.h"
 #include "correlations.h"
 #include "statistics.h"
 #include "tensors.h"
 #include "strings_utilities.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
@@ -27,13 +24,13 @@ public:
     enum class Codification { UTF8, SHIFT_JIS };
 
     Dataset(const Index = 0,
-            const dimensions& = {0},
-            const dimensions& = {0});
+            const shape& = {0},
+            const shape& = {0});
 
     Dataset(const filesystem::path&,
             const string&,
-            const bool& = true,
-            const bool& = false,
+            bool = true,
+            bool = false,
             const Codification& = Codification::UTF8);
 
     // Enumerations
@@ -147,28 +144,28 @@ public:
 
     // Variables get
 
-    Index get_variables_number() const;
-    Index get_variables_number(const string&) const;
-    Index get_used_variables_number() const;
+    Index get_features_number() const;
+    Index get_features_number(const string&) const;
+    Index get_used_features_number() const;
 
-    vector<string> get_variable_names() const;
-    vector<string> get_variable_names(const string&) const;
+    vector<string> get_feature_names() const;
+    vector<string> get_feature_names(const string&) const;
 
-    vector<vector<Index>> get_variable_indices() const;
-    vector<Index> get_variable_indices(const Index) const;
-    vector<Index> get_variable_indices(const string&) const;
-    vector<Index> get_used_variable_indices() const;
+    vector<vector<Index>> get_feature_indices() const;
+    vector<Index> get_feature_indices(const Index) const;
+    vector<Index> get_feature_indices(const string&) const;
+    vector<Index> get_used_feature_indices() const;
 
-    dimensions get_dimensions(const string&) const;
+    shape get_shape(const string&) const;
 
-    vector<string> get_variable_scalers(const string&) const;
+    vector<string> get_feature_scalers(const string&) const;
 
-    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, const bool&) const;
+    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const;
 
     const Tensor2& get_data() const;
     Tensor2* get_data_p();
     Tensor2 get_data_samples(const string&) const;
-    Tensor2 get_data_variables(const string&) const;
+    Tensor2 get_feature_data(const string&) const;
     Tensor2 get_data(const string&, const string&) const;
     Tensor2 get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
 
@@ -197,8 +194,8 @@ public:
 
     const filesystem::path& get_data_path() const;
 
-    const bool& get_header_line() const;
-    const bool& get_has_sample_ids() const;
+    bool get_header_line() const;
+    bool get_has_sample_ids() const;
 
     vector<string> get_sample_ids() const;
 
@@ -213,23 +210,23 @@ public:
 
     Index get_gmt() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     bool is_empty() const;
 
-    dimensions get_input_dimensions() const;
-    dimensions get_target_dimensions() const;
+    shape get_input_shape() const;
+    shape get_target_shape() const;
 
     void get_categorical_info(const string&, vector<Index>&, vector<Index>&) const;
 
     // Set
 
-    void set(const Index = 0, const dimensions& = {}, const dimensions& = {});
+    void set(const Index = 0, const shape& = {}, const shape& = {});
 
     void set(const filesystem::path&,
              const string&,
-             const bool& = true,
-             const bool& = false,
+             bool = true,
+             bool = false,
              const Dataset::Codification& = Codification::UTF8);
 
     void set(const filesystem::path&);
@@ -282,11 +279,11 @@ public:
 
     // Variables set
 
-    void set_variable_names(const vector<string>&);
+    void set_feature_names(const vector<string>&);
 
-    void set_variable_roles(const string&);
+    void set_feature_roles(const string&);
 
-    void set_dimensions(const string&, const dimensions&);
+    void set_shape(const string&, const shape&);
 
     // Dataset
 
@@ -296,8 +293,8 @@ public:
 
     void set_data_path(const filesystem::path&);
 
-    void set_has_header(const bool&);
-    void set_has_ids(const bool&);
+    void set_has_header(bool);
+    void set_has_ids(bool);
 
     void set_separator(const Separator&);
     void set_separator_string(const string&);
@@ -312,7 +309,7 @@ public:
 
     void set_gmt(const Index);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     bool is_sample_used(const Index) const;
 
@@ -321,7 +318,7 @@ public:
     bool has_binary_or_categorical_raw_variables() const;
     bool has_time_raw_variable() const;
 
-    bool has_selection() const;
+    bool has_validation() const;
 
     bool has_missing_values(const vector<string>&) const;
 
@@ -348,7 +345,7 @@ public:
 
     // Descriptives
 
-    vector<Descriptives> calculate_variable_descriptives() const;
+    vector<Descriptives> calculate_feature_descriptives() const;
     //vector<Descriptives> calculate_used_variable_descriptives() const;
 
     //vector<Descriptives> calculate_raw_variable_descriptives() const;
@@ -357,7 +354,7 @@ public:
     vector<Descriptives> calculate_raw_variable_descriptives_negative_samples() const;
     vector<Descriptives> calculate_raw_variable_descriptives_categories(const Index) const;
 
-    vector<Descriptives> calculate_variable_descriptives(const string&) const;
+    vector<Descriptives> calculate_feature_descriptives(const string&) const;
 
     vector<Descriptives> calculate_testing_target_variable_descriptives() const;
 
@@ -409,11 +406,11 @@ public:
 
     vector<Descriptives> scale_data();
 
-    virtual vector<Descriptives> scale_variables(const string&);
+    virtual vector<Descriptives> scale_features(const string&);
 
     // Data unscaling
 
-    void unscale_variables(const string&, const vector<Descriptives>&);
+    void unscale_features(const string&, const vector<Descriptives>&);
 
     // Classification
 
@@ -534,9 +531,9 @@ protected:
 
     // Dimensions
 
-    dimensions input_dimensions;
-    dimensions target_dimensions;
-    dimensions decoder_dimensions;
+    shape input_shape;
+    shape target_shape;
+    shape decoder_shape;
 
     // Samples
 
@@ -609,8 +606,8 @@ struct Batch
               // const vector<Index>&,
               const vector<Index>& = vector<Index>());
 
-    vector<TensorView> get_input_views() const;
-    TensorView get_target_view() const;
+    vector<TensorView> get_inputs() const;
+    TensorView get_targets() const;
 
     Index get_samples_number() const;
 
@@ -624,13 +621,13 @@ struct Batch
 
     Dataset* dataset = nullptr;
 
-    dimensions input_dimensions;
+    shape input_shape;
     Tensor1 input_tensor;
 
-    dimensions decoder_dimensions;
+    shape decoder_shape;
     Tensor1 decoder_tensor;
 
-    dimensions target_dimensions;
+    shape target_shape;
     Tensor1 target_tensor;
 
     unique_ptr<ThreadPool> thread_pool = nullptr;
@@ -644,7 +641,7 @@ struct BatchCuda
 {
     BatchCuda(const Index = 0, Dataset* = nullptr);
 
-    ~BatchCuda() { free(); }
+    //~BatchCuda() { free(); }
 
     void set(const Index, Dataset*);
 
@@ -656,8 +653,8 @@ struct BatchCuda
     //BatchCuda(const BatchCuda&) = delete;
     //BatchCuda& operator=(const BatchCuda&) = delete;
 
-    vector<TensorViewCuda> get_input_views_device() const;
-    TensorViewCuda get_target_view_device() const;
+    vector<TensorViewCuda> get_inputs_device() const;
+    TensorViewCuda get_targets_device() const;
 
     Index get_samples_number() const;
 
@@ -667,7 +664,7 @@ struct BatchCuda
 
     void copy_device(const Index);
 
-    void free();
+//    void free();
 
     void print() const;
 
@@ -679,13 +676,13 @@ struct BatchCuda
 
     Dataset* dataset = nullptr;
 
-    dimensions input_dimensions;
-    dimensions decoder_dimensions;
-    dimensions target_dimensions;        
+    shape input_shape;
+    shape decoder_shape;
+    shape target_shape;
 
-    float* inputs_host = nullptr;
-    float* decoder_host = nullptr;
-    float* targets_host = nullptr;
+    vector<float> inputs_host;
+    vector<float> decoder_host;
+    vector<float> targets_host;
 
     TensorCuda inputs_device;
     TensorCuda decoder_device;

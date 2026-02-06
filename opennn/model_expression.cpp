@@ -47,7 +47,7 @@ string ModelExpression::write_comments_c() const
 string ModelExpression::write_logistic_c() const
 {
     return
-        "float Logistic(float x) {\n"
+        "float Sigmoid(float x) {\n"
         "\tfloat z = 1.0f / (1.0f + expf(-x));\n"
         "\treturn z;\n"
         "}\n\n";
@@ -112,11 +112,11 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
 
     ostringstream buffer;
 
-    vector<string> feature_names = neural_network->get_feature_names();
-    if(feature_names.empty())
+    vector<string> input_names = neural_network->get_feature_names();
+    if(input_names.empty())
         for(const Dataset::RawVariable& raw_variable : raw_variables)
             if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                feature_names.push_back(raw_variable.name);
+                input_names.push_back(raw_variable.name);
 
     vector<string> output_names = neural_network->get_output_names();
     if(output_names.empty())
@@ -124,10 +124,10 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
             if(raw_variable.role == "Target" || raw_variable.role == "InputTarget")
                 output_names.push_back(raw_variable.name);
 
-    vector<string> fixed_feature_names = fix_feature_names(feature_names);
+    vector<string> fixed_feature_names = fix_feature_names(input_names);
     vector<string> fixed_output_names = fix_output_names(output_names);
 
-    const Index inputs_number = feature_names.size();
+    const Index inputs_number = input_names.size();
     const Index outputs_number = output_names.size();
 
     bool logistic = false;
@@ -140,7 +140,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
     buffer << write_comments_c();
 
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "\n// \t " << i << ")  " << feature_names[i];
+        buffer << "\n// \t " << i << ")  " << input_names[i];
 
     buffer << "\n \n \n#include <stdio.h>\n"
               "#include <stdlib.h>\n"
@@ -195,7 +195,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
         }
     }
 
-    if(expression.find("Logistic") != string::npos) logistic = true;
+    if(expression.find("Sigmoid") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) relu = true;
     if(expression.find("ExponentialLinear") != string::npos) exp_linear = true;
     if(expression.find("SELU") != string::npos) selu = true;
@@ -227,7 +227,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
         replace_all_appearances(processed_line, "]", "_");
 
         for(Index i = 0; i < inputs_number; i++)
-            replace_all_word_appearances(processed_line, feature_names[i], fixed_feature_names[i]);
+            replace_all_word_appearances(processed_line, input_names[i], fixed_feature_names[i]);
 
         buffer << "\tdouble " << processed_line << "\n";
     }
@@ -273,7 +273,7 @@ string ModelExpression::get_expression_c(const vector<Dataset::RawVariable>& raw
     buffer << "\t// Please enter your values here:\n";
 
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "\tinputs[" << i << "] = 0.0f; // " << feature_names[i] << "\n";
+        buffer << "\tinputs[" << i << "] = 0.0f; // " << input_names[i] << "\n";
 
     buffer << "\n\tfloat* outputs;\n";
     buffer << "\n\toutputs = calculate_outputs(inputs);\n\n";
@@ -353,11 +353,11 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 
     ostringstream buffer;
 
-    vector<string> feature_names = neural_network->get_feature_names();
-    if(feature_names.empty())
+    vector<string> input_names = neural_network->get_feature_names();
+    if(input_names.empty())
         for(const Dataset::RawVariable& raw_variable : raw_variables)
             if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                feature_names.push_back(raw_variable.name);
+                input_names.push_back(raw_variable.name);
 
     vector<string> output_names = neural_network->get_output_names();
     if(output_names.empty())
@@ -365,15 +365,15 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
             if(raw_variable.role == "Target" || raw_variable.role == "InputTarget")
                 output_names.push_back(raw_variable.name);
 
-    const vector<string> fixed_feature_names = fix_feature_names(feature_names);
+    const vector<string> fixed_feature_names = fix_feature_names(input_names);
     const vector<string> fixed_output_names = fix_output_names(output_names);
 
-    const Index inputs_number = feature_names.size();
+    const Index inputs_number = input_names.size();
     const Index outputs_number = output_names.size();
 
     buffer << write_header_api();
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "\n\t\t" << i << ")  " << feature_names[i];
+        buffer << "\n\t\t" << i << ")  " << input_names[i];
     buffer << write_subheader_api();
 
     // Expression
@@ -385,8 +385,8 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 
     if(expression.find("Linear") != string::npos)
         buffer << "function Linear($x) { return $x; }\n";
-    if(expression.find("Logistic") != string::npos)
-        buffer << "function Logistic($x) { return 1 / (1 + exp(-$x)); }\n";
+    if(expression.find("Sigmoid") != string::npos)
+        buffer << "function Sigmoid($x) { return 1 / (1 + exp(-$x)); }\n";
     if(expression.find("RectifiedLinear") != string::npos)
         buffer << "function RectifiedLinear($x) { return max(0, $x); }\n";
     if(expression.find("HyperbolicTangent") != string::npos)
@@ -416,8 +416,8 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
         replace_all_word_appearances(expression, var_name, "$" + var_name);
 
     for(Index i = 0; i < inputs_number; i++)
-        if(feature_names[i] != fixed_feature_names[i])
-            replace_all_word_appearances(expression, feature_names[i], "$" + fixed_feature_names[i]);
+        if(input_names[i] != fixed_feature_names[i])
+            replace_all_word_appearances(expression, input_names[i], "$" + fixed_feature_names[i]);
 
     for(Index i = 0; i < outputs_number; i++)
         if(output_names[i] != fixed_output_names[i])
@@ -506,7 +506,7 @@ string ModelExpression::get_expression_api(const vector<Dataset::RawVariable>& r
 string ModelExpression::logistic_javascript() const
 {
     return
-        "function Logistic(x) {\n"
+        "function Sigmoid(x) {\n"
         "\tvar z = 1/(1+Math.exp(-x));\n"
         "\treturn z;\n"
         "}\n";
@@ -740,11 +740,11 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 {
     // Prepare data
 
-    vector<string> feature_names = neural_network->get_feature_names();
-    if(feature_names.empty())
+    vector<string> input_names = neural_network->get_feature_names();
+    if(input_names.empty())
         for(const Dataset::RawVariable& raw_variable : raw_variables)
             if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                feature_names.push_back(raw_variable.name);
+                input_names.push_back(raw_variable.name);
 
     vector<string> output_names = neural_network->get_output_names();
     if(output_names.empty())
@@ -752,10 +752,10 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
             if(raw_variable.role == "Target" || raw_variable.role == "InputTarget")
                 output_names.push_back(raw_variable.name);
 
-    const Index inputs_number = feature_names.size();
+    const Index inputs_number = input_names.size();
     const Index outputs_number = output_names.size();
 
-    vector<string> fixes_feature_names = fix_feature_names(feature_names);
+    vector<string> fixes_feature_names = fix_feature_names(input_names);
     vector<string> fixes_output_names = fix_output_names(output_names);
 
     // Expression
@@ -811,14 +811,14 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         }
     }
 
-    const int maximum_output_variable_numbers = 5;
+    const int maximum_output_feature_numbers = 5;
     bool logistic     = false;
     bool ReLU         = false;
     bool ExpLinear    = false;
     bool SExpLinear   = false;
     bool Softmax      = false;
 
-    if(expression.find("Logistic") != string::npos) logistic = true;
+    if(expression.find("Sigmoid") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) ReLU = true;
     if(expression.find("ExponentialLinear") != string::npos) ExpLinear = true;
     if(expression.find("SELU") != string::npos) SExpLinear = true;
@@ -831,7 +831,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
     buffer << header_javascript();
 
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "\n\t " << i + 1 << ")  " << feature_names[i];
+        buffer << "\n\t " << i + 1 << ")  " << input_names[i];
 
     buffer << subheader_javascript();
 
@@ -866,7 +866,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
             {
                 if(!descriptive_names.empty())
                 {
-                    string root_name = feature_names[i];
+                    string root_name = input_names[i];
                     size_t lag_pos = root_name.rfind("_lag");
 
                     if(lag_pos != string::npos)
@@ -905,7 +905,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
             buffer << "<!-- "<< to_string(i) <<"scaling layer -->" << endl;
             buffer << "<tr style=\"height:3.5em\">" << endl;
-            buffer << "<td> " << feature_names[i] << " </td>" << endl;
+            buffer << "<td> " << input_names[i] << " </td>" << endl;
             buffer << "<td class=\"neural-cell\">" << endl;
 
             if(min_value==0 && max_value==0)
@@ -929,7 +929,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         for(Index i = 0; i < inputs_number; i++)
             buffer << "<!-- "<< to_string(i) <<"no scaling layer -->" << endl
                    << "<tr style=\"height:3.5em\">" << endl
-                   << "<td> " << feature_names[i] << " </td>" << endl
+                   << "<td> " << input_names[i] << " </td>" << endl
                    << "<td class=\"neural-cell\">" << endl
                    << "<input type=\"range\" id=\"" << fixes_feature_names[i] << "\" value=\"0\" min=\"-1\" max=\"1\" step=\"0.01\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[i] << "_text')\" />" << endl
                    << "<input type=\"number\" id=\"" << fixes_feature_names[i] << "_text\" value=\"0\" min=\"-1\" max=\"1\" step=\"any\" onchange=\"updateTextInput1(this.value, '" << fixes_feature_names[i] << "')\">" << endl
@@ -939,7 +939,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     buffer << "</table>" << endl;
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
     {
         buffer << "<!-- HIDDEN INPUTS -->" << endl;
         for(Index i = 0; i < outputs_number; i++)
@@ -955,7 +955,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     // Outputs
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
     {
         buffer << "<tr style=\"height:3.5em\">" << endl
                << "<td> Target </td>" << endl
@@ -995,7 +995,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     buffer << "<script>" << endl;
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
     {
         buffer << "function updateSelectedCategory() {" << endl
                << "\tvar selectedCategory = document.getElementById(\"category_select\").value;" << endl
@@ -1033,7 +1033,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
 
     buffer << "\n" << "\t" << "var outputs = calculate_outputs(inputs); " << endl;
 
-    if(outputs_number > maximum_output_variable_numbers)
+    if(outputs_number > maximum_output_feature_numbers)
         buffer << "\t" << "updateSelectedCategory();" << endl;
     else
         for(Index i = 0; i < outputs_number; i++)
@@ -1057,7 +1057,7 @@ string ModelExpression::get_expression_javascript(const vector<Dataset::RawVaria
         string line = lines[i];
 
         for(Index j = 0; j < inputs_number; ++j)
-            replace_all_word_appearances(line, feature_names[j], fixes_feature_names[j]);
+            replace_all_word_appearances(line, input_names[j], fixes_feature_names[j]);
 
         if(Softmax) replace_all_appearances(line, "Softmax", "___SOFTMAX_TOKEN___");
 
@@ -1149,16 +1149,16 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     ostringstream buffer;
 
-    vector<string> feature_names = neural_network->get_feature_names();
-    if(feature_names.empty())
+    vector<string> input_names = neural_network->get_feature_names();
+    if(input_names.empty())
         for(const Dataset::RawVariable& raw_variable : raw_variables)
             if(raw_variable.role == "Input" || raw_variable.role == "InputTarget")
-                feature_names.push_back(raw_variable.name);
+                input_names.push_back(raw_variable.name);
 
     vector<string> original_outputs = neural_network->get_output_names();
     vector<string> outputs = fix_output_names(original_outputs);
 
-    const Index inputs_number = feature_names.size();
+    const Index inputs_number = input_names.size();
     const Index outputs_number = outputs.size();
 
     bool logistic = false;
@@ -1171,7 +1171,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     buffer << write_header_python();
 
     for(Index i = 0; i < inputs_number; i++)
-        buffer << "\t" << i << ") " << feature_names[i] << endl;
+        buffer << "\t" << i << ") " << input_names[i] << endl;
 
     buffer << write_subheader_python();
 
@@ -1218,7 +1218,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
         }
     }
 
-    if(expression.find("Logistic") != string::npos) logistic = true;
+    if(expression.find("Sigmoid") != string::npos) logistic = true;
     if(expression.find("RectifiedLinear") != string::npos) relu = true;
     if(expression.find("ExponentialLinear") != string::npos) exp_linear = true;
     if(expression.find("SELU") != string::npos) selu = true;
@@ -1230,7 +1230,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
            << "class NeuralNetwork:\n\n";
 
     string inputs_list_str;
-    for(const string& fname : feature_names)
+    for(const string& fname : input_names)
         inputs_list_str += "'" + replace_reserved_keywords(fname) + "', ";
 
     if(!inputs_list_str.empty())
@@ -1241,7 +1241,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     buffer << "\tdef __init__(self):\n"
            << "\t\t" << "self.inputs_number = " << inputs_number << "\n"
-           << "\t\t" << "self.feature_names = [" << inputs_list_str << "]\n\n";
+           << "\t\t" << "self.input_names = [" << inputs_list_str << "]\n\n";
 
     buffer << "\t@staticmethod\n"
            << "\tdef Linear(x):\n"
@@ -1249,7 +1249,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
 
     if(logistic)
         buffer << "\t@staticmethod\n"
-               << "\tdef Logistic (x):\n"
+               << "\tdef Sigmoid (x):\n"
                << "\t\t" << "z = 1/(1+np.exp(-x))\n"
                << "\t\t" << "return z\n\n";
 
@@ -1285,7 +1285,7 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     buffer << "\t" << "def calculate_outputs(self, inputs):\n";
 
     Index input_idx = 0;
-    for(const string& fname : feature_names)
+    for(const string& fname : input_names)
         buffer << "\t\t" << replace_reserved_keywords(fname) << " = inputs[" << input_idx++ << "]\n";
 
     buffer << "\n";
@@ -1297,11 +1297,11 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
         replace_all_appearances(processed_line, "[", "_");
         replace_all_appearances(processed_line, "]", "_");
 
-        for(const string& fname : feature_names)
+        for(const string& fname : input_names)
             replace_all_word_appearances(processed_line, fname, replace_reserved_keywords(fname));
 
         replace_all_word_appearances(processed_line, "Linear", "self.Linear");
-        replace_all_word_appearances(processed_line, "Logistic", "self.Logistic");
+        replace_all_word_appearances(processed_line, "Sigmoid", "self.Sigmoid");
         replace_all_word_appearances(processed_line, "RectifiedLinear", "self.RectifiedLinear");
         replace_all_word_appearances(processed_line, "ExponentialLinear", "self.ExponentialLinear");
         replace_all_word_appearances(processed_line, "SELU", "self.SELU");
@@ -1344,10 +1344,10 @@ string ModelExpression::get_expression_python(const vector<Dataset::RawVariable>
     buffer << "def main():\n"
            << "\n\t# Introduce your input values here\n";
 
-    vector<string> fixed_raw_names = fix_feature_names(feature_names);
+    vector<string> fixed_raw_names = fix_feature_names(input_names);
 
     for(Index i = 0; i < inputs_number; ++i)
-        buffer << "\t" << fixed_raw_names[i] << " = 0  # " << feature_names[i] << "\n";
+        buffer << "\t" << fixed_raw_names[i] << " = 0  # " << input_names[i] << "\n";
 
     buffer << "\n\t# --- Data conversion (DO NOT modify) ---\n";
     buffer << "\tinputs = []\n\n";
@@ -1482,16 +1482,16 @@ vector<string> ModelExpression::fix_get_expression_outputs(const string& str,
 }
 
 
-vector<string> ModelExpression::fix_feature_names(const vector<string>& feature_names) const
+vector<string> ModelExpression::fix_feature_names(const vector<string>& input_names) const
 {
-    const Index inputs_number = feature_names.size();
+    const Index inputs_number = input_names.size();
     vector<string> fixes_feature_names(inputs_number);
 
     for(Index i = 0; i < inputs_number; i++)
-        if(feature_names[i].empty())
+        if(input_names[i].empty())
             fixes_feature_names[i] = "input_" + to_string(i);
         else
-            fixes_feature_names[i] = replace_reserved_keywords(feature_names[i]);
+            fixes_feature_names[i] = replace_reserved_keywords(input_names[i]);
 
     return fixes_feature_names;
 

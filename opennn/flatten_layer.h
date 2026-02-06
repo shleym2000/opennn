@@ -31,24 +31,24 @@ class Flatten final : public Layer
 
 public:
 
-    Flatten(const dimensions& new_input_dimensions = {} )
+    Flatten(const shape& new_input_shape = {} )
     {
-        set(new_input_dimensions);
+        set(new_input_shape);
     }
 
 
-    dimensions get_input_dimensions() const override
+    shape get_input_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
 
-    dimensions get_output_dimensions() const override
+    shape get_output_shape() const override
     {
-        if (input_dimensions.empty() || input_dimensions[0] == 0)
+        if (input_shape.empty() || input_shape[0] == 0)
             return {0};
 
-        return { (Index)accumulate(input_dimensions.begin(), input_dimensions.end(), (size_t)1, multiplies<size_t>()) };
+        return { (Index)accumulate(input_shape.begin(), input_shape.end(), (size_t)1, multiplies<size_t>()) };
     }
 
 
@@ -57,7 +57,7 @@ public:
         if constexpr (Rank < 2)
             throw logic_error("get_input_height() requires Rank ≥ 2.");
 
-        return input_dimensions[0];
+        return input_shape[0];
     }
 
 
@@ -66,7 +66,7 @@ public:
         if constexpr (Rank < 2)
             throw logic_error("get_input_width() requires Rank >= 2.");
 
-        return input_dimensions[1];
+        return input_shape[1];
     }
 
 
@@ -75,27 +75,27 @@ public:
         if constexpr (Rank < 3)
             throw logic_error("get_input_channels() requires Rank >= 3.");
 
-        return input_dimensions[2];
+        return input_shape[2];
     }
 
 
-    void set(const dimensions& new_input_dimensions)
+    void set(const shape& new_input_shape)
     {
-        if (new_input_dimensions.size() != Rank - 1)
-            throw runtime_error("Error: Input dimensions size must match layer Rank in FlattenLayer::set().");
+        if (new_input_shape.size() != Rank - 1)
+            throw runtime_error("Error: Input shape size must match layer Rank in FlattenLayer::set().");
 
         name = "Flatten" + to_string(Rank) + "d";
 
         set_label("flatten_layer");
 
-        input_dimensions = new_input_dimensions;
+        input_shape = new_input_shape;
     }
 
     // Forward propagation
     
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool&) override
+                           bool) override
     {
         FlattenForwardPropagation<Rank>* forward_propagation =
             static_cast<FlattenForwardPropagation<Rank>*>(layer_forward_propagation.get());
@@ -109,17 +109,17 @@ public:
     // Back-propagation
     
     void back_propagate(const vector<TensorView>&,
-                        const vector<TensorView>& delta_views,
+                        const vector<TensorView>& output_gradient_views,
                         unique_ptr<LayerForwardPropagation>&,
                         unique_ptr<LayerBackPropagation>& layer_back_propagation) const override
     {
         FlattenBackPropagation<Rank>* flatten_back_propagation =
             static_cast<FlattenBackPropagation<Rank>*>(layer_back_propagation.get());
 
-        type* source_ptr = delta_views[0].data;
-        type* dest_ptr = flatten_back_propagation->input_deltas[0].data;
+        type* source_ptr = output_gradient_views[0].data;
+        type* dest_ptr = flatten_back_propagation->input_gradients[0].data;
 
-        const size_t bytes_to_copy = flatten_back_propagation->input_deltas[0].size() * sizeof(type);
+        const size_t bytes_to_copy = flatten_back_propagation->input_gradients[0].size() * sizeof(type);
 
         if (source_ptr && dest_ptr && source_ptr != dest_ptr)
             memcpy(dest_ptr, source_ptr, bytes_to_copy);
@@ -162,17 +162,17 @@ public:
     void print() const override
     {
         cout << "Flatten layer" << endl
-             << "Input dimensions: " << input_dimensions << endl
-             << "Output dimensions: " << get_output_dimensions() << endl;
+             << "Input shape: " << input_shape << endl
+             << "Output shape: " << get_output_shape() << endl;
     }
 
 #ifdef OPENNN_CUDA
 
 public:
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool&)
+                                bool)
     {
         const Index batch_size = forward_propagation->batch_size;
         const Index outputs_number = get_outputs_number();
@@ -183,42 +183,47 @@ public:
             const Index width = get_input_width();
             const Index channels = get_input_channels();
 
-            FlattenForwardPropagationCuda<Rank>* fp_cuda =
+            FlattenForwardPropagationCuda<Rank>* layer_forward_propagation =
                 static_cast<FlattenForwardPropagationCuda<Rank>*>(forward_propagation.get());
 
-            type* reordered_inputs = fp_cuda->reordered_inputs.data;
-            type* outputs_device = fp_cuda->outputs.data;
+            type* reordered_inputs = layer_forward_propagation->reordered_inputs.data;
+            type* outputs_device = layer_forward_propagation->outputs.data;
 
-            invert_reorder_inputs_cuda(inputs_device[0].data, reordered_inputs, batch_size, channels, height, width);
+            invert_reorder_inputs_cuda(inputs[0].data,
+                                       reordered_inputs,
+                                       batch_size,
+                                       channels,
+                                       height,
+                                       width);
 
             reorganize_inputs_cuda(reordered_inputs, outputs_device, batch_size, outputs_number);
         }
         else
             CHECK_CUDA(cudaMemcpy(forward_propagation->outputs.data,
-                                  inputs_device[0].data, batch_size * outputs_number * sizeof(type),
+                                  inputs[0].data, batch_size * outputs_number * sizeof(type),
                                   cudaMemcpyDeviceToDevice));
     }
 
 
-    void back_propagate_cuda(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>& deltas_device,
+    void back_propagate(const vector<TensorViewCuda>&,
+                             const vector<TensorViewCuda>& output_gradients,
                              unique_ptr<LayerForwardPropagationCuda>&,
                              unique_ptr<LayerBackPropagationCuda>& back_propagation) const
     {
         const Index batch_size = back_propagation->batch_size;
 
-        type* input_deltas = back_propagation->input_deltas[0].data;
+        type* input_gradients = back_propagation->input_gradients[0].data;
 
         const Index outputs_number = get_outputs_number();
 
-        reorganize_deltas_cuda(deltas_device[0].data, input_deltas, batch_size, outputs_number);
+        reorganize_gradients_cuda(output_gradients[0].data, input_gradients, batch_size, outputs_number);
     }
 
 #endif
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 };
 
 
@@ -232,13 +237,13 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
 
     void initialize() override
     {
-        const dimensions output_dimensions = layer->get_output_dimensions();
-        outputs.dims = {batch_size, output_dimensions[0]};
+        const shape output_dimensions = layer->get_output_shape();
+        outputs.shape = {batch_size, output_dimensions[0]};
     }
 
     void print() const override
     {
-        cout << "Flatten Outputs Dimensions:" << endl << outputs.dims << endl;
+        cout << "Flatten Outputs Dimensions:" << endl << outputs.shape << endl;
     }
 };
 
@@ -255,21 +260,21 @@ struct FlattenBackPropagation final : LayerBackPropagation
     {
         const Flatten<Rank>* flatten_layer = static_cast<const Flatten<Rank>*>(layer);
 
-        const dimensions input_shape = flatten_layer->get_input_dimensions();
+        const shape input_shape = flatten_layer->get_input_shape();
 
-        dimensions full_input_dims = { batch_size };
+        shape full_input_dims = { batch_size };
         full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
 
-        input_deltas_memory.resize(1);
-        input_deltas_memory[0].resize(count_elements(full_input_dims));
-        input_deltas.resize(1);
-        input_deltas[0].data = input_deltas_memory[0].data();
-        input_deltas[0].dims = full_input_dims;
+        input_gradients_memory.resize(1);
+        input_gradients_memory[0].resize(count_elements(full_input_dims));
+        input_gradients.resize(1);
+        input_gradients[0].data = input_gradients_memory[0].data();
+        input_gradients[0].shape = full_input_dims;
     }
 
     void print() const override
     {
-        cout << "Flatten Deltas Dimensions:" << endl << input_deltas[0].dims << endl;
+        cout << "Flatten Deltas Dimensions:" << endl << input_gradients[0].shape << endl;
     }
 };
 
@@ -313,8 +318,8 @@ struct FlattenBackPropagationCuda : public LayerBackPropagationCuda
     {
         const Index inputs_number = layer->get_inputs_number();
 
-        input_deltas.resize(1);
-        input_deltas[0].resize({ batch_size, inputs_number, 1, 1 });
+        input_gradients.resize(1);
+        input_gradients[0].resize({ batch_size, inputs_number, 1, 1 });
     }
 };
 

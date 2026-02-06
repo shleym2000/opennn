@@ -13,22 +13,22 @@
 namespace opennn
 {
 
-MultiHeadAttention::MultiHeadAttention(const dimensions& new_input_dimensions,
+MultiHeadAttention::MultiHeadAttention(const shape& new_input_shape,
                                        const Index& new_heads_number,
                                        const string& new_name) : Layer()
 {
     // Self-attention
 
-    set(new_input_dimensions[0],    // query_sequence_length
-        new_input_dimensions[0],    // source_sequence_length
-        new_input_dimensions[1],    // embedding_dimension
+    set(new_input_shape[0],    // query_sequence_length
+        new_input_shape[0],    // source_sequence_length
+        new_input_shape[1],    // embedding_dimension
         new_heads_number,
         false,
         new_name);
 }
 
-MultiHeadAttention::MultiHeadAttention(const dimensions& new_query_dimensions,
-                                       const dimensions& new_source_dimensions,
+MultiHeadAttention::MultiHeadAttention(const shape& new_query_dimensions,
+                                       const shape& new_source_dimensions,
                                        const Index& new_heads_number,
                                        const string& new_name) : Layer()
 {
@@ -59,7 +59,7 @@ Index MultiHeadAttention::get_source_sequence_length() const
 
 Index MultiHeadAttention::get_embedding_dimension() const
 {
-    return query_biases.dims[0];
+    return query_biases.shape[0];
 }
 
 
@@ -87,13 +87,13 @@ Index MultiHeadAttention::get_head_dimension() const
 }
 
 
-dimensions MultiHeadAttention::get_input_dimensions() const
+shape MultiHeadAttention::get_input_shape() const
 {
     return { query_sequence_length, get_embedding_dimension() };
 }
 
 
-dimensions MultiHeadAttention::get_output_dimensions() const
+shape MultiHeadAttention::get_output_shape() const
 {
     return { query_sequence_length, get_embedding_dimension() };
 }
@@ -112,7 +112,7 @@ void MultiHeadAttention::set(const Index new_query_sequence_length,
                              const Index& new_source_sequence_length,
                              const Index& new_embedding_dimension,
                              const Index& new_heads_number,
-                             const bool& new_use_causal_mask,
+                             bool new_use_causal_mask,
                              const string& new_label)
 {
     name = "MultiHeadAttention";
@@ -124,17 +124,17 @@ void MultiHeadAttention::set(const Index new_query_sequence_length,
     if (heads_number <= 0 || new_embedding_dimension % heads_number != 0)
         throw runtime_error("MultiHeadAttention Error: The embedding dimension must be divisible by the number of heads.");
 
-    query_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    query_biases.dims = {new_embedding_dimension};
+    query_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    query_biases.shape = {new_embedding_dimension};
 
-    key_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    key_biases.dims = {new_embedding_dimension};
+    key_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    key_biases.shape = {new_embedding_dimension};
 
-    value_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    value_biases.dims = {new_embedding_dimension};
+    value_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    value_biases.shape = {new_embedding_dimension};
 
-    projection_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    projection_biases.dims = {new_embedding_dimension};
+    projection_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    projection_biases.shape = {new_embedding_dimension};
 
     use_causal_mask = new_use_causal_mask;
 
@@ -155,7 +155,7 @@ void MultiHeadAttention::set_dropout_rate(const type new_dropout_rate)
 
 void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views,
                                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                           const bool&)
+                                           bool)
 {
     const Index embedding_dimension = get_embedding_dimension();
     const Index head_dimension = get_head_dimension();
@@ -240,7 +240,7 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
 
 
 void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
-                                        const vector<TensorView>& delta_views,
+                                        const vector<TensorView>& output_gradient_views,
                                         unique_ptr<LayerForwardPropagation>& forward_propagation,
                                         unique_ptr<LayerBackPropagation>& back_propagation) const
 {
@@ -251,7 +251,7 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
                                                         ? query_input
                                                         : tensor_map<3>(input_views[1]);
 
-    const TensorMap3 delta_Y = tensor_map<3>(delta_views[0]);
+    const TensorMap3 delta_Y = tensor_map<3>(output_gradient_views[0]);
 
     // Forward propagation
 
@@ -269,25 +269,25 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     MultiHeadAttentionBackPropagation* this_back_propagation =
         static_cast<MultiHeadAttentionBackPropagation*>(back_propagation.get());
 
-    TensorMap2 projection_weight_deltas = tensor_map<2>(this_back_propagation->projection_weight_deltas);
-    TensorMap1 projection_bias_deltas = tensor_map<1>(this_back_propagation->projection_bias_deltas);
-    Tensor3& concatenated_attention_output_deltas = this_back_propagation->concatenated_attention_output_deltas;
-    Tensor4& attention_output_deltas = this_back_propagation->attention_output_deltas;
-    Tensor4& attention_weight_deltas = this_back_propagation->attention_weight_deltas;
-    Tensor4& query_deltas = this_back_propagation->query_deltas;
-    Tensor4& key_deltas = this_back_propagation->key_deltas;
-    Tensor4& value_deltas = this_back_propagation->value_deltas;
-    TensorMap2 query_weight_deltas = tensor_map<2>(this_back_propagation->query_weight_deltas);
-    TensorMap1 query_bias_deltas = tensor_map<1>(this_back_propagation->query_bias_deltas);
-    TensorMap2 key_weight_deltas = tensor_map<2>(this_back_propagation->key_weight_deltas);
-    TensorMap1 key_bias_deltas = tensor_map<1>(this_back_propagation->key_bias_deltas);
-    TensorMap2 value_weight_deltas = tensor_map<2>(this_back_propagation->value_weight_deltas);
-    TensorMap1 value_bias_deltas = tensor_map<1>(this_back_propagation->value_bias_deltas);
+    TensorMap2 projection_weight_gradients = tensor_map<2>(this_back_propagation->projection_weight_gradients);
+    TensorMap1 projection_bias_gradients = tensor_map<1>(this_back_propagation->projection_bias_gradients);
+    Tensor3& concatenated_attention_output_gradients = this_back_propagation->concatenated_attention_output_gradients;
+    Tensor4& attention_output_gradients = this_back_propagation->attention_output_gradients;
+    Tensor4& attention_weight_gradients = this_back_propagation->attention_weight_gradients;
+    Tensor4& query_gradients = this_back_propagation->query_gradients;
+    Tensor4& key_gradients = this_back_propagation->key_gradients;
+    Tensor4& value_gradients = this_back_propagation->value_gradients;
+    TensorMap2 query_weight_gradients = tensor_map<2>(this_back_propagation->query_weight_gradients);
+    TensorMap1 query_bias_gradients = tensor_map<1>(this_back_propagation->query_bias_gradients);
+    TensorMap2 key_weight_gradients = tensor_map<2>(this_back_propagation->key_weight_gradients);
+    TensorMap1 key_bias_gradients = tensor_map<1>(this_back_propagation->key_bias_gradients);
+    TensorMap2 value_weight_gradients = tensor_map<2>(this_back_propagation->value_weight_gradients);
+    TensorMap1 value_bias_gradients = tensor_map<1>(this_back_propagation->value_bias_gradients);
 
-    TensorMap3 input_query_deltas = tensor_map<3>(back_propagation->input_deltas[0]);
-    TensorMap3 input_source_deltas = tensor_map<3>(back_propagation->input_deltas[1]);
+    TensorMap3 input_query_gradients = tensor_map<3>(back_propagation->input_gradients[0]);
+    TensorMap3 input_source_gradients = tensor_map<3>(back_propagation->input_gradients[1]);
 
-    Tensor4& softmax_deltas = this_back_propagation->softmax_deltas;
+    Tensor4& softmax_gradients = this_back_propagation->softmax_gradients;
 
     const Index batch_size = this_forward_propagation->batch_size;
     const Index embedding_dimension = get_embedding_dimension();
@@ -295,17 +295,17 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     const type scaling_factor = get_scaling_factor();
     const Index total_heads = batch_size * heads_number;
 
-    projection_weight_deltas.device(*device) =
+    projection_weight_gradients.device(*device) =
         concatenated_attention_outputs.reshape(array_2(batch_size * query_sequence_length, embedding_dimension))
         .contract(delta_Y.reshape(array_2(batch_size * query_sequence_length, embedding_dimension)), axes(0, 0));
 
-    projection_bias_deltas.device(*device) = delta_Y.sum(array_2(0, 1));
+    projection_bias_gradients.device(*device) = delta_Y.sum(array_2(0, 1));
 /*
-    concatenated_attention_output_deltas.device(*device) =
+    concatenated_attention_output_gradients.device(*device) =
         delta_Y.contract(projection_weights, axes(2, 1));
 */
-    attention_output_deltas.device(*device) =
-        concatenated_attention_output_deltas.reshape(array_4(batch_size, query_sequence_length, heads_number, head_dimension))
+    attention_output_gradients.device(*device) =
+        concatenated_attention_output_gradients.reshape(array_4(batch_size, query_sequence_length, heads_number, head_dimension))
                                             .shuffle(array_4(0, 2, 1, 3));
 
     // @todo improve the following loops as before
@@ -316,20 +316,20 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
         for(Index h = 0; h < heads_number; ++h)
         {
             const auto w_slice = attention_weights.chip(b, 0).chip(h, 0); // [Lq, Ls]
-            const auto do_slice = attention_output_deltas.chip(b, 0).chip(h, 0); // [Lq, Dh]
+            const auto do_slice = attention_output_gradients.chip(b, 0).chip(h, 0); // [Lq, Dh]
             const auto v_slice = value.chip(b, 0).chip(h, 0); // [Ls, Dh]
 
-            value_deltas.chip(b, 0).chip(h, 0).device(*device) =
+            value_gradients.chip(b, 0).chip(h, 0).device(*device) =
                 w_slice.contract(do_slice, axes(0, 0));
 
-            attention_weight_deltas.chip(b, 0).chip(h, 0).device(*device) =
+            attention_weight_gradients.chip(b, 0).chip(h, 0).device(*device) =
                 do_slice.contract(v_slice, axes(1, 1));
         }
     }
 
-    auto dot_product = (attention_weights * attention_weight_deltas).sum(array_1(3));
+    auto dot_product = (attention_weights * attention_weight_gradients).sum(array_1(3));
 
-    softmax_deltas.device(*device) = attention_weights * (attention_weight_deltas -
+    softmax_gradients.device(*device) = attention_weights * (attention_weight_gradients -
         dot_product.reshape(array_4(batch_size, heads_number, query_sequence_length, 1))
         .broadcast(array_4(1, 1, 1, source_sequence_length)));
 
@@ -338,35 +338,35 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     {
         for(Index h = 0; h < heads_number; ++h)
         {
-            const auto sd_slice = softmax_deltas.chip(b, 0).chip(h, 0); // [Lq, Ls]
+            const auto sd_slice = softmax_gradients.chip(b, 0).chip(h, 0); // [Lq, Ls]
             const auto q_slice = query.chip(b, 0).chip(h, 0); // [Lq, Dh]
             const auto k_slice = key.chip(b, 0).chip(h, 0); // [Ls, Dh]
 
-            query_deltas.chip(b, 0).chip(h, 0).device(*device) =
+            query_gradients.chip(b, 0).chip(h, 0).device(*device) =
                 sd_slice.contract(k_slice, axes(1, 0)) * scaling_factor;
 
-            key_deltas.chip(b, 0).chip(h, 0).device(*device) =
+            key_gradients.chip(b, 0).chip(h, 0).device(*device) =
                 sd_slice.contract(q_slice, axes(0, 0)) * scaling_factor;
         }
     }
 
     // Query Projection
-    calculate_projection_gradient(query_deltas, query_input, query_weights,
-                                  query_bias_deltas, query_weight_deltas,
-                                  input_query_deltas, batch_size, false);
+    calculate_projection_gradient(query_gradients, query_input, query_weights,
+                                  query_bias_gradients, query_weight_gradients,
+                                  input_query_gradients, batch_size, false);
 
     // Key Projection
-    calculate_projection_gradient(key_deltas, source_input, key_weights,
-                                  key_bias_deltas, key_weight_deltas,
-                                  input_source_deltas, batch_size, false);
+    calculate_projection_gradient(key_gradients, source_input, key_weights,
+                                  key_bias_gradients, key_weight_gradients,
+                                  input_source_gradients, batch_size, false);
 
     // Value Projection (accumulate=true because it shares input with Key)
-    calculate_projection_gradient(value_deltas, source_input, value_weights,
-                                  value_bias_deltas, value_weight_deltas,
-                                  input_source_deltas, batch_size, true);
+    calculate_projection_gradient(value_gradients, source_input, value_weights,
+                                  value_bias_gradients, value_weight_gradients,
+                                  input_source_gradients, batch_size, true);
 
     if(input_views.size() == 1)
-        input_query_deltas.device(*device) += input_source_deltas;
+        input_query_gradients.device(*device) += input_source_gradients;
 
 }
 
@@ -426,8 +426,8 @@ void MultiHeadAttention::print() const
     cout << "Multi-head attention Layer" << endl
          << "Label: " << label << endl
          << "Type: Embedding" << endl
-         << "Input dimensions: " << get_input_dimensions() << endl
-         << "Output dimensions: " << get_output_dimensions();
+         << "Input shape: " << get_input_shape() << endl
+         << "Output shape: " << get_output_shape();
 }
 
 
@@ -496,13 +496,13 @@ void MultiHeadAttentionForwardPropagation::initialize()
 
     concatenated_attention_outputs.resize(batch_size, query_sequence_length, embedding_dimension);
 
-    outputs.dims = {batch_size, query_sequence_length, embedding_dimension};
+    outputs.shape = {batch_size, query_sequence_length, embedding_dimension};
 }
 
 
 void MultiHeadAttentionForwardPropagation::print() const
 {
-//    cout << "Output dimensions:" << output_dimensions << endl
+//    cout << "Output shape:" << output_dimensions << endl
 //    cout << "Outputs:" << endl;
     //cout << TensorMap<Tensor<type,3>>(outputs_data, output_dimensions(0), output_dimensions(1), output_dimensions(2)) << endl;
 }
@@ -518,33 +518,33 @@ void MultiHeadAttentionBackPropagation::initialize()
     const Index heads_number = multihead_attention_layer->get_heads_number();
     const Index head_dimension = multihead_attention_layer->get_head_dimension();
 
-    query_weight_deltas.dims = {embedding_dimension, embedding_dimension};
-    key_weight_deltas.dims = {embedding_dimension, embedding_dimension};
-    value_weight_deltas.dims = {embedding_dimension, embedding_dimension};
-    projection_weight_deltas.dims = {embedding_dimension, embedding_dimension};
+    query_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    key_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    value_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    projection_weight_gradients.shape = {embedding_dimension, embedding_dimension};
 
-    query_bias_deltas.dims = {embedding_dimension};
-    key_bias_deltas.dims = {embedding_dimension};
-    value_bias_deltas.dims = {embedding_dimension};
-    projection_bias_deltas.dims = {embedding_dimension};
+    query_bias_gradients.shape = {embedding_dimension};
+    key_bias_gradients.shape = {embedding_dimension};
+    value_bias_gradients.shape = {embedding_dimension};
+    projection_bias_gradients.shape = {embedding_dimension};
 
-    input_deltas.resize(2);
-    input_deltas[0].dims = {batch_size, query_sequence_length, embedding_dimension};
-    input_deltas[1].dims = {batch_size, source_sequence_length, embedding_dimension};
+    input_gradients.resize(2);
+    input_gradients[0].shape = {batch_size, query_sequence_length, embedding_dimension};
+    input_gradients[1].shape = {batch_size, source_sequence_length, embedding_dimension};
 
     // Auxiliar
 
-    softmax_deltas.resize(batch_size, heads_number, query_sequence_length, source_sequence_length);
+    softmax_gradients.resize(batch_size, heads_number, query_sequence_length, source_sequence_length);
 
-    attention_weight_deltas.resize(batch_size, heads_number, source_sequence_length, query_sequence_length);
+    attention_weight_gradients.resize(batch_size, heads_number, source_sequence_length, query_sequence_length);
 
-    attention_output_deltas.resize(batch_size, heads_number, query_sequence_length, head_dimension);
+    attention_output_gradients.resize(batch_size, heads_number, query_sequence_length, head_dimension);
 
-    concatenated_attention_output_deltas.resize(batch_size, query_sequence_length, embedding_dimension);
+    concatenated_attention_output_gradients.resize(batch_size, query_sequence_length, embedding_dimension);
 
-    query_deltas.resize(batch_size, heads_number, query_sequence_length, head_dimension);
-    key_deltas.resize(batch_size, heads_number, source_sequence_length, head_dimension);
-    value_deltas.resize(batch_size, heads_number, source_sequence_length, head_dimension);
+    query_gradients.resize(batch_size, heads_number, query_sequence_length, head_dimension);
+    key_gradients.resize(batch_size, heads_number, source_sequence_length, head_dimension);
+    value_gradients.resize(batch_size, heads_number, source_sequence_length, head_dimension);
 
     aux_rows.resize(source_sequence_length);
 }
@@ -565,10 +565,10 @@ MultiHeadAttentionBackPropagation::MultiHeadAttentionBackPropagation(const Index
 
 vector<TensorView*> MultiHeadAttentionBackPropagation::get_workspace_views()
 {
-    return {&query_weight_deltas, &query_bias_deltas,
-            &key_weight_deltas, &key_bias_deltas,
-            &value_weight_deltas, &value_bias_deltas,
-            &projection_weight_deltas, &projection_bias_deltas};
+    return {&query_weight_gradients, &query_bias_gradients,
+            &key_weight_gradients, &key_bias_gradients,
+            &value_weight_gradients, &value_bias_gradients,
+            &projection_weight_gradients, &projection_bias_gradients};
 }
 
 REGISTER(Layer, MultiHeadAttention, "MultiHeadAttention")

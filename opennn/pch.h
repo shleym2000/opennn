@@ -1,5 +1,9 @@
 #pragma once
 
+#define NDEBUG
+#define EIGEN_MAX_ALIGN_BYTES 64
+#define EIGEN_NO_DEBUG
+
 #define NUMERIC_LIMITS_MIN type(0.000001)
 
 #define NOMINMAX
@@ -44,7 +48,7 @@
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "../eigen/Eigen/src/Core/util/DisableStupidWarnings.h"
 
-#define OPENNN_CUDA // Comment this line to disable cuda files
+//#define OPENNN_CUDA // Comment this line to disable cuda files
 
 #ifdef OPENNN_CUDA
 
@@ -115,10 +119,13 @@
 
 using namespace std;
 using namespace Eigen;
-//using namespace tinyxml2;
 
 using type = float;
-using dimensions = vector<Index>;
+using shape = vector<Index>;
+
+#include "tinyxml2.h"
+
+using namespace tinyxml2;
 
 using Tensor1 = Tensor<type, 1>;
 using Tensor2 = Tensor<type, 2>;
@@ -126,15 +133,15 @@ using Tensor3 = Tensor<type, 3>;
 using Tensor4 = Tensor<type, 4>;
 using Tensor5 = Tensor<type, 5>;
 
-using TensorMap1 = TensorMap<Tensor<type, 1>, Aligned16>;
-using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned16>;
-using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned16>;
-using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned16>;
+using TensorMap1 = TensorMap<Tensor<type, 1>, Aligned64>;
+using TensorMap2 = TensorMap<Tensor<type, 2>, Aligned64>;
+using TensorMap3 = TensorMap<Tensor<type, 3>, Aligned64>;
+using TensorMap4 = TensorMap<Tensor<type, 4>, Aligned64>;
 
-using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, Aligned16>;
-using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, Aligned16>;
-using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, Aligned16>;
-using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, Aligned16>;
+using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, Aligned64>;
+using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, Aligned64>;
+using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, Aligned64>;
+using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, Aligned64>;
 
 template<typename Base, typename T>
 inline bool is_instance_of(const T* ptr)

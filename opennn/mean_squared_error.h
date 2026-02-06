@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-class MeanSquaredError final : public LossIndex
+class MeanSquaredError final : public Loss
 {
 
 public:
@@ -24,7 +24,7 @@ public:
                          const ForwardPropagation&,
                          BackPropagation&) const override;
 
-    void calculate_output_delta(const Batch&,
+    void calculate_output_gradients(const Batch&,
                                 ForwardPropagation&,
                                 BackPropagation&) const override;
 
@@ -34,7 +34,7 @@ public:
                             const ForwardPropagation&,
                             BackPropagationLM&) const override;
 
-    void calculate_output_delta_lm(const Batch&,
+    void calculate_output_gradients_lm(const Batch&,
                                    ForwardPropagation&,
                                    BackPropagationLM&) const override;
 
@@ -52,11 +52,11 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void calculate_error_cuda(const BatchCuda&,
+    void calculate_error(const BatchCuda&,
                               const ForwardPropagationCuda&,
                               BackPropagationCuda&) const override;
 
-    void calculate_output_delta_cuda(const BatchCuda&,
+    void calculate_output_gradients(const BatchCuda&,
                                      ForwardPropagationCuda&,
                                      BackPropagationCuda&) const override;
 

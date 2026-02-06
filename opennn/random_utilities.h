@@ -10,9 +10,6 @@
 
 #include "pch.h"
 
-using namespace std;
-using namespace Eigen;
-
 namespace opennn
 {
     void set_seed(Index seed);
@@ -33,9 +30,10 @@ namespace opennn
     template<typename T>
     void shuffle_vector(vector<T>& vec);
 
+    void shuffle_vector_blocks(vector<Index>& vec, size_t num_parts = 20);
+
     template<typename T>
     void shuffle_tensor(Tensor<T, 1>& vec);
-
 
     Index get_random_element(const vector<Index> &values);
 }

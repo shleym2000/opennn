@@ -14,14 +14,14 @@
 namespace opennn
 {
 
-Unscaling::Unscaling(const dimensions& new_input_dimensions, const string& label)
+Unscaling::Unscaling(const shape& new_input_shape, const string& label)
     : Layer()
 {
-    set(new_input_dimensions[0], label);
+    set(new_input_shape[0], label);
 }
 
 
-dimensions Unscaling::get_input_dimensions() const
+shape Unscaling::get_input_shape() const
 {
     const Index neurons_number = descriptives.size();
 
@@ -29,7 +29,7 @@ dimensions Unscaling::get_input_dimensions() const
 }
 
 
-dimensions Unscaling::get_output_dimensions() const
+shape Unscaling::get_output_shape() const
 {
     const Index neurons_number = descriptives.size();
 
@@ -80,7 +80,7 @@ vector<string> Unscaling::get_scalers() const
 string Unscaling::get_expression(const vector<string>& new_feature_names,
                                  const vector<string>& new_output_names) const
 {
-    const vector<string> feature_names = new_feature_names.empty()
+    const vector<string> input_names = new_feature_names.empty()
                                            ? get_default_feature_names()
                                            : new_feature_names;
 
@@ -99,19 +99,19 @@ string Unscaling::get_expression(const vector<string>& new_feature_names,
         const string& scaler = scalers[i];
 
         if(scaler == "None")
-            buffer << output_names[i] << " = " << feature_names[i] << ";\n";
+            buffer << output_names[i] << " = " << input_names[i] << ";\n";
         else if(scaler == "MinimumMaximum")
             if(abs(descriptives[i].minimum - descriptives[i].maximum) < NUMERIC_LIMITS_MIN)
                 buffer << output_names[i] << "=" << descriptives[i].minimum <<";\n";
             else
-                buffer << output_names[i] << "=" << feature_names[i] << "*(" << (descriptives[i].maximum - descriptives[i].minimum)/(max_range - min_range)
+                buffer << output_names[i] << "=" << input_names[i] << "*(" << (descriptives[i].maximum - descriptives[i].minimum)/(max_range - min_range)
                 << ")+" << (descriptives[i].minimum - min_range*(descriptives[i].maximum - descriptives[i].minimum)/(max_range - min_range)) << ";\n";
         else if(scaler == "MeanStandardDeviation")
-            buffer << output_names[i] << "=" << feature_names[i] << "*" << descriptives[i].standard_deviation <<"+"<< descriptives[i].mean <<";\n";
+            buffer << output_names[i] << "=" << input_names[i] << "*" << descriptives[i].standard_deviation <<"+"<< descriptives[i].mean <<";\n";
         else if(scaler == "StandardDeviation")
-            buffer << output_names[i] << "=" <<  feature_names[i] << "*" << descriptives[i].standard_deviation <<";\n";
+            buffer << output_names[i] << "=" <<  input_names[i] << "*" << descriptives[i].standard_deviation <<";\n";
         else if(scaler == "Logarithm")
-            buffer << output_names[i] << "=" << "exp(" << feature_names[i] << ");\n";
+            buffer << output_names[i] << "=" << "exp(" << input_names[i] << ");\n";
         else
             throw runtime_error("Unknown inputs scaling method.\n");
     }
@@ -125,15 +125,15 @@ string Unscaling::get_expression(const vector<string>& new_feature_names,
 }
 
 
-void Unscaling::set_input_dimensions(const dimensions& new_input_dimensions)
+void Unscaling::set_input_shape(const shape& new_input_shape)
 {
-    descriptives.resize(new_input_dimensions[0]);
+    descriptives.resize(new_input_shape[0]);
 }
 
 
-void Unscaling::set_output_dimensions(const dimensions& new_output_dimensions)
+void Unscaling::set_output_shape(const shape& new_output_shape)
 {
-    descriptives.resize(new_output_dimensions[0]);
+    descriptives.resize(new_output_shape[0]);
 }
 
 
@@ -186,7 +186,7 @@ void Unscaling::set_scalers(const string& new_scalers)
 
 void Unscaling::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
-                                  const bool&)
+                                  bool)
 {
     TensorMap2 outputs = tensor_map<2>(forward_propagation->outputs);
 
@@ -243,7 +243,7 @@ void Unscaling::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Unscaling");
 
-    const dimensions output_dimensions = get_output_dimensions();
+    const shape output_dimensions = get_output_shape();
 
     add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
 
@@ -314,16 +314,16 @@ UnscalingForwardPropagation::UnscalingForwardPropagation(const Index new_batch_s
 
 void UnscalingForwardPropagation::initialize()
 {
-    const dimensions output_dimensions = static_cast<Unscaling*>(layer)->get_output_dimensions();
+    const shape output_dimensions = static_cast<Unscaling*>(layer)->get_output_shape();
 
-    outputs.dims = {batch_size, output_dimensions[0]};
+    outputs.shape = {batch_size, output_dimensions[0]};
 }
 
 
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs.dims << endl;
+         << outputs.shape << endl;
 }
 
 REGISTER(Layer, Unscaling, "Unscaling")
@@ -332,9 +332,9 @@ REGISTER(LayerForwardPropagation, UnscalingForwardPropagation, "Unscaling")
 
 #ifdef OPENNN_CUDA
 
-void Unscaling::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+void Unscaling::forward_propagate(const vector<TensorViewCuda>& inputs,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                       const bool&)
+                                       bool)
 {
     UnscalingForwardPropagationCuda* this_forward_propagation =
         static_cast<UnscalingForwardPropagationCuda*>(forward_propagation.get());
@@ -363,12 +363,6 @@ void UnscalingForwardPropagationCuda::print() const
     cout << "Unscaling CUDA Outputs (pass-through):" << endl
         << matrix_from_device(outputs.data, batch_size, outputs_number) << endl;
 }
-
-
-void UnscalingForwardPropagationCuda::free()
-{
-}
-
 
 REGISTER(LayerForwardPropagationCuda, UnscalingForwardPropagationCuda, "Unscaling")
 

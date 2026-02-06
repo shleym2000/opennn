@@ -52,9 +52,9 @@ public:
 
     inline static const vector<string> reserved_tokens = {PAD_TOKEN, UNK_TOKEN, START_TOKEN, END_TOKEN};
 
-    dimensions get_input_dimensions() const;
+    shape get_input_shape() const;
 
-    dimensions get_target_dimensions() const;
+    shape get_target_shape() const;
 
 private:
 

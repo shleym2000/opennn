@@ -13,11 +13,11 @@
 namespace opennn
 {
 
-Embedding::Embedding(const dimensions& new_input_dimensions,
+Embedding::Embedding(const shape& new_input_shape,
                      const Index& new_embedding_dimension,
                      const string& new_label) : Layer()
 {
-    set(new_input_dimensions[0], new_input_dimensions[1], new_embedding_dimension, new_label);
+    set(new_input_shape[0], new_input_shape[1], new_embedding_dimension, new_label);
 
     name = "Embedding";
 }
@@ -25,7 +25,7 @@ Embedding::Embedding(const dimensions& new_input_dimensions,
 
 Index Embedding::get_vocabulary_size() const
 {
-    return weights.dims[0];
+    return weights.shape[0];
 }
 
 
@@ -37,17 +37,17 @@ Index Embedding::get_sequence_length() const
 
 Index Embedding::get_embedding_dimension() const
 {
-    return weights.dims[1];
+    return weights.shape[1];
 }
 
 
-dimensions Embedding::get_input_dimensions() const
+shape Embedding::get_input_shape() const
 {
     return { sequence_length };
 }
 
 
-dimensions Embedding::get_output_dimensions() const
+shape Embedding::get_output_shape() const
 {
     const Index embedding_dimension = get_embedding_dimension();
 
@@ -69,7 +69,7 @@ void Embedding::set(const Index new_vocabulary_size,
     sequence_length = new_sequence_length;
     label = new_label;
 
-    weights.dims = {new_vocabulary_size, new_embedding_dimension};
+    weights.shape = {new_vocabulary_size, new_embedding_dimension};
 
     positional_encoding.resize(sequence_length, new_embedding_dimension);
     positional_encoding.setZero();
@@ -85,13 +85,13 @@ void Embedding::set(const Index new_vocabulary_size,
                 : cos(i / pow(10000, (j - Index(half_depth)) / half_depth));
 }
 
-void Embedding::set_scale_embedding(const bool& new_scale_embedding)
+void Embedding::set_scale_embedding(bool new_scale_embedding)
 {
     scale_embedding = new_scale_embedding;
 }
 
 
-void Embedding::set_add_positional_encoding(const bool& new_add_positional_encoding)
+void Embedding::set_add_positional_encoding(bool new_add_positional_encoding)
 {
     add_positional_encoding = new_add_positional_encoding;
 }
@@ -122,8 +122,8 @@ void Embedding::set_parameters_glorot()
 {
     if(weights.size() == 0) return;
 
-    const Index vocabulary_size = weights.dims[0];
-    const Index embedding_dimension = weights.dims[1];
+    const Index vocabulary_size = weights.shape[0];
+    const Index embedding_dimension = weights.shape[1];
 
     const type limit = sqrt(type(6.0) / (vocabulary_size + embedding_dimension));
 
@@ -138,7 +138,7 @@ void Embedding::set_parameters_glorot()
 
 void Embedding::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                  const bool& is_training)
+                                  bool is_training)
 {
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
@@ -164,7 +164,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
         {
             const Index token_id = inputs(sample_index, word_index);
 
-            if (token_id < 0 || token_id >= weights.dims[0])
+            if (token_id < 0 || token_id >= weights.shape[0])
                 throw runtime_error("Invalid token_id \n");
 
             const auto embedding = weights_map.chip(token_id, 0);
@@ -180,50 +180,49 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
                                   .reshape(array_3(1, sequence_length, embedding_dimension))
                                   .broadcast(array_3(batch_size, 1, 1));
 
-
     //if(is_training && dropout_rate > 0)
     //    dropout(outputs, dropout_rate);
 }
 
 
 void Embedding::back_propagate(const vector<TensorView>& input_views,
-                               const vector<TensorView>& delta_views,
+                               const vector<TensorView>& output_gradient_views,
                                unique_ptr<LayerForwardPropagation>&,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
     const Index embedding_dimension = get_embedding_dimension();
-    const Index batch_size = input_views[0].dims[0];
-    const Index sequence_length = input_views[0].dims[1];
+    const Index batch_size = input_views[0].shape[0];
+    const Index sequence_length = input_views[0].shape[1];
 
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
-    if (delta_views.size() > 1)
-        add_deltas(delta_views);
+    if (output_gradient_views.size() > 1)
+        add_gradients(output_gradient_views);
 
-    TensorMap3 deltas = tensor_map<3>(delta_views[0]);
+    TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
     // Back propagation
 
     EmbeddingBackPropagation* embedding_back_propagation =
         static_cast<EmbeddingBackPropagation*>(back_propagation.get());
 
-    TensorMap2 weight_deltas = tensor_map<2>(embedding_back_propagation->weight_deltas);
-    weight_deltas.setZero();
+    TensorMap2 weight_gradients = tensor_map<2>(embedding_back_propagation->weight_gradients);
+    weight_gradients.setZero();
 
     if(scale_embedding)
-        deltas.device(*device) = deltas*sqrt(type(embedding_dimension));
+        output_gradients.device(*device) = output_gradients*sqrt(type(embedding_dimension));
 
     #pragma omp parallel for
     for(Index sample_index = 0; sample_index < batch_size; sample_index++)
     {
-        auto sample_deltas = deltas.chip(sample_index, 0);
+        const auto sample_gradients = output_gradients.chip(sample_index, 0);
 
         for(Index word_index = 0; word_index < sequence_length; word_index++)
-            weight_deltas.chip(Index(inputs(sample_index, word_index)), 0)
-                += sample_deltas.chip(word_index, 0);
+            weight_gradients.chip(Index(inputs(sample_index, word_index)), 0)
+                += sample_gradients.chip(word_index, 0);
     }
 
-    weight_deltas.chip(0, 0).setZero(); // PAD
+    weight_gradients.chip(0, 0).setZero(); // PAD
 }
 
 
@@ -232,15 +231,15 @@ void Embedding::print() const
     cout << "Embedding Layer" << endl
          << "Label: " << label << endl
          << "Type: Embedding" << endl
-         << "Input dimensions: " << get_input_dimensions() << endl
-         << "Output dimensions: " << get_output_dimensions() << endl
+         << "Input shape: " << get_input_shape() << endl
+         << "Output shape: " << get_output_shape() << endl
          << "Vocabulary size: " << get_vocabulary_size() << endl
          << "Sequence length: " << get_sequence_length() << endl
          << "Embedding dimension: " << get_embedding_dimension() << endl
          << "Dropout rate: " << dropout_rate << endl
-         << "Weights dimensions: " << weights.dims << endl;
+         << "Weights shape: " << weights.shape << endl;
 
-    cout << "Weights:\n " << weights.dims << endl;
+    cout << "Weights:\n " << weights.shape << endl;
     cout << "Positional encoding:\n" << positional_encoding << endl;
 }
 
@@ -288,13 +287,13 @@ void EmbeddingForwardPropagation::initialize()
     const Index sequence_length = embedding_layer->get_sequence_length();
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
 
-    outputs.dims = {batch_size, sequence_length, embedding_dimension};
+    outputs.shape = {batch_size, sequence_length, embedding_dimension};
 }
 
 
 void EmbeddingForwardPropagation::print() const
 {
-    cout << "Output dimensions:" << endl;
+    cout << "Output shape:" << endl;
     //       cout << output_dimensions << endl;
     cout << "Outputs:" << endl;
     //       cout << TensorMap<Tensor<type,3>>(outputs_data, output_dimensions(0), output_dimensions(1), output_dimensions(2)) << endl;
@@ -315,13 +314,13 @@ void EmbeddingBackPropagation::initialize()
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
     const Index vocabulary_size = embedding_layer->get_vocabulary_size();
 
-    weight_deltas.dims = {vocabulary_size, embedding_dimension};
+    weight_gradients.shape = {vocabulary_size, embedding_dimension};
 }
 
 
 vector<TensorView*> EmbeddingBackPropagation::get_workspace_views()
 {
-    return {&weight_deltas};
+    return {&weight_gradients};
 }
 
 
@@ -331,20 +330,20 @@ void EmbeddingBackPropagation::print() const
 
 #ifdef OPENNN_CUDA
 
-void Embedding::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+void Embedding::forward_propagate(const vector<TensorViewCuda>& inputs,
                                        unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                       const bool& is_training)
+                                       bool is_training)
 {
-    throw runtime_error("Embedding::forward_propagate_cuda is not yet implemented. Please check back in a future version.");
+    throw runtime_error("Embedding::forward_propagate is not yet implemented. Please check back in a future version.");
 }
 
 
-void Embedding::back_propagate_cuda(const vector<TensorViewCuda>&,
+void Embedding::back_propagate(const vector<TensorViewCuda>&,
                                     const vector<TensorViewCuda>&,
                                     unique_ptr<LayerForwardPropagationCuda>&,
                                     unique_ptr<LayerBackPropagationCuda>&) const
 {
-    throw runtime_error("Embedding::back_propagate_cuda is not yet implemented. Please check back in a future version.");
+    throw runtime_error("Embedding::back_propagate is not yet implemented. Please check back in a future version.");
 }
 
 
@@ -389,7 +388,7 @@ void EmbeddingBackPropagationCuda::initialize()
 
 vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_workspace_views_device()
 {
-    return {&weight_deltas_device};
+    return {&weight_gradients};
 }
 
 

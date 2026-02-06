@@ -1,22 +1,12 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   N E U R O N S   S E L E C T I O N   C L A S S   H E A D E R
+//   N E U R O N   S E L E C T I O N   C L A S S   H E A D E R
 //
 //   Artificial Intelligence Techniques SL
 //   artelnics@artelnics.com
 
 #pragma once
-
-#include "../eigen/unsupported/Eigen/CXX11/Tensor"
-
-#include "tinyxml2.h"
-
-using namespace tinyxml2;
-
-using type = float;
-using namespace std;
-using namespace Eigen;
 
 namespace opennn
 {
@@ -25,14 +15,14 @@ class TrainingStrategy;
 struct TrainingResults;
 struct NeuronsSelectionResults;
 
-class NeuronsSelection
+class NeuronSelection
 {
 public:
 
     enum class StoppingCondition { MaximumTime, SelectionErrorGoal, MaximumEpochs, MaximumSelectionFailures, MaximumNeurons };
 
-    NeuronsSelection(const TrainingStrategy* = nullptr);
-    virtual ~NeuronsSelection() = default;
+    NeuronSelection(const TrainingStrategy* = nullptr);
+    virtual ~NeuronSelection() = default;
 
     TrainingStrategy* get_training_strategy() const;
 
@@ -42,9 +32,9 @@ public:
     const Index& get_minimum_neurons() const;
     const Index& get_trials_number() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
-    const type& get_selection_error_goal() const;
+    const type& get_validation_error_goal() const;
     const Index& get_maximum_epochs_number() const;
     const type& get_maximum_time() const;
 
@@ -58,10 +48,10 @@ public:
     void set_minimum_neurons(const Index);
     void set_trials_number(const Index);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
-    void set_selection_error_goal(const type);
-    void set_maximum_epochs_number(const Index);
+    void set_validation_error_goal(const type);
+    void set_maximum_epochs(const Index);
     void set_maximum_time(const type);
 
     string write_stopping_condition(const TrainingResults&) const;
@@ -93,7 +83,7 @@ protected:
 
     Tensor<Index, 1> neurons_history;
 
-    Tensor1 selection_error_history;
+    Tensor1 validation_error_history;
 
     Tensor1 training_error_history;
 
@@ -103,9 +93,9 @@ protected:
 
     Index trials_number = 1;
 
-    type selection_error_goal = 0;
+    type validation_error_goal = 0;
 
-    Index maximum_epochs_number = 10;
+    Index maximum_epochs = 10;
 
     type maximum_time = 0;
 
@@ -117,7 +107,7 @@ protected:
 
 struct NeuronsSelectionResults
 {
-   NeuronsSelectionResults(const Index maximum_epochs_number = 0);
+   NeuronsSelectionResults(const Index maximum_epochs = 0);
 
    void resize_history(const Index new_size);
 
@@ -137,15 +127,15 @@ struct NeuronsSelectionResults
 
    Tensor1 training_error_history;
 
-   Tensor1 selection_error_history;
+   Tensor1 validation_error_history;
 
    type optimum_training_error = type(10);
 
-   type optimum_selection_error = type(10);
+   type optimum_validation_error = type(10);
 
    // Model selection
 
-   NeuronsSelection::StoppingCondition stopping_condition = NeuronsSelection::StoppingCondition::MaximumTime;
+   NeuronSelection::StoppingCondition stopping_condition = NeuronSelection::StoppingCondition::MaximumTime;
 
    string elapsed_time;
 };

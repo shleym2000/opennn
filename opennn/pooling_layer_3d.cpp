@@ -13,23 +13,23 @@
 namespace opennn
 {
 
-Pooling3d::Pooling3d(const dimensions& new_input_dimensions,
+Pooling3d::Pooling3d(const shape& new_input_shape,
                      const PoolingMethod& new_pooling_method,
                      const string& new_name) : Layer()
 {
-    set(new_input_dimensions, new_pooling_method, new_name);
+    set(new_input_shape, new_pooling_method, new_name);
 }
 
 
-dimensions Pooling3d::get_input_dimensions() const
+shape Pooling3d::get_input_shape() const
 {
-    return input_dimensions;
+    return input_shape;
 }
 
 
-dimensions Pooling3d::get_output_dimensions() const
+shape Pooling3d::get_output_shape() const
 {
-    return {input_dimensions[1]};
+    return {input_shape[1]};
 }
 
 
@@ -45,10 +45,10 @@ string Pooling3d::write_pooling_method() const
 }
 
 
-void Pooling3d::set(const dimensions& new_input_dimensions, const PoolingMethod& new_pooling_method, const string& new_label)
+void Pooling3d::set(const shape& new_input_shape, const PoolingMethod& new_pooling_method, const string& new_label)
 {
     name = "Pooling3d";
-    input_dimensions = new_input_dimensions;
+    input_shape = new_input_shape;
     pooling_method = new_pooling_method;
     set_label(new_label);
 }
@@ -70,13 +70,13 @@ void Pooling3d::set_pooling_method(const string& new_pooling_method)
 
 void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                  const bool& is_training)
+                                  bool is_training)
 {
     const TensorMap3 inputs = tensor_map<3>(input_views[0]);
 
     TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
 
-    Pooling3dForwardPropagation* pooling_layer_forward_propagation =
+    Pooling3dForwardPropagation* pooling_forward_propagation =
         static_cast<Pooling3dForwardPropagation*>(layer_forward_propagation.get());
 
 
@@ -87,7 +87,7 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
 
     if (pooling_method == PoolingMethod::MaxPooling)
     {
-        Tensor<Index, 2>& maximal_indices = pooling_layer_forward_propagation->maximal_indices;
+        Tensor<Index, 2>& maximal_indices = pooling_forward_propagation->maximal_indices;
 
 #pragma omp parallel for
         for(Index batch_index = 0; batch_index < batch_size; ++batch_index)
@@ -122,12 +122,12 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
 
 
 void Pooling3d::back_propagate(const vector<TensorView>& input_views,
-                               const vector<TensorView>& delta_views,
+                               const vector<TensorView>& output_gradient_views,
                                unique_ptr<LayerForwardPropagation>& forward_propagation,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
     const TensorMap3 input_tensor_map  = tensor_map<3>(input_views[0]);
-    const TensorMap2 delta_tensor_map  = tensor_map<2>(delta_views[0]);
+    const TensorMap2 delta_tensor_map  = tensor_map<2>(output_gradient_views[0]);
 
     Pooling3dForwardPropagation* forward_layer  =
         static_cast<Pooling3dForwardPropagation*>(forward_propagation.get());
@@ -168,8 +168,8 @@ void Pooling3dForwardPropagation::initialize()
 {
     const Pooling3d* pooling_layer = static_cast<Pooling3d*>(layer);
 
-    const Index features = pooling_layer->get_output_dimensions()[0];
-    outputs.dims = {batch_size, features};
+    const Index features = pooling_layer->get_output_shape()[0];
+    outputs.shape = {batch_size, features};
 
     if (pooling_layer->get_pooling_method() == Pooling3d::PoolingMethod::MaxPooling)
         maximal_indices.resize(batch_size, features);
@@ -180,7 +180,7 @@ void Pooling3dBackPropagation::initialize()
 {
     layer = static_cast<Pooling3d*>(layer);
 
-    const dimensions layer_input_dimensions = layer->get_input_dimensions();
+    const shape layer_input_dimensions = layer->get_input_shape();
 
     input_derivatives.resize(batch_size,
                              layer_input_dimensions[0],
@@ -207,7 +207,7 @@ Pooling3dBackPropagation::Pooling3dBackPropagation(const Index new_batch_size, L
 void Pooling3d::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Pooling3d");
-    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_dimensions()));
+    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_shape()));
     add_xml_element(printer, "PoolingMethod", write_pooling_method());
     printer.CloseElement();
 }
@@ -217,7 +217,7 @@ void Pooling3d::from_XML(const XMLDocument& document)
     const XMLElement* element = document.FirstChildElement("Pooling3d");
     if(!element) throw runtime_error("Pooling3d element is nullptr.");
 
-    set_input_dimensions(string_to_dimensions(read_xml_string(element, "InputDimensions")));
+    set_input_shape(string_to_dimensions(read_xml_string(element, "InputDimensions")));
     set_pooling_method(read_xml_string(element, "PoolingMethod"));
 }
 
@@ -225,8 +225,8 @@ void Pooling3d::from_XML(const XMLDocument& document)
 void Pooling3d::print() const
 {
     cout << "Pooling3d layer" << endl
-         << "Input dimensions: " << dimensions_to_string(input_dimensions) << endl
-         << "Output dimensions: " << dimensions_to_string(get_output_dimensions()) << endl
+         << "Input shape: " << dimensions_to_string(input_shape) << endl
+         << "Output shape: " << dimensions_to_string(get_output_shape()) << endl
          << "Pooling Method: " << write_pooling_method() << endl;
 }
 
