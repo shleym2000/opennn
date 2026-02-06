@@ -1,6 +1,7 @@
 #pragma once
 
 #define NDEBUG
+#define EIGEN_MAX_ALIGN_BYTES 64
 #define EIGEN_NO_DEBUG
 
 #define NUMERIC_LIMITS_MIN type(0.000001)

@@ -834,7 +834,7 @@ public:
                                            Tensor2& global_jacobian) const override
     {
         const Index batch_size = back_propagation->batch_size;
-        constexpr Index ALIGNMENT = 16;
+        constexpr Index ALIGNMENT = 64;
         constexpr Index MASK = ~(ALIGNMENT - 1);
 
         Index global_offset = start_column_index;

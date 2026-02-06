@@ -239,8 +239,8 @@ public:
                 const Index batch_size = output_view.shape[0];
                 const Index features = output_view.size() / batch_size;
 
-                if (reinterpret_cast<uintptr_t>(output_view.data) % 16 != 0)
-                    throw runtime_error("tensor_map alignment error: Pointer is not 16-byte aligned.");
+                if (reinterpret_cast<uintptr_t>(output_view.data) % 64 != 0)
+                    throw runtime_error("tensor_map alignment error: Pointer is not 64-byte aligned.");
 
                 return TensorMap2(output_view.data, batch_size, features);
             }
