@@ -22,11 +22,11 @@ namespace opennn
     Index random_integer(Index min, Index max);
     bool random_bool(type probability = 0.5);
 
-    void set_random_uniform(Tensor1& tensor, type min = -1, type max = 1);
-    void set_random_uniform(Tensor2& tensor, type min = -1, type max = 1);
+    void set_random_uniform(Tensor1& tensor, type min = -0.1, type max = 0.1);
+    void set_random_uniform(Tensor2& tensor, type min = -0.1, type max = 0.1);
 
-    void set_random_uniform(TensorMap1 tensor, type min = -1, type max = 1);
-    void set_random_uniform(TensorMap2 tensor, type min = -1, type max = 1);
+    void set_random_uniform(TensorMap1 tensor, type min = -0.1, type max = 0.1);
+    void set_random_uniform(TensorMap2 tensor, type min = -0.1, type max = 0.1);
 
     void set_random_integer(Tensor2& tensor, Index min, Index max);
 

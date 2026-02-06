@@ -806,6 +806,7 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
     const float* input_data = inputs_device[0].data;
     float* outputs_buffer = use_convolutions() ? convolutions.data : outputs.data;
+    cudnnTensorDescriptor_t current_output_descriptor = use_convolutions() ? convolutions.get_descriptor() : outputs.get_descriptor();
 
     void* workspace = this_forward_propagation->workspace;
     const size_t workspace_bytes = this_forward_propagation->workspace_bytes;
@@ -819,7 +820,7 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
 
         input_data = reordered_inputs_data;
     }
-
+    
     if (!batch_normalization && activation_function != "Softmax" && activation_function != "Linear" && !use_convolutions())
     {
         CHECK_CUDNN(cudnnConvolutionBiasActivationForward(
@@ -833,12 +834,12 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
             convolution_algorithm,
             workspace, workspace_bytes,              
             &beta,
-            outputs.get_descriptor(),
+            current_output_descriptor,
             outputs.data,
             biases_device.get_descriptor(),
             biases_device.data,
             activation_descriptor,
-            outputs.get_descriptor(),
+            current_output_descriptor,
             outputs.data));
     }
     else
@@ -853,7 +854,7 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
             convolution_algorithm,
             workspace, workspace_bytes,
             &beta,
-            convolutions.get_descriptor(),
+            current_output_descriptor,
             outputs_buffer));
 
         // Biases
@@ -863,7 +864,7 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
                                    biases_device.get_descriptor(),
                                    biases_device.data,
                                    &alpha,
-                                   outputs.get_descriptor(),
+                                   current_output_descriptor,
                                    outputs_buffer));
 
         // Batch Normalization
@@ -873,9 +874,9 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
                 cudnn_handle,
                 CUDNN_BATCHNORM_SPATIAL,
                 &alpha, &beta,
-                outputs.get_descriptor(),
+                current_output_descriptor,
                 outputs_buffer,
-                outputs.get_descriptor(),
+                current_output_descriptor,
                 outputs_buffer,
                 gammas_device.get_descriptor(),
                 gammas_device.data,
@@ -891,9 +892,9 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
                 cudnn_handle,
                 CUDNN_BATCHNORM_SPATIAL,
                 &alpha, &beta,
-                outputs.get_descriptor(),
+                current_output_descriptor,
                 outputs_buffer,
-                outputs.get_descriptor(),
+                current_output_descriptor,
                 outputs_buffer,
                 gammas_device.get_descriptor(),
                 gammas_device.data,
@@ -909,10 +910,10 @@ void Convolutional::forward_propagate_cuda(const vector<TensorViewCuda>& inputs_
             CHECK_CUDNN(cudnnActivationForward(cudnn_handle,
                 activation_descriptor,
                 &alpha,
-                outputs.get_descriptor(),
+                current_output_descriptor,
                 outputs_buffer,
                 &beta,
-                outputs.get_descriptor(),
+                current_output_descriptor,
                 outputs.data));
         }
         else if (use_convolutions())

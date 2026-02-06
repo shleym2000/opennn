@@ -23,7 +23,7 @@ int main()
 
         // Data set
 
-        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/melanoma_dataset_bmp");
+        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/melanoma_dataset_bmp_small");
 
         image_dataset.split_samples_random(0.8, 0.0, 0.2);
 
@@ -52,9 +52,11 @@ int main()
 
         // Testing analysis
 
-        cout << "Calculating Binary classification tests..." << endl;
-        const TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
-        testing_analysis.print_binary_classification_tests();
+        //const TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
+
+        //cout << "Calculating confusion...." << endl;
+        //const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
+        //cout << "\nConfusion matrix:\n" << confusion << endl;
 
 #endif
 
