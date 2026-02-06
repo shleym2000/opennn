@@ -224,7 +224,7 @@ void Optimizer::set_names()
     const Index input_features_number = dataset->get_features_number("Input");
     const Index target_features_number = dataset->get_features_number("Target");
 
-    const vector<Dataset::RawVariable> raw_variables = dataset->get_raw_variables();
+    const vector<Dataset::Variable> raw_variables = dataset->get_raw_variables();
     const vector<Index> input_feature_indices = dataset->get_raw_variable_indices("Input");
     const vector<Index> target_feature_indices = dataset->get_raw_variable_indices("Input");
 

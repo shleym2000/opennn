@@ -419,7 +419,7 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
 
     // Raw Variables
 
-    const XMLElement* raw_variables_element = image_dataset_element->FirstChildElement("RawVariables");
+    const XMLElement* raw_variables_element = image_dataset_element->FirstChildElement("Variables");
 
     raw_variables_from_XML(raw_variables_element);
 

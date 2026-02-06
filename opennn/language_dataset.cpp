@@ -42,9 +42,9 @@ LanguageDataset::LanguageDataset(const Index samples_number,
 
     for(Index i = 0; i < features_number; i++)
     {
-        RawVariable& raw_variable = raw_variables[i];
+        Variable& raw_variable = raw_variables[i];
 
-        raw_variable.type = RawVariableType::Numeric;
+        raw_variable.type = VariableType::Numeric;
         raw_variable.name = "variable_" + to_string(i + 1);
 
         raw_variable.role = (i < input_sequence_length)
@@ -437,7 +437,7 @@ void LanguageDataset::from_XML(const XMLDocument& data_set_document)
     set_has_header(read_xml_bool(data_source_element, "HasHeader"));
     set_has_ids(read_xml_bool(data_source_element, "HasSamplesId"));
 
-    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("RawVariables");
+    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("Variables");
 
     raw_variables_from_XML(raw_variables_element);
 

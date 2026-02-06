@@ -177,7 +177,6 @@ void TimeSeriesDataset::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "MissingValuesLabel", missing_values_label);
     add_xml_element(printer, "LagsNumber", to_string(get_past_time_steps()));
     add_xml_element(printer, "StepsAhead", to_string(get_future_time_steps()));
-//    add_xml_element(printer, "TimeRawVariable", get_time_raw_variable());
     add_xml_element(printer, "Codification", get_codification_string());
     printer.CloseElement();
 
@@ -218,12 +217,11 @@ void TimeSeriesDataset::from_XML(const XMLDocument& data_set_document)
     set_missing_values_label(read_xml_string(data_source_element, "MissingValuesLabel"));
     set_past_time_steps(stoi(read_xml_string(data_source_element, "LagsNumber")));
     set_future_time_steps(stoi(read_xml_string(data_source_element, "StepsAhead")));
-    //set_time_raw_variable(read_xml_string(data_source_element, "TimeRawVariable"));
     set_codification(read_xml_string(data_source_element, "Codification"));
 
     // Raw variables
 
-    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("RawVariables");
+    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("Variables");
 
     raw_variables_from_XML(raw_variables_element);
 
@@ -522,18 +520,18 @@ Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index past_time_step
         {
             const Index raw_variable_index = input_raw_variable_indices[i];
 
-            const RawVariableType input_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType input_raw_variable_type = raw_variables[raw_variable_index].type;
 
-            if(input_raw_variable_type == RawVariableType::Numeric)
+            if(input_raw_variable_type == VariableType::Numeric)
                 input_target_numeric_raw_variables_number++;
         }
         else
         {
             const Index raw_variable_index = target_raw_variable_indices[count];
 
-            const RawVariableType target_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType target_raw_variable_type = raw_variables[raw_variable_index].type;
 
-            if(target_raw_variable_type == RawVariableType::Numeric)
+            if(target_raw_variable_type == VariableType::Numeric)
                 input_target_numeric_raw_variables_number++;
 
             count++;
@@ -552,7 +550,7 @@ Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index past_time_step
 
     for(Index i = 0; i < raw_variables_number; i++)
     {
-        if(raw_variables[i].role == "None" || raw_variables[i].type != RawVariableType::Numeric)
+        if(raw_variables[i].role == "None" || raw_variables[i].type != VariableType::Numeric)
             continue;
 
         input_i = get_raw_variable_data(i);
@@ -598,18 +596,18 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
         {
             const Index raw_variable_index = input_raw_variable_indices[i];
 
-            const RawVariableType input_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType input_raw_variable_type = raw_variables[raw_variable_index].type;
 
-            if(input_raw_variable_type == RawVariableType::Numeric)
+            if(input_raw_variable_type == VariableType::Numeric)
                 input_target_numeric_raw_variables_number++;
         }
         else
         {
             const Index raw_variable_index = target_raw_variable_indices[count];
 
-            const RawVariableType target_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType target_raw_variable_type = raw_variables[raw_variable_index].type;
 
-            if(target_raw_variable_type == RawVariableType::Numeric && raw_variables[raw_variable_index].role != "InputTarget")
+            if(target_raw_variable_type == VariableType::Numeric && raw_variables[raw_variable_index].role != "InputTarget")
                 input_target_numeric_raw_variables_number++;
 
             count++;
@@ -634,7 +632,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
 
     for(Index i = 0; i < raw_variables_number; i++)
     {
-        if(raw_variables[i].role == "None" || raw_variables[i].type != RawVariableType::Numeric)
+        if(raw_variables[i].role == "None" || raw_variables[i].type != VariableType::Numeric)
             continue;
 
         input_i = get_raw_variable_data(i);
@@ -646,7 +644,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
         for(Index j = 0; j < raw_variables_number; j++)
         {
             if(raw_variables[j].role == "None"
-            || raw_variables[j].type != RawVariableType::Numeric)
+            || raw_variables[j].type != VariableType::Numeric)
                 continue;
 
             input_j = get_raw_variable_data(j);
@@ -681,7 +679,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
     vector<Index> numeric_vars_indices;
 
     for(size_t i = 0; i < raw_variables.size(); ++i)
-        if(raw_variables[i].role != "None" && raw_variables[i].type == RawVariableType::Numeric)
+        if(raw_variables[i].role != "None" && raw_variables[i].type == VariableType::Numeric)
             numeric_vars_indices.push_back(i);
 
     const Index numeric_vars_count = numeric_vars_indices.size();

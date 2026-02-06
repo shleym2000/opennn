@@ -39,21 +39,21 @@ public:
 
     enum class MissingValuesMethod{Unuse, Mean, Median, Interpolation};
 
-    enum class RawVariableType{None, Numeric, Binary, Categorical, DateTime, Constant};
+    enum class VariableType{None, Numeric, Binary, Categorical, DateTime, Constant};
 
     // Structs
 
-    struct RawVariable
+    struct Variable
     {
-        RawVariable(const string& = string(),
+        Variable(const string& = string(),
                     const string& = "None",
-                    const Dataset::RawVariableType& = Dataset::RawVariableType::Numeric,
+                    const Dataset::VariableType& = Dataset::VariableType::Numeric,
                     const string& = "MeanStandardDeviation",
                     const vector<string>& = vector<string>());
 
         void set(const string& = string(),
                  const string& = "None",
-                 const Dataset::RawVariableType& = Dataset::RawVariableType::Numeric,
+                 const Dataset::VariableType& = Dataset::VariableType::Numeric,
                  const string& = "MeanStandardDeviation",
                  const vector<string>& = vector<string>());
 
@@ -61,7 +61,7 @@ public:
 
         string role = "None";
 
-        Dataset::RawVariableType type = Dataset::RawVariableType::None;
+        Dataset::VariableType type = Dataset::VariableType::None;
 
         vector<string> categories;
 
@@ -88,7 +88,7 @@ public:
 
         bool is_binary() const
         {
-            if(type == Dataset::RawVariableType::Binary)
+            if(type == Dataset::VariableType::Binary)
                 return true;
             else
                 return false;
@@ -96,7 +96,7 @@ public:
 
         bool is_categorical() const
         {
-            if(type == Dataset::RawVariableType::Categorical)
+            if(type == Dataset::VariableType::Categorical)
                 return true;
             else
                 return false;
@@ -128,8 +128,8 @@ public:
     Index get_raw_variables_number(const string&) const;
     Index get_used_raw_variables_number() const;
 
-    const vector<RawVariable>& get_raw_variables() const;
-    vector<RawVariable> get_raw_variables(const string&) const;
+    const vector<Variable>& get_raw_variables() const;
+    vector<Variable> get_raw_variables(const string&) const;
 
     Index get_raw_variable_index(const string&) const;
     Index get_raw_variable_index(const Index) const;
@@ -140,7 +140,7 @@ public:
     vector<string> get_raw_variable_names() const;
     vector<string> get_raw_variable_names(const string&) const;
 
-    RawVariableType get_raw_variable_type(const Index index) const {return raw_variables[index].type;}
+    VariableType get_raw_variable_type(const Index index) const {return raw_variables[index].type;}
 
     // Variables get
 
@@ -246,7 +246,7 @@ public:
 
     // Raw variables set
 
-    void set_raw_variables(const vector<RawVariable>&);
+    void set_raw_variables(const vector<Variable>&);
 
     void set_default_raw_variable_names();
 
@@ -261,10 +261,10 @@ public:
     void set_raw_variable_role(const Index, const string&);
     void set_raw_variable_role(const string&, const string&);
 
-    void set_raw_variable_type(const Index, const RawVariableType&);
-    void set_raw_variable_type(const string&, const RawVariableType&);
+    void set_raw_variable_type(const Index, const VariableType&);
+    void set_raw_variable_type(const string&, const VariableType&);
 
-    void set_raw_variable_types(const RawVariableType&);
+    void set_raw_variable_types(const VariableType&);
 
     void set_raw_variable_names(const vector<string>&);
 
@@ -496,7 +496,7 @@ public:
     virtual void read_csv();
 
     void infer_column_types(const vector<vector<string>>&);
-    DateFormat infer_dataset_date_format(const vector<Dataset::RawVariable>&, const vector<vector<string>>&, bool, const string&);
+    DateFormat infer_dataset_date_format(const vector<Dataset::Variable>&, const vector<vector<string>>&, bool, const string&);
 
     void read_data_file_preview(const vector<vector<string>>&);
 
@@ -543,7 +543,7 @@ protected:
 
     // Raw variables
 
-    vector<RawVariable> raw_variables;
+    vector<Variable> raw_variables;
 
     // Data File
 

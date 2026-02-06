@@ -187,9 +187,9 @@ void ResponseOptimization::set_input_condition(const string& name,
 
     input_conditions(relative_index) = condition;
 
-    const vector<Dataset::RawVariable> raw_inputs = dataset->get_raw_variables("Input");
+    const vector<Dataset::Variable> raw_inputs = dataset->get_raw_variables("Input");
 
-    const Dataset::RawVariable& raw_var = raw_inputs[relative_index];
+    const Dataset::Variable& raw_var = raw_inputs[relative_index];
     const Index raw_inputs_number = static_cast<Index>(raw_inputs.size());
 
     vector<Index> raw_input_categoricals;
@@ -304,9 +304,9 @@ void ResponseOptimization::set_output_condition(const string& variable_name,
 
     output_conditions(relative_index) = condition;
 
-    const vector<Dataset::RawVariable> raw_outputs = dataset->get_raw_variables("Target");
+    const vector<Dataset::Variable> raw_outputs = dataset->get_raw_variables("Target");
 
-    const Dataset::RawVariable& raw_var = raw_outputs[relative_index];
+    const Dataset::Variable& raw_var = raw_outputs[relative_index];
 
     const Index raw_outputs_number  = static_cast<Index>(raw_outputs.size());
 
@@ -542,15 +542,15 @@ Tensor2 ResponseOptimization::calculate_inputs() const
         {
             const Index used_raw_variable_index = input_raw_variables_indices[j];
 
-            const Dataset::RawVariableType raw_variable_type = dataset->get_raw_variable_type(used_raw_variable_index);
+            const Dataset::VariableType raw_variable_type = dataset->get_raw_variable_type(used_raw_variable_index);
 
-            if(raw_variable_type == Dataset::RawVariableType::Numeric
-            || raw_variable_type == Dataset::RawVariableType::Constant)
+            if(raw_variable_type == Dataset::VariableType::Numeric
+            || raw_variable_type == Dataset::VariableType::Constant)
             {
                 inputs(i, current_feature_index ) = random_uniform(input_minimums[current_feature_index ], input_maximums[current_feature_index ]);
                 ++current_feature_index ;
             }
-            else if(raw_variable_type == Dataset::RawVariableType::Binary)
+            else if(raw_variable_type == Dataset::VariableType::Binary)
             {
                 const type minimum_temp  = input_minimums[current_feature_index ];
                 const type maximum_temp  = input_maximums[current_feature_index ];
@@ -564,7 +564,7 @@ Tensor2 ResponseOptimization::calculate_inputs() const
 
                 ++current_feature_index ;
             }
-            else if(raw_variable_type == Dataset::RawVariableType::Categorical)
+            else if(raw_variable_type == Dataset::VariableType::Categorical)
             {
                 const Index categories_number = dataset->get_raw_variables()[used_raw_variable_index].get_categories_number();
 
