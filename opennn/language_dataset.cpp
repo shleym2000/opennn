@@ -36,18 +36,18 @@ LanguageDataset::LanguageDataset(const Index samples_number,
     const Index features_number = input_sequence_length + 1;
 
     data.resize(samples_number, features_number);
-    raw_variables.resize(features_number);
+    variables.resize(features_number);
 
     set_default();
 
     for(Index i = 0; i < features_number; i++)
     {
-        RawVariable& raw_variable = raw_variables[i];
+        Variable& variable = variables[i];
 
-        raw_variable.type = RawVariableType::Numeric;
-        raw_variable.name = "variable_" + to_string(i + 1);
+        variable.type = VariableType::Numeric;
+        variable.name = "variable_" + to_string(i + 1);
 
-        raw_variable.role = (i < input_sequence_length)
+        variable.role = (i < input_sequence_length)
                                ? "Input"
                                : "Target";
     }
@@ -72,9 +72,9 @@ LanguageDataset::LanguageDataset(const Index samples_number,
     target_shape = { get_maximum_target_sequence_length() };
     decoder_shape = { 0 };
 
-    set_raw_variable_scalers("None");
-    set_default_raw_variable_names();
-    set_binary_raw_variables();
+    set_variable_scalers("None");
+    set_default_variable_names();
+    set_binary_variables();
 }
 
 
@@ -337,17 +337,17 @@ void LanguageDataset::read_csv()
     data.resize(samples_number, features_number);
     data.setZero();
 
-    raw_variables.resize(features_number);
+    variables.resize(features_number);
 
-    for_each(raw_variables.begin(), raw_variables.begin() + maximum_input_sequence_length,
-             [](auto& raw_variable) {raw_variable.role = "Input";});
+    for_each(variables.begin(), variables.begin() + maximum_input_sequence_length,
+             [](auto& variable) {variable.role = "Input";});
 
-    for_each(raw_variables.begin() + maximum_input_sequence_length, raw_variables.begin() + maximum_input_sequence_length + maximum_target_sequence_length,
-             [](auto& raw_variable) {raw_variable.role = "Target";});
+    for_each(variables.begin() + maximum_input_sequence_length, variables.begin() + maximum_input_sequence_length + maximum_target_sequence_length,
+             [](auto& variable) {variable.role = "Target";});
 
     for(Index i = 0; i < maximum_input_sequence_length; i++)
     {
-        raw_variables[i].name = "token_" + to_string(i+1);
+        variables[i].name = "token_" + to_string(i+1);
     }
 
     // set data
@@ -361,10 +361,10 @@ void LanguageDataset::read_csv()
     target_shape = {get_maximum_target_sequence_length()};
     decoder_shape = {get_maximum_target_sequence_length()};
 
-    set_raw_variable_scalers("None");
-    set_default_raw_variable_names();
+    set_variable_scalers("None");
+    set_default_variable_names();
     split_samples_random();
-    set_binary_raw_variables();
+    set_binary_variables();
 
     cout << "Reading finished" << endl;
 }
@@ -396,7 +396,7 @@ void LanguageDataset::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "Codification", get_codification_string());
     printer.CloseElement();
 
-    raw_variables_to_XML(printer);
+    variables_to_XML(printer);
 
     samples_to_XML(printer);
 
@@ -437,9 +437,9 @@ void LanguageDataset::from_XML(const XMLDocument& data_set_document)
     set_has_header(read_xml_bool(data_source_element, "HasHeader"));
     set_has_ids(read_xml_bool(data_source_element, "HasSamplesId"));
 
-    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("RawVariables");
+    const XMLElement* variables_element = data_set_element->FirstChildElement("Variables");
 
-    raw_variables_from_XML(raw_variables_element);
+    variables_from_XML(variables_element);
 
     const XMLElement* samples_element = data_set_element->FirstChildElement("Samples");
 

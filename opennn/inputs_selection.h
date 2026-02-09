@@ -134,9 +134,9 @@ struct InputsSelectionResults
 
     type optimum_validation_error = numeric_limits<type>::max();
 
-    vector<string> optimal_input_raw_variable_names;
+    vector<string> optimal_input_variable_names;
 
-    vector<Index> optimal_input_raw_variables_indices;
+    vector<Index> optimal_input_variables_indices;
 
     Tensor<bool, 1> optimal_inputs;
 

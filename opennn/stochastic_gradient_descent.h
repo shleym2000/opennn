@@ -85,7 +85,7 @@ public:
 
     TrainingResults train_cuda() override;
 
-    void update_parameters_cuda(BackPropagationCuda&, SGDOptimizationDataCuda&) const;
+    void update_parameters(BackPropagationCuda&, SGDOptimizationDataCuda&) const;
 
 #endif
 
@@ -103,7 +103,7 @@ struct StochasticGradientDescentData final : public OptimizerData
     Index iteration = 0;
 
     Tensor1 parameter_updates;
-    Tensor1 last_parameters_increment;
+    Tensor1 last_parameter_updates;
 };
 
 

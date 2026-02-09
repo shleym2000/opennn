@@ -159,7 +159,7 @@ void MeanSquaredError::to_XML(XMLPrinter& file_stream) const
 
 #ifdef OPENNN_CUDA
 
-void MeanSquaredError::calculate_error(const BatchCuda& batch_cuda,
+void MeanSquaredError::calculate_error(const BatchCuda& batch,
                                             const ForwardPropagationCuda& forward_propagation,
                                             BackPropagationCuda& back_propagation) const
 {
@@ -168,9 +168,9 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch_cuda,
 
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device.data;
+    const type* targets = batch.targets_device.data;
 
     // Forward propagation
 
@@ -208,7 +208,7 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch_cuda,
 }
 
 
-void MeanSquaredError::calculate_output_gradients(const BatchCuda& batch_cuda,
+void MeanSquaredError::calculate_output_gradients(const BatchCuda& batch,
                                                    ForwardPropagationCuda& forward_propagation,
                                                    BackPropagationCuda& back_propagation) const
 {
@@ -216,7 +216,7 @@ void MeanSquaredError::calculate_output_gradients(const BatchCuda& batch_cuda,
 
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
     // Back propagation
 

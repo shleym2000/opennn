@@ -34,8 +34,8 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
 
     const Index outputs_number = neural_network->get_outputs_number();
 
-    const Index raw_inputs_number  = dataset->get_raw_variables_number("Input");
-    const Index raw_outputs_number = dataset->get_raw_variables_number("Target");
+    const Index raw_inputs_number  = dataset->get_variables_number("Input");
+    const Index raw_outputs_number = dataset->get_variables_number("Target");
 
     input_conditions.resize(raw_inputs_number);
     input_conditions.setConstant(Condition::None);
@@ -171,12 +171,12 @@ void ResponseOptimization::set_input_condition(const string& name,
                                                const ResponseOptimization::Condition& condition,
                                                const Tensor1& values)
 {
-    const Index raw_index = dataset->get_raw_variable_index(name);
+    const Index raw_index = dataset->get_variable_index(name);
 
     if(raw_index < 0)
         throw runtime_error("Unknown input variable name: " + name);
 
-    const vector<Index> input_indices = dataset->get_raw_variable_indices("Input");
+    const vector<Index> input_indices = dataset->get_variable_indices("Input");
 
     auto it = find(input_indices.begin(), input_indices.end(), raw_index);
 
@@ -187,9 +187,9 @@ void ResponseOptimization::set_input_condition(const string& name,
 
     input_conditions(relative_index) = condition;
 
-    const vector<Dataset::RawVariable> raw_inputs = dataset->get_raw_variables("Input");
+    const vector<Dataset::Variable> raw_inputs = dataset->get_variables("Input");
 
-    const Dataset::RawVariable& raw_var = raw_inputs[relative_index];
+    const Dataset::Variable& raw_var = raw_inputs[relative_index];
     const Index raw_inputs_number = static_cast<Index>(raw_inputs.size());
 
     vector<Index> raw_input_categoricals;
@@ -281,12 +281,12 @@ void ResponseOptimization::set_output_condition(const string& variable_name,
                                                 const ResponseOptimization::Condition& condition,
                                                 const Tensor1& values)
 {
-    const Index raw_index = dataset->get_raw_variable_index(variable_name);
+    const Index raw_index = dataset->get_variable_index(variable_name);
 
     if(raw_index < 0)
         throw runtime_error("Unknown output variable name: " + variable_name);
 
-    const vector<Index> target_indices = dataset->get_raw_variable_indices("Target");
+    const vector<Index> target_indices = dataset->get_variable_indices("Target");
 
     Index relative_index = -1;
 
@@ -304,9 +304,9 @@ void ResponseOptimization::set_output_condition(const string& variable_name,
 
     output_conditions(relative_index) = condition;
 
-    const vector<Dataset::RawVariable> raw_outputs = dataset->get_raw_variables("Target");
+    const vector<Dataset::Variable> raw_outputs = dataset->get_variables("Target");
 
-    const Dataset::RawVariable& raw_var = raw_outputs[relative_index];
+    const Dataset::Variable& raw_var = raw_outputs[relative_index];
 
     const Index raw_outputs_number  = static_cast<Index>(raw_outputs.size());
 
@@ -526,11 +526,11 @@ Tensor2 ResponseOptimization::calculate_inputs() const
     Tensor2 inputs(evaluations_number, inputs_number);
     inputs.setZero();
 
-    const Index input_raw_variables_number = dataset->get_raw_variables_number("Input");
+    const Index input_variables_number = dataset->get_variables_number("Input");
 
-    const vector<Index> input_raw_variables_indices = dataset->get_raw_variable_indices("Input");
+    const vector<Index> input_variables_indices = dataset->get_variable_indices("Input");
 
-    const auto& raw_vars = dataset->get_raw_variables("Input");
+    const auto& raw_vars = dataset->get_variables("Input");
 
     const type tiny_span = type(1e-9);
 
@@ -538,19 +538,19 @@ Tensor2 ResponseOptimization::calculate_inputs() const
     {
         Index current_feature_index  = 0;
 
-        for(Index j = 0; j < input_raw_variables_number; j++)
+        for(Index j = 0; j < input_variables_number; j++)
         {
-            const Index used_raw_variable_index = input_raw_variables_indices[j];
+            const Index used_variable_index = input_variables_indices[j];
 
-            const Dataset::RawVariableType raw_variable_type = dataset->get_raw_variable_type(used_raw_variable_index);
+            const Dataset::VariableType variable_type = dataset->get_variable_type(used_variable_index);
 
-            if(raw_variable_type == Dataset::RawVariableType::Numeric
-            || raw_variable_type == Dataset::RawVariableType::Constant)
+            if(variable_type == Dataset::VariableType::Numeric
+            || variable_type == Dataset::VariableType::Constant)
             {
                 inputs(i, current_feature_index ) = random_uniform(input_minimums[current_feature_index ], input_maximums[current_feature_index ]);
                 ++current_feature_index ;
             }
-            else if(raw_variable_type == Dataset::RawVariableType::Binary)
+            else if(variable_type == Dataset::VariableType::Binary)
             {
                 const type minimum_temp  = input_minimums[current_feature_index ];
                 const type maximum_temp  = input_maximums[current_feature_index ];
@@ -564,9 +564,9 @@ Tensor2 ResponseOptimization::calculate_inputs() const
 
                 ++current_feature_index ;
             }
-            else if(raw_variable_type == Dataset::RawVariableType::Categorical)
+            else if(variable_type == Dataset::VariableType::Categorical)
             {
-                const Index categories_number = dataset->get_raw_variables()[used_raw_variable_index].get_categories_number();
+                const Index categories_number = dataset->get_variables()[used_variable_index].get_categories_number();
 
                 Index fixed_category = -1;
 
@@ -633,9 +633,9 @@ Tensor<type,2> ResponseOptimization::calculate_envelope(const Tensor<type,2>& in
     if(envelope.size() == 0)
         return Tensor<type,2>();
 
-    const Index raw_inputs_number  = dataset->get_raw_variables_number("Input");
+    const Index raw_inputs_number  = dataset->get_variables_number("Input");
 
-    const Index raw_outputs_number = dataset->get_raw_variables_number("Target");
+    const Index raw_outputs_number = dataset->get_variables_number("Target");
 
     vector<Index> raw_input_categoricals;
 
@@ -843,11 +843,11 @@ void ResponseOptimization::build_objectives_from_envelope(const Tensor<type,2>& 
 {
     const Index inputs_number  = neural_network->get_inputs_number();
 
-    const Index raw_inputs_number  = dataset->get_raw_variables_number("Input");
-    const Index raw_outputs_number = dataset->get_raw_variables_number("Target");
+    const Index raw_inputs_number  = dataset->get_variables_number("Input");
+    const Index raw_outputs_number = dataset->get_variables_number("Target");
 
-    const vector<Index> global_input_indices = dataset->get_raw_variable_indices("Input");
-    const vector<Index> global_output_indices = dataset->get_raw_variable_indices("Target");
+    const vector<Index> global_input_indices = dataset->get_variable_indices("Input");
+    const vector<Index> global_output_indices = dataset->get_variable_indices("Target");
 
     vector<Index> raw_input_categoricals;
     vector<Index> raw_input_categories_sizes;
@@ -1076,9 +1076,9 @@ ResponseOptimization::SingleOrPareto ResponseOptimization::iterative_optimizatio
 {
     constexpr type epsilon = numeric_limits<type>::epsilon();
 
-    const vector<string> input_names  = dataset->get_raw_variable_names("Input");
+    const vector<string> input_names  = dataset->get_variable_names("Input");
 
-    const vector<string> output_names = dataset->get_raw_variable_names("Target");
+    const vector<string> output_names = dataset->get_variable_names("Target");
 
     const Index raw_inputs_number = input_names.size();
 

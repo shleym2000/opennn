@@ -24,7 +24,7 @@ __global__ void reorder_inputs_kernel(const float* __restrict__ source, float* _
 }
 
 
-void reorder_inputs_cuda(const float* source, float* destination, int N,int C,int H,int W)
+void reorder_inputs(const float* source, float* destination, int N,int C,int H,int W)
 {
     int total = N * H * W * C;
     const int threads_per_block = 256;
@@ -52,7 +52,7 @@ __global__ void invert_reorder_inputs_kernel(const float* __restrict__ source, f
 }
 
 
-void invert_reorder_inputs_cuda(const float* source, float* destination, int N, int C, int H, int W)
+void invert_reorder_inputs(const float* source, float* destination, int N, int C, int H, int W)
 {
     int total = N * C * H * W;
     const int threads_per_block = 256;
@@ -221,15 +221,15 @@ type* matrix_to_device(const Tensor<type, 2>& matrix)
 }
 
 
-Tensor<type, 2> matrix_from_device(const type* pointer, const size_t& new_rows_number, const size_t& new_raw_variables_number)
+Tensor<type, 2> matrix_from_device(const type* pointer, const size_t& new_rows_number, const size_t& new_variables_number)
 {
-    Tensor<type, 2> matrix(new_rows_number, new_raw_variables_number);
+    Tensor<type, 2> matrix(new_rows_number, new_variables_number);
 
     matrix.setZero();
 
     if (matrix.size() == 0) cout << "Empty matrix" << endl;
 
-    if (cudaMemcpy(matrix.data(), pointer, new_rows_number * new_raw_variables_number * sizeof(type), cudaMemcpyDeviceToHost) != cudaSuccess)
+    if (cudaMemcpy(matrix.data(), pointer, new_rows_number * new_variables_number * sizeof(type), cudaMemcpyDeviceToHost) != cudaSuccess)
         cout << "Cuda matrix memcpy error" << endl;
 
     return matrix;

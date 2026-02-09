@@ -638,7 +638,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 
             // Optimization algorithm
 
-            update_parameters_cuda(training_back_propagation, optimization_data);
+            update_parameters(training_back_propagation, optimization_data);
         }
 
         // Loss
@@ -766,7 +766,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
 }
 
 
-void AdaptiveMomentEstimation::update_parameters_cuda(BackPropagationCuda& back_propagation,
+void AdaptiveMomentEstimation::update_parameters(BackPropagationCuda& back_propagation,
                                                       ADAMOptimizationDataCuda& optimization_data) const
 {
     NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();

@@ -67,10 +67,10 @@ public:
         if (input_views[0].shape != input_views[1].shape)
             throw runtime_error("Input shape for " + name + " must be identical.");
 
-        const TensorMap<Tensor<type, Rank>, Aligned64> input_1 = tensor_map<Rank>(input_views[0]);
-        const TensorMap<Tensor<type, Rank>, Aligned64> input_2 = tensor_map<Rank>(input_views[1]);
+        const TensorMap<Tensor<type, Rank>, AlignedMax> input_1 = tensor_map<Rank>(input_views[0]);
+        const TensorMap<Tensor<type, Rank>, AlignedMax> input_2 = tensor_map<Rank>(input_views[1]);
 
-        TensorMap<Tensor<type, Rank>, Aligned64> outputs = tensor_map<Rank>(forward_propagation->outputs);
+        TensorMap<Tensor<type, Rank>, AlignedMax> outputs = tensor_map<Rank>(forward_propagation->outputs);
 
         outputs.device(*device) = input_1 + input_2;
     }
@@ -84,10 +84,10 @@ public:
         if (output_gradient_views.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input.");
 
-        const TensorMap<Tensor<type, Rank>, Aligned64> output_gradients = tensor_map<Rank>(output_gradient_views[0]);
+        const TensorMap<Tensor<type, Rank>, AlignedMax> output_gradients = tensor_map<Rank>(output_gradient_views[0]);
 
-        TensorMap<Tensor<type, Rank>, Aligned64> input_gradients_0 = tensor_map<Rank>(back_propagation->input_gradients[0]);
-        TensorMap<Tensor<type, Rank>, Aligned64> input_gradients_1 = tensor_map<Rank>(back_propagation->input_gradients[1]);
+        TensorMap<Tensor<type, Rank>, AlignedMax> input_gradients_0 = tensor_map<Rank>(back_propagation->input_gradients[0]);
+        TensorMap<Tensor<type, Rank>, AlignedMax> input_gradients_1 = tensor_map<Rank>(back_propagation->input_gradients[1]);
 
         input_gradients_0.device(*device) = output_gradients;
         input_gradients_1.device(*device) = output_gradients;

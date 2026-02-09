@@ -220,11 +220,11 @@ void InputsSelectionResults::print() const
 {
     cout << endl
          << "Input Validation Results" << endl
-         << "Optimal inputs number: " << optimal_input_raw_variable_names.size() << endl
+         << "Optimal inputs number: " << optimal_input_variable_names.size() << endl
          << "Inputs: " << endl;
 
-    for(size_t i = 0; i < optimal_input_raw_variable_names.size(); i++)
-        cout << "   " << optimal_input_raw_variable_names[i] << endl;
+    for(size_t i = 0; i < optimal_input_variable_names.size(); i++)
+        cout << "   " << optimal_input_variable_names[i] << endl;
 
     cout << "Optimum training error: " << optimum_training_error << endl
          << "Optimum selection error: " << optimum_validation_error << endl;

@@ -119,7 +119,7 @@ void MinkowskiError::from_XML(const XMLDocument& document)
 
 #ifdef OPENNN_CUDA
 
-void MinkowskiError::calculate_error(const BatchCuda& batch_cuda,
+void MinkowskiError::calculate_error(const BatchCuda& batch,
                                           const ForwardPropagationCuda& forward_propagation,
                                           BackPropagationCuda& back_propagation) const
 {
@@ -127,7 +127,7 @@ void MinkowskiError::calculate_error(const BatchCuda& batch_cuda,
 }
 
 
-void MinkowskiError::calculate_output_gradients(const BatchCuda& batch_cuda,
+void MinkowskiError::calculate_output_gradients(const BatchCuda& batch,
                                                  ForwardPropagationCuda& forward_propagation,
                                                  BackPropagationCuda& back_propagation) const
 {
