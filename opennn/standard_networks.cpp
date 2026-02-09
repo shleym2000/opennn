@@ -26,6 +26,8 @@
 #include "multihead_attention_layer.h"
 #include "strings_utilities.h"
 
+using namespace std;
+
 namespace opennn
 {
 
@@ -269,15 +271,15 @@ SimpleResNet::SimpleResNet(const shape& input_shape,
         {
             const Index block_input_index = last_layer_index;
 
-            shape current_input_dims = get_layer(block_input_index)->get_output_shape();
+            shape current_input_shape = get_layer(block_input_index)->get_output_shape();
 
             const Index filters = initial_filters[stage];
 
             const Index stride = (stage > 0 && block == 0) ? 2 : 1;
 
             // Main
-            auto conv1 = make_unique<Convolutional>(current_input_dims,
-                                                    shape{ 3, 3, current_input_dims[2], filters },
+            auto conv1 = make_unique<Convolutional>(current_input_shape,
+                                                    shape{ 3, 3, current_input_shape[2], filters },
                                                     "RectifiedLinear",
                                                     shape{ stride, stride },
                                                     "Same",
@@ -303,10 +305,10 @@ SimpleResNet::SimpleResNet(const shape& input_shape,
             // Skip Connection
             Index skip_path_index = block_input_index;
 
-            if (stride != 1 || current_input_dims[2] != filters)
+            if (stride != 1 || current_input_shape[2] != filters)
             {
-                auto skip_conv = make_unique<Convolutional>(current_input_dims,
-                                                            shape{ 1, 1, current_input_dims[2], filters },
+                auto skip_conv = make_unique<Convolutional>(current_input_shape,
+                                                            shape{ 1, 1, current_input_shape[2], filters },
                                                             "Linear",
                                                             shape{ stride, stride },
                                                             "Same",
@@ -878,7 +880,7 @@ string Transformer::calculate_outputs(const string& source)
 
         const TensorView output_view = forward_propagation.get_outputs();
 
-        const Index vocabulary_size = output_view.shape[2];
+        const Index vocabulary_size = output_view.dims[2];
 
         const TensorMap3 probabilities(output_view.data, batch_size, decoder_sequence_length, vocabulary_size);
 

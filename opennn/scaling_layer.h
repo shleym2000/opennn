@@ -344,7 +344,7 @@ public:
             // But following 2D code strictly, it only reads NeuronsNumber.
             // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
             // However, to make it compile for Rank > 2, I need to pass correct size.
-            // If XML doesn't validation dims, we can't fully restore shape.
+            // If XML doesn't validation dims, we can't fully restore dims.
             // I will implement a dummy reshape for now to satisfy Rank:
             // [neurons_number, 1, 1...]
 
@@ -469,13 +469,13 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
     {
         const Index outputs_number = layer->get_outputs_number();
 
-        outputs.shape = {batch_size, outputs_number};
+        outputs.dims = {batch_size, outputs_number};
     }
 
     void print() const override
     {
         cout << "Outputs:" << endl
-             << outputs.shape << endl;
+             << outputs.dims << endl;
     }
 };
 

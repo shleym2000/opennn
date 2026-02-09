@@ -64,7 +64,7 @@ public:
         if (input_views.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs.");
 
-        if (input_views[0].shape != input_views[1].shape)
+        if (input_views[0].dims != input_views[1].dims)
             throw runtime_error("Input shape for " + name + " must be identical.");
 
         const TensorMap<Tensor<type, Rank>, AlignedMax> input_1 = tensor_map<Rank>(input_views[0]);
@@ -194,14 +194,14 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
         shape full_dims = { batch_size };
         full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
 
-        outputs.shape = full_dims;
+        outputs.dims = full_dims;
     }
 
 
     void print() const override
     {
         cout << "Addition Forward Propagation:" << endl;
-        cout << "Outputs shape: " << outputs.shape << endl;
+        cout << "Outputs shape: " << outputs.dims << endl;
         cout << "Outputs data:" << endl << outputs.data << endl;
     }
 };
@@ -228,9 +228,9 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
         input_gradients.resize(2);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].shape = full_dims;
+        input_gradients[0].dims = full_dims;
         input_gradients[1].data = input_gradients_memory[1].data();
-        input_gradients[1].shape = full_dims;
+        input_gradients[1].dims = full_dims;
     }
 
 
@@ -240,13 +240,13 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
         if(input_gradients.size() >= 1)
         {
-            cout << "Input 1 Deltas shape: " << input_gradients[0].shape << endl;
+            cout << "Input 1 Deltas shape: " << input_gradients[0].dims << endl;
             cout << input_gradients[0].data << endl;
         }
 
         if(input_gradients.size() >= 2)
         {
-            cout << "Input 2 Deltas shape: " << input_gradients[1].shape << endl;
+            cout << "Input 2 Deltas shape: " << input_gradients[1].dims << endl;
             cout << input_gradients[1].data << endl;
         }
     }
@@ -292,9 +292,9 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const shape input_dims = layer->get_input_shape();
+        const shape input_shape = layer->get_input_shape();
         shape full_dims = { static_cast<Index>(batch_size) };
-        full_dims.insert(full_dims.end(), input_dims.begin(), input_dims.end());
+        full_dims.insert(full_dims.end(), input_shape.begin(), input_shape.end());
 
         input_gradients.resize(2);
         input_gradients[0].resize(full_dims);

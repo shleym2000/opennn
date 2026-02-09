@@ -169,7 +169,7 @@ void Pooling3dForwardPropagation::initialize()
     const Pooling3d* pooling_layer = static_cast<Pooling3d*>(layer);
 
     const Index features = pooling_layer->get_output_shape()[0];
-    outputs.shape = {batch_size, features};
+    outputs.dims = {batch_size, features};
 
     if (pooling_layer->get_pooling_method() == Pooling3d::PoolingMethod::MaxPooling)
         maximal_indices.resize(batch_size, features);

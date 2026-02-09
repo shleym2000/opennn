@@ -61,10 +61,7 @@ int main()
 #endif
 
         cout << "Bye!" << endl;
-        
-        
-        
-        /*
+
         cout << "OpenNN. National Institute of Standards and Techonology (MNIST) Example." << endl;
 
         // Dataset
@@ -103,9 +100,7 @@ int main()
     const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
     //cout << "\nConfusion matrix CUDA:\n" << confusion_cuda << endl;
     cout << "\nConfusion matrix:\n" << confusion << endl;
-    */
 
-    
    
 #ifndef OPENNN_CUDA
         cout << "Enable CUDA in pch.h" << endl;

@@ -13,6 +13,8 @@
 #include <memory>
 #include <stdexcept>
 
+using namespace std;
+
 namespace opennn
 {
 

@@ -9,6 +9,9 @@
 #pragma once
 
 #include "statistics.h"
+#include "tinyxml2.h"
+
+using namespace tinyxml2;
 
 namespace opennn
 {

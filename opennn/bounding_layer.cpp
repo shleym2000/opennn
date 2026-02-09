@@ -292,14 +292,14 @@ void BoundingForwardPropagation::initialize()
 {
     const Index neurons_number = static_cast<Bounding*>(layer)->get_output_shape()[0];
 
-    outputs.shape = {batch_size, neurons_number};
+    outputs.dims = {batch_size, neurons_number};
 }
 
 
 void BoundingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs.shape << endl;
+         << outputs.dims << endl;
 }
 
 REGISTER(Layer, Bounding, "Bounding")

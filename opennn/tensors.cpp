@@ -6,8 +6,8 @@
 //   Artificial Intelligence Techniques, SL
 //   artelnics@artelnics.com
 
-#include "../eigen/Eigen/Dense"
 #include "tensors.h"
+#include "../eigen/Eigen/Dense"
 
 namespace opennn
 {
@@ -291,7 +291,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
 type l2_distance(const Tensor1&x, const Tensor1&y)
 {
     if(x.size() != y.size())
-        throw runtime_error("x and y vector must  have the same shape.\n");
+        throw runtime_error("x and y vector must  have the same dims.\n");
 
     Tensor<type, 0> distance;
 

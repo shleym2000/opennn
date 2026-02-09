@@ -568,7 +568,7 @@ void PoolingForwardPropagation::initialize()
 
     const Index channels = pooling_layer->get_channels_number();
 
-    outputs.shape = {batch_size, output_height, output_width, channels};
+    outputs.dims = {batch_size, output_height, output_width, channels};
 
     image_patches.resize(batch_size,
                          pool_height,
@@ -588,7 +588,7 @@ void PoolingForwardPropagation::print() const
 {
     cout << "Pooling layer forward propagation" << endl
          << "Outputs:" << endl
-         << outputs.shape << endl;
+         << outputs.dims << endl;
 }
 
 
@@ -606,17 +606,17 @@ void PoolingBackPropagation::initialize()
     const shape& input_shape = pooling_layer->get_input_shape();
     const shape& output_dimensions = pooling_layer->get_output_shape();
 
-    shape full_input_dims = { batch_size };
-    full_input_dims.insert(full_input_dims.end(), input_shape.begin(), input_shape.end());
+    shape full_input_shape = { batch_size };
+    full_input_shape.insert(full_input_shape.end(), input_shape.begin(), input_shape.end());
 
     if (pooling_layer->get_pooling_method() == "AveragePooling")
         gradients_by_pool_size.resize(batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]);
 
     input_gradients_memory.resize(1);
-    input_gradients_memory[0].resize(count_elements(full_input_dims));
+    input_gradients_memory[0].resize(count_elements(full_input_shape));
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
-    input_gradients[0].shape = full_input_dims;
+    input_gradients[0].dims = full_input_shape;
 }
 
 
@@ -624,7 +624,7 @@ void PoolingBackPropagation::print() const
 {
     cout << "Pooling layer back propagation" << endl;
     cout << "Input output_gradients:" << endl
-         << input_gradients[0].shape << endl;
+         << input_gradients[0].dims << endl;
 }
 
 

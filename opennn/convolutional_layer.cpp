@@ -298,25 +298,25 @@ Index Convolutional::get_row_stride() const
 
 Index Convolutional::get_kernel_height() const
 {
-    return weights.shape[0];
+    return weights.dims[0];
 }
 
 
 Index Convolutional::get_kernel_width() const
 {
-    return weights.shape[1];
+    return weights.dims[1];
 }
 
 
 Index Convolutional::get_kernel_channels() const
 {
-    return weights.shape[2];
+    return weights.dims[2];
 }
 
 
 Index Convolutional::get_kernels_number() const
 {
-    return weights.shape[3];
+    return weights.dims[3];
 }
 
 
@@ -396,8 +396,8 @@ void Convolutional::set(const shape& new_input_shape,
 
     set_convolution_type(new_convolution_type);
 
-    biases.shape = {kernels_number};
-    weights.shape = {kernel_height, kernel_width, kernel_channels, kernels_number};
+    biases.dims = {kernels_number};
+    weights.dims = {kernel_height, kernel_width, kernel_channels, kernels_number};
 
     batch_normalization = new_batch_normalization;
 
@@ -406,13 +406,13 @@ void Convolutional::set(const shape& new_input_shape,
         running_means.resize(kernels_number);
         running_standard_deviations.resize(kernels_number);
 
-        gammas.shape = {kernels_number};
-        betas.shape = {kernels_number};
+        gammas.dims = {kernels_number};
+        betas.dims = {kernels_number};
     }
     else
     {
-        gammas.shape.clear();
-        betas.shape.clear();
+        gammas.dims.clear();
+        betas.dims.clear();
     }
 
     set_label(new_label);
@@ -567,8 +567,8 @@ void Convolutional::print() const
     cout << "Convolutional layer" << endl
          << "Input shape: " << input_shape << endl
          << "Output shape: " << get_output_shape() << endl
-         << "Biases shape: " << biases.shape << endl
-         << "Weights shape: " << weights.shape << endl
+         << "Biases shape: " << biases.dims << endl
+         << "Weights shape: " << weights.dims << endl
          << "biases:" << endl;
     //cout << biases << endl;
     cout << "Weights:" << endl;
@@ -678,16 +678,16 @@ void ConvolutionalForwardPropagation::initialize()
                                input_width + (padding_width*2),
                                input_channels);
 
-    outputs.shape = {batch_size, output_height, output_width, kernels_number};
+    outputs.dims = {batch_size, output_height, output_width, kernels_number};
 
-    activation_derivatives.shape = { batch_size, output_height, output_width, kernels_number };
+    activation_derivatives.dims = { batch_size, output_height, output_width, kernels_number };
 
     // Batch Normalization
 
     if (convolutional_layer->get_batch_normalization())
     {
-        means.shape = { kernels_number };
-        standard_deviations.shape = { kernels_number };
+        means.dims = { kernels_number };
+        standard_deviations.dims = { kernels_number };
     } 
 }
 
@@ -709,9 +709,9 @@ void ConvolutionalForwardPropagation::print() const
 {
     cout << "Convolutional layer shape" << endl
          << "Outputs:" << endl
-         << outputs.shape << endl
+         << outputs.dims << endl
          << "Activation derivatives:" << endl
-         << activation_derivatives.shape << endl;
+         << activation_derivatives.dims << endl;
 }
 
 
@@ -735,9 +735,9 @@ void ConvolutionalBackPropagation::initialize()
     const Index kernel_channels = convolutional_layer->get_kernel_channels();
     const Index kernels_number = convolutional_layer->get_kernels_number();
 
-    bias_gradients.shape = {kernels_number};
+    bias_gradients.dims = {kernels_number};
 
-    weight_gradients.shape = { kernel_height, kernel_width, kernel_channels, kernels_number };
+    weight_gradients.dims = { kernel_height, kernel_width, kernel_channels, kernels_number };
 
     rotated_weights.resize(kernel_height,
                            kernel_width,
@@ -748,14 +748,14 @@ void ConvolutionalBackPropagation::initialize()
     input_gradients_memory[0].resize(count_elements({ batch_size, input_height, input_width, channels }));
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
-    input_gradients[0].shape = { batch_size, input_height, input_width, channels };
+    input_gradients[0].dims = { batch_size, input_height, input_width, channels };
 
     // Batch Normalization
 
     if (convolutional_layer->get_batch_normalization())
     {
-        gamma_gradients.shape = {kernels_number};
-        beta_gradients.shape = {kernels_number};
+        gamma_gradients.dims = {kernels_number};
+        beta_gradients.dims = {kernels_number};
     }
 }
 
@@ -777,9 +777,9 @@ void ConvolutionalBackPropagation::print() const
 {
     cout << "Convolutional layer back propagation shape" << endl
          << "Biases derivatives:\n" << endl
-         << bias_gradients.shape << endl
+         << bias_gradients.dims << endl
          << "Synaptic weights derivatives:\n" << endl
-         << weight_gradients.shape << endl;
+         << weight_gradients.dims << endl;
 }
 
 

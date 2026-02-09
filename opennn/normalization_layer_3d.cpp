@@ -60,11 +60,11 @@ void Normalization3d::set(const Index new_sequence_length,
 {
     sequence_length = new_sequence_length;
 
-    gammas.shape = {new_embedding_dimension};
+    gammas.dims = {new_embedding_dimension};
 /*
     gammas.setConstant(1);
 */
-    betas.shape = {new_embedding_dimension};
+    betas.dims = {new_embedding_dimension};
 /*
     betas.setZero();
 */
@@ -121,7 +121,7 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
                                      unique_ptr<LayerForwardPropagation>& forward_propagation,
                                      unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const Index batch_size = input_views[0].shape[0];
+    const Index batch_size = input_views[0].dims[0];
     const Index embedding_dimension = get_embedding_dimension();
 
     if(output_gradient_views.size() > 1)
@@ -230,7 +230,7 @@ void Normalization3dForwardPropagation::initialize()
     const Index sequence_length = normalization_3d->get_sequence_length();
     const Index embedding_dimension = normalization_3d->get_embedding_dimension();
 
-    outputs.shape = {batch_size, sequence_length, embedding_dimension};
+    outputs.dims = {batch_size, sequence_length, embedding_dimension};
 
     means.resize(batch_size, sequence_length);
     standard_deviations.resize(batch_size, sequence_length);
@@ -240,7 +240,7 @@ void Normalization3dForwardPropagation::initialize()
 void Normalization3dForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs.shape << endl;
+         << outputs.dims << endl;
 }
 
 
@@ -251,15 +251,15 @@ void Normalization3dBackPropagation::initialize()
     const Index sequence_length = normalization_layer_3d->get_sequence_length();
     const Index embedding_dimension = normalization_layer_3d->get_embedding_dimension();
 
-    gamma_derivatives.shape = {embedding_dimension};
-    beta_derivatives.shape = {embedding_dimension};
+    gamma_derivatives.dims = {embedding_dimension};
+    beta_derivatives.dims = {embedding_dimension};
 
     scaled_gradients.resize(batch_size, sequence_length, embedding_dimension);
     standard_deviation_derivatives.resize(batch_size, sequence_length, embedding_dimension);
     aux_2d.resize(batch_size, sequence_length);
 
     input_gradients.resize(1);
-    input_gradients[0].shape = {batch_size, sequence_length, embedding_dimension};
+    input_gradients[0].dims = {batch_size, sequence_length, embedding_dimension};
 }
 
 

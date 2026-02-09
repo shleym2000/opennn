@@ -21,51 +21,51 @@ inline Index count_elements(const shape& dims)
 struct TensorView
 {
     type* data = nullptr;
-    shape shape;
+    shape dims;
 
     TensorView() noexcept = default;
 
     TensorView(type* new_data, const ::shape& new_shape) noexcept
     {
         data = new_data;
-        shape = new_shape;
+        dims = new_shape;
     }
 
-    Index rank() const { return shape.size(); }
+    Index rank() const { return dims.size(); }
 
     Index size() const
     {
-        if (shape.empty()) return 0;
+        if (dims.empty()) return 0;
 
-        return accumulate(shape.begin(), shape.end(), static_cast<Index>(1), multiplies<Index>());
+        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
     }
 
     void print() const
     {
-        if(!data || shape.empty())
+        if(!data || dims.empty())
         {
             cout << "TensorView: Empty or Null" << endl;
             return;
         }
 
         cout << "Dims: (";
-        for(size_t i = 0; i < shape.size(); ++i)
-            cout << shape[i] << (i < shape.size() - 1 ? ", " : "");
+        for(size_t i = 0; i < dims.size(); ++i)
+            cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
 
         cout << ")" << endl;
 
         const Index total_size = size();
-        const Index last_dim_stride = shape.back();
+        const Index last_dim_stride = dims.back();
 
         for(Index i = 0; i < total_size; ++i)
         {
             cout << data[i] << " ";
 
-            if (shape.size() > 1 && (i + 1) % last_dim_stride == 0)
+            if (dims.size() > 1 && (i + 1) % last_dim_stride == 0)
                 cout << endl;
         }
 
-        if (shape.size() == 1 || total_size % last_dim_stride != 0)
+        if (dims.size() == 1 || total_size % last_dim_stride != 0)
             cout << endl;
     }
 };
@@ -315,29 +315,29 @@ TensorMap<Tensor<type, rank>, AlignedMax> tensor_map(const TensorView& tensor_vi
     if constexpr (rank == 2)
         if (tensor_view.rank() == 4)
             return TensorMap2(tensor_view.data,
-                              tensor_view.shape[0],
-                              tensor_view.size() / tensor_view.shape[0]);
+                              tensor_view.dims[0],
+                              tensor_view.size() / tensor_view.dims[0]);
 
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap1(tensor_view.data, tensor_view.shape[0]);
+        return TensorMap1(tensor_view.data, tensor_view.dims[0]);
     else if constexpr (rank == 2)
         return TensorMap2(tensor_view.data,
-                          tensor_view.shape[0],
-                          tensor_view.shape[1]);
+                          tensor_view.dims[0],
+                          tensor_view.dims[1]);
     else if constexpr (rank == 3)
         return TensorMap3(tensor_view.data,
-                          tensor_view.shape[0],
-                          tensor_view.shape[1],
-                          tensor_view.shape[2]);
+                          tensor_view.dims[0],
+                          tensor_view.dims[1],
+                          tensor_view.dims[2]);
     else if constexpr (rank == 4)
         return TensorMap4(tensor_view.data,
-                          tensor_view.shape[0],
-                          tensor_view.shape[1],
-                          tensor_view.shape[2],
-                          tensor_view.shape[3]);
+                          tensor_view.dims[0],
+                          tensor_view.dims[1],
+                          tensor_view.dims[2],
+                          tensor_view.dims[3]);
     else
         static_assert(rank >= 1 && rank <= 4, "Unsupported tensor rank");
 }
