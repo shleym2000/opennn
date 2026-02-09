@@ -4580,7 +4580,7 @@ void BatchCuda::copy_device(const Index current_batch_size)
 }
 
 
-Tensor2 BatchCuda::get_inputs_device() const
+Tensor2 BatchCuda::get_inputs_from_device() const
 {
     const Index inputs_number = dataset->get_variables_number("Input");
 
@@ -4594,7 +4594,7 @@ Tensor2 BatchCuda::get_inputs_device() const
 }
 
 
-Tensor2 BatchCuda::get_decoder_device() const
+Tensor2 BatchCuda::get_decoder_from_device() const
 {
     const Index decoder_number = dataset->get_variables_number("Decoder");
 
@@ -4608,7 +4608,7 @@ Tensor2 BatchCuda::get_decoder_device() const
 }
 
 
-Tensor2 BatchCuda::get_targets_device() const
+Tensor2 BatchCuda::get_targets_from_device() const
 {
     const Index targets_number = target_shape[1];
 
@@ -4642,14 +4642,7 @@ Index BatchCuda::get_samples_number() const
 
 void BatchCuda::print() const
 {
-    if(!input_shape.empty())
-        cout << "get_inputs_device:" << endl << get_inputs_device() << endl;
-
-    if(!decoder_shape.empty())
-        cout << "get_decoder_device:" << endl << get_decoder_device() << endl;
-
-    if(!target_shape.empty())
-        cout << "get_targets_device:" << endl << get_targets_device() << endl;
+    // @todo
 }
 
 

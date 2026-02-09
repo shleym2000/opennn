@@ -658,9 +658,9 @@ struct BatchCuda
 
     Index get_samples_number() const;
 
-    Tensor2 get_inputs_device() const;
-    Tensor2 get_decoder_device() const;
-    Tensor2 get_targets_device() const;
+    Tensor2 get_inputs_from_device() const;
+    Tensor2 get_decoder_from_device() const;
+    Tensor2 get_targets_from_device() const;
 
     void copy_device(const Index);
 

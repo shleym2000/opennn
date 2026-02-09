@@ -38,8 +38,8 @@ void reverse_cuda(int, int, int, type*);
 __global__ void reorganize_inputs_kernel(const type*, type*, int, int);
 void reorganize_inputs_cuda(const type*, type*, int, int);
 
-__global__ void reorganize_deltas_kernel(const type*, type*, int, int);
-void reorganize_deltas_cuda(const type*, type*, int, int);
+__global__ void reorganize_gradients_kernel(const type*, type*, int, int);
+void reorganize_gradients_cuda(const type*, type*, int, int);
 
 void copy_to_vector_cuda(float* destination, const float* source, const Index& size, Index& index);
 void copy_from_vector_cuda(float* destination, const float* source, const Index& size, Index& index);

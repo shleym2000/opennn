@@ -24,7 +24,7 @@ __global__ void reorder_inputs_kernel(const float* __restrict__ source, float* _
 }
 
 
-void reorder_inputs(const float* source, float* destination, int N,int C,int H,int W)
+void reorder_inputs_cuda(const float* source, float* destination, int N,int C,int H,int W)
 {
     int total = N * H * W * C;
     const int threads_per_block = 256;
@@ -52,7 +52,7 @@ __global__ void invert_reorder_inputs_kernel(const float* __restrict__ source, f
 }
 
 
-void invert_reorder_inputs(const float* source, float* destination, int N, int C, int H, int W)
+void invert_reorder_inputs_cuda(const float* source, float* destination, int N, int C, int H, int W)
 {
     int total = N * C * H * W;
     const int threads_per_block = 256;
@@ -118,7 +118,7 @@ void reorganize_inputs_cuda(const type* inputs_device, type* outputs_device, int
 }
 
 
-__global__ void reorganize_deltas_kernel(const type* inputs_device, type* outputs_device, int rows, int cols) 
+__global__ void reorganize_gradients_kernel(const type* inputs_device, type* outputs_device, int rows, int cols) 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int totalSize = rows * cols;
@@ -134,13 +134,13 @@ __global__ void reorganize_deltas_kernel(const type* inputs_device, type* output
     }
 }
 
-void reorganize_deltas_cuda(const type* inputs_device, type* outputs_device, int rows, int cols) 
+void reorganize_gradients_cuda(const type* inputs_device, type* outputs_device, int rows, int cols) 
 {
     int num_elements = rows * cols;
     int blockSize = 256;
     int numBlocks = (num_elements + blockSize - 1) / blockSize;
 
-    reorganize_deltas_kernel << <numBlocks, blockSize >> > (inputs_device, outputs_device, rows, cols);
+    reorganize_gradients_kernel << <numBlocks, blockSize >> > (inputs_device, outputs_device, rows, cols);
 }
 
 

@@ -16,7 +16,7 @@ int main()
     try
     {
         cout << "OpenNN. Blank Cuda." << endl;
-        
+        /*
         cout << "OpenNN. Melanoma Cancer CUDA Example." << endl;
 
 #ifdef OPENNN_CUDA
@@ -61,7 +61,7 @@ int main()
 #endif
 
         cout << "Bye!" << endl;
-
+        */
         cout << "OpenNN. National Institute of Standards and Techonology (MNIST) Example." << endl;
 
         // Dataset

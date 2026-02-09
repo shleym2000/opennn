@@ -812,7 +812,7 @@ void Convolutional::forward_propagate(const vector<TensorViewCuda>& inputs,
     {
         type* reordered_inputs_data = convolutional_forward_propagation->reordered_inputs_device.data;
 
-        reorder_inputs(inputs[0].data, reordered_inputs_data, batch_size, get_input_channels(), get_input_height(), get_input_width());
+        reorder_inputs_cuda(inputs[0].data, reordered_inputs_data, batch_size, get_input_channels(), get_input_height(), get_input_width());
 
         input_data = reordered_inputs_data;
     }
