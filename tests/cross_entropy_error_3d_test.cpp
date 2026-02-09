@@ -49,11 +49,11 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
 
     raw_variables[0].name = "input";
     raw_variables[0].role = opennn::"Input";
-    raw_variables[0].type = opennn::Dataset::RawVariableType::Numeric;
+    raw_variables[0].type = opennn::Dataset::VariableType::Numeric;
 
     raw_variables[1].name = "target";
     raw_variables[1].role = opennn::"Target";
-    raw_variables[1].type = opennn::Dataset::RawVariableType::Numeric;
+    raw_variables[1].type = opennn::Dataset::VariableType::Numeric;
 
     language_dataset.set_raw_variables(raw_variables);
     language_dataset.set_data(data);
@@ -68,7 +68,7 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
     NeuralNetwork neural_network;
 
     neural_network.add_layer(make_unique<Embedding>(
-        dimensions{vocabulary_size, sequence_length},
+        shape{vocabulary_size, sequence_length},
         embedding_dimension,
         "embedding_layer"
         ));
@@ -85,7 +85,7 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
     neural_network.print();
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_inputs(), forward_propagation, true);
 
     // Loss index
 
@@ -120,10 +120,10 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
     dataset.set_data(data);
 
     for (Index i = 0; i < inputs_number; i++)
-        dataset.set_raw_variable_role(i, "Input");
+        dataset.set_variable_role(i, "Input");
 
     for (Index i = 0; i < inputs_number; i++)
-        dataset.set_raw_variable_role(i + inputs_number, "Target");
+        dataset.set_variable_role(i + inputs_number, "Target");
 
     dataset.set_sample_roles("Training");
 
@@ -146,7 +146,7 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
     neural_network.add_layer(dense_layer_3d);
 
     forward_propagation.set(batch_size, &neural_network);
-    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
+    neural_network.forward_propagate(batch.get_inputs(), forward_propagation, is_training);
 
     // Loss index
 
@@ -214,7 +214,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
         
-        transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
+        transformer.forward_propagate(batch.get_inputs(), forward_propagation, is_training);
         
         // Loss index
 

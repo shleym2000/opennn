@@ -280,13 +280,13 @@ TEST(Transformer, ForwardPropagate)
     dataset.set_sample_roles("Training");
 
     for(Index i = 0; i < context_length; i++)
-        dataset.set_raw_variable_role(i, string::Context);
+        dataset.set_variable_role(i, string::Context);
 
     for(Index i = 0; i < input_length; i++)
-        dataset.set_raw_variable_role(i + context_length, "Input");
+        dataset.set_variable_role(i + context_length, "Input");
 
     for(Index i = 0; i < input_length; i++)
-        dataset.set_raw_variable_role(i + context_length + input_length, "Target");
+        dataset.set_variable_role(i + context_length + input_length, "Target");
 
     training_samples_indices = dataset.get_sample_indices("Training");
     decoder_variables_indices = dataset.get_variable_indices(string::Context);
@@ -302,7 +302,7 @@ TEST(Transformer, ForwardPropagate)
 
     ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
-    transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
+    transformer.forward_propagate(batch.get_inputs(), forward_propagation, is_training);
 
     Dense3DForwardPropagation* dense_layer_forward_propagation
         = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);
@@ -349,13 +349,13 @@ TEST(Transformer, ForwardPropagate)
         dataset.set_sample_roles("Training");
 
         for(Index i = 0; i < context_length; i++)
-            dataset.set_raw_variable_role(i, string::Context);
+            dataset.set_variable_role(i, string::Context);
 
         for(Index i = 0; i < input_length; i++)
-            dataset.set_raw_variable_role(i + context_length, "Input");
+            dataset.set_variable_role(i + context_length, "Input");
 
         for(Index i = 0; i < input_length; i++)
-            dataset.set_raw_variable_role(i + context_length + input_length, "Target");
+            dataset.set_variable_role(i + context_length + input_length, "Target");
 
         training_samples_indices = dataset.get_sample_indices("Training");
         decoder_variables_indices = dataset.get_variable_indices(string::Context);
@@ -371,7 +371,7 @@ TEST(Transformer, ForwardPropagate)
 
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
 
-        transformer.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
+        transformer.forward_propagate(batch.get_inputs(), forward_propagation, is_training);
 
         Dense3DForwardPropagation* dense_layer_forward_propagation
             = static_cast<Dense3DForwardPropagation*>(forward_propagation.layers[transformer.get_layers_number() - 1]);

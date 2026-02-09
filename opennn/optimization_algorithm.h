@@ -8,25 +8,25 @@
 
 #pragma once
 
-#include "tinyxml2.h"
 #include "statistics.h"
+#include "tinyxml2.h"
 
 using namespace tinyxml2;
 
 namespace opennn
 {
 
-class LossIndex;
+class Loss;
 
 struct TrainingResults;
 
-class OptimizationAlgorithm
+class Optimizer
 {
 
 public:
 
-    OptimizationAlgorithm(const LossIndex* = nullptr);
-    virtual ~OptimizationAlgorithm() = default;
+    Optimizer(const Loss* = nullptr);
+    virtual ~Optimizer() = default;
 
     enum class StoppingCondition{None,
                                  MinimumLossDecrease,
@@ -35,7 +35,7 @@ public:
                                  MaximumEpochsNumber,
                                  MaximumTime};
 
-    LossIndex* get_loss_index() const;
+    Loss* get_loss_index() const;
 
     string get_hardware_use() const;
 
@@ -43,7 +43,7 @@ public:
 
     bool has_loss_index() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     const Index& get_display_period() const;
 
@@ -53,13 +53,13 @@ public:
 
     string write_time(const type) const;
 
-    void set(const LossIndex* = nullptr);
+    void set(const Loss* = nullptr);
 
     virtual void set_threads_number(const int&);
 
-    virtual void set_loss_index(LossIndex*);
+    virtual void set_loss_index(Loss*);
 
-    virtual void set_display(const bool&);
+    virtual void set_display(bool);
 
     void set_display_period(const Index);
 
@@ -97,9 +97,9 @@ protected:
     unique_ptr<ThreadPool> thread_pool = nullptr;
     unique_ptr<ThreadPoolDevice> device = nullptr;
 
-    LossIndex* loss_index = nullptr;
+    Loss* loss_index = nullptr;
 
-    Index maximum_epochs_number = 10000;
+    Index maximum_epochs = 10000;
 
     type maximum_time = type(360000);
 
@@ -145,10 +145,10 @@ public:
 };
 
 
-struct OptimizationAlgorithmData
+struct OptimizerData
 {
-    OptimizationAlgorithmData();
-    virtual ~OptimizationAlgorithmData() = default;
+    OptimizerData();
+    virtual ~OptimizerData() = default;
 
     virtual void print() const;
 
@@ -170,7 +170,7 @@ struct TrainingResults
 
     type get_training_error() const;
 
-    type get_selection_error() const;
+    type get_validation_error() const;
 
     Index get_epochs_number() const;
 
@@ -178,23 +178,23 @@ struct TrainingResults
 
     void print(const string& message = string()) const;
 
-    OptimizationAlgorithm::StoppingCondition stopping_condition = OptimizationAlgorithm::StoppingCondition::None;
+    Optimizer::StoppingCondition stopping_condition = Optimizer::StoppingCondition::None;
 
     Tensor<string, 2> write_override_results(const Index = 3) const;
 
     void resize_training_error_history(const Index);
 
-    void resize_selection_error_history(const Index);
+    void resize_validation_error_history(const Index);
 
     Tensor1 training_error_history;
 
-    Tensor1 selection_error_history;
+    Tensor1 validation_error_history;
 
     string elapsed_time;
 
     type loss = NAN;
 
-    Index selection_failures = 0;
+    Index validation_failures = 0;
 
     type loss_decrease = type(0);
 };

@@ -25,7 +25,7 @@ void initialize_generator()
     }
     else
     {
-        int thread_id = omp_get_thread_num();
+        const int thread_id = omp_get_thread_num();
         generator.seed(static_cast<unsigned int>(global_seed + thread_id * 5489u));
     }
 
@@ -44,7 +44,8 @@ void set_seed(Index seed)
 }
 
 
-inline mt19937& get_generator() {
+inline mt19937& get_generator()
+{
     if(!is_initialized) initialize_generator();
     return generator;
 }
@@ -128,10 +129,33 @@ template void shuffle_vector<Index>(vector<Index>&);
 template void shuffle_vector<size_t>(vector<size_t>&);
 
 
+void shuffle_vector_blocks(vector<Index>& vec, size_t num_blocks)
+{
+    const size_t n = vec.size();
+    if (n < 2) return;
+
+    const size_t block_size = n / max(size_t(1), num_blocks);
+
+    if (block_size < 10)
+    {
+        shuffle_vector(vec);
+        return;
+    }
+
+    for (size_t i = 0; i < n; i += block_size)
+    {
+        const auto start = vec.begin() + i;
+        const auto end = (i + block_size > n) ? vec.end() : start + block_size;
+
+        shuffle(start, end, get_generator());
+    }
+}
+
+
 template<typename T>
 void shuffle_tensor(Tensor<T, 1>& vec)
 {
-    std::shuffle(vec.data(), vec.data() + vec.size(), get_generator());
+    shuffle(vec.data(), vec.data() + vec.size(), get_generator());
 }
 
 template void shuffle_tensor<bool>(Tensor<bool, 1>&);

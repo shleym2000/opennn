@@ -35,7 +35,7 @@ int main()
 
         // Neural Network
 
-        ClassificationNetwork classification_network(dataset.get_input_dimensions(), { neurons_number}, dataset.get_target_dimensions());
+        ClassificationNetwork classification_network(dataset.get_input_shape(), { neurons_number}, dataset.get_target_shape());
 
         // Training Strategy
 
@@ -47,7 +47,7 @@ int main()
         training_strategy.get_loss_index()->set_regularization_method("None");
         training_strategy.set_optimization_algorithm("AdaptiveMomentEstimation");
         AdaptiveMomentEstimation* adam = dynamic_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
-        adam->set_maximum_epochs_number(1000);
+        adam->set_maximum_epochs(1000);
 
         training_strategy.train();
 

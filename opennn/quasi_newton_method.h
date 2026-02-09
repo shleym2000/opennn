@@ -17,25 +17,25 @@ namespace opennn
 struct QuasiNewtonMethodData;
 struct Triplet;
 
-class QuasiNewtonMethod final : public OptimizationAlgorithm
+class QuasiNewtonMethod final : public Optimizer
 {
 
 public:
 
-    QuasiNewtonMethod(const LossIndex* = nullptr);
+    QuasiNewtonMethod(const Loss* = nullptr);
 
     // Stopping criteria
 
     const type& get_minimum_loss_decrease() const;
     const type& get_loss_goal() const;
 
-    const Index& get_maximum_selection_failures() const;
+    const Index& get_maximum_validation_failures() const;
 
     // Set
 
-    void set_loss_index(LossIndex*) override;
+    void set_loss_index(Loss*) override;
 
-    void set_display(const bool&) override;
+    void set_display(bool) override;
 
     void set_default();
 
@@ -44,9 +44,9 @@ public:
     void set_minimum_loss_decrease(const type);
     void set_loss_goal(const type);
 
-    void set_maximum_selection_failures(const Index);
+    void set_maximum_validation_failures(const Index);
 
-    void set_maximum_epochs_number(const Index);
+    void set_maximum_epochs(const Index);
     void set_maximum_time(const type);
 
     // Training
@@ -98,7 +98,7 @@ private:
 
     type training_loss_goal;
 
-    Index maximum_selection_failures;
+    Index maximum_validation_failures;
 
     type learning_rate_tolerance;
 
@@ -128,7 +128,7 @@ struct Triplet
 };
 
 
-struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
+struct QuasiNewtonMethodData final : public OptimizerData
 {
     QuasiNewtonMethodData(QuasiNewtonMethod* new_quasi_newton_method = nullptr);
 
@@ -143,7 +143,7 @@ struct QuasiNewtonMethodData final : public OptimizationAlgorithmData
     Tensor1 old_parameters;
     Tensor1 parameters_difference;
 
-    Tensor1 parameters_increment;
+    Tensor1 parameter_updates;
 
     // Loss index data
 

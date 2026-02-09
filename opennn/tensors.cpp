@@ -6,8 +6,8 @@
 //   Artificial Intelligence Techniques, SL
 //   artelnics@artelnics.com
 
-#include "../eigen/Eigen/Dense"
 #include "tensors.h"
+#include "../eigen/Eigen/Dense"
 
 namespace opennn
 {
@@ -291,7 +291,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
 type l2_distance(const Tensor1&x, const Tensor1&y)
 {
     if(x.size() != y.size())
-        throw runtime_error("x and y vector must  have the same dimensions.\n");
+        throw runtime_error("x and y vector must  have the same dims.\n");
 
     Tensor<type, 0> distance;
 
@@ -386,45 +386,23 @@ void fill_tensor_data(const Tensor2& matrix,
                       const vector<Index>& column_indices,
                       type* __restrict tensor_data)
 {
-    if(row_indices.empty() || column_indices.empty()) return;
-
-    const bool contiguous = is_contiguous(row_indices);
-
     const Index rows_number = row_indices.size();
     const Index columns_number = column_indices.size();
 
+    if(rows_number == 0 || columns_number == 0) return;
+
     const type* __restrict matrix_data = matrix.data();
-    const Index matrix_rows_number = matrix.dimension(0);
-
+    const Index matrix_rows_count = matrix.dimension(0);
     const Index* __restrict row_indices_data = row_indices.data();
-    const Index* __restrict column_indices_data = column_indices.data();
 
-    if(contiguous)
+    #pragma omp parallel for if(columns_number >= 32) schedule(static)
+    for(Index j = 0; j < columns_number; ++j)
     {
-        const Index row_start = row_indices_data[0];
+        const type* __restrict matrix_column = matrix_data + (matrix_rows_count * column_indices[j]);
+        type* __restrict tensor_value = tensor_data + (rows_number * j);
 
-        #pragma omp parallel for schedule(static)
-        for(Index j = 0; j < columns_number; ++j)
-        {
-            const type* __restrict matrix_column = matrix_data + matrix_rows_number * column_indices_data[j];
-
-            type* __restrict tensor_value = tensor_data + rows_number * j;
-
-            copy_n(matrix_column + row_start, rows_number, tensor_value);
-        }
-    }
-    else
-    {
-        #pragma omp parallel for schedule(static)
-        for(Index j = 0; j < columns_number; j++)
-        {
-            const type* __restrict matrix_column = matrix_data + matrix_rows_number * column_indices_data[j];
-
-            type* __restrict tensor_value = tensor_data + rows_number * j;
-
-            for(Index i = 0; i < rows_number; i++)
-                tensor_value[i] = matrix_column[row_indices_data[i]];
-        }
+        for(Index i = 0; i < rows_number; ++i)
+            tensor_value[i] = matrix_column[row_indices_data[i]];
     }
 }
 
@@ -565,7 +543,7 @@ Tensor2 assemble_matrix_matrix(const Tensor2& x, const Tensor2& y)
 }
 
 
-string dimensions_to_string(const dimensions& x, const string& separator)
+string dimensions_to_string(const shape& x, const string& separator)
 {
     const Index size = x.size();
 
@@ -581,9 +559,9 @@ string dimensions_to_string(const dimensions& x, const string& separator)
 }
 
 
-dimensions string_to_dimensions(const string& x, const string& separator)
+shape string_to_dimensions(const string& x, const string& separator)
 {
-    dimensions result;
+    shape result;
 
     if (x.empty())
         throw runtime_error("Error: Input string must not be empty.\n");
@@ -668,15 +646,15 @@ TensorMap2 tensor_map(const Tensor4& tensor, const Index& index_3, const Index& 
 }
 
 
-Index get_size(const dimensions &d)
+Index get_size(const shape &d)
 {
     return accumulate(d.begin(), d.end(), 1, multiplies<Index>());
 }
 
 
-dimensions prepend(const Index &x, const dimensions &d)
+shape prepend(const Index &x, const shape &d)
 {
-    dimensions result = {x};
+    shape result = {x};
     result.insert(result.end(), d.begin(), d.end());
     return result;
 }
@@ -684,8 +662,7 @@ dimensions prepend(const Index &x, const dimensions &d)
 
 type* link(type *pointer, vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for(TensorView* view : views)
@@ -694,6 +671,9 @@ type* link(type *pointer, vector<TensorView*> views)
             continue;
 
         view->data = pointer;
+
+        if (reinterpret_cast<uintptr_t>(pointer) % EIGEN_MAX_ALIGN_BYTES != 0)
+            throw runtime_error("Master pointer in link() is not aligned.");
 
         pointer += (view->size() + ALIGN_ELEMENTS - 1) & MASK;
     }
@@ -711,8 +691,7 @@ void link(type *pointer, vector<vector<TensorView*> > views)
 
 Index get_size(const vector<TensorView*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;
@@ -744,8 +723,7 @@ Index get_size(vector<vector<TensorView*> > views)
 
 type* link(type* pointer, vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     for (TensorViewCuda* view : views)
@@ -771,8 +749,7 @@ void link(type* pointer, vector<vector<TensorViewCuda*> > views)
 
 Index get_size(const vector<TensorViewCuda*> views)
 {
-    constexpr Index ALIGN_BYTES = 16;
-    constexpr Index ALIGN_ELEMENTS = ALIGN_BYTES / sizeof(type);
+    constexpr Index ALIGN_ELEMENTS = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     constexpr Index MASK = ~(ALIGN_ELEMENTS - 1);
 
     Index total_size = 0;

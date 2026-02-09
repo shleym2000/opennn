@@ -18,7 +18,7 @@ class ImageDataset : public Dataset
 
 public:
 
-    ImageDataset(const Index = 0, const dimensions& = {0, 0, 0}, const dimensions& = {0});
+    ImageDataset(const Index = 0, const shape& = {0, 0, 0}, const shape& = {0});
 
     ImageDataset(const filesystem::path&);
 
@@ -45,9 +45,9 @@ public:
     void set_image_height(const int&);
     void set_image_padding(const int&);
 
-    void set_augmentation(const bool&);
-    void set_random_reflection_axis_x(const bool&);
-    void set_random_reflection_axis_y(const bool&);
+    void set_augmentation(bool);
+    void set_random_reflection_axis_x(bool);
+    void set_random_reflection_axis_y(bool);
     void set_random_rotation_minimum(const type);
     void set_random_rotation_maximum(const type);
     void set_random_horizontal_translation_minimum(const type);
@@ -55,10 +55,10 @@ public:
     void set_random_vertical_translation_minimum(const type);
     void set_random_vertical_translation_maximum(const type);
 
-    vector<Descriptives> scale_variables(const string&) override;
-    void unscale_variables(const string&);
+    vector<Descriptives> scale_features(const string&) override;
+    void unscale_features(const string&);
 
-    void read_bmp(const dimensions& new_input_dimensions = { 0, 0, 0 });
+    void read_bmp(const shape& new_input_shape = { 0, 0, 0 });
 
     void from_XML(const XMLDocument&) override;
     void to_XML(XMLPrinter&) const override;
@@ -95,7 +95,7 @@ private:
 
     Index regions_number = 1000; // Number of region proposals per image
     Index region_rows = 6; // Final region width to warp
-    Index region_raw_variables = 6; // Final region height to warp
+    Index region_variables = 6; // Final region height to warp
 
 };
 

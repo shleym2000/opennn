@@ -15,7 +15,7 @@ namespace opennn
 {
 
 CrossEntropyError3d::CrossEntropyError3d(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "CrossEntropyError3d";
 }
@@ -26,10 +26,10 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
                                                  BackPropagation& back_propagation) const
 {
     /*
-    const TensorView targets_view = batch.get_target_view();
+    const TensorView targets_view = batch.get_targets();
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
     const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
@@ -79,10 +79,10 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
                                                    BackPropagation& back_propagation) const
 {
     /*
-    const TensorView targets_view = batch.get_target_view();
+    const TensorView targets_view = batch.get_targets();
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
     const TensorMap3 outputs = tensor_map<3>(outputs_view);
 
     const Index batch_size = outputs.dimension(0);
@@ -154,11 +154,11 @@ void CrossEntropyError3d::calculate_error(const Batch& batch,
 }
 
 
-void CrossEntropyError3d::calculate_output_delta(const Batch&,
+void CrossEntropyError3d::calculate_output_gradients(const Batch&,
                                                  ForwardPropagation&,
                                                  BackPropagation&) const
 {
-    // Dense3d with softmax does not have deltas.
+    // Dense3d with softmax does not have output_gradients.
     // Error combinations derivatives are calculated directly.
 }
 
@@ -188,24 +188,24 @@ void CrossEntropyError3d::from_XML(const XMLDocument& document)
 
 #ifdef OPENNN_CUDA
 
-void CrossEntropyError3d::calculate_error_cuda(const BatchCuda&,
+void CrossEntropyError3d::calculate_error(const BatchCuda&,
                                                const ForwardPropagationCuda&,
                                                BackPropagationCuda&) const
 {
-    throw runtime_error("CUDA calculate_error_cuda not implemented for loss index type: CrossEntropyError3d");
+    throw runtime_error("CUDA calculate_error not implemented for loss index type: CrossEntropyError3d");
 }
 
 
-void CrossEntropyError3d::calculate_output_delta_cuda(const BatchCuda&,
+void CrossEntropyError3d::calculate_output_gradients(const BatchCuda&,
                                                       ForwardPropagationCuda&,
                                                       BackPropagationCuda&) const
 {
-    throw runtime_error("CUDA calculate_output_delta_cuda not implemented for loss index type: CrossEntropyError3d");
+    throw runtime_error("CUDA calculate_output_gradients not implemented for loss index type: CrossEntropyError3d");
 }
 
 #endif
 
-REGISTER(LossIndex, CrossEntropyError3d, "CrossEntropyError3d");
+REGISTER(Loss, CrossEntropyError3d, "CrossEntropyError3d");
 
 }
 

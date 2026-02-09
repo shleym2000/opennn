@@ -106,12 +106,12 @@ TEST(GeneticAlgorithmTest, InitializePopulationCorrelations)
     }
 
     dataset.set_data(full_data);
-    dataset.set_raw_variable_role(0, "Input");
-    dataset.set_raw_variable_role(1, "Input");
-    dataset.set_raw_variable_role(2, "Input");
-    dataset.set_raw_variable_role(3, "Target");
+    dataset.set_variable_role(0, "Input");
+    dataset.set_variable_role(1, "Input");
+    dataset.set_variable_role(2, "Input");
+    dataset.set_variable_role(3, "Target");
 
-    ApproximationNetwork neural_network(dataset.get_input_dimensions(), {1}, {targets_number});
+    ApproximationNetwork neural_network(dataset.get_input_shape(), {1}, {targets_number});
     TrainingStrategy training_strategy(&neural_network, &dataset);
     GeneticAlgorithm genetic_algorithm(&training_strategy);
 
@@ -338,25 +338,25 @@ TEST(GeneticAlgorithmTest, InputSelection_StopsByErrorGoal)
         data(i, 2) = type(i) / 20.0;
     }
     dataset.set_data(data);
-    dataset.set_raw_variable_role(0, "Input");
-    dataset.set_raw_variable_role(1, "Input");
-    dataset.set_raw_variable_role(2, "None");
-    dataset.set_raw_variable_role(3, "Target");
+    dataset.set_variable_role(0, "Input");
+    dataset.set_variable_role(1, "Input");
+    dataset.set_variable_role(2, "None");
+    dataset.set_variable_role(3, "Target");
 
-    ApproximationNetwork neural_network(dataset.get_input_dimensions(), {6}, {1});
+    ApproximationNetwork neural_network(dataset.get_input_shape(), {6}, {1});
     TrainingStrategy training_strategy(&neural_network, &dataset);
     GeneticAlgorithm genetic_algorithm(&training_strategy);
 
     genetic_algorithm.set_display(false);
     genetic_algorithm.set_individuals_number(6);
-    genetic_algorithm.set_maximum_epochs_number(10);
-    genetic_algorithm.set_selection_error_goal(1.0);
+    genetic_algorithm.set_maximum_epochs(10);
+    genetic_algorithm.set_validation_error_goal(1.0);
 
     InputsSelectionResults input_selection_results = genetic_algorithm.perform_input_selection();
 
     EXPECT_EQ(input_selection_results.stopping_condition, InputsSelection::StoppingCondition::SelectionErrorGoal);
-    ASSERT_GT(input_selection_results.selection_error_history.dimension(0), 0);
-    EXPECT_LE(input_selection_results.selection_error_history(input_selection_results.selection_error_history.dimension(0) - 1), 0.1);
+    ASSERT_GT(input_selection_results.validation_error_history.dimension(0), 0);
+    EXPECT_LE(input_selection_results.validation_error_history(input_selection_results.validation_error_history.dimension(0) - 1), 0.1);
 }
 
 
@@ -372,18 +372,18 @@ TEST(GeneticAlgorithmTest, InputSelection_StopsByMaxEpochs)
         data(i, 2) = type(i) / 20.0;
     }
     dataset.set_data(data);
-    dataset.set_raw_variable_role(0, "Input");
-    dataset.set_raw_variable_role(1, "Input");
-    dataset.set_raw_variable_role(2, "Target");
+    dataset.set_variable_role(0, "Input");
+    dataset.set_variable_role(1, "Input");
+    dataset.set_variable_role(2, "Target");
 
-    ApproximationNetwork neural_network(dataset.get_input_dimensions(), {6}, {1});
+    ApproximationNetwork neural_network(dataset.get_input_shape(), {6}, {1});
     TrainingStrategy training_strategy(&neural_network, &dataset);
     GeneticAlgorithm genetic_algorithm(&training_strategy);
 
     genetic_algorithm.set_display(false);
     genetic_algorithm.set_individuals_number(6);
-    genetic_algorithm.set_maximum_epochs_number(1);
-    genetic_algorithm.set_selection_error_goal(0.0);
+    genetic_algorithm.set_maximum_epochs(1);
+    genetic_algorithm.set_validation_error_goal(0.0);
 
     InputsSelectionResults input_selection_results = genetic_algorithm.perform_input_selection();
 

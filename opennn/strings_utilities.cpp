@@ -877,7 +877,7 @@ void detokenize_wordpiece(Tensor2& predictions, ostringstream& buffer)
 */
 }
 
-vector<string> preprocess_language_document(const string& document, const bool& input)
+vector<string> preprocess_language_document(const string& document, bool input)
 {
     vector<string> tokens;
 

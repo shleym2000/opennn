@@ -23,7 +23,7 @@ TEST(Embedding, DefaultConstructor)
 
 TEST(Embedding, GeneralConstructor)
 {    
-    const dimensions input_dimensions = {1, 2, 3};
+    const shape input_dimensions = {1, 2, 3};
 
     const Index vocabulary_size = input_dimensions[0];
     const Index sequence_length = input_dimensions[1];
@@ -45,7 +45,7 @@ TEST(Embedding, ForwardPropagate)
     const Index embedding_dimension = random_integer(1, 10);
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Embedding>(dimensions{vocabulary_size, sequence_length}, embedding_dimension));
+    neural_network.add_layer(make_unique<Embedding>(shape{vocabulary_size, sequence_length}, embedding_dimension));
 
     Embedding embedding_layer({vocabulary_size, sequence_length}, embedding_dimension);
     embedding_layer.set_parameters_random();
@@ -94,15 +94,15 @@ TEST(Embedding, BackPropagate)
     const Index vocabulary_size = language_dataset.get_input_vocabulary_size();
     const Index sequence_length = language_dataset.get_maximum_input_sequence_length();
 
-    dimensions input_dimensions = { vocabulary_size, sequence_length };
+    shape input_dimensions = { vocabulary_size, sequence_length };
 
     NeuralNetwork neural_network;
 
     neural_network.add_layer(make_unique<Embedding>(input_dimensions, embedding_dimension));
-    neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_dimensions()));
-    neural_network.add_layer(make_unique<opennn::Dense<3>>(neural_network.get_output_dimensions(), language_dataset.get_target_dimensions(), "Logistic"));
+    neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_shape()));
+    neural_network.add_layer(make_unique<opennn::Dense<3>>(neural_network.get_output_shape(), language_dataset.get_target_shape(), "Logistic"));
 
-    Tensor2 inputs  = language_dataset.get_data_variables("Input");
+    Tensor2 inputs  = language_dataset.get_feature_data("Input");
     const Index batch_size = inputs.dimension(0);
 
     Layer* first_layer = neural_network.get_layer(0).get();
@@ -110,7 +110,7 @@ TEST(Embedding, BackPropagate)
     unique_ptr<LayerForwardPropagation> forward_propagation =
         make_unique<EmbeddingForwardPropagation>(batch_size, first_layer);
 
-    dimensions input_dims_vector(inputs.dimensions().begin(), inputs.dimensions().end());
+    shape input_dims_vector(inputs.dimensions().begin(), inputs.dimensions().end());
     TensorView input_view(inputs.data(), input_dims_vector);
 
     first_layer->forward_propagate({ input_view }, forward_propagation, false);

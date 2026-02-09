@@ -85,7 +85,7 @@ TEST_F(CorrelationsTest, LogisticCorrelation)
     //correlation.print(); system("pause");
 
     EXPECT_LE(abs(correlation.r), type(0.1));
-    EXPECT_EQ(correlation.form, Correlation::Form::Logistic);
+    EXPECT_EQ(correlation.form, Correlation::Form::Sigmoid);
 
     // Test
 
@@ -103,7 +103,7 @@ TEST_F(CorrelationsTest, LogisticCorrelation)
 
     EXPECT_GE(correlation.r, type(0.9));
     EXPECT_LE(correlation.r, type(1));
-    EXPECT_EQ(correlation.form, Correlation::Form::Logistic);
+    EXPECT_EQ(correlation.form, Correlation::Form::Sigmoid);
 
     EXPECT_NEAR(correlation.r, type(1), NUMERIC_LIMITS_MIN);
 
@@ -161,7 +161,7 @@ TEST_F(CorrelationsTest, LogisticCorrelation)
     correlation = logistic_correlation_vector_vector(device.get(), x, y);
 
     //EXPECT_NEAR(correlation.r, type(1), NUMERIC_LIMITS_MIN);
-    //EXPECT_EQ(correlation.form, Correlation::Form::Logistic);
+    //EXPECT_EQ(correlation.form, Correlation::Form::Sigmoid);
 
     // Test
 

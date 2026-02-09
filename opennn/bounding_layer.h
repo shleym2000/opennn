@@ -18,12 +18,12 @@ class Bounding final : public Layer
 
 public:
 
-    Bounding(const dimensions& = {0}, const string& = "bounding_layer");
+    Bounding(const shape& = {0}, const string& = "bounding_layer");
 
     enum class BoundingMethod{NoBounding, Bounding};
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     const BoundingMethod& get_bounding_method() const;
 
@@ -35,10 +35,10 @@ public:
     const Tensor1& get_upper_bounds() const;
     type get_upper_bound(const Index) const;
 
-    void set(const dimensions & = { 0 }, const string & = "bounding_layer");
+    void set(const shape & = { 0 }, const string & = "bounding_layer");
 
-    void set_input_dimensions(const dimensions&) override;
-    void set_output_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
+    void set_output_shape(const shape&) override;
 
     void set_bounding_method(const BoundingMethod&);
     void set_bounding_method(const string&);
@@ -53,12 +53,12 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
 #ifdef OPENNN_CUDA
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
+    void forward_propagate(const vector<TensorViewCuda>&,
                                 unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+                                bool) override;
 #endif
 
     // Expression
@@ -102,8 +102,6 @@ struct BoundingForwardPropagationCuda final : public LayerForwardPropagationCuda
     void initialize() override;
 
     void print() const override;
-
-    void free() override;
 };
 
 #endif

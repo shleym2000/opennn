@@ -9,11 +9,6 @@
 #pragma once
 
 #include "pch.h"
-#include "../eigen/unsupported/Eigen/CXX11/Tensor"
-
-using type = float;
-using namespace std;
-using namespace Eigen;
 
 namespace opennn
 {
@@ -22,7 +17,7 @@ struct Correlation
 {
     enum class Method{Pearson, Spearman};
 
-    enum class Form{Linear, Logistic, Logarithmic, Exponential, Power};
+    enum class Form{Linear, Sigmoid, Logarithmic, Exponential, Power};
 
     Correlation() {}
 

@@ -31,22 +31,22 @@ using namespace std;
 namespace opennn
 {
 
-ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
-                                           const dimensions& complexity_dimensions,
-                                           const dimensions& output_dimensions) : NeuralNetwork()
+ApproximationNetwork::ApproximationNetwork(const shape& input_shape,
+                                           const shape& complexity_dimensions,
+                                           const shape& output_dimensions) : NeuralNetwork()
 {
     const Index complexity_size = complexity_dimensions.size();
 
-    add_layer(make_unique<Scaling<2>>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_shape));
 
     for(Index i = 0; i < complexity_size; i++)
-        add_layer(make_unique<Dense<2>>(get_output_dimensions(),
-                                       dimensions{ complexity_dimensions[i] },
+        add_layer(make_unique<Dense<2>>(get_output_shape(),
+                                       shape{ complexity_dimensions[i] },
                                        "HyperbolicTangent",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
 
-    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_shape(),
                                    output_dimensions,
                                    "Linear",
                                    false,
@@ -59,53 +59,53 @@ ApproximationNetwork::ApproximationNetwork(const dimensions& input_dimensions,
     this->compile();
     this->set_parameters_glorot();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
 }
 
 
-ClassificationNetwork::ClassificationNetwork(const dimensions& input_dimensions,
-                                             const dimensions& complexity_dimensions,
-                                             const dimensions& output_dimensions) : NeuralNetwork()
+ClassificationNetwork::ClassificationNetwork(const shape& input_shape,
+                                             const shape& complexity_dimensions,
+                                             const shape& output_dimensions) : NeuralNetwork()
 {
     const Index complexity_size = complexity_dimensions.size();
 
-    add_layer(make_unique<Scaling<2>>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_shape));
 
     for(Index i = 0; i < complexity_size; i++)
-        add_layer(make_unique<Dense<2>>(get_output_dimensions(),
-                                       dimensions{complexity_dimensions[i]},
+        add_layer(make_unique<Dense<2>>(get_output_shape(),
+                                       shape{complexity_dimensions[i]},
                                        "HyperbolicTangent",
                                        false,
                                        "dense2d_layer_" + to_string(i + 1)));
 
-    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_shape(),
                                    output_dimensions,
-                                   output_dimensions[0] == 1 ? "Logistic" : "Softmax",
+                                   output_dimensions[0] == 1 ? "Sigmoid" : "Softmax",
                                    false,
                                    "classification_layer"));
 
     this->compile();
     this->set_parameters_random();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
 }
 
 
-ForecastingNetwork::ForecastingNetwork(const dimensions& input_dimensions,
-                                       const dimensions& complexity_dimensions,
-                                       const dimensions& output_dimensions) : NeuralNetwork()
+ForecastingNetwork::ForecastingNetwork(const shape& input_shape,
+                                       const shape& complexity_dimensions,
+                                       const shape& output_dimensions) : NeuralNetwork()
 {
-    add_layer(make_unique<Scaling<3>>(input_dimensions));
+    add_layer(make_unique<Scaling<3>>(input_shape));
 
-    add_layer(make_unique<Recurrent>(input_dimensions,
+    add_layer(make_unique<Recurrent>(input_shape,
                                      complexity_dimensions));
 
     add_layer(make_unique<Dense<2>>(complexity_dimensions,
@@ -120,43 +120,43 @@ ForecastingNetwork::ForecastingNetwork(const dimensions& input_dimensions,
     this->compile();
     this->set_parameters_random();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
 }
 
 
-AutoAssociationNetwork::AutoAssociationNetwork(const dimensions& input_dimensions,
-                                               const dimensions& complexity_dimensions,
-                                               const dimensions& output_dimensions) : NeuralNetwork()
+AutoAssociationNetwork::AutoAssociationNetwork(const shape& input_shape,
+                                               const shape& complexity_dimensions,
+                                               const shape& output_dimensions) : NeuralNetwork()
 {
-    add_layer(make_unique<Scaling<2>>(input_dimensions));
+    add_layer(make_unique<Scaling<2>>(input_shape));
 
     const Index mapping_neurons_number = 10;
     const Index bottle_neck_neurons_number = complexity_dimensions[0];
 
-    add_layer(make_unique<Dense<2>>(input_dimensions,
-                                   dimensions{mapping_neurons_number},
+    add_layer(make_unique<Dense<2>>(input_shape,
+                                   shape{mapping_neurons_number},
                                    "HyperbolicTangent",
                                    false,
                                    "mapping_layer"));
 
-    add_layer(make_unique<Dense<2>>(dimensions{ mapping_neurons_number },
-                                   dimensions{ bottle_neck_neurons_number },
+    add_layer(make_unique<Dense<2>>(shape{ mapping_neurons_number },
+                                   shape{ bottle_neck_neurons_number },
                                    "Linear",
                                    false,
                                    "bottleneck_layer"));
 
-    add_layer(make_unique<Dense<2>>(dimensions{ bottle_neck_neurons_number },
-                                   dimensions{ mapping_neurons_number },
+    add_layer(make_unique<Dense<2>>(shape{ bottle_neck_neurons_number },
+                                   shape{ mapping_neurons_number },
                                    "HyperbolicTangent",
                                    false,
                                    "demapping_layer"));
 
-    add_layer(make_unique<Dense<2>>(dimensions{ mapping_neurons_number },
-                                   dimensions{ output_dimensions },
+    add_layer(make_unique<Dense<2>>(shape{ mapping_neurons_number },
+                                   shape{ output_dimensions },
                                    "Linear",
                                    false,
                                    "output_layer"));
@@ -168,25 +168,25 @@ AutoAssociationNetwork::AutoAssociationNetwork(const dimensions& input_dimension
 }
 
 
-ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_dimensions,
-                                                       const dimensions& complexity_dimensions,
-                                                       const dimensions& output_dimensions) : NeuralNetwork()
+ImageClassificationNetwork::ImageClassificationNetwork(const shape& input_shape,
+                                                       const shape& complexity_dimensions,
+                                                       const shape& output_dimensions) : NeuralNetwork()
 {
-    if (input_dimensions.size() != 3)
-        throw runtime_error("Input dimensions size is not 3.");
+    if (input_shape.size() != 3)
+        throw runtime_error("Input shape size is not 3.");
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling<4>>(input_dimensions));
+    add_layer(make_unique<Scaling<4>>(input_shape));
 
     const Index complexity_size = complexity_dimensions.size();
     
     for(Index i = 0; i < complexity_size; i++)
     {
-        const dimensions kernel_dimensions = { 3, 3, get_output_dimensions()[2], complexity_dimensions[i] };
-        const dimensions stride_dimensions = { 1, 1 };
+        const shape kernel_dimensions = { 3, 3, get_output_shape()[2], complexity_dimensions[i] };
+        const shape stride_dimensions = { 1, 1 };
         
-        add_layer(make_unique<Convolutional>(get_output_dimensions(),
+        add_layer(make_unique<Convolutional>(get_output_shape(),
                                              kernel_dimensions,
                                              "RectifiedLinear",
                                              stride_dimensions,
@@ -194,11 +194,11 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                              false, // Batch normalization
                                              "convolutional_layer_" + to_string(i + 1)));
         
-        const dimensions pool_dimensions = { 2, 2 };
-        const dimensions pooling_stride_dimensions = { 2, 2 };
-        const dimensions padding_dimensions = { 0, 0 };
+        const shape pool_dimensions = { 2, 2 };
+        const shape pooling_stride_dimensions = { 2, 2 };
+        const shape padding_dimensions = { 0, 0 };
         
-        add_layer(make_unique<Pooling>(get_output_dimensions(),
+        add_layer(make_unique<Pooling>(get_output_shape(),
                                        pool_dimensions,
                                        pooling_stride_dimensions,
                                        padding_dimensions,
@@ -207,9 +207,9 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
                                        
     }
     
-    add_layer(make_unique<Flatten<4>>(get_output_dimensions()));
+    add_layer(make_unique<Flatten<4>>(get_output_shape()));
 
-    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
+    add_layer(make_unique<Dense<2>>(get_output_shape(),
                                    output_dimensions,
                                    "Softmax",
                                    false, // Batch normalization
@@ -218,34 +218,34 @@ ImageClassificationNetwork::ImageClassificationNetwork(const dimensions& input_d
     this->compile();
     this->set_parameters_random();
 
-    const Index features_number = get_features_number();
-    feature_names.resize(features_number);
+    const Index inputs_number = get_inputs_number();
+    input_names.resize(inputs_number);
 
     const Index outputs_number = get_outputs_number();
     output_names.resize(outputs_number);
 }
 
 
-SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
+SimpleResNet::SimpleResNet(const shape& input_shape,
                            const vector<Index>& blocks_per_stage,
-                           const dimensions& initial_filters,
-                           const dimensions& output_dimensions) : NeuralNetwork()
+                           const shape& initial_filters,
+                           const shape& output_dimensions) : NeuralNetwork()
 {
-    if (input_dimensions.size() != 3)
-        throw runtime_error("Input dimensions size must be 3.");
+    if (input_shape.size() != 3)
+        throw runtime_error("Input shape size must be 3.");
     if (blocks_per_stage.size() != initial_filters.size())
         throw runtime_error("blocks_per_stage and initial_filters must have the same size.");
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling<4>>(input_dimensions));
+    add_layer(make_unique<Scaling<4>>(input_shape));
 
     Index last_layer_index = 0;
 
-    auto stem_conv = make_unique<Convolutional>(get_layer(last_layer_index)->get_output_dimensions(),
-                                                dimensions{ 7, 7, input_dimensions[2], initial_filters[0] },
+    auto stem_conv = make_unique<Convolutional>(get_layer(last_layer_index)->get_output_shape(),
+                                                shape{ 7, 7, input_shape[2], initial_filters[0] },
                                                 "RectifiedLinear",
-                                                dimensions{ 2, 2 },
+                                                shape{ 2, 2 },
                                                 "Same",
                                                 false,
                                                 "stem_conv_1");
@@ -254,10 +254,10 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
     last_layer_index = get_layers_number() - 1;
 
-    auto stem_pool = make_unique<Pooling>(get_layer(last_layer_index)->get_output_dimensions(),
-                                          dimensions{ 3, 3 },
-                                          dimensions{ 2, 2 },
-                                          dimensions{ 1, 1 },
+    auto stem_pool = make_unique<Pooling>(get_layer(last_layer_index)->get_output_shape(),
+                                          shape{ 3, 3 },
+                                          shape{ 2, 2 },
+                                          shape{ 1, 1 },
                                           "MaxPooling",
                                           "stem_pool");
 
@@ -271,17 +271,17 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
         {
             const Index block_input_index = last_layer_index;
 
-            dimensions current_input_dims = get_layer(block_input_index)->get_output_dimensions();
+            shape current_input_shape = get_layer(block_input_index)->get_output_shape();
 
             const Index filters = initial_filters[stage];
 
             const Index stride = (stage > 0 && block == 0) ? 2 : 1;
 
             // Main
-            auto conv1 = make_unique<Convolutional>(current_input_dims,
-                                                    dimensions{ 3, 3, current_input_dims[2], filters },
+            auto conv1 = make_unique<Convolutional>(current_input_shape,
+                                                    shape{ 3, 3, current_input_shape[2], filters },
                                                     "RectifiedLinear",
-                                                    dimensions{ stride, stride },
+                                                    shape{ stride, stride },
                                                     "Same",
                                                     false,
                                                     "s" + to_string(stage) + "b" + to_string(block) + "_conv1");
@@ -290,10 +290,10 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
             Index main_path_index = get_layers_number() - 1;
 
-            auto conv2 = make_unique<Convolutional>(get_layer(main_path_index)->get_output_dimensions(),
-                                                    dimensions{ 3, 3, filters, filters },
+            auto conv2 = make_unique<Convolutional>(get_layer(main_path_index)->get_output_shape(),
+                                                    shape{ 3, 3, filters, filters },
                                                     "Linear",
-                                                    dimensions{ 1, 1 },
+                                                    shape{ 1, 1 },
                                                     "Same",
                                                     false,
                                                     "s" + to_string(stage) + "b" + to_string(block) + "_conv2");
@@ -305,12 +305,12 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
             // Skip Connection
             Index skip_path_index = block_input_index;
 
-            if (stride != 1 || current_input_dims[2] != filters)
+            if (stride != 1 || current_input_shape[2] != filters)
             {
-                auto skip_conv = make_unique<Convolutional>(current_input_dims,
-                                                            dimensions{ 1, 1, current_input_dims[2], filters },
+                auto skip_conv = make_unique<Convolutional>(current_input_shape,
+                                                            shape{ 1, 1, current_input_shape[2], filters },
                                                             "Linear",
-                                                            dimensions{ stride, stride },
+                                                            shape{ stride, stride },
                                                             "Same",
                                                             false,
                                                             "s" + to_string(stage) + "b" + to_string(block) + "_skip");
@@ -320,7 +320,7 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
                 skip_path_index = get_layers_number() - 1;
             }
 
-            const dimensions main_out_dims = get_layer(main_path_index)->get_output_dimensions();
+            const shape main_out_dims = get_layer(main_path_index)->get_output_shape();
 
             auto addition_layer = make_unique<Addition<4>>(main_out_dims, "s" + to_string(stage) + "b" + to_string(block) + "_add");
 
@@ -328,10 +328,10 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
             last_layer_index = get_layers_number() - 1;
 
-            auto activation_layer = make_unique<Convolutional>(get_layer(last_layer_index)->get_output_dimensions(),
-                                                               dimensions{ 1, 1, filters, filters },
+            auto activation_layer = make_unique<Convolutional>(get_layer(last_layer_index)->get_output_shape(),
+                                                               shape{ 1, 1, filters, filters },
                                                                "RectifiedLinear",
-                                                               dimensions{ 1, 1 },
+                                                               shape{ 1, 1 },
                                                                "Same",
                                                                false,
                                                                "s" + to_string(stage) + "b" + to_string(block) + "_relu");
@@ -342,12 +342,12 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
         }
     }
 
-    const dimensions pre_pool_dims = get_layer(last_layer_index)->get_output_dimensions();
+    const shape pre_pool_dims = get_layer(last_layer_index)->get_output_shape();
 
     auto global_pool = make_unique<Pooling>(pre_pool_dims,
-                                            dimensions{ pre_pool_dims[0], pre_pool_dims[1] },
-                                            dimensions{ 1, 1 },
-                                            dimensions{ 0, 0 },
+                                            shape{ pre_pool_dims[0], pre_pool_dims[1] },
+                                            shape{ 1, 1 },
+                                            shape{ 0, 0 },
                                             "AveragePooling",
                                             "global_avg_pool");
 
@@ -355,13 +355,13 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 
     last_layer_index = get_layers_number() - 1;
 
-    auto flatten_layer = make_unique<Flatten<2>>(get_layer(last_layer_index)->get_output_dimensions());
+    auto flatten_layer = make_unique<Flatten<2>>(get_layer(last_layer_index)->get_output_shape());
 
     add_layer(std::move(flatten_layer), { last_layer_index });
 
     last_layer_index = get_layers_number() - 1;
 
-    auto dense_layer = make_unique<Dense<2>>(get_layer(last_layer_index)->get_output_dimensions(),
+    auto dense_layer = make_unique<Dense<2>>(get_layer(last_layer_index)->get_output_shape(),
                                             output_dimensions,
                                             "Softmax",
                                             false,
@@ -374,41 +374,41 @@ SimpleResNet::SimpleResNet(const dimensions& input_dimensions,
 }
 
 
-VGG16::VGG16(const dimensions& new_input_dimensions, const dimensions& new_target_dimensions)
+VGG16::VGG16(const shape& new_input_shape, const shape& new_target_shape)
     : NeuralNetwork()
 {
-    set(new_input_dimensions, new_target_dimensions);
+    set(new_input_shape, new_target_shape);
 }
 
 
-void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_target_dimensions)
+void VGG16::set(const shape& new_input_shape, const shape& new_target_shape)
 {
     reference_all_layers();
 
     // Scaling 4D
-    add_layer(make_unique<Scaling<4>>(new_input_dimensions));
+    add_layer(make_unique<Scaling<4>>(new_input_shape));
 
     // --- Conv 3×3, 64 kernels, ReLU x2 -> Pooling 2×2 stride 2 ---
     {
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, new_input_dimensions[2], 64 },
+            get_output_shape(),
+            shape{ 3, 3, new_input_shape[2], 64 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_1"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 64, 64 },
+            get_output_shape(),
+            shape{ 3, 3, 64, 64 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_2"));
         add_layer(make_unique<Pooling>(
-            get_output_dimensions(),
-            dimensions{ 2, 2 },
-            dimensions{ 2, 2 },
-            dimensions{ 0, 0 },
+            get_output_shape(),
+            shape{ 2, 2 },
+            shape{ 2, 2 },
+            shape{ 0, 0 },
             "MaxPooling",
             "pool1"));
     }
@@ -416,24 +416,24 @@ void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_ta
     // --- Conv 3×3, 128 kernels, ReLU x2 -> Pooling 2×2 stride 2 ---
     {
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 64, 128 },
+            get_output_shape(),
+            shape{ 3, 3, 64, 128 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_3"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 128, 128 },
+            get_output_shape(),
+            shape{ 3, 3, 128, 128 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_4"));
         add_layer(make_unique<Pooling>(
-            get_output_dimensions(),
-            dimensions{ 2, 2 },
-            dimensions{ 2, 2 },
-            dimensions{ 0, 0 },
+            get_output_shape(),
+            shape{ 2, 2 },
+            shape{ 2, 2 },
+            shape{ 0, 0 },
             "MaxPooling",
             "pool2"));
     }
@@ -441,112 +441,112 @@ void VGG16::set(const dimensions& new_input_dimensions, const dimensions& new_ta
     // --- Conv 3×3, 256 kernels, ReLU x3 -> Pooling 2×2 stride 2 ---
     {
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 128, 256 },
+            get_output_shape(),
+            shape{ 3, 3, 128, 256 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_5"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 256, 256 },
+            get_output_shape(),
+            shape{ 3, 3, 256, 256 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_6"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 256, 256 },
+            get_output_shape(),
+            shape{ 3, 3, 256, 256 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_7"));
         add_layer(make_unique<Pooling>(
-            get_output_dimensions(),
-            dimensions{ 2, 2 },
-            dimensions{ 2, 2 },
-            dimensions{ 0, 0 },
+            get_output_shape(),
+            shape{ 2, 2 },
+            shape{ 2, 2 },
+            shape{ 0, 0 },
             "MaxPooling", "pool3"));
     }
 
     // --- Conv 3×3, 512 kernels, ReLU x3 -> Pooling 2×2 stride 2 ---
     {
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 256, 512 },
+            get_output_shape(),
+            shape{ 3, 3, 256, 512 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_8"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 512, 512 },
+            get_output_shape(),
+            shape{ 3, 3, 512, 512 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_9"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 512, 512 },
+            get_output_shape(),
+            shape{ 3, 3, 512, 512 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_10"));
         add_layer(make_unique<Pooling>(
-            get_output_dimensions(),
-            dimensions{ 2, 2 },
-            dimensions{ 2, 2 },
-            dimensions{ 0, 0 },
+            get_output_shape(),
+            shape{ 2, 2 },
+            shape{ 2, 2 },
+            shape{ 0, 0 },
             "MaxPooling", "pool4"));
     }
 
     // --- Conv 3×3, 512 kernels, ReLU x3 -> Pooling 2×2 stride 2 ---
     {
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 512, 512 },
+            get_output_shape(),
+            shape{ 3, 3, 512, 512 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_11"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 512, 512 },
+            get_output_shape(),
+            shape{ 3, 3, 512, 512 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_12"));
         add_layer(make_unique<Convolutional>(
-            get_output_dimensions(),
-            dimensions{ 3, 3, 512, 512 },
+            get_output_shape(),
+            shape{ 3, 3, 512, 512 },
             "RectifiedLinear",
-            dimensions{ 1, 1 },
+            shape{ 1, 1 },
             "Same",
             "conv_13"));
         add_layer(make_unique<Pooling>(
-            get_output_dimensions(),
-            dimensions{ 2, 2 },
-            dimensions{ 2, 2 },
-            dimensions{ 0, 0 },
+            get_output_shape(),
+            shape{ 2, 2 },
+            shape{ 2, 2 },
+            shape{ 0, 0 },
             "MaxPooling", "pool5"));
     }
 
-    const dimensions pre_pool_dims = get_output_dimensions();
+    const shape pre_pool_dims = get_output_shape();
 
     add_layer(make_unique<Pooling>(
         pre_pool_dims,
-        dimensions{ pre_pool_dims[0], pre_pool_dims[1] },
-        dimensions{ 1, 1 },
-        dimensions{ 0, 0 },
+        shape{ pre_pool_dims[0], pre_pool_dims[1] },
+        shape{ 1, 1 },
+        shape{ 0, 0 },
         "AveragePooling",
         "global_avg_pool"));
 
     // Flatten
-    add_layer(make_unique<Flatten<2>>(get_output_dimensions()));
+    add_layer(make_unique<Flatten<2>>(get_output_shape()));
 
     //Classifier
-    add_layer(make_unique<Dense<2>>(get_output_dimensions(),
-                                   new_target_dimensions,
+    add_layer(make_unique<Dense<2>>(get_output_shape(),
+                                   new_target_shape,
                                    "Softmax",
                                    false,
                                    "dense_classifier"));
@@ -563,42 +563,42 @@ VGG16::VGG16(const filesystem::path& file_name)
 }
 
 
-TextClassificationNetwork::TextClassificationNetwork(const dimensions& input_dimensions,
-                                                     const dimensions& complexity_dimensions,
-                                                     const dimensions& output_dimensions,
+TextClassificationNetwork::TextClassificationNetwork(const shape& input_shape,
+                                                     const shape& complexity_dimensions,
+                                                     const shape& output_dimensions,
                                                      const vector<string>& new_input_vocabulary) : NeuralNetwork()
 {
     layers.clear();
 
     reference_all_layers();
 
-    const Index vocabulary_size = input_dimensions[0];
-    const Index sequence_length = input_dimensions[1];
-    const Index embedding_dimension = input_dimensions[2];
+    const Index vocabulary_size = input_shape[0];
+    const Index sequence_length = input_shape[1];
+    const Index embedding_dimension = input_shape[2];
 
     const Index heads_number = complexity_dimensions[0];
     //const bool use_causal_mask = false;
 
-    const string classification_layer_activation = output_dimensions[0] == 1 ? "Logistic" : "Softmax";
+    const string classification_layer_activation = output_dimensions[0] == 1 ? "Sigmoid" : "Softmax";
 
-    add_layer(make_unique<Embedding>(dimensions({vocabulary_size, sequence_length}),
+    add_layer(make_unique<Embedding>(shape({vocabulary_size, sequence_length}),
                                      embedding_dimension,
                                      "embedding_layer"));
 
     add_layer(make_unique<MultiHeadAttention>(
-         dimensions({sequence_length, embedding_dimension}),
+         shape({sequence_length, embedding_dimension}),
          heads_number,
          "multihead_attention_layer"));
 
     add_layer(make_unique<Pooling3d>(
-        get_output_dimensions()));
+        get_output_shape()));
 
     // add_layer(make_unique<Flatten<3>>(
-    //     get_output_dimensions()
+    //     get_output_shape()
     //     ));
 
     add_layer(make_unique<Dense<2>>(
-        get_output_dimensions(),
+        get_output_shape(),
         output_dimensions,
         classification_layer_activation,
         "classification_layer"));
@@ -647,11 +647,11 @@ void Transformer::set(const Index input_sequence_length,
     if (input_sequence_length == 0 || decoder_sequence_length == 0)
         return;
 
-    feature_names.resize(input_sequence_length + decoder_sequence_length);
+    input_names.resize(input_sequence_length + decoder_sequence_length);
 
     // Embedding Layers: vocabulary size, sequence length, embedding dimension
 
-    auto decoder_embedding = make_unique<Embedding>(dimensions{output_vocabulary_size, decoder_sequence_length},
+    auto decoder_embedding = make_unique<Embedding>(shape{output_vocabulary_size, decoder_sequence_length},
                                                     embedding_dimension,
                                                     "decoder_embedding");
 
@@ -662,7 +662,7 @@ void Transformer::set(const Index input_sequence_length,
 
     Index current_dec_idx = 0;
 
-    auto input_embedding = make_unique<Embedding>(dimensions{input_vocabulary_size, input_sequence_length},
+    auto input_embedding = make_unique<Embedding>(shape{input_vocabulary_size, input_sequence_length},
                                                   embedding_dimension,
                                                   "input_embedding");
 
@@ -677,18 +677,18 @@ void Transformer::set(const Index input_sequence_length,
 
     for(Index i = 0; i < layers_number; i++)
     {
-        add_layer(make_unique<MultiHeadAttention>(dimensions{input_sequence_length, embedding_dimension},
+        add_layer(make_unique<MultiHeadAttention>(shape{input_sequence_length, embedding_dimension},
                                                   heads_number,
                                                   "input_self_attention_" + to_string(i+1)),
                   {current_enc_idx});
 
         const Index attn_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Addition<3>>(dimensions{input_sequence_length, embedding_dimension},
+        add_layer(make_unique<Addition<3>>(shape{input_sequence_length, embedding_dimension},
                                            "input_self_attention_addition_" + to_string(i+1)),
                   {current_enc_idx, attn_idx});
 
-        add_layer(make_unique<Normalization3d>(dimensions{input_sequence_length, embedding_dimension},
+        add_layer(make_unique<Normalization3d>(shape{input_sequence_length, embedding_dimension},
                                                "input_self_attention_normalization_" + to_string(i+1)));
 
         const Index norm_1_idx = get_layers_number() - 1;
@@ -707,11 +707,11 @@ void Transformer::set(const Index input_sequence_length,
 
         const Index ff_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Addition<3>>(dimensions{input_sequence_length, embedding_dimension},
+        add_layer(make_unique<Addition<3>>(shape{input_sequence_length, embedding_dimension},
                                            "encoder_dense_addition_" + to_string(i+1)),
                   {norm_1_idx, ff_idx});
 
-        add_layer(make_unique<Normalization3d>(dimensions{input_sequence_length, embedding_dimension},
+        add_layer(make_unique<Normalization3d>(shape{input_sequence_length, embedding_dimension},
                                                "encoder_dense_normalization_" + to_string(i+1)));
 
         current_enc_idx = get_layers_number() - 1;
@@ -725,35 +725,35 @@ void Transformer::set(const Index input_sequence_length,
     {
         // chatgpt says that here uses causal mask???
 
-        add_layer(make_unique<MultiHeadAttention>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<MultiHeadAttention>(shape{decoder_sequence_length, embedding_dimension},
                                                   heads_number,
                                                   "decoder_self_attention_" + to_string(i+1)),
                   {current_dec_idx});
 
         const Index self_attn_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Addition<3>>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<Addition<3>>(shape{decoder_sequence_length, embedding_dimension},
                                            "decoder_self_attention_addition_" + to_string(i+1)),
                   {current_dec_idx, self_attn_idx});
 
-        add_layer(make_unique<Normalization3d>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<Normalization3d>(shape{decoder_sequence_length, embedding_dimension},
                                                "decoder_self_attention_normalization_" + to_string(i+1)));
 
         const Index norm_1_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<MultiHeadAttention>(dimensions{decoder_sequence_length, embedding_dimension},
-                                                  dimensions{input_sequence_length, embedding_dimension},
+        add_layer(make_unique<MultiHeadAttention>(shape{decoder_sequence_length, embedding_dimension},
+                                                  shape{input_sequence_length, embedding_dimension},
                                                   heads_number,
                                                   "cross_attention_" + to_string(i+1)),
                   {norm_1_idx, encoder_final_output_idx});
 
         const Index cross_attn_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Addition<3>>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<Addition<3>>(shape{decoder_sequence_length, embedding_dimension},
                                            "cross_attention_addition_" + to_string(i+1)),
                   {norm_1_idx, cross_attn_idx});
 
-        add_layer(make_unique<Normalization3d>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<Normalization3d>(shape{decoder_sequence_length, embedding_dimension},
                                                "cross_attention_normalization_" + to_string(i+1)));
 
         const Index norm_2_idx = get_layers_number() - 1;
@@ -772,11 +772,11 @@ void Transformer::set(const Index input_sequence_length,
 
         const Index ff_idx = get_layers_number() - 1;
 
-        add_layer(make_unique<Addition<3>>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<Addition<3>>(shape{decoder_sequence_length, embedding_dimension},
                                            "decoder_dense_addition_" + to_string(i+1)),
                   {norm_2_idx, ff_idx});
 
-        add_layer(make_unique<Normalization3d>(dimensions{decoder_sequence_length, embedding_dimension},
+        add_layer(make_unique<Normalization3d>(shape{decoder_sequence_length, embedding_dimension},
                                                "decoder_dense_normalization_" + to_string(i+1)));
 
         current_dec_idx = get_layers_number() - 1;
@@ -812,19 +812,19 @@ void Transformer::set_output_vocabulary(const vector<string>& new_output_vocabul
 
 Index Transformer::get_input_sequence_length() const
 {
-    return get_layer("enc_embed")->get_input_dimensions()[0];
+    return get_layer("enc_embed")->get_input_shape()[0];
 }
 
 
 Index Transformer::get_decoder_sequence_length() const
 {
-    return get_layer("dec_embed")->get_input_dimensions()[0];
+    return get_layer("dec_embed")->get_input_shape()[0];
 }
 
 
 Index Transformer::get_embedding_dimension() const
 {
-    return get_layer(0)->get_output_dimensions().back();
+    return get_layer(0)->get_output_shape().back();
 }
 
 Index Transformer::get_heads_number() const

@@ -15,8 +15,8 @@
 namespace opennn
 {
 
-QuasiNewtonMethod::QuasiNewtonMethod(const LossIndex* new_loss_index)
-    : OptimizationAlgorithm(new_loss_index)
+QuasiNewtonMethod::QuasiNewtonMethod(const Loss* new_loss)
+    : Optimizer(new_loss)
 {
     set_default();
 }
@@ -34,19 +34,19 @@ const type& QuasiNewtonMethod::get_loss_goal() const
 }
 
 
-const Index& QuasiNewtonMethod::get_maximum_selection_failures() const
+const Index& QuasiNewtonMethod::get_maximum_validation_failures() const
 {
-    return maximum_selection_failures;
+    return maximum_validation_failures;
 }
 
 
-void QuasiNewtonMethod::set_loss_index(LossIndex* new_loss_index)
+void QuasiNewtonMethod::set_loss_index(Loss* new_loss)
 {
-    loss_index = new_loss_index;
+    loss_index = new_loss;
 }
 
 
-void QuasiNewtonMethod::set_display(const bool& new_display)
+void QuasiNewtonMethod::set_display(bool new_display)
 {
     display = new_display;
 }
@@ -63,9 +63,9 @@ void QuasiNewtonMethod::set_default()
 
     minimum_loss_decrease = type(0);
     training_loss_goal = type(0);
-    maximum_selection_failures = 1000;
+    maximum_validation_failures = 1000;
 
-    maximum_epochs_number = 1000;
+    maximum_epochs = 1000;
     maximum_time = type(3600);
 
     // UTILITIES
@@ -87,15 +87,15 @@ void QuasiNewtonMethod::set_loss_goal(const type new_loss_goal)
 }
 
 
-void QuasiNewtonMethod::set_maximum_selection_failures(const Index new_maximum_selection_failures)
+void QuasiNewtonMethod::set_maximum_validation_failures(const Index new_maximum_validation_failures)
 {
-    maximum_selection_failures = new_maximum_selection_failures;
+    maximum_validation_failures = new_maximum_validation_failures;
 }
 
 
-void QuasiNewtonMethod::set_maximum_epochs_number(const Index new_maximum_epochs_number)
+void QuasiNewtonMethod::set_maximum_epochs(const Index new_maximum_epochs)
 {
-    maximum_epochs_number = new_maximum_epochs_number;
+    maximum_epochs = new_maximum_epochs;
 }
 
 
@@ -163,7 +163,7 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
     Tensor1& old_parameters = optimization_data.old_parameters;
     Tensor1& parameters_difference = optimization_data.parameters_difference;
-    Tensor1& parameters_increment = optimization_data.parameters_increment;
+    Tensor1& parameter_updates = optimization_data.parameter_updates;
 
     Tensor1& old_gradient = optimization_data.old_gradient;
     Tensor1& gradient_difference = optimization_data.gradient_difference;
@@ -215,10 +215,10 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
 
     if(abs(optimization_data.learning_rate) > type(0))
     {
-        optimization_data.parameters_increment.device(*device)
+        optimization_data.parameter_updates.device(*device)
             = optimization_data.training_direction*optimization_data.learning_rate;
 
-        final_parameters.device(*device) += optimization_data.parameters_increment;
+        final_parameters.device(*device) += optimization_data.parameter_updates;
     }
     else
     {
@@ -230,11 +230,11 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
         for(Index i = 0; i < parameters_number; i++)
         {
             if (abs(gradient(i)) < NUMERIC_LIMITS_MIN)
-                parameters_increment(i) = type(0);
+                parameter_updates(i) = type(0);
             else
             {
-                parameters_increment(i) = (gradient(i) > type(0)) ? -epsilon : epsilon;
-                final_parameters(i) += parameters_increment(i);
+                parameter_updates(i) = (gradient(i) > type(0)) ? -epsilon : epsilon;
+                final_parameters(i) += parameter_updates(i);
             }
         }
 
@@ -260,7 +260,7 @@ TrainingResults QuasiNewtonMethod::train()
     if(!loss_index || !loss_index->has_neural_network() || !loss_index->has_dataset())
         return TrainingResults();
 
-    TrainingResults results(maximum_epochs_number + 1);
+    TrainingResults results(maximum_epochs + 1);
 
     check();
 
@@ -273,19 +273,19 @@ TrainingResults QuasiNewtonMethod::train()
     if(!dataset)
         throw runtime_error("Dataset is null.");
 
-    const bool has_selection = dataset->has_selection();
+    const bool has_validation = dataset->has_validation();
 
     const string error_type = loss_index->get_name();
 
     const Index training_samples_number = dataset->get_samples_number("Training");
 
-    const Index selection_samples_number = dataset->get_samples_number("Selection");
+    const Index validation_samples_number = dataset->get_samples_number("Validation");
 
-    const vector<Index> training_samples_indices = dataset->get_sample_indices("Training");
-    const vector<Index> selection_samples_indices = dataset->get_sample_indices("Selection");
+    const vector<Index> training_sample_indices = dataset->get_sample_indices("Training");
+    const vector<Index> validation_sample_indices = dataset->get_sample_indices("Validation");
 
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     // Neural network
 
@@ -293,7 +293,7 @@ TrainingResults QuasiNewtonMethod::train()
 
     ForwardPropagation training_forward_propagation(training_samples_number, neural_network);
 
-    ForwardPropagation selection_forward_propagation(selection_samples_number, neural_network);
+    ForwardPropagation validation_forward_propagation(validation_samples_number, neural_network);
 
     set_names();
 
@@ -302,12 +302,12 @@ TrainingResults QuasiNewtonMethod::train()
     // Batch
 
     Batch training_batch(training_samples_number, dataset);
-    // training_batch.fill(training_samples_indices, input_variable_indices, {}, target_variable_indices);
-    training_batch.fill(training_samples_indices, input_variable_indices, target_variable_indices);
+    // training_batch.fill(training_sample_indices, input_feature_indices, {}, target_feature_indices);
+    training_batch.fill(training_sample_indices, input_feature_indices, target_feature_indices);
 
-    Batch selection_batch(selection_samples_number, dataset);
-    // selection_batch.fill(selection_samples_indices, input_variable_indices, {}, target_variable_indices);
-    selection_batch.fill(selection_samples_indices, input_variable_indices, target_variable_indices);
+    Batch validation_batch(validation_samples_number, dataset);
+    // validation_batch.fill(validation_sample_indices, input_feature_indices, {}, target_feature_indices);
+    validation_batch.fill(validation_sample_indices, input_feature_indices, target_feature_indices);
 
     // Loss index
 
@@ -315,14 +315,14 @@ TrainingResults QuasiNewtonMethod::train()
 
     BackPropagation training_back_propagation(training_samples_number, loss_index);
 
-    BackPropagation selection_back_propagation(selection_samples_number, loss_index);
+    BackPropagation validation_back_propagation(validation_samples_number, loss_index);
 
     // Optimization algorithm
 
     bool stop_training = false;
     bool is_training = true;
 
-    Index selection_failures = 0;
+    Index validation_failures = 0;
 
     type old_loss = type(0);
     type loss_decrease = numeric_limits<type>::max();
@@ -337,7 +337,7 @@ TrainingResults QuasiNewtonMethod::train()
 
     // Main loop
 
-    for(Index epoch = 0; epoch <= maximum_epochs_number; epoch++)
+    for(Index epoch = 0; epoch <= maximum_epochs; epoch++)
     {
         if(display && epoch%display_period == 0) cout << "Epoch: " << epoch << endl;
 
@@ -345,7 +345,7 @@ TrainingResults QuasiNewtonMethod::train()
 
         // Neural network
 
-        neural_network->forward_propagate(training_batch.get_input_views(),
+        neural_network->forward_propagate(training_batch.get_inputs(),
                                           training_forward_propagation,
                                           is_training);
 
@@ -366,25 +366,25 @@ TrainingResults QuasiNewtonMethod::train()
                           training_back_propagation,
                           optimization_data);
 
-        // Selection error
+        // Validation error
 
-        if(has_selection)
+        if(has_validation)
         {
-            neural_network->forward_propagate(selection_batch.get_input_views(),
-                                              selection_forward_propagation,
+            neural_network->forward_propagate(validation_batch.get_inputs(),
+                                              validation_forward_propagation,
                                               is_training);
 
             // Loss Index
 
-            loss_index->calculate_error(selection_batch,
-                                        selection_forward_propagation,
-                                        selection_back_propagation);
+            loss_index->calculate_error(validation_batch,
+                                        validation_forward_propagation,
+                                        validation_back_propagation);
 
-            results.selection_error_history(epoch) = selection_back_propagation.error();
+            results.validation_error_history(epoch) = validation_back_propagation.error();
 
             if(epoch != 0
-                && results.selection_error_history(epoch) > results.selection_error_history(epoch-1))
-                selection_failures++;
+                && results.validation_error_history(epoch) > results.validation_error_history(epoch-1))
+                validation_failures++;
         }
 
         elapsed_time = get_elapsed_time(beginning_time);
@@ -392,7 +392,7 @@ TrainingResults QuasiNewtonMethod::train()
         if(display && epoch%display_period == 0)
         {
             cout << "Training error: " << training_back_propagation.error << endl;
-            if(has_selection) cout << "Selection error: " << selection_back_propagation.error << endl;
+            if(has_validation) cout << "Validation error: " << validation_back_propagation.error << endl;
             cout << "Learning rate: " << optimization_data.learning_rate << endl;
             cout << "Elapsed time: " << write_time(elapsed_time) << endl;
         }
@@ -406,27 +406,27 @@ TrainingResults QuasiNewtonMethod::train()
         if(loss_decrease < minimum_loss_decrease)
         {
             if(display) cout << "Epoch " << epoch << "\nMinimum loss decrease reached (" << minimum_loss_decrease << "): " << loss_decrease << endl;
-            results.stopping_condition = OptimizationAlgorithm::StoppingCondition::MinimumLossDecrease;
+            results.stopping_condition = Optimizer::StoppingCondition::MinimumLossDecrease;
         }
         else if(results.training_error_history(epoch) < training_loss_goal)
         {
             if(display) cout << "Epoch " << epoch << "\nLoss goal reached: " << results.training_error_history(epoch) << endl;
-            results.stopping_condition = OptimizationAlgorithm::StoppingCondition::LossGoal;
+            results.stopping_condition = Optimizer::StoppingCondition::LossGoal;
         }
-        else if(selection_failures >= maximum_selection_failures)
+        else if(validation_failures >= maximum_validation_failures)
         {
-            if(display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << selection_failures << endl;
-            results.stopping_condition = OptimizationAlgorithm::StoppingCondition::MaximumSelectionErrorIncreases;
+            if(display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << validation_failures << endl;
+            results.stopping_condition = Optimizer::StoppingCondition::MaximumSelectionErrorIncreases;
         }
-        else if(epoch == maximum_epochs_number)
+        else if(epoch == maximum_epochs)
         {
             if(display) cout << "Epoch " << epoch << "\nMaximum epochs number reached: " << epoch << endl;
-            results.stopping_condition = OptimizationAlgorithm::StoppingCondition::MaximumEpochsNumber;
+            results.stopping_condition = Optimizer::StoppingCondition::MaximumEpochsNumber;
         }
         else if(elapsed_time >= maximum_time)
         {
             if(display) cout << "Epoch " << epoch << "\nMaximum training time reached: " << write_time(elapsed_time) << endl;
-            results.stopping_condition = OptimizationAlgorithm::StoppingCondition::MaximumTime;
+            results.stopping_condition = Optimizer::StoppingCondition::MaximumTime;
         }
         else
         {
@@ -437,9 +437,9 @@ TrainingResults QuasiNewtonMethod::train()
         {
             results.loss = training_back_propagation.loss;
             results.loss_decrease = loss_decrease;
-            results.selection_failures = selection_failures;
+            results.validation_failures = validation_failures;
             results.resize_training_error_history(epoch+1);
-            results.resize_selection_error_history(has_selection ? epoch + 1 : 0);
+            results.resize_validation_error_history(has_validation ? epoch + 1 : 0);
             results.elapsed_time = write_time(elapsed_time);
 
             break;
@@ -462,8 +462,8 @@ void QuasiNewtonMethod::to_XML(XMLPrinter& printer) const
 
     add_xml_element(printer, "MinimumLossDecrease", to_string(minimum_loss_decrease));
     add_xml_element(printer, "LossGoal", to_string(training_loss_goal));
-    add_xml_element(printer, "MaximumSelectionFailures", to_string(maximum_selection_failures));
-    add_xml_element(printer, "MaximumEpochsNumber", to_string(maximum_epochs_number));
+    add_xml_element(printer, "MaximumSelectionFailures", to_string(maximum_validation_failures));
+    add_xml_element(printer, "MaximumEpochsNumber", to_string(maximum_epochs));
     add_xml_element(printer, "MaximumTime", to_string(maximum_time));
 
     printer.CloseElement();
@@ -478,8 +478,8 @@ Tensor<string, 2> QuasiNewtonMethod::to_string_matrix() const
                              {"Learning rate tolerance", to_string(double(learning_rate_tolerance))},
                              {"Minimum loss decrease", to_string(double(minimum_loss_decrease))},
                              {"Loss goal", to_string(double(training_loss_goal))},
-                             {"Maximum selection error increases", to_string(maximum_selection_failures)},
-                             {"Maximum epochs number", to_string(maximum_epochs_number)},
+                             {"Maximum selection error increases", to_string(maximum_validation_failures)},
+                             {"Maximum epochs number", to_string(maximum_epochs)},
                              {"Maximum time", write_time(maximum_time)}});
 
     return string_matrix;
@@ -500,8 +500,8 @@ void QuasiNewtonMethod::from_XML(const XMLDocument& document)
 
     set_minimum_loss_decrease(read_xml_type(root_element, "MinimumLossDecrease"));
     set_loss_goal(read_xml_type(root_element, "LossGoal"));
-    set_maximum_selection_failures(read_xml_index(root_element, "MaximumSelectionFailures"));
-    set_maximum_epochs_number(read_xml_index(root_element, "MaximumEpochsNumber"));
+    set_maximum_validation_failures(read_xml_index(root_element, "MaximumSelectionFailures"));
+    set_maximum_epochs(read_xml_index(root_element, "MaximumEpochsNumber"));
     set_maximum_time(read_xml_type(root_element, "MaximumTime"));
 }
 
@@ -516,7 +516,7 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
 {
     quasi_newton_method = new_quasi_newton_method;
 
-    const LossIndex* loss_index = quasi_newton_method->get_loss_index();
+    const Loss* loss_index = quasi_newton_method->get_loss_index();
 
     const NeuralNetwork* neural_network = loss_index->get_neural_network();
 
@@ -529,7 +529,7 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
     parameters_difference.resize(parameters_number);
 
     potential_parameters.resize(parameters_number);
-    parameters_increment.resize(parameters_number);
+    parameter_updates.resize(parameters_number);
 
     // Loss index data
 
@@ -596,7 +596,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
         potential_parameters.device(*device)
             = parameters + training_direction * triplet.B.first;
 
-        neural_network->forward_propagate(batch.get_input_views(),
+        neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters, forward_propagation);
 
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
@@ -614,7 +614,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
         potential_parameters.device(*device)
             = parameters + training_direction*triplet.B.first;
 
-        neural_network->forward_propagate(batch.get_input_views(),
+        neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters,
                                           forward_propagation);
 
@@ -632,7 +632,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
             potential_parameters.device(*device)
                 = parameters + training_direction*triplet.B.first;
 
-            neural_network->forward_propagate(batch.get_input_views(),
+            neural_network->forward_propagate(batch.get_inputs(),
                                               potential_parameters,
                                               forward_propagation);
 
@@ -648,7 +648,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
         potential_parameters.device(*device)
             = parameters + training_direction*triplet.U.first;
 
-        neural_network->forward_propagate(batch.get_input_views(),
+        neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters,
                                           forward_propagation);
 
@@ -665,7 +665,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
             potential_parameters.device(*device)
                 = parameters + training_direction*triplet.U.first;
 
-            neural_network->forward_propagate(batch.get_input_views(), potential_parameters, forward_propagation);
+            neural_network->forward_propagate(batch.get_inputs(), potential_parameters, forward_propagation);
 
             loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
@@ -728,7 +728,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
     {
         potential_parameters.device(*device) = parameters + training_direction * alpha;
 
-        neural_network->forward_propagate(batch.get_input_views(), potential_parameters, forward_propagation);
+        neural_network->forward_propagate(batch.get_inputs(), potential_parameters, forward_propagation);
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
         const type new_loss = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
 
@@ -811,7 +811,7 @@ void Triplet::check() const
 }
 
 
-REGISTER(OptimizationAlgorithm, QuasiNewtonMethod, "QuasiNewtonMethod");
+REGISTER(Optimizer, QuasiNewtonMethod, "QuasiNewtonMethod");
 
 }
 

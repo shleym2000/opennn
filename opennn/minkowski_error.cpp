@@ -16,7 +16,7 @@ namespace opennn
 {
 
 MinkowskiError::MinkowskiError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     set_default();
 }
@@ -55,13 +55,13 @@ void MinkowskiError::calculate_error(const Batch& batch,
 
     const Index samples_number = batch.get_samples_number();
 
-    const TensorView targets_view = batch.get_target_view();
+    const TensorView targets_view = batch.get_targets();
 
     const TensorMap2 targets = tensor_map<2>(targets_view);
 
     // Forward propagation
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -77,21 +77,21 @@ void MinkowskiError::calculate_error(const Batch& batch,
 }
 
 
-void MinkowskiError::calculate_output_delta(const Batch& batch,
+void MinkowskiError::calculate_output_gradients(const Batch& batch,
                                             ForwardPropagation&,
                                             BackPropagation& back_propagation) const
 {
     const Index samples_number = batch.get_samples_number();
 
-    const TensorView delta_views = back_propagation.get_output_deltas_tensor_view();
+    const TensorView output_gradient_views = back_propagation.get_output_gradients();
 
-    TensorMap2 deltas = tensor_map<2>(delta_views);
+    TensorMap2 output_gradients = tensor_map<2>(output_gradient_views);
 
     const Tensor2& errors = back_propagation.errors;
 
     const type coefficient = type(1.0 / samples_number);
 
-    deltas.device(*device) = errors*((errors.abs() + numeric_limits<type>::epsilon())
+    output_gradients.device(*device) = errors*((errors.abs() + numeric_limits<type>::epsilon())
                                            .pow(minkowski_parameter - type(2)))*minkowski_parameter*coefficient;
 }
 
@@ -119,24 +119,24 @@ void MinkowskiError::from_XML(const XMLDocument& document)
 
 #ifdef OPENNN_CUDA
 
-void MinkowskiError::calculate_error_cuda(const BatchCuda& batch_cuda,
+void MinkowskiError::calculate_error(const BatchCuda& batch,
                                           const ForwardPropagationCuda& forward_propagation,
                                           BackPropagationCuda& back_propagation) const
 {
-    throw runtime_error("CUDA calculate_error_cuda not implemented for loss index type: MinkowskiError");
+    throw runtime_error("CUDA calculate_error not implemented for loss index type: MinkowskiError");
 }
 
 
-void MinkowskiError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
+void MinkowskiError::calculate_output_gradients(const BatchCuda& batch,
                                                  ForwardPropagationCuda& forward_propagation,
                                                  BackPropagationCuda& back_propagation) const
 {
-    throw runtime_error("CUDA calculate_output_delta_cuda not implemented for loss index type: MinkowskiError");
+    throw runtime_error("CUDA calculate_output_gradients not implemented for loss index type: MinkowskiError");
 }
 
 #endif
 
-REGISTER(LossIndex, MinkowskiError, "MinkowskiError");
+REGISTER(Loss, MinkowskiError, "MinkowskiError");
 
 }
 

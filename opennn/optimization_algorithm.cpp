@@ -19,71 +19,71 @@
 namespace opennn
 {
 
-OptimizationAlgorithm::OptimizationAlgorithm(const LossIndex* new_loss_index)
+Optimizer::Optimizer(const Loss* new_loss)
 {
     const unsigned int threads_number = thread::hardware_concurrency();
     thread_pool = make_unique<ThreadPool>(threads_number);
     device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 
-    set(new_loss_index);
+    set(new_loss);
 }
 
 
-LossIndex* OptimizationAlgorithm::get_loss_index() const
+Loss* Optimizer::get_loss_index() const
 {
     return loss_index;
 }
 
 
-string OptimizationAlgorithm::get_hardware_use() const
+string Optimizer::get_hardware_use() const
 {
     return hardware_use;
 }
 
 
-void OptimizationAlgorithm::set_hardware_use(const string& new_hardware_use)
+void Optimizer::set_hardware_use(const string& new_hardware_use)
 {
     hardware_use = new_hardware_use;
 }
 
 
-bool OptimizationAlgorithm::has_loss_index() const
+bool Optimizer::has_loss_index() const
 {
     return loss_index;
 }
 
 
-const bool& OptimizationAlgorithm::get_display() const
+bool Optimizer::get_display() const
 {
     return display;
 }
 
 
-const Index& OptimizationAlgorithm::get_display_period() const
+const Index& Optimizer::get_display_period() const
 {
     return display_period;
 }
 
 
-const Index& OptimizationAlgorithm::get_save_period() const
+const Index& Optimizer::get_save_period() const
 {
     return save_period;
 }
 
 
-const string& OptimizationAlgorithm::get_neural_network_file_name() const
+const string& Optimizer::get_neural_network_file_name() const
 {
     return neural_network_file_name;
 }
 
 
-void OptimizationAlgorithm::set(const LossIndex* new_loss_index)
+void Optimizer::set(const Loss* new_loss)
 {
-    loss_index = const_cast<LossIndex*>(new_loss_index);
+    loss_index = const_cast<Loss*>(new_loss);
 }
 
 
-void OptimizationAlgorithm::set_threads_number(const int& new_threads_number)
+void Optimizer::set_threads_number(const int& new_threads_number)
 {
     thread_pool.reset();
     device.reset();
@@ -93,52 +93,52 @@ void OptimizationAlgorithm::set_threads_number(const int& new_threads_number)
 }
 
 
-void OptimizationAlgorithm::set_loss_index(LossIndex* new_loss_index)
+void Optimizer::set_loss_index(Loss* new_loss)
 {
-    loss_index = new_loss_index;
+    loss_index = new_loss;
 }
 
 
-void OptimizationAlgorithm::set_display(const bool& new_display)
+void Optimizer::set_display(bool new_display)
 {
     display = new_display;
 }
 
 
-void OptimizationAlgorithm::set_display_period(const Index new_display_period)
+void Optimizer::set_display_period(const Index new_display_period)
 {
     display_period = new_display_period;
 }
 
 
-void OptimizationAlgorithm::set_save_period(const Index new_save_period)
+void Optimizer::set_save_period(const Index new_save_period)
 {
     save_period = new_save_period;
 }
 
 
-void OptimizationAlgorithm::set_neural_network_file_name(const string& new_neural_network_file_name)
+void Optimizer::set_neural_network_file_name(const string& new_neural_network_file_name)
 {
     neural_network_file_name = new_neural_network_file_name;
 }
 
 
-void OptimizationAlgorithm::check() const
+void Optimizer::check() const
 {
     if(!loss_index)
         throw runtime_error("loss_index is nullptr.\n");
 }
 
 
-string OptimizationAlgorithm::get_name() const
+string Optimizer::get_name() const
 {
     return name;
 }
 
 
-void OptimizationAlgorithm::to_XML(XMLPrinter& printer) const
+void Optimizer::to_XML(XMLPrinter& printer) const
 {
-    printer.OpenElement("OptimizationAlgorithm");
+    printer.OpenElement("Optimizer");
 
     add_xml_element(printer, "Display", to_string(display));
 
@@ -146,9 +146,9 @@ void OptimizationAlgorithm::to_XML(XMLPrinter& printer) const
 }
 
 
-void OptimizationAlgorithm::from_XML(const XMLDocument& document)
+void Optimizer::from_XML(const XMLDocument& document)
 {
-    const XMLElement* root_element = document.FirstChildElement("OptimizationAlgorithm");
+    const XMLElement* root_element = document.FirstChildElement("Optimizer");
 
     if(!root_element)
         throw runtime_error("Optimization algorithm element is nullptr.\n");
@@ -157,18 +157,18 @@ void OptimizationAlgorithm::from_XML(const XMLDocument& document)
 }
 
 
-Tensor<string, 2> OptimizationAlgorithm::to_string_matrix() const
+Tensor<string, 2> Optimizer::to_string_matrix() const
 {
     return Tensor<string, 2>();
 }
 
 
-void OptimizationAlgorithm::print() const
+void Optimizer::print() const
 {
 }
 
 
-void OptimizationAlgorithm::save(const filesystem::path& file_name) const
+void Optimizer::save(const filesystem::path& file_name) const
 {
     try
     {
@@ -195,7 +195,7 @@ void OptimizationAlgorithm::save(const filesystem::path& file_name) const
 }
 
 
-void OptimizationAlgorithm::load(const filesystem::path& file_name)
+void Optimizer::load(const filesystem::path& file_name)
 {
     XMLDocument document;
 
@@ -206,7 +206,7 @@ void OptimizationAlgorithm::load(const filesystem::path& file_name)
 }
 
 
-type OptimizationAlgorithm::get_elapsed_time(const time_t &beginning_time)
+type Optimizer::get_elapsed_time(const time_t &beginning_time)
 {
     time_t current_time;
     time(&current_time);
@@ -214,19 +214,19 @@ type OptimizationAlgorithm::get_elapsed_time(const time_t &beginning_time)
 }
 
 
-void OptimizationAlgorithm::set_names()
+void Optimizer::set_names()
 {
     Dataset* dataset = loss_index->get_dataset();
 
-    const vector<string> feature_names = dataset->get_variable_names("Input");
-    const vector<string> target_names = dataset->get_variable_names("Target");
+    const vector<string> input_names = dataset->get_feature_names("Input");
+    const vector<string> target_names = dataset->get_feature_names("Target");
 
-    const Index input_variables_number = dataset->get_variables_number("Input");
-    const Index target_variables_number = dataset->get_variables_number("Target");
+    const Index input_features_number = dataset->get_features_number("Input");
+    const Index target_features_number = dataset->get_features_number("Target");
 
-    const vector<Dataset::RawVariable> raw_variables = dataset->get_raw_variables();
-    const vector<Index> input_variable_indices = dataset->get_raw_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_raw_variable_indices("Input");
+    const vector<Dataset::Variable> variables = dataset->get_variables();
+    const vector<Index> input_feature_indices = dataset->get_variable_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_variable_indices("Input");
 
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
@@ -235,38 +235,38 @@ void OptimizationAlgorithm::set_names()
 
     TimeSeriesDataset* time_series_dataset = dynamic_cast<TimeSeriesDataset*>(dataset);
 
-    for(Index i = 0; i < input_variables_number; i++)
+    for(Index i = 0; i < input_features_number; i++)
     {
         if(time_series_dataset)
         {
             const Index time_steps = time_series_dataset->get_past_time_steps();
 
-            if(feature_names[i] == "")
+            if(input_names[i].empty())
                 for(Index j = 0; j < time_steps; j++)
                     input_variable_names.push_back("variable_" + to_string(i + 1) + "_lag" + to_string(j));
             else
                 for(Index j = 0; j < time_steps; j++)
-                    input_variable_names.push_back(feature_names[i] + "_lag" + to_string(j));
+                    input_variable_names.push_back(input_names[i] + "_lag" + to_string(j));
         }
         else
         {
-            if(feature_names[i] == "")
+            if(input_names[i].empty())
                 input_variable_names.push_back("variable_" + to_string(i + 1));
             else
-                input_variable_names.push_back(feature_names[i]);
+                input_variable_names.push_back(input_names[i]);
         }
     }
 
-    for(Index i = 0; i < target_variables_number; i++)
+    for(Index i = 0; i < target_features_number; i++)
     {
         string current_target_name;
 
-        if(target_names[i] == "")
+        if(target_names[i].empty())
         {
-            auto input_iterator = find(input_variable_indices.begin(), input_variable_indices.end(), target_variable_indices[i]);
+            auto input_iterator = find(input_feature_indices.begin(), input_feature_indices.end(), target_feature_indices[i]);
 
-            if(input_iterator == input_variable_indices.end())
-                current_target_name = "variable_" + to_string(input_variables_number + i + 1);
+            if(input_iterator == input_feature_indices.end())
+                current_target_name = "variable_" + to_string(input_features_number + i + 1);
             else
                 current_target_name = "variable_" + to_string(int(*input_iterator) + 1);
         }
@@ -284,7 +284,7 @@ void OptimizationAlgorithm::set_names()
 }
 
 
-void OptimizationAlgorithm::set_scaling()
+void Optimizer::set_scaling()
 {
     Dataset* dataset = loss_index->get_dataset();
     NeuralNetwork* neural_network = loss_index->get_neural_network();
@@ -296,8 +296,8 @@ void OptimizationAlgorithm::set_scaling()
 
     if(neural_network->has("Scaling2d"))
     {
-        input_variable_scalers = dataset->get_variable_scalers("Input");
-        input_variable_descriptives = dataset->scale_variables("Input");
+        input_variable_scalers = dataset->get_feature_scalers("Input");
+        input_variable_descriptives = dataset->scale_features("Input");
 
         Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
         scaling_layer->set_descriptives(input_variable_descriptives);
@@ -306,8 +306,8 @@ void OptimizationAlgorithm::set_scaling()
     else if(neural_network->has("Scaling3d"))
     {
         TimeSeriesDataset* time_series_dataset = static_cast<TimeSeriesDataset*>(dataset);
-        input_variable_scalers = time_series_dataset->get_variable_scalers("Input");
-        input_variable_descriptives = time_series_dataset->scale_variables("Input");
+        input_variable_scalers = time_series_dataset->get_feature_scalers("Input");
+        input_variable_descriptives = time_series_dataset->scale_features("Input");
 
         Scaling<3>* scaling_layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
         scaling_layer->set_descriptives(input_variable_descriptives);
@@ -316,7 +316,7 @@ void OptimizationAlgorithm::set_scaling()
     else if(neural_network->has("Scaling4d"))
     {
         ImageDataset* image_dataset = static_cast<ImageDataset*>(dataset);
-        image_dataset->scale_variables("Input");
+        image_dataset->scale_features("Input");
     }
 
     if(!neural_network->has("Unscaling"))
@@ -324,14 +324,14 @@ void OptimizationAlgorithm::set_scaling()
 
     // Unscaling layer
 
-    const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_variable_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     bool has_pure_targets = false;
-    for(const Index t_idx : target_variable_indices)
+    for(const Index t_idx : target_feature_indices)
     {
         bool is_input = false;
-        for(const Index i_idx : input_variable_indices)
+        for(const Index i_idx : input_feature_indices)
         {
             if(t_idx == i_idx)
             {
@@ -351,22 +351,22 @@ void OptimizationAlgorithm::set_scaling()
 
     if(has_pure_targets)
     {
-        target_variable_descriptives = dataset->scale_variables("Target");
-        target_variable_scalers = dataset->get_variable_scalers("Target");
+        target_variable_descriptives = dataset->scale_features("Target");
+        target_variable_scalers = dataset->get_feature_scalers("Target");
     }
 
     vector<Descriptives> unscaling_layer_descriptives;
     vector<string> unscaling_layer_scalers;
 
-    for(size_t i = 0; i < target_variable_indices.size(); ++i)
+    for(size_t i = 0; i < target_feature_indices.size(); ++i)
     {
-        const Index& target_index = target_variable_indices[i];
+        const Index& target_index = target_feature_indices[i];
 
-        auto it = find(input_variable_indices.begin(), input_variable_indices.end(), target_index);
+        auto it = find(input_feature_indices.begin(), input_feature_indices.end(), target_index);
 
-        if(it != input_variable_indices.end())
+        if(it != input_feature_indices.end())
         {
-            const Index input_pos = distance(input_variable_indices.begin(), it);
+            const Index input_pos = distance(input_feature_indices.begin(), it);
 
             unscaling_layer_descriptives.push_back(input_variable_descriptives[input_pos]);
             unscaling_layer_scalers.push_back(input_variable_scalers[input_pos]);
@@ -388,7 +388,7 @@ void OptimizationAlgorithm::set_scaling()
 }
 
 
-void OptimizationAlgorithm::set_unscaling()
+void Optimizer::set_unscaling()
 {
     Dataset* dataset = loss_index->get_dataset();
     NeuralNetwork* neural_network = loss_index->get_neural_network();
@@ -398,17 +398,17 @@ void OptimizationAlgorithm::set_unscaling()
     if(neural_network->has("Scaling2d"))
     {
         Scaling<2>* layer = static_cast<Scaling<2>*>(neural_network->get_first("Scaling2d"));
-        dataset->unscale_variables("Input", layer->get_descriptives());
+        dataset->unscale_features("Input", layer->get_descriptives());
     }
     else if(neural_network->has("Scaling3d"))
     {
         Scaling<3>* layer = static_cast<Scaling<3>*>(neural_network->get_first("Scaling3d"));
-        dataset->unscale_variables("Input", layer->get_descriptives());
+        dataset->unscale_features("Input", layer->get_descriptives());
     }
     else if(neural_network->has("Scaling4d"))
     {
         ImageDataset* image_dataset = static_cast<ImageDataset*>(dataset);
-        image_dataset->unscale_variables("Input");
+        image_dataset->unscale_features("Input");
     }
 
     if(!neural_network->has("Unscaling"))
@@ -419,8 +419,8 @@ void OptimizationAlgorithm::set_unscaling()
     const Unscaling* unscaling_layer = static_cast<Unscaling*>(neural_network->get_first("Unscaling"));
     const vector<Descriptives>& all_target_descriptives = unscaling_layer->get_descriptives();
 
-    const vector<Index> input_indices = dataset->get_variable_indices("Input");
-    const vector<Index> target_indices = dataset->get_variable_indices("Target");
+    const vector<Index> input_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_indices = dataset->get_feature_indices("Target");
 
     vector<Descriptives> unscaled_targets_descriptives;
 
@@ -442,11 +442,11 @@ void OptimizationAlgorithm::set_unscaling()
     }
 
     if(!unscaled_targets_descriptives.empty())
-        dataset->unscale_variables("Target", unscaled_targets_descriptives);
+        dataset->unscale_features("Target", unscaled_targets_descriptives);
 }
 
 
-void OptimizationAlgorithm::set_vocabularies()
+void Optimizer::set_vocabularies()
 {
     Dataset* dataset = loss_index->get_dataset();
 
@@ -473,8 +473,8 @@ TrainingResults::TrainingResults(const Index epochs_number)
     training_error_history.resize(1 + epochs_number);
     training_error_history.setConstant(type(-1.0));
 
-    selection_error_history.resize(1 + epochs_number);
-    selection_error_history.setConstant(type(-1.0));
+    validation_error_history.resize(1 + epochs_number);
+    validation_error_history.setConstant(type(-1.0));
 }
 
 
@@ -482,22 +482,22 @@ string TrainingResults::write_stopping_condition() const
 {
     switch(stopping_condition)
     {
-    case OptimizationAlgorithm::StoppingCondition::None:
+    case Optimizer::StoppingCondition::None:
         return "None";
 
-    case OptimizationAlgorithm::StoppingCondition::MinimumLossDecrease:
+    case Optimizer::StoppingCondition::MinimumLossDecrease:
         return "Minimum loss decrease";
 
-    case OptimizationAlgorithm::StoppingCondition::LossGoal:
+    case Optimizer::StoppingCondition::LossGoal:
         return "Loss goal";
 
-    case OptimizationAlgorithm::StoppingCondition::MaximumSelectionErrorIncreases:
+    case Optimizer::StoppingCondition::MaximumSelectionErrorIncreases:
         return "Maximum selection error increases";
 
-    case OptimizationAlgorithm::StoppingCondition::MaximumEpochsNumber:
+    case Optimizer::StoppingCondition::MaximumEpochsNumber:
         return "Maximum epochs number";
 
-    case OptimizationAlgorithm::StoppingCondition::MaximumTime:
+    case Optimizer::StoppingCondition::MaximumTime:
         return "Maximum training time";
 
     default:
@@ -514,11 +514,11 @@ type TrainingResults::get_training_error() const
 }
 
 
-type TrainingResults::get_selection_error() const
+type TrainingResults::get_validation_error() const
 {
-    const Index size = selection_error_history.size();
+    const Index size = validation_error_history.size();
 
-    return selection_error_history(size - 1);
+    return validation_error_history(size - 1);
 }
 
 
@@ -548,27 +548,27 @@ void TrainingResults::resize_training_error_history(const Index new_size)
 }
 
 
-void TrainingResults::resize_selection_error_history(const Index new_size)
+void TrainingResults::resize_validation_error_history(const Index new_size)
 {
-    if(selection_error_history.size() == 0)
+    if(validation_error_history.size() == 0)
     {
-        selection_error_history.resize(new_size);
+        validation_error_history.resize(new_size);
         return;
     }
 
-    const Tensor1 old_selection_error_history = selection_error_history;
+    const Tensor1 old_validation_error_history = validation_error_history;
 
-    selection_error_history.resize(new_size);
+    validation_error_history.resize(new_size);
 
-    const Index minimum_size = min(new_size, old_selection_error_history.size());
+    const Index minimum_size = min(new_size, old_validation_error_history.size());
 
     for(Index i = 0; i < minimum_size; ++i)
-        selection_error_history(i) = old_selection_error_history(i);
+        validation_error_history(i) = old_validation_error_history(i);
 
 }
 
 
-string OptimizationAlgorithm::write_time(const type time) const
+string Optimizer::write_time(const type time) const
 {
     const int hours = int(time) / 3600;
     int seconds = int(time) % 3600;
@@ -609,8 +609,8 @@ void TrainingResults::print(const string &message) const
          << "Training results" << endl
          << "Epochs number: " << epochs_number - 1 << endl
          << "Training error: " << training_error_history(epochs_number - 1) << endl;
-    if (selection_error_history.size() > 0)
-        cout << "Selection error: " << selection_error_history(epochs_number - 1) << endl;
+    if (validation_error_history.size() > 0)
+        cout << "Validation error: " << validation_error_history(epochs_number - 1) << endl;
     cout << "Stopping condition: " << write_stopping_condition() << endl;
 }
 
@@ -623,7 +623,7 @@ Tensor<string, 2> TrainingResults::write_override_results(const Index precision)
     override_results(1,0) = "Elapsed time";
     override_results(2,0) = "Stopping criterion";
     override_results(3,0) = "Training error";
-    override_results(4,0) = "Selection error";
+    override_results(4,0) = "Validation error";
 
     const Index size = training_error_history.size();
 
@@ -648,9 +648,9 @@ Tensor<string, 2> TrainingResults::write_override_results(const Index precision)
     ostringstream buffer;
     buffer.str("");
 
-    selection_error_history.size() == 0
+    validation_error_history.size() == 0
         ? buffer << "NAN"
-        : buffer << setprecision(precision) << selection_error_history(size-1);
+        : buffer << setprecision(precision) << validation_error_history(size-1);
 
     override_results(4,1) = buffer.str();
 
@@ -658,12 +658,12 @@ Tensor<string, 2> TrainingResults::write_override_results(const Index precision)
 }
 
 
-OptimizationAlgorithmData::OptimizationAlgorithmData()
+OptimizerData::OptimizerData()
 {
 }
 
 
-void OptimizationAlgorithmData::print() const
+void OptimizerData::print() const
 {
     cout << "Potential parameters:" << endl
          << potential_parameters << endl

@@ -26,7 +26,7 @@ public:
 
     const Tensor1& get_training_errors() const;
 
-    const Tensor1& get_selection_errors() const;
+    const Tensor1& get_validation_errors() const;
 
     const Tensor1& get_fitness() const;
 
@@ -60,7 +60,7 @@ public:
 
     void set_elitism_size(const Index);
 
-    void set_maximum_epochs_number(const Index);
+    void set_maximum_epochs(const Index);
 
     void set_fitness(const Tensor1&); // Used in testing
     void set_selection(const Tensor<bool, 1>&); // Used in testing
@@ -86,7 +86,7 @@ public:
 
     vector<Index> get_selected_individual_indices() const;
 
-    vector<Index> get_raw_variable_indices(const Tensor<bool, 1>&);
+    vector<Index> get_variable_indices(const Tensor<bool, 1>&);
 
     InputsSelectionResults perform_input_selection() override;
 
@@ -106,14 +106,14 @@ private:
 
     Tensor<Tensor1, 1> parameters;
 
-    vector<Index> original_input_raw_variable_indices;
-    vector<Index> original_target_raw_variable_indices;
+    vector<Index> original_input_variable_indices;
+    vector<Index> original_target_variable_indices;
     
     Tensor<bool, 2> population;
 
     Tensor1 training_errors;
 
-    Tensor1 selection_errors;
+    Tensor1 validation_errors;
 
     Tensor1 fitness;
 
@@ -124,7 +124,7 @@ private:
 
     type mean_training_error;
 
-    type mean_selection_error;
+    type mean_validation_error;
     
     Tensor<bool, 2> optimal_individuals_history;
 

@@ -18,17 +18,17 @@ struct ForwardPropagation;
 struct BackPropagationLM;
 struct LevenbergMarquardtAlgorithmData;
 
-class LevenbergMarquardtAlgorithm final : public OptimizationAlgorithm
+class LevenbergMarquardtAlgorithm final : public Optimizer
 {
 
 public:
 
-   LevenbergMarquardtAlgorithm(const LossIndex* = nullptr);
+   LevenbergMarquardtAlgorithm(const Loss* = nullptr);
 
    const type& get_minimum_loss_decrease() const;
    const type& get_loss_goal() const;
 
-   const Index& get_maximum_selection_failures() const;
+   const Index& get_maximum_validation_failures() const;
 
    const type& get_damping_parameter() const;
 
@@ -53,9 +53,9 @@ public:
    void set_minimum_loss_decrease(const type);
    void set_loss_goal(const type);
 
-   void set_maximum_selection_failures(const Index);
+   void set_maximum_validation_failures(const Index);
 
-   void set_maximum_epochs_number(const Index);
+   void set_maximum_epochs(const Index);
    void set_maximum_time(const type);
 
    // Training
@@ -103,11 +103,11 @@ private:
 
    type training_loss_goal = type(0);
 
-   Index maximum_selection_failures = 0;
+   Index maximum_validation_failures = 0;
 };
 
 
-struct LevenbergMarquardtAlgorithmData final : public OptimizationAlgorithmData
+struct LevenbergMarquardtAlgorithmData final : public OptimizerData
 {
 
     LevenbergMarquardtAlgorithmData(LevenbergMarquardtAlgorithm* new_Levenberg_Marquardt_method = nullptr);
@@ -121,7 +121,7 @@ struct LevenbergMarquardtAlgorithmData final : public OptimizationAlgorithmData
     Tensor1 old_parameters;
     Tensor1 parameters_difference;
 
-    Tensor1 parameters_increment;
+    Tensor1 parameter_updates;
 
     // Loss index data
 

@@ -19,10 +19,10 @@ class Unscaling final : public Layer
 
 public:
 
-    Unscaling(const dimensions& = {0}, const string& = "unscaling_layer");
+    Unscaling(const shape& = {0}, const string& = "unscaling_layer");
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     vector<Descriptives> get_descriptives() const;
 
@@ -33,23 +33,23 @@ public:
 
     void set(const Index = 0, const string& = "unscaling_layer");
 
-    void set_input_dimensions(const dimensions&) override;
-    void set_output_dimensions(const dimensions&) override;
+    void set_input_shape(const shape&) override;
+    void set_output_shape(const shape&) override;
 
     void set_descriptives(const vector<Descriptives>&);
 
-    void set_min_max_range(const type min, const type max);
+    void set_min_max_range(const type, const type);
 
     void set_scalers(const vector<string>&);
     void set_scalers(const string&);
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 #ifdef OPENNN_CUDA
-    void forward_propagate_cuda(const vector<TensorViewCuda>&,
-                                unique_ptr<LayerForwardPropagationCuda>&,
-                                const bool&) override;
+    void forward_propagate(const vector<TensorViewCuda>&,
+                           unique_ptr<LayerForwardPropagationCuda>&,
+                           bool) override;
 #endif
 
     void print() const override;
@@ -89,8 +89,6 @@ struct UnscalingForwardPropagationCuda final : public LayerForwardPropagationCud
     void initialize() override;
 
     void print() const override;
-
-    void free() override;
 };
 
 #endif

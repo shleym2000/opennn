@@ -62,9 +62,9 @@ int main()
 
         cout << "-----------------------------------" << endl;
 
-        ForecastingNetwork forecasting_network({time_series_dataset.get_input_dimensions()},
+        ForecastingNetwork forecasting_network({time_series_dataset.get_input_shape()},
                                                {4},
-                                               {time_series_dataset.get_target_dimensions()});
+                                               {time_series_dataset.get_target_shape()});
 
 
 /*
@@ -104,7 +104,7 @@ int main()
 
         AdaptiveMomentEstimation* adam = static_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
         adam->set_batch_size(1000);
-        adam->set_maximum_epochs_number(10000);
+        adam->set_maximum_epochs(10000);
 
         // QuasiNewtonMethod* quasi = static_cast<QuasiNewtonMethod*>(training_strategy.get_optimization_algorithm());
         // quasi->set_loss_goal(0.001);

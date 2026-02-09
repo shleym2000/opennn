@@ -27,7 +27,7 @@ TEST(PerformanceTest, Rosenbrock)
 
     training_strategy.get_loss_index()->set_regularization_method("NoRegularization");
 
-    training_strategy.set_maximum_epochs_number(10);
+    training_strategy.set_maximum_epochs(10);
     training_strategy.set_display_period(1);
     training_strategy.get_adaptive_moment_estimation()->set_batch_size(1000);
     training_strategy.set_maximum_time(86400);
@@ -52,12 +52,12 @@ TEST(PerformanceTest, ImageClassification)
     /*
     image_data_set.set("Training");
 
-    const dimensions complexity_dimensions = { 8 };
+    const shape complexity_dimensions = { 8 };
 
     NeuralNetwork neural_network(NeuralNetwork::ModelType::ImageClassification,
-        image_data_set.get_input_dimensions(),
+        image_data_set.get_input_shape(),
         complexity_dimensions,
-        image_data_set.get_target_dimensions());
+        image_data_set.get_target_shape());
 
     TrainingStrategy training_strategy(&neural_network, &image_data_set);
    
@@ -65,7 +65,7 @@ TEST(PerformanceTest, ImageClassification)
     training_strategy.set_optimization_method(TrainingStrategy::OptimizationMethod::ADAPTIVE_MOMENT_ESTIMATION);
     training_strategy.get_loss_index()->set_regularization_method("NoRegularization");
     training_strategy.get_adaptive_moment_estimation()->set_batch_size(512);
-    training_strategy.get_adaptive_moment_estimation()->set_maximum_epochs_number(2);
+    training_strategy.get_adaptive_moment_estimation()->set_maximum_epochs(2);
     training_strategy.set_display_period(1);
     
     training_strategy.train();

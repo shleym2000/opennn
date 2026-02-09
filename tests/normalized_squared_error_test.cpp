@@ -77,7 +77,7 @@ TEST(NormalizedSquaredErrorTest, BackPropagateLM)
     normalized_squared_error.set_normalization_coefficient();
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_inputs(), forward_propagation, true);
 
     BackPropagation back_propagation(samples_number, &normalized_squared_error);
     normalized_squared_error.back_propagate(batch, forward_propagation, back_propagation);
@@ -118,10 +118,10 @@ TEST(NormalizedSquaredErrorTest, NormalizationCoefficient)
     uses.resize(8);
     uses.setValues({"Input", "Input", "Input", "Input", "Target", "Target", "Target", "Target"});
 
-    target_data = dataset.get_data_variables("Target");
+    target_data = dataset.get_feature_data("Target");
 
-    Eigen::array<int, 1> dimensions({0});
-    targets_mean = target_data.mean(dimensions);
+    Eigen::array<int, 1> shape({0});
+    targets_mean = target_data.mean(shape);
 
     ApproximationNetwork neural_network({inputs_number}, {neurons_number}, {outputs_number});
     neural_network.set_parameters_random();

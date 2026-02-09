@@ -18,14 +18,14 @@ class Normalization3d final : public Layer
 
 public:
 
-    Normalization3d(const dimensions& = dimensions({0,0}),
+    Normalization3d(const shape& = shape({0,0}),
                     const string& = "normalization_layer_3d");
 
     Index get_sequence_length() const;
     Index get_embedding_dimension() const;
 
-    dimensions get_input_dimensions() const override;
-    dimensions get_output_dimensions() const override;
+    shape get_input_shape() const override;
+    shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
@@ -33,7 +33,7 @@ public:
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,
-                           const bool&) override;
+                           bool) override;
 
     void back_propagate(const vector<TensorView>&,
                         const vector<TensorView>&,
@@ -84,7 +84,7 @@ struct Normalization3dBackPropagation final : LayerBackPropagation
     TensorView gamma_derivatives;
     TensorView beta_derivatives;
 
-    Tensor3 scaled_deltas;
+    Tensor3 scaled_gradients;
     Tensor3 standard_deviation_derivatives;
     Tensor2 aux_2d;
 

@@ -16,7 +16,7 @@ namespace opennn
 {
 
 MeanSquaredError::MeanSquaredError(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
-    : LossIndex(new_neural_network, new_dataset)
+    : Loss(new_neural_network, new_dataset)
 {
     name = "MeanSquaredError";
 }
@@ -35,9 +35,9 @@ void MeanSquaredError::calculate_error(const Batch& batch,
     if (outputs_number == 0 || samples_number == 0)
         throw runtime_error("MeanSquaredError: outputs_number or samples_number is zero.");
 
-    const TensorMap2 targets = tensor_map<2>(batch.get_target_view());
+    const TensorMap2 targets = tensor_map<2>(batch.get_targets());
 
-    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs_view();
+    const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
 
     const TensorMap2 outputs = tensor_map<2>(outputs_view);
 
@@ -75,7 +75,7 @@ void MeanSquaredError::calculate_error_lm(const Batch&,
 }
 
 
-void MeanSquaredError::calculate_output_delta(const Batch& batch,
+void MeanSquaredError::calculate_output_gradients(const Batch& batch,
                                               ForwardPropagation&,
                                               BackPropagation& back_propagation) const
 {
@@ -89,30 +89,30 @@ void MeanSquaredError::calculate_output_delta(const Batch& batch,
 
     const Tensor2& errors = back_propagation.errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
+    const TensorView output_gradients_pair = back_propagation.get_output_gradients();
 
-    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
+    TensorMap2 output_gradients = tensor_map<2>(output_gradients_pair);
 
-    output_deltas.device(*device) = errors / type(0.5 * outputs_number * samples_number);
+    output_gradients.device(*device) = errors / type(0.5 * outputs_number * samples_number);
 }
 
 
-void MeanSquaredError::calculate_output_delta_lm(const Batch&,
+void MeanSquaredError::calculate_output_gradients_lm(const Batch&,
                                                  ForwardPropagation&,
                                                  BackPropagationLM& back_propagation) const
 {
     const Tensor2& errors = back_propagation.errors;
     Tensor1& squared_errors = back_propagation.squared_errors;
 
-    const TensorView output_deltas_pair = back_propagation.get_output_deltas_tensor_view();
-    TensorMap2 output_deltas = tensor_map<2>(output_deltas_pair);
+    const TensorView output_gradients_pair = back_propagation.get_output_gradients();
+    TensorMap2 output_gradients = tensor_map<2>(output_gradients_pair);
 
-    output_deltas.device(*device) = errors;
+    output_gradients.device(*device) = errors;
 
     const type epsilon = 1.0e-12F;
     squared_errors.device(*device) = squared_errors + epsilon;
 
-    divide_columns(device.get(), output_deltas, squared_errors);
+    divide_columns(device.get(), output_gradients, squared_errors);
 }
 
 
@@ -159,7 +159,7 @@ void MeanSquaredError::to_XML(XMLPrinter& file_stream) const
 
 #ifdef OPENNN_CUDA
 
-void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
+void MeanSquaredError::calculate_error(const BatchCuda& batch,
                                             const ForwardPropagationCuda& forward_propagation,
                                             BackPropagationCuda& back_propagation) const
 {
@@ -168,13 +168,13 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
-    const type* targets = batch_cuda.targets_device.data;
+    const type* targets = batch.targets_device.data;
 
     // Forward propagation
 
-    const type* outputs = forward_propagation.get_last_trainable_layer_outputs_view_device().data;
+    const TensorViewCuda outputs = forward_propagation.get_last_trainable_layer_outputs_device();
 
     // Back propagatioin
 
@@ -182,22 +182,18 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 
     Tensor<type,0>& error = back_propagation.error;
 
-    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_deltas.get_descriptor();
+    const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_gradients.get_descriptor();
 
-    const cudnnOpTensorDescriptor_t operator_sum_descriptor = back_propagation.operator_sum_descriptor;
-
-    float alpha = 1.0f;
-    float alpha_minus_one = -1.0f;
-    const float beta = 0.0f;
+    const float alpha_minus_one = -1.0f;
 
     cudnnOpTensor(cudnn_handle,
-                  operator_sum_descriptor,
+                  back_propagation.operator_sum_descriptor,
                   &alpha_minus_one,
                   output_tensor_descriptor,
                   targets,
                   &alpha,
                   output_tensor_descriptor,
-                  outputs,
+                  outputs.data,
                   &beta,
                   output_tensor_descriptor,
                   errors_device);
@@ -212,7 +208,7 @@ void MeanSquaredError::calculate_error_cuda(const BatchCuda& batch_cuda,
 }
 
 
-void MeanSquaredError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
+void MeanSquaredError::calculate_output_gradients(const BatchCuda& batch,
                                                    ForwardPropagationCuda& forward_propagation,
                                                    BackPropagationCuda& back_propagation) const
 {
@@ -220,24 +216,24 @@ void MeanSquaredError::calculate_output_delta_cuda(const BatchCuda& batch_cuda,
 
     // Batch
 
-    const Index samples_number = batch_cuda.get_samples_number();
+    const Index samples_number = batch.get_samples_number();
 
     // Back propagation
 
     type* errors_device = back_propagation.errors;
 
-    float* output_deltas_device = back_propagation.get_output_deltas_tensor_view_device().data;
+    float* output_gradients_device = back_propagation.get_output_gradients_tensor_view_device().data;
 
     const type coefficient = type(2.0) / type(outputs_number * samples_number);
 
-    cudaMemcpy(output_deltas_device, errors_device, outputs_number * samples_number * sizeof(float), cudaMemcpyDeviceToDevice);
+    cudaMemcpy(output_gradients_device, errors_device, outputs_number * samples_number * sizeof(float), cudaMemcpyDeviceToDevice);
 
-    CHECK_CUBLAS(cublasSscal(cublas_handle, outputs_number * samples_number, &coefficient, output_deltas_device, 1));
+    CHECK_CUBLAS(cublasSscal(cublas_handle, outputs_number * samples_number, &coefficient, output_gradients_device, 1));
 }
 
 #endif
 
-REGISTER(LossIndex, MeanSquaredError, "MeanSquaredError");
+REGISTER(Loss, MeanSquaredError, "MeanSquaredError");
 
 }
 

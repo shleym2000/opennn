@@ -11,8 +11,8 @@ TEST(Dense2dTest, DefaultConstructor)
     opennn::Dense<2> dense_layer;
 
     EXPECT_EQ(dense_layer.get_name(), "Dense2d");
-    EXPECT_EQ(dense_layer.get_input_dimensions().size(), 1);
-    EXPECT_EQ(dense_layer.get_output_dimensions().size(), 1);
+    EXPECT_EQ(dense_layer.get_input_shape().size(), 1);
+    EXPECT_EQ(dense_layer.get_output_shape().size(), 1);
 }
 
 
@@ -22,11 +22,11 @@ TEST(Dense2dTest, GeneralConstructor)
 
     EXPECT_EQ(dense_layer.get_activation_function(), "Linear");
 
-    ASSERT_EQ(dense_layer.get_input_dimensions().size(), 1);
-    EXPECT_EQ(dense_layer.get_input_dimensions()[0], 10);
+    ASSERT_EQ(dense_layer.get_input_shape().size(), 1);
+    EXPECT_EQ(dense_layer.get_input_shape()[0], 10);
 
-    ASSERT_EQ(dense_layer.get_output_dimensions().size(), 1);
-    EXPECT_EQ(dense_layer.get_output_dimensions()[0], 3);
+    ASSERT_EQ(dense_layer.get_output_shape().size(), 1);
+    EXPECT_EQ(dense_layer.get_output_shape()[0], 3);
 
     EXPECT_EQ(dense_layer.get_parameters_number(), 33);
 }
@@ -58,8 +58,8 @@ TEST(Dense2dTest, ForwardPropagate)
         );
 
     EXPECT_EQ(dense2d_layer.get_name(), "Dense2d");
-    EXPECT_EQ(dense2d_layer.get_input_dimensions()[0], inputs_number);
-    EXPECT_EQ(dense2d_layer.get_output_dimensions()[0], outputs_number);
+    EXPECT_EQ(dense2d_layer.get_input_shape()[0], inputs_number);
+    EXPECT_EQ(dense2d_layer.get_output_shape()[0], outputs_number);
 
     const TensorView output_view = forward_propagation->get_outputs();
 
@@ -74,7 +74,7 @@ TEST(Dense3dTest, DefaultConstructor)
     opennn::Dense<3> dense_3d;
 
     EXPECT_EQ(dense_3d.get_name(), "Dense3d");
-    EXPECT_TRUE(dense_3d.get_output_dimensions().size() > 0);
+    EXPECT_TRUE(dense_3d.get_output_shape().size() > 0);
 }
 
 
@@ -86,8 +86,8 @@ TEST(Dense3dTest, GeneralConstructor)
 
     opennn::Dense<3> dense_3d({sequence_length, input_embedding}, {output_embedding}, "HyperbolicTangent");
 
-    const dimensions input_dims = dense_3d.get_input_dimensions();
-    const dimensions output_dims = dense_3d.get_output_dimensions();
+    const shape input_dims = dense_3d.get_input_shape();
+    const shape output_dims = dense_3d.get_output_shape();
 
     EXPECT_EQ(input_dims[0], sequence_length);
     EXPECT_EQ(output_dims[0], output_embedding);

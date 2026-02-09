@@ -23,8 +23,8 @@ int main()
 
         Dataset dataset("../data/iris_plant_original.csv", ";", true, false);
 
-        const Index inputs_number = dataset.get_variables_number("Input");
-        const Index targets_number = dataset.get_variables_number("Target");
+        const Index inputs_number = dataset.get_features_number("Input");
+        const Index targets_number = dataset.get_features_number("Target");
 
         // Neural network
 

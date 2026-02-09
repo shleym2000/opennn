@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "tinyxml2.h"
 #include "correlations.h"
 #include "statistics.h"
 #include "tensors.h"
 #include "strings_utilities.h"
-
-using namespace tinyxml2;
 
 namespace opennn
 {
@@ -27,13 +24,13 @@ public:
     enum class Codification { UTF8, SHIFT_JIS };
 
     Dataset(const Index = 0,
-            const dimensions& = {0},
-            const dimensions& = {0});
+            const shape& = {0},
+            const shape& = {0});
 
     Dataset(const filesystem::path&,
             const string&,
-            const bool& = true,
-            const bool& = false,
+            bool = true,
+            bool = false,
             const Codification& = Codification::UTF8);
 
     // Enumerations
@@ -42,21 +39,21 @@ public:
 
     enum class MissingValuesMethod{Unuse, Mean, Median, Interpolation};
 
-    enum class RawVariableType{None, Numeric, Binary, Categorical, DateTime, Constant};
+    enum class VariableType{None, Numeric, Binary, Categorical, DateTime, Constant};
 
     // Structs
 
-    struct RawVariable
+    struct Variable
     {
-        RawVariable(const string& = string(),
+        Variable(const string& = string(),
                     const string& = "None",
-                    const Dataset::RawVariableType& = Dataset::RawVariableType::Numeric,
+                    const Dataset::VariableType& = Dataset::VariableType::Numeric,
                     const string& = "MeanStandardDeviation",
                     const vector<string>& = vector<string>());
 
         void set(const string& = string(),
                  const string& = "None",
-                 const Dataset::RawVariableType& = Dataset::RawVariableType::Numeric,
+                 const Dataset::VariableType& = Dataset::VariableType::Numeric,
                  const string& = "MeanStandardDeviation",
                  const vector<string>& = vector<string>());
 
@@ -64,7 +61,7 @@ public:
 
         string role = "None";
 
-        Dataset::RawVariableType type = Dataset::RawVariableType::None;
+        Dataset::VariableType type = Dataset::VariableType::None;
 
         vector<string> categories;
 
@@ -91,7 +88,7 @@ public:
 
         bool is_binary() const
         {
-            if(type == Dataset::RawVariableType::Binary)
+            if(type == Dataset::VariableType::Binary)
                 return true;
             else
                 return false;
@@ -99,7 +96,7 @@ public:
 
         bool is_categorical() const
         {
-            if(type == Dataset::RawVariableType::Categorical)
+            if(type == Dataset::VariableType::Categorical)
                 return true;
             else
                 return false;
@@ -127,48 +124,48 @@ public:
 
     Tensor<Index, 1> get_sample_role_numbers() const;
 
-    inline Index get_raw_variables_number() const { return raw_variables.size(); }
-    Index get_raw_variables_number(const string&) const;
-    Index get_used_raw_variables_number() const;
-
-    const vector<RawVariable>& get_raw_variables() const;
-    vector<RawVariable> get_raw_variables(const string&) const;
-
-    Index get_raw_variable_index(const string&) const;
-    Index get_raw_variable_index(const Index) const;
-
-    vector<Index> get_raw_variable_indices(const string&) const;
-    vector<Index> get_used_raw_variables_indices() const;
-
-    vector<string> get_raw_variable_names() const;
-    vector<string> get_raw_variable_names(const string&) const;
-
-    RawVariableType get_raw_variable_type(const Index index) const {return raw_variables[index].type;}
-
-    // Variables get
-
-    Index get_variables_number() const;
+    inline Index get_variables_number() const { return variables.size(); }
     Index get_variables_number(const string&) const;
     Index get_used_variables_number() const;
+
+    const vector<Variable>& get_variables() const;
+    vector<Variable> get_variables(const string&) const;
+
+    Index get_variable_index(const string&) const;
+    Index get_variable_index(const Index) const;
+
+    vector<Index> get_variable_indices(const string&) const;
+    vector<Index> get_used_variables_indices() const;
 
     vector<string> get_variable_names() const;
     vector<string> get_variable_names(const string&) const;
 
-    vector<vector<Index>> get_variable_indices() const;
-    vector<Index> get_variable_indices(const Index) const;
-    vector<Index> get_variable_indices(const string&) const;
-    vector<Index> get_used_variable_indices() const;
+    VariableType get_variable_type(const Index index) const {return variables[index].type;}
 
-    dimensions get_dimensions(const string&) const;
+    // Variables get
 
-    vector<string> get_variable_scalers(const string&) const;
+    Index get_features_number() const;
+    Index get_features_number(const string&) const;
+    Index get_used_features_number() const;
 
-    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, const bool&) const;
+    vector<string> get_feature_names() const;
+    vector<string> get_feature_names(const string&) const;
+
+    vector<vector<Index>> get_feature_indices() const;
+    vector<Index> get_feature_indices(const Index) const;
+    vector<Index> get_feature_indices(const string&) const;
+    vector<Index> get_used_feature_indices() const;
+
+    shape get_shape(const string&) const;
+
+    vector<string> get_feature_scalers(const string&) const;
+
+    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const;
 
     const Tensor2& get_data() const;
     Tensor2* get_data_p();
     Tensor2 get_data_samples(const string&) const;
-    Tensor2 get_data_variables(const string&) const;
+    Tensor2 get_feature_data(const string&) const;
     Tensor2 get_data(const string&, const string&) const;
     Tensor2 get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
 
@@ -177,10 +174,10 @@ public:
     Tensor2 get_sample_input_data(const Index) const;
     Tensor2 get_sample_target_data(const Index) const;
 
-    Tensor2 get_raw_variable_data(const Index) const;
-    Tensor2 get_raw_variable_data(const Index, const vector<Index>&) const;
-    //Tensor2 get_raw_variable_data(const Tensor<Index, 1>&) const;
-    Tensor2 get_raw_variable_data(const string&) const;
+    Tensor2 get_variable_data(const Index) const;
+    Tensor2 get_variable_data(const Index, const vector<Index>&) const;
+    //Tensor2 get_variable_data(const Tensor<Index, 1>&) const;
+    Tensor2 get_variable_data(const string&) const;
 
     string get_sample_category(const Index, const Index&) const;
     Tensor1 get_sample(const Index) const;
@@ -197,8 +194,8 @@ public:
 
     const filesystem::path& get_data_path() const;
 
-    const bool& get_header_line() const;
-    const bool& get_has_sample_ids() const;
+    bool get_header_line() const;
+    bool get_has_sample_ids() const;
 
     vector<string> get_sample_ids() const;
 
@@ -213,23 +210,23 @@ public:
 
     Index get_gmt() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     bool is_empty() const;
 
-    dimensions get_input_dimensions() const;
-    dimensions get_target_dimensions() const;
+    shape get_input_shape() const;
+    shape get_target_shape() const;
 
     void get_categorical_info(const string&, vector<Index>&, vector<Index>&) const;
 
     // Set
 
-    void set(const Index = 0, const dimensions& = {}, const dimensions& = {});
+    void set(const Index = 0, const shape& = {}, const shape& = {});
 
     void set(const filesystem::path&,
              const string&,
-             const bool& = true,
-             const bool& = false,
+             bool = true,
+             bool = false,
              const Dataset::Codification& = Codification::UTF8);
 
     void set(const filesystem::path&);
@@ -247,46 +244,46 @@ public:
     void set_sample_roles(const vector<string>&);
     void set_sample_roles(const vector<Index>&, const string&);
 
-    // Raw variables set
-
-    void set_raw_variables(const vector<RawVariable>&);
-
-    void set_default_raw_variable_names();
-
-    void set_default_raw_variables_roles();
-    void set_default_raw_variables_roles_forecasting();
-    virtual void set_raw_variable_roles(const vector<string>&);
-
-    void set_raw_variables(const string&);
-    void set_raw_variable_indices(const vector<Index>&, const vector<Index>&);
-    void set_input_raw_variables_unused();
-
-    void set_raw_variable_role(const Index, const string&);
-    void set_raw_variable_role(const string&, const string&);
-
-    void set_raw_variable_type(const Index, const RawVariableType&);
-    void set_raw_variable_type(const string&, const RawVariableType&);
-
-    void set_raw_variable_types(const RawVariableType&);
-
-    void set_raw_variable_names(const vector<string>&);
-
-    void set_raw_variables_number(const Index);
-
-    void set_raw_variable_scalers(const string&);
-
-    void set_raw_variable_scalers(const vector<string>&);
-
-    void set_binary_raw_variables();
-    void unuse_constant_raw_variables();
-
     // Variables set
+
+    void set_variables(const vector<Variable>&);
+
+    void set_default_variable_names();
+
+    void set_default_variables_roles();
+    void set_default_variables_roles_forecasting();
+    virtual void set_variable_roles(const vector<string>&);
+
+    void set_variables(const string&);
+    void set_variable_indices(const vector<Index>&, const vector<Index>&);
+    void set_input_variables_unused();
+
+    void set_variable_role(const Index, const string&);
+    void set_variable_role(const string&, const string&);
+
+    void set_variable_type(const Index, const VariableType&);
+    void set_variable_type(const string&, const VariableType&);
+
+    void set_variable_types(const VariableType&);
 
     void set_variable_names(const vector<string>&);
 
-    void set_variable_roles(const string&);
+    void set_variables_number(const Index);
 
-    void set_dimensions(const string&, const dimensions&);
+    void set_variable_scalers(const string&);
+
+    void set_variable_scalers(const vector<string>&);
+
+    void set_binary_variables();
+    void unuse_constant_variables();
+
+    // Variables set
+
+    void set_feature_names(const vector<string>&);
+
+    void set_feature_roles(const string&);
+
+    void set_shape(const string&, const shape&);
 
     // Dataset
 
@@ -296,8 +293,8 @@ public:
 
     void set_data_path(const filesystem::path&);
 
-    void set_has_header(const bool&);
-    void set_has_ids(const bool&);
+    void set_has_header(bool);
+    void set_has_ids(bool);
 
     void set_separator(const Separator&);
     void set_separator_string(const string&);
@@ -312,16 +309,16 @@ public:
 
     void set_gmt(const Index);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     bool is_sample_used(const Index) const;
 
-    bool has_binary_raw_variables() const;
-    bool has_categorical_raw_variables() const;
-    bool has_binary_or_categorical_raw_variables() const;
-    bool has_time_raw_variable() const;
+    bool has_binary_variables() const;
+    bool has_categorical_variables() const;
+    bool has_binary_or_categorical_variables() const;
+    bool has_time_variable() const;
 
-    bool has_selection() const;
+    bool has_validation() const;
 
     bool has_missing_values(const vector<string>&) const;
 
@@ -339,8 +336,8 @@ public:
 
     //Tensor<Index, 1> unuse_repeated_samples();
 
-    vector<string> unuse_uncorrelated_raw_variables(const type = type(0.25));
-    vector<string> unuse_collinear_raw_variables(const type = type(0.95));
+    vector<string> unuse_uncorrelated_variables(const type = type(0.25));
+    vector<string> unuse_collinear_variables(const type = type(0.95));
 
     // Initialization
 
@@ -348,16 +345,14 @@ public:
 
     // Descriptives
 
-    vector<Descriptives> calculate_variable_descriptives() const;
+    vector<Descriptives> calculate_feature_descriptives() const;
     //vector<Descriptives> calculate_used_variable_descriptives() const;
 
-    //vector<Descriptives> calculate_raw_variable_descriptives() const;
+    vector<Descriptives> calculate_variable_descriptives_positive_samples() const;
+    vector<Descriptives> calculate_variable_descriptives_negative_samples() const;
+    vector<Descriptives> calculate_variable_descriptives_categories(const Index) const;
 
-    vector<Descriptives> calculate_raw_variable_descriptives_positive_samples() const;
-    vector<Descriptives> calculate_raw_variable_descriptives_negative_samples() const;
-    vector<Descriptives> calculate_raw_variable_descriptives_categories(const Index) const;
-
-    vector<Descriptives> calculate_variable_descriptives(const string&) const;
+    vector<Descriptives> calculate_feature_descriptives(const string&) const;
 
     vector<Descriptives> calculate_testing_target_variable_descriptives() const;
 
@@ -370,17 +365,17 @@ public:
 
     // Distribution
 
-    vector<Histogram> calculate_raw_variable_distributions(const Index = 10) const;
+    vector<Histogram> calculate_variable_distributions(const Index = 10) const;
 
     // Box plots
 
-    vector<BoxPlot> calculate_raw_variables_box_plots() const;
+    vector<BoxPlot> calculate_variables_box_plots() const;
 
     // Inputs correlations
 
-    Tensor<Correlation, 2> calculate_input_raw_variable_pearson_correlations() const;
+    Tensor<Correlation, 2> calculate_input_variable_pearson_correlations() const;
 
-    Tensor<Correlation, 2> calculate_input_raw_variable_spearman_correlations() const;
+    Tensor<Correlation, 2> calculate_input_variable_spearman_correlations() const;
 
     void print_inputs_correlations() const;
 
@@ -388,14 +383,14 @@ public:
 
     // Input-target correlations
 
-    Tensor<Correlation, 2> calculate_input_target_raw_variable_pearson_correlations() const;
-    Tensor<Correlation, 2> calculate_input_target_raw_variable_spearman_correlations() const;
+    Tensor<Correlation, 2> calculate_input_target_variable_pearson_correlations() const;
+    Tensor<Correlation, 2> calculate_input_target_variable_spearman_correlations() const;
 
     Tensor<Index, 1> calculate_correlations_rank() const;
 
-    void print_input_target_raw_variables_correlations() const;
+    void print_input_target_variables_correlations() const;
 
-    void print_top_input_target_raw_variables_correlations() const;
+    void print_top_input_target_variables_correlations() const;
 
     // Filtering
 
@@ -403,17 +398,17 @@ public:
 
     // Scaling2d
 
-    void set_default_raw_variables_scalers();
+    void set_default_variables_scalers();
 
     // Data scaling
 
     vector<Descriptives> scale_data();
 
-    virtual vector<Descriptives> scale_variables(const string&);
+    virtual vector<Descriptives> scale_features(const string&);
 
     // Data unscaling
 
-    void unscale_variables(const string&, const vector<Descriptives>&);
+    void unscale_features(const string&, const vector<Descriptives>&);
 
     // Classification
 
@@ -445,7 +440,7 @@ public:
     void save(const filesystem::path&) const;
     void load(const filesystem::path&);
 
-    void print_raw_variables() const;
+    void print_variables() const;
 
     void print_data() const;
     void print_data_preview() const;
@@ -476,8 +471,8 @@ public:
     void scrub_missing_values();
     void calculate_missing_values_statistics();
 
-    Tensor<Index, 1> count_nans_per_raw_variable() const;
-    Index count_raw_variables_with_nan() const;
+    Tensor<Index, 1> count_nans_per_variable() const;
+    Index count_variables_with_nan() const;
     Index count_rows_with_nan() const;
     Index count_nan() const;
 
@@ -499,7 +494,7 @@ public:
     virtual void read_csv();
 
     void infer_column_types(const vector<vector<string>>&);
-    DateFormat infer_dataset_date_format(const vector<Dataset::RawVariable>&, const vector<vector<string>>&, bool, const string&);
+    DateFormat infer_dataset_date_format(const vector<Dataset::Variable>&, const vector<vector<string>>&, bool, const string&);
 
     void read_data_file_preview(const vector<vector<string>>&);
 
@@ -534,9 +529,9 @@ protected:
 
     // Dimensions
 
-    dimensions input_dimensions;
-    dimensions target_dimensions;
-    dimensions decoder_dimensions;
+    shape input_shape;
+    shape target_shape;
+    shape decoder_shape;
 
     // Samples
 
@@ -544,9 +539,9 @@ protected:
 
     vector<string> sample_ids;
 
-    // Raw variables
+    // Variables
 
-    vector<RawVariable> raw_variables;
+    vector<Variable> variables;
 
     // Data File
 
@@ -556,7 +551,7 @@ protected:
 
     string missing_values_label = "NA";
 
-    Tensor<bool, 1> nans_raw_variables;
+    Tensor<bool, 1> nans_variables;
 
     bool has_header = false;
 
@@ -574,7 +569,7 @@ protected:
 
     Index missing_values_number = 0;
 
-    Tensor<Index, 1> raw_variables_missing_values_number;
+    Tensor<Index, 1> variables_missing_values_number;
 
     Index rows_missing_values_number = 0;
 
@@ -585,12 +580,12 @@ protected:
     const vector<string> positive_words = {"1", "yes", "positive", "+", "true", "good", "si", "sí", "Sí"};
     const vector<string> negative_words = {"0", "no", "negative", "-", "false", "bad", "not", "No"};
 
-    void raw_variables_to_XML(XMLPrinter&) const;
+    void variables_to_XML(XMLPrinter&) const;
     void samples_to_XML(XMLPrinter&) const;
     void missing_values_to_XML(XMLPrinter&) const;
     void preview_data_to_XML(XMLPrinter&) const;
 
-    void raw_variables_from_XML(const XMLElement*);
+    void variables_from_XML(const XMLElement*);
     void samples_from_XML(const XMLElement*);
     void missing_values_from_XML(const XMLElement*);
     void preview_data_from_XML(const XMLElement*);
@@ -609,8 +604,8 @@ struct Batch
               // const vector<Index>&,
               const vector<Index>& = vector<Index>());
 
-    vector<TensorView> get_input_views() const;
-    TensorView get_target_view() const;
+    vector<TensorView> get_inputs() const;
+    TensorView get_targets() const;
 
     Index get_samples_number() const;
 
@@ -624,13 +619,13 @@ struct Batch
 
     Dataset* dataset = nullptr;
 
-    dimensions input_dimensions;
+    shape input_shape;
     Tensor1 input_tensor;
 
-    dimensions decoder_dimensions;
+    shape decoder_shape;
     Tensor1 decoder_tensor;
 
-    dimensions target_dimensions;
+    shape target_shape;
     Tensor1 target_tensor;
 
     unique_ptr<ThreadPool> thread_pool = nullptr;
@@ -644,7 +639,7 @@ struct BatchCuda
 {
     BatchCuda(const Index = 0, Dataset* = nullptr);
 
-    ~BatchCuda() { free(); }
+    //~BatchCuda() { free(); }
 
     void set(const Index, Dataset*);
 
@@ -656,18 +651,18 @@ struct BatchCuda
     //BatchCuda(const BatchCuda&) = delete;
     //BatchCuda& operator=(const BatchCuda&) = delete;
 
-    vector<TensorViewCuda> get_input_views_device() const;
-    TensorViewCuda get_target_view_device() const;
+    vector<TensorViewCuda> get_inputs_device() const;
+    TensorViewCuda get_targets_device() const;
 
     Index get_samples_number() const;
 
-    Tensor2 get_inputs_device() const;
-    Tensor2 get_decoder_device() const;
-    Tensor2 get_targets_device() const;
+    Tensor2 get_inputs_from_device() const;
+    Tensor2 get_decoder_from_device() const;
+    Tensor2 get_targets_from_device() const;
 
     void copy_device(const Index);
 
-    void free();
+//    void free();
 
     void print() const;
 
@@ -679,13 +674,13 @@ struct BatchCuda
 
     Dataset* dataset = nullptr;
 
-    dimensions input_dimensions;
-    dimensions decoder_dimensions;
-    dimensions target_dimensions;        
+    shape input_shape;
+    shape decoder_shape;
+    shape target_shape;
 
-    float* inputs_host = nullptr;
-    float* decoder_host = nullptr;
-    float* targets_host = nullptr;
+    vector<float> inputs_host;
+    vector<float> decoder_host;
+    vector<float> targets_host;
 
     TensorCuda inputs_device;
     TensorCuda decoder_device;

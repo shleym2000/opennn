@@ -19,13 +19,13 @@ class TimeSeriesDataset final : public Dataset
 public:
 
     TimeSeriesDataset(const Index = 0,
-                      const dimensions& = {},
-                      const dimensions& = {});
+                      const shape& = {},
+                      const shape& = {});
 
     TimeSeriesDataset(const filesystem::path&,
                       const string&,
-                      const bool& = true,
-                      const bool& = false,
+                      bool = true,
+                      bool = false,
                       const Codification& = Codification::UTF8);
 
     struct TimeSeriesData {
@@ -38,14 +38,14 @@ public:
     const Index& get_past_time_steps() const;
     const Index& get_future_time_steps() const;
 
-    const Index& get_time_raw_variable_index() const;
+    const Index& get_time_variable_index() const;
 
     TimeSeriesData get_data() const;
-    Tensor3 get_data(const string& sample_role, const string& variable_use) const;
+    Tensor3 get_data(const string& sample_role, const string& feature_use) const;
 
     void set_past_time_steps(const Index);
     void set_future_time_steps(const Index);
-    void set_time_raw_variable_index(const Index);
+    void set_time_variable_index(const Index);
 
     Tensor2 calculate_autocorrelations(const Index = 10) const;
     Tensor3 calculate_cross_correlations(const Index = 10) const;
@@ -69,7 +69,7 @@ public:
                             const vector<Index>&,
                             type*) const override;
 
-    vector<vector<Index>> get_batches(const vector<Index>&, const Index&, const bool&) const override;
+    vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const override;
 
 
 private:
@@ -78,7 +78,7 @@ private:
 
     Index future_time_steps = 1;
 
-    Index time_raw_variable_index = 0;
+    Index time_variable_index = 0;
 };
 
 }

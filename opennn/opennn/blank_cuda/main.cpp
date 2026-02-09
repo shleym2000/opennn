@@ -25,9 +25,9 @@ int main()
 
         // Neural network
 
-        ImageClassificationNetwork image_classification_network(image_dataset.get_dimensions("Input"),
+        ImageClassificationNetwork image_classification_network(image_dataset.get_shape("Input"),
             {4},
-            image_dataset.get_dimensions("Target"));
+            image_dataset.get_shape("Target"));
 
         // Training strategy
         WeightedSquaredError* wse = new WeightedSquaredError(&image_classification_network, &image_dataset); 
@@ -38,7 +38,7 @@ int main()
         training_strategy.get_loss_index()->set_regularization_method("None");
 
         AdaptiveMomentEstimation* adam = dynamic_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
-        adam->set_maximum_epochs_number(200);
+        adam->set_maximum_epochs(200);
         adam->set_display_period(10);
 
 #ifdef OPENNN_CUDA

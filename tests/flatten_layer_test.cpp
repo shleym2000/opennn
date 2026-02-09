@@ -10,7 +10,7 @@ protected:
     const Index height = 4;
     const Index width = 4;
     const Index channels = 3;
-    const dimensions input_dimensions = { height, width, channels };
+    const shape input_dimensions = { height, width, channels };
 
     unique_ptr<Flatten<4>> flatten_layer;
 
@@ -23,8 +23,8 @@ protected:
 
 TEST_F(FlattenLayerTest, Constructor)
 {
-    EXPECT_EQ(flatten_layer->get_input_dimensions(), input_dimensions);
-    EXPECT_EQ(flatten_layer->get_output_dimensions(), dimensions{ height * width * channels });
+    EXPECT_EQ(flatten_layer->get_input_shape(), input_dimensions);
+    EXPECT_EQ(flatten_layer->get_output_shape(), shape{ height * width * channels });
     EXPECT_EQ(flatten_layer->get_name(), "Flatten4d");
 }
 
@@ -40,13 +40,13 @@ TEST_F(FlattenLayerTest, ForwardPropagate)
     inputs.setConstant(1.23f);
 
     auto eigen_dims = inputs.dimensions();
-    dimensions dims_vector(eigen_dims.begin(), eigen_dims.end());
+    shape dims_vector(eigen_dims.begin(), eigen_dims.end());
     TensorView input_view(inputs.data(), dims_vector);
 
     flatten_layer->forward_propagate({ input_view }, forward_propagation, false);
 
     const TensorView output_pair = forward_propagation->get_outputs();
-    const dimensions& output_dims = output_pair.dims;
+    const shape& output_dims = output_pair.dims;
 
     ASSERT_EQ(output_dims.size(), 2) << "Flatten<4> should produce a 2D tensor (batch, features).";
     EXPECT_EQ(output_dims[0], batch_size);
@@ -65,18 +65,18 @@ TEST_F(FlattenLayerTest, BackPropagate)
 
     Tensor4 inputs(batch_size, height, width, channels);
     inputs.setConstant(1.0f);
-    TensorView input_view(inputs.data(), dimensions{ batch_size, height, width, channels });
+    TensorView input_view(inputs.data(), shape{ batch_size, height, width, channels });
 
     const Index flattened_size = height * width * channels;
     Tensor2 output_derivatives(batch_size, flattened_size);
     output_derivatives.setConstant(1.0f);
-    TensorView output_derivatives_view(output_derivatives.data(), dimensions{ batch_size, flattened_size });
+    TensorView output_derivatives_view(output_derivatives.data(), shape{ batch_size, flattened_size });
     
     flatten_layer->forward_propagate({ input_view }, forward_propagation, true);
     
     flatten_layer->back_propagate({ input_view }, { output_derivatives_view }, forward_propagation, back_propagation);
     
-    const vector<TensorView> input_derivative_views = back_propagation->get_input_deltas();
+    const vector<TensorView> input_derivative_views = back_propagation->get_input_gradients();
 
     ASSERT_EQ(input_derivative_views.size(), 1) << "Flatten layer should have one input derivative.";
 

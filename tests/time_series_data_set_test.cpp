@@ -17,8 +17,8 @@ TEST(TimeSeriesDataset, DefaultConstructor)
 
 TEST(TimeSeriesDataset, GeneralConstructor)
 {
-    dimensions input_dimensions = { 1 };
-    dimensions target_dimensions = { 1 }; 
+    shape input_dimensions = { 1 };
+    shape target_dimensions = { 1 }; 
 
     TimeSeriesDataset time_series_data_set_3(1, input_dimensions, target_dimensions);
 
@@ -37,8 +37,8 @@ TEST(TimeSeriesDataset, Autocorrelations)
     Tensor2 autocorrelations;
 
     Index samples_number = 1;
-    dimensions inputs_number = { 1 };
-    dimensions targets_number ={ 1 };
+    shape inputs_number = { 1 };
+    shape targets_number ={ 1 };
 
     Index lags_number = 1;
     Index steps_ahead_number = 1;
@@ -61,8 +61,8 @@ TEST(TimeSeriesDataset, Autocorrelations)
 TEST(TimeSeriesDataset, CrossCorrelations)
 {
 
-    dimensions input_dimensions = { 2 };
-    dimensions target_dimensions = { 2 };
+    shape input_dimensions = { 2 };
+    shape target_dimensions = { 2 };
 
     TimeSeriesDataset dataset(6, input_dimensions, target_dimensions);
     
@@ -100,8 +100,8 @@ TEST(TimeSeriesDataset, CrossCorrelations)
 TEST(TimeSeriesDataset, test_transform_time_series)
 {
 
-    dimensions input_dimensions = { 1 };
-    dimensions target_dimensions = { 2 };
+    shape input_dimensions = { 1 };
+    shape target_dimensions = { 2 };
 
     TimeSeriesDataset dataset(9, input_dimensions, target_dimensions);
 
@@ -130,13 +130,13 @@ TEST(TimeSeriesDataset, test_transform_time_series)
 
     //dataset.transform_time_series();
 
-    EXPECT_EQ(dataset.get_raw_variables_number(), 2);
+    EXPECT_EQ(dataset.get_variables_number(), 2);
     EXPECT_EQ(dataset.get_variables_number(), 2);
     EXPECT_EQ(dataset.get_samples_number(), 9);
 
     EXPECT_EQ(dataset.get_variables_number("Input"), 1);
     EXPECT_EQ(dataset.get_variables_number("Target"), 1);
-    EXPECT_EQ(dataset.get_raw_variables_number("Target"), 1);
+    EXPECT_EQ(dataset.get_variables_number("Target"), 1);
     EXPECT_EQ(dataset.get_variables_number("None"), 0);
 
     std::vector<string> input_variable_names = dataset.get_variable_names("Input");
@@ -151,8 +151,8 @@ TEST(TimeSeriesDataset, test_transform_time_series)
 TEST(TimeSeriesDataset, test_set_steps_ahead_number)
 {
 
-    dimensions input_dimensions = { 1 };
-    dimensions target_dimensions = { 2 };
+    shape input_dimensions = { 1 };
+    shape target_dimensions = { 2 };
 
     TimeSeriesDataset dataset(4, input_dimensions, target_dimensions);
 
@@ -177,8 +177,8 @@ TEST(TimeSeriesDataset, test_set_steps_ahead_number)
 TEST(TimeSeriesDataset, test_set_lags_number)
 {
 
-    dimensions input_dimensions = { 1 };
-    dimensions target_dimensions = { 2 };
+    shape input_dimensions = { 1 };
+    shape target_dimensions = { 2 };
 
     TimeSeriesDataset dataset(4, input_dimensions, target_dimensions);
 

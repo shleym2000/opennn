@@ -118,7 +118,7 @@ void reorganize_inputs_cuda(const type* inputs_device, type* outputs_device, int
 }
 
 
-__global__ void reorganize_deltas_kernel(const type* inputs_device, type* outputs_device, int rows, int cols) 
+__global__ void reorganize_gradients_kernel(const type* inputs_device, type* outputs_device, int rows, int cols) 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int totalSize = rows * cols;
@@ -134,13 +134,13 @@ __global__ void reorganize_deltas_kernel(const type* inputs_device, type* output
     }
 }
 
-void reorganize_deltas_cuda(const type* inputs_device, type* outputs_device, int rows, int cols) 
+void reorganize_gradients_cuda(const type* inputs_device, type* outputs_device, int rows, int cols) 
 {
     int num_elements = rows * cols;
     int blockSize = 256;
     int numBlocks = (num_elements + blockSize - 1) / blockSize;
 
-    reorganize_deltas_kernel << <numBlocks, blockSize >> > (inputs_device, outputs_device, rows, cols);
+    reorganize_gradients_kernel << <numBlocks, blockSize >> > (inputs_device, outputs_device, rows, cols);
 }
 
 
@@ -221,15 +221,15 @@ type* matrix_to_device(const Tensor<type, 2>& matrix)
 }
 
 
-Tensor<type, 2> matrix_from_device(const type* pointer, const size_t& new_rows_number, const size_t& new_raw_variables_number)
+Tensor<type, 2> matrix_from_device(const type* pointer, const size_t& new_rows_number, const size_t& new_variables_number)
 {
-    Tensor<type, 2> matrix(new_rows_number, new_raw_variables_number);
+    Tensor<type, 2> matrix(new_rows_number, new_variables_number);
 
     matrix.setZero();
 
     if (matrix.size() == 0) cout << "Empty matrix" << endl;
 
-    if (cudaMemcpy(matrix.data(), pointer, new_rows_number * new_raw_variables_number * sizeof(type), cudaMemcpyDeviceToHost) != cudaSuccess)
+    if (cudaMemcpy(matrix.data(), pointer, new_rows_number * new_variables_number * sizeof(type), cudaMemcpyDeviceToHost) != cudaSuccess)
         cout << "Cuda matrix memcpy error" << endl;
 
     return matrix;

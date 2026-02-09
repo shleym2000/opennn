@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-class CrossEntropyError2d final : public LossIndex
+class CrossEntropyError2d final : public Loss
 {
 
 public:
@@ -36,17 +36,17 @@ public:
 
     // Gradient
 
-    void calculate_output_delta(const Batch&,
-                                ForwardPropagation&,
-                                BackPropagation&) const override;
+    void calculate_output_gradients(const Batch&,
+                                    ForwardPropagation&,
+                                    BackPropagation&) const override;
 
-    void calculate_binary_output_delta(const Batch&,
-                                       ForwardPropagation&,
-                                       BackPropagation&) const;
+    void calculate_binary_output_gradients(const Batch&,
+                                           ForwardPropagation&,
+                                           BackPropagation&) const;
 
-    void calculate_multiple_output_delta(const Batch&,
-                                         ForwardPropagation&,
-                                         BackPropagation&) const;
+    void calculate_multiple_output_gradients(const Batch&,
+                                             ForwardPropagation&,
+                                             BackPropagation&) const;
 
     // Serialization
 
@@ -62,29 +62,29 @@ public:
 
     // Error
 
-    void calculate_error_cuda(const BatchCuda&,
+    void calculate_error(const BatchCuda&,
                               const ForwardPropagationCuda&,
                               BackPropagationCuda&) const override;
 
-    void calculate_binary_error_cuda(const BatchCuda&,
+    void calculate_binary_error(const BatchCuda&,
                                      const ForwardPropagationCuda&,
                                      BackPropagationCuda&) const;
 
-    void calculate_multiple_error_cuda(const BatchCuda&,
+    void calculate_multiple_error(const BatchCuda&,
                                        const ForwardPropagationCuda&,
                                        BackPropagationCuda&) const;
 
     // Gradient
 
-    void calculate_output_delta_cuda(const BatchCuda&,
+    void calculate_output_gradients(const BatchCuda&,
                                      ForwardPropagationCuda&,
                                      BackPropagationCuda&) const override;
 
-    void calculate_binary_output_delta_cuda(const BatchCuda&,
+    void calculate_binary_output_gradients(const BatchCuda&,
                                             ForwardPropagationCuda&,
                                             BackPropagationCuda&) const;
 
-    void calculate_multiple_output_delta_cuda(const BatchCuda&,
+    void calculate_multiple_output_gradients(const BatchCuda&,
                                               ForwardPropagationCuda&,
                                               BackPropagationCuda&) const;
 

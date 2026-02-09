@@ -16,7 +16,7 @@ namespace opennn
 {
 
 GrowingNeurons::GrowingNeurons(const TrainingStrategy* new_training_strategy)
-    : NeuronsSelection(new_training_strategy)
+    : NeuronSelection(new_training_strategy)
 {
     set_default();
 }
@@ -28,9 +28,9 @@ const Index& GrowingNeurons::get_neurons_increment() const
 }
 
 
-const Index& GrowingNeurons::get_maximum_selection_failures() const
+const Index& GrowingNeurons::get_maximum_validation_failures() const
 {
-    return maximum_selection_failures;
+    return maximum_validation_failures;
 }
 
 
@@ -42,7 +42,7 @@ void GrowingNeurons::set_default()
     maximum_neurons = 10;
     trials_number = 3;
     neurons_increment = 1;
-    maximum_selection_failures = 100;
+    maximum_validation_failures = 100;
     maximum_time = type(3600);
 }
 
@@ -53,15 +53,15 @@ void GrowingNeurons::set_neurons_increment(const Index new_neurons_increment)
 }
 
 
-void GrowingNeurons::set_maximum_selection_failures(const Index new_maximum_selection_failures)
+void GrowingNeurons::set_maximum_validation_failures(const Index new_maximum_validation_failures)
 {
-    maximum_selection_failures = new_maximum_selection_failures;
+    maximum_validation_failures = new_maximum_validation_failures;
 }
 
 
 NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 {
-    NeuronsSelectionResults neuron_selection_results(maximum_epochs_number);
+    NeuronsSelectionResults neuron_selection_results(maximum_epochs);
 
     if(display) cout << "Performing growing neuron selection..." << endl;
 
@@ -75,11 +75,11 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 
     // Loss index
 
-    type previous_selection_error = numeric_limits<type>::max();
+    type previous_validation_error = numeric_limits<type>::max();
 
     // Optimization algorithm
 
-    Index selection_failures = 0;
+    Index validation_failures = 0;
 
     bool end = false;
 
@@ -94,7 +94,7 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 
     // Main loop
 
-    for(Index epoch = 0; epoch < maximum_epochs_number; epoch++)
+    for(Index epoch = 0; epoch < maximum_epochs; epoch++)
     {
         if(display) cout << "\nGrowing neurons epoch: " << epoch << endl;
 
@@ -102,8 +102,8 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 
         neurons_number = minimum_neurons + epoch*neurons_increment;
 
-        neural_network->get_layer(last_trainable_layer_index - 1)->set_output_dimensions({ neurons_number });
-        neural_network->get_layer(last_trainable_layer_index)->set_input_dimensions({ neurons_number });
+        neural_network->get_layer(last_trainable_layer_index - 1)->set_output_shape({ neurons_number });
+        neural_network->get_layer(last_trainable_layer_index)->set_input_shape({ neurons_number });
 
         //neural_network->print();
         // throw runtime_error("Checking the network");
@@ -113,7 +113,7 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
         // Loss index
 
         type minimum_training_error = numeric_limits<type>::max();
-        type minimum_selection_error = numeric_limits<type>::max();
+        type minimum_validation_error = numeric_limits<type>::max();
 
         for(Index trial = 0; trial < trials_number; trial++)
         {
@@ -124,36 +124,36 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
             if(display)
                 cout << "Trial: " << trial+1 << endl
                      << "Training error: " << training_results.get_training_error() << endl
-                     << "Selection error: " << training_results.get_selection_error() << endl;
+                     << "Validation error: " << training_results.get_validation_error() << endl;
 
-            if(training_results.get_selection_error() < minimum_selection_error)
+            if(training_results.get_validation_error() < minimum_validation_error)
             {
                 minimum_training_error = training_results.get_training_error();
-                minimum_selection_error = training_results.get_selection_error();
+                minimum_validation_error = training_results.get_validation_error();
 
                 neuron_selection_results.training_error_history(epoch) = minimum_training_error;
-                neuron_selection_results.selection_error_history(epoch) = minimum_selection_error;
+                neuron_selection_results.validation_error_history(epoch) = minimum_validation_error;
             }
 
-            if(minimum_selection_error < neuron_selection_results.optimum_selection_error)
+            if(minimum_validation_error < neuron_selection_results.optimum_validation_error)
             {
                 neuron_selection_results.optimal_neurons_number = neurons_number;
                 //neural_network->get_parameters(neuron_selection_results.optimal_parameters);
                 neuron_selection_results.optimum_training_error = minimum_training_error;
-                neuron_selection_results.optimum_selection_error = minimum_selection_error;                                
+                neuron_selection_results.optimum_validation_error = minimum_validation_error;                                
             }
         }
 
         if(display)
             cout << "Neurons number: " << neurons_number << endl
                  << "Training error: " << training_results.get_training_error() << endl
-                 << "Selection error: " << training_results.get_selection_error() << endl
+                 << "Validation error: " << training_results.get_validation_error() << endl
                  << "Elapsed time: " << write_time(elapsed_time) << endl;
 
-        if(neuron_selection_results.optimum_selection_error > previous_selection_error) 
-            selection_failures++;
+        if(neuron_selection_results.optimum_validation_error > previous_validation_error) 
+            validation_failures++;
 
-        previous_selection_error = neuron_selection_results.optimum_selection_error;
+        previous_validation_error = neuron_selection_results.optimum_validation_error;
 
         time(&current_time);
 
@@ -168,19 +168,19 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
             if (display) cout << "Epoch " << epoch << "\nMaximum time reached: " << write_time(elapsed_time) << endl;
             neuron_selection_results.stopping_condition = GrowingNeurons::StoppingCondition::MaximumTime;
         }
-        else if(training_results.get_selection_error() <= selection_error_goal)
+        else if(training_results.get_validation_error() <= validation_error_goal)
         {
-            if(display) cout << "Epoch " << epoch << "\nSelection error goal reached: " << training_results.get_selection_error() << endl;
+            if(display) cout << "Epoch " << epoch << "\nSelection error goal reached: " << training_results.get_validation_error() << endl;
             neuron_selection_results.stopping_condition = GrowingNeurons::StoppingCondition::SelectionErrorGoal;
         }
-        else if(epoch >= maximum_epochs_number)
+        else if(epoch >= maximum_epochs)
         {
             if(display) cout << "Epoch " << epoch << "\nMaximum epochs number reached: " << epoch << endl;
             neuron_selection_results.stopping_condition = GrowingNeurons::StoppingCondition::MaximumEpochs;
         }
-        else if(selection_failures >= maximum_selection_failures)
+        else if(validation_failures >= maximum_validation_failures)
         {
-            if(display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << selection_failures << endl;
+            if(display) cout << "Epoch " << epoch << "\nMaximum selection failures reached: " << validation_failures << endl;
             neuron_selection_results.stopping_condition = GrowingNeurons::StoppingCondition::MaximumSelectionFailures;
         }
         else if(neurons_number >= maximum_neurons)
@@ -207,8 +207,8 @@ NeuronsSelectionResults GrowingNeurons::perform_neurons_selection()
 
     cout << "Parameters number: " << neuron_selection_results.optimal_parameters.dimensions() << endl;
 
-    neural_network->get_layer(last_trainable_layer_index - 1).get()->set_output_dimensions({ neuron_selection_results.optimal_neurons_number });
-    neural_network->get_layer(last_trainable_layer_index).get()->set_input_dimensions({ neuron_selection_results.optimal_neurons_number });
+    neural_network->get_layer(last_trainable_layer_index - 1).get()->set_output_shape({ neuron_selection_results.optimal_neurons_number });
+    neural_network->get_layer(last_trainable_layer_index).get()->set_input_shape({ neuron_selection_results.optimal_neurons_number });
     neural_network->set_parameters(neuron_selection_results.optimal_parameters);
 
     if(display) neuron_selection_results.print();
@@ -226,9 +226,9 @@ Tensor<string, 2> GrowingNeurons::to_string_matrix() const
     {"Maximum neurons", to_string(maximum_neurons)},
     {"NeuronsIncrement", to_string(neurons_increment)},
     {"Trials number", to_string(trials_number)},
-    {"Selection loss goal", to_string(selection_error_goal)},
-    {"Maximum selection failures", to_string(maximum_selection_failures)},
-    {"Maximum iterations number", to_string(maximum_epochs_number)},
+    {"Validation loss goal", to_string(validation_error_goal)},
+    {"Maximum selection failures", to_string(maximum_validation_failures)},
+    {"Maximum iterations number", to_string(maximum_epochs)},
     {"Maximum time", to_string(maximum_time)}});
 
     return string_matrix;
@@ -243,8 +243,8 @@ void GrowingNeurons::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "MaximumNeurons", to_string(maximum_neurons));
     add_xml_element(printer, "NeuronsIncrement", to_string(neurons_increment));
     add_xml_element(printer, "TrialsNumber", to_string(trials_number));
-    add_xml_element(printer, "SelectionErrorGoal", to_string(selection_error_goal));
-    add_xml_element(printer, "MaximumSelectionFailures", to_string(maximum_selection_failures));
+    add_xml_element(printer, "SelectionErrorGoal", to_string(validation_error_goal));
+    add_xml_element(printer, "MaximumSelectionFailures", to_string(maximum_validation_failures));
     add_xml_element(printer, "MaximumTime", to_string(maximum_time));
 
     printer.CloseElement();
@@ -262,8 +262,8 @@ void GrowingNeurons::from_XML(const XMLDocument& document)
     set_maximum_neurons(read_xml_index(root_element, "MaximumNeurons"));
     set_neurons_increment(read_xml_index(root_element, "NeuronsIncrement"));
     set_trials_number(read_xml_index(root_element, "TrialsNumber"));
-    set_selection_error_goal(read_xml_type(root_element, "SelectionErrorGoal"));
-    set_maximum_selection_failures(read_xml_index(root_element, "MaximumSelectionFailures"));
+    set_validation_error_goal(read_xml_type(root_element, "SelectionErrorGoal"));
+    set_maximum_validation_failures(read_xml_index(root_element, "MaximumSelectionFailures"));
     set_maximum_time(read_xml_type(root_element, "MaximumTime"));
 }
 
@@ -293,7 +293,7 @@ void GrowingNeurons::load(const filesystem::path& file_name)
     from_XML(document);
 }
 
-REGISTER(NeuronsSelection, GrowingNeurons, "GrowingNeurons");
+REGISTER(NeuronSelection, GrowingNeurons, "GrowingNeurons");
 
 }
 

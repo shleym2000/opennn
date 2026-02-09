@@ -24,19 +24,19 @@ class Scaling final : public Layer
 
 public:
 
-    Scaling(const dimensions& new_input_dimensions = {})
+    Scaling(const shape& new_input_shape = {})
     {
-        set(new_input_dimensions);
+        set(new_input_shape);
     }
 
-    dimensions get_input_dimensions() const override
+    shape get_input_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
-    dimensions get_output_dimensions() const override
+    shape get_output_shape() const override
     {
-        return input_dimensions;
+        return input_shape;
     }
 
     vector<Descriptives> get_descriptives() const
@@ -109,20 +109,20 @@ public:
     }
 
 
-    void set(const dimensions& new_input_dimensions = {})
+    void set(const shape& new_input_shape = {})
     {
-        if (new_input_dimensions.size() != Rank -1) 
+        if (new_input_shape.size() != Rank -1) 
         {
            ostringstream buffer;
            buffer << "OpenNN Exception: Scaling Layer.\n"
-                  << "void set(const dimensions& new_input_dimensions) method.\n"
-                  << "Input dimensions size must be " << Rank - 1 << ", but is " << new_input_dimensions.size() << ".\n";
+                  << "void set(const shape& new_input_shape) method.\n"
+                  << "Input shape size must be " << Rank - 1 << ", but is " << new_input_shape.size() << ".\n";
            throw logic_error(buffer.str());
         }
 
-        input_dimensions = new_input_dimensions;
+        input_shape = new_input_shape;
 
-        const Index new_inputs_number = count_elements(new_input_dimensions);
+        const Index new_inputs_number = count_elements(new_input_shape);
 
         descriptives.resize(new_inputs_number);
 
@@ -142,14 +142,14 @@ public:
         is_trainable = false;
     }
 
-    void set_input_dimensions(const dimensions& new_input_dimensions) override
+    void set_input_shape(const shape& new_input_shape) override
     {
-        set(new_input_dimensions);
+        set(new_input_shape);
     }
 
-    void set_output_dimensions(const dimensions& new_output_dimensions) override
+    void set_output_shape(const shape& new_output_shape) override
     {
-        set_input_dimensions(new_output_dimensions);
+        set_input_shape(new_output_shape);
     }
 
 
@@ -179,7 +179,7 @@ public:
 
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                           const bool&) override
+                           bool) override
     {
         const Index outputs_number = get_outputs_number();
 
@@ -210,35 +210,35 @@ public:
         }
     }
 
-    string write_no_scaling_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_no_scaling_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
 
         ostringstream buffer;
 
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = " << feature_names[i] << ";\n";
+            buffer << output_names[i] << " = " << input_names[i] << ";\n";
 
         return buffer.str();
     }
 
-    string write_minimum_maximum_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_minimum_maximum_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
 
         ostringstream buffer;
 
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = 2*(" << feature_names[i] << "-(" << descriptives[i].minimum << "))/(" << descriptives[i].maximum << "-(" << descriptives[i].minimum << "))-1;\n";
+            buffer << output_names[i] << " = 2*(" << input_names[i] << "-(" << descriptives[i].minimum << "))/(" << descriptives[i].maximum << "-(" << descriptives[i].minimum << "))-1;\n";
 
         return buffer.str();
     }
 
-    string write_mean_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_mean_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
         const Index inputs_number = get_inputs_number();
 
@@ -247,28 +247,28 @@ public:
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = (" << feature_names[i] << "-(" << descriptives[i].mean << "))/" << descriptives[i].standard_deviation << ";\n";
+            buffer << output_names[i] << " = (" << input_names[i] << "-(" << descriptives[i].mean << "))/" << descriptives[i].standard_deviation << ";\n";
 
         return buffer.str();
     }
 
-    string write_standard_deviation_expression(const vector<string>& feature_names, const vector<string>& output_names) const
+    string write_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_dimensions().size() == 0 ? 0 : count_elements(get_output_dimensions());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
 
         ostringstream buffer;
 
         buffer.precision(10);
 
         for(Index i = 0; i < inputs_number; i++)
-            buffer << output_names[i] << " = " << feature_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
+            buffer << output_names[i] << " = " << input_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
 
         return buffer.str();
     }
 
     string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& = vector<string>()) const override
     {
-        const vector<string> feature_names = new_feature_names.empty()
+        const vector<string> input_names = new_feature_names.empty()
                                                ? get_default_feature_names()
                                                : new_feature_names;
 
@@ -283,19 +283,19 @@ public:
             const string& scaler = scalers[i];
 
             if(scaler == "None")
-                buffer << "scaled_" << feature_names[i] << " = " << feature_names[i] << ";\n";
+                buffer << "scaled_" << input_names[i] << " = " << input_names[i] << ";\n";
             else if(scaler == "MinimumMaximum")
-                buffer << "scaled_" << feature_names[i]
-                       << " = " << feature_names[i] << "*(" << max_range << "-" << min_range << ")/("
+                buffer << "scaled_" << input_names[i]
+                       << " = " << input_names[i] << "*(" << max_range << "-" << min_range << ")/("
                        << descriptives[i].maximum << "-(" << descriptives[i].minimum << "))-" << descriptives[i].minimum << "*("
                        << max_range << "-" << min_range << ")/("
                        << descriptives[i].maximum << "-" << descriptives[i].minimum << ")+" << min_range << ";\n";
             else if(scaler == "MeanStandardDeviation")
-                buffer << "scaled_" << feature_names[i] << " = (" << feature_names[i] << "-" << descriptives[i].mean << ")/" << descriptives[i].standard_deviation << ";\n";
+                buffer << "scaled_" << input_names[i] << " = (" << input_names[i] << "-" << descriptives[i].mean << ")/" << descriptives[i].standard_deviation << ";\n";
             else if(scaler == "StandardDeviation")
-                buffer << "scaled_" << feature_names[i] << " = " << feature_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
+                buffer << "scaled_" << input_names[i] << " = " << input_names[i] << "/(" << descriptives[i].standard_deviation << ");\n";
             else if(scaler == "Logarithm")
-                buffer << "scaled_" << feature_names[i] << " = log(" << feature_names[i] << ");\n";
+                buffer << "scaled_" << input_names[i] << " = log(" << input_names[i] << ");\n";
             else
                 throw runtime_error("Unknown inputs scaling method.\n");
         }
@@ -344,11 +344,11 @@ public:
             // But following 2D code strictly, it only reads NeuronsNumber.
             // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
             // However, to make it compile for Rank > 2, I need to pass correct size.
-            // If XML doesn't validation dims, we can't fully restore dimensions.
+            // If XML doesn't validation dims, we can't fully restore dims.
             // I will implement a dummy reshape for now to satisfy Rank:
             // [neurons_number, 1, 1...]
 
-            dimensions dims(Rank-1, 1);
+            shape dims(Rank-1, 1);
             dims[0] = neurons_number;
             set(dims);
         }
@@ -392,7 +392,7 @@ public:
     {
         printer.OpenElement(name.c_str());
 
-        add_xml_element(printer, "NeuronsNumber", to_string(get_output_dimensions().size() == 0 ? 0 : accumulate(get_output_dimensions().begin(), get_output_dimensions().end(), 1, multiplies<Index>())));
+        add_xml_element(printer, "NeuronsNumber", to_string(get_output_shape().size() == 0 ? 0 : accumulate(get_output_shape().begin(), get_output_shape().end(), 1, multiplies<Index>())));
 
         const Index outputs_number = get_outputs_number();
 
@@ -411,9 +411,9 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void forward_propagate_cuda(const vector<TensorViewCuda>& inputs_device,
+    void forward_propagate(const vector<TensorViewCuda>& inputs,
                                 unique_ptr<LayerForwardPropagationCuda>& forward_propagation,
-                                const bool&) override
+                                bool) override
     {
         ScalingForwardPropagationCuda<Rank>* scaling_forward_propagation =
             static_cast<ScalingForwardPropagationCuda<Rank>*>(forward_propagation.get());
@@ -421,8 +421,11 @@ public:
         const Index outputs_number = get_outputs_number();
         const size_t size = outputs_number * forward_propagation->batch_size;
 
-        scale_2d_cuda(size, forward_propagation->batch_size, outputs_number,
-                      inputs_device[0].data, forward_propagation->outputs.data,
+        scale_2d_cuda(size,
+                      forward_propagation->batch_size,
+                      outputs_number,
+                      inputs[0].data,
+                      forward_propagation->outputs.data,
                       scaling_forward_propagation->scalers_device,
                       scaling_forward_propagation->minimums_device,
                       scaling_forward_propagation->maximums_device,
@@ -436,7 +439,7 @@ public:
 
 private:
 
-    dimensions input_dimensions;
+    shape input_shape;
 
     type* minimums = nullptr;
     type* maximums = nullptr;

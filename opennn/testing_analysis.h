@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "pch.h"    
 #include "tinyxml2.h"
 
 using namespace tinyxml2;
@@ -84,14 +85,14 @@ public:
     NeuralNetwork* get_neural_network() const;
     Dataset* get_dataset() const;
 
-    const bool& get_display() const;
+    bool get_display() const;
 
     // Set
 
     void set_neural_network(NeuralNetwork*);
     void set_dataset(Dataset*);
 
-    void set_display(const bool&);
+    void set_display(bool);
 
     void set_threads_number(const int&);
 
@@ -249,7 +250,7 @@ public:
 
     pair<type, type> test_transformer() const;
 
-    string test_transformer(const vector<string>& context_string, const bool& imported_vocabulary) const;
+    string test_transformer(const vector<string>& context_string, bool imported_vocabulary) const;
 
     // Serialization
 

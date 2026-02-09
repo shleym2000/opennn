@@ -121,8 +121,8 @@ TEST(NeuralNetworkTest, ForwardPropagate)
     });
 
     Dataset dataset(samples_number,
-                    dimensions{inputs_number},
-                    dimensions{outputs_number});
+                    shape{inputs_number},
+                    shape{outputs_number});
     dataset.set_data(data);
     dataset.set_sample_roles("Training");
 
@@ -136,7 +136,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     ForwardPropagation forward_propagation(samples_number, &neural_network_aproximation);
 
-    neural_network_aproximation.forward_propagate(batch.get_input_views(), forward_propagation, is_training);
+    neural_network_aproximation.forward_propagate(batch.get_inputs(), forward_propagation, is_training);
 
     DenseForwardPropagation<2>* dense_layer_forward_propagation
         = static_cast<DenseForwardPropagation<2>*>(forward_propagation.layers[1].get());
@@ -152,7 +152,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     ForwardPropagation forward_propagation_0(samples_number, &neural_network_classification);
 
-    neural_network_classification.forward_propagate(batch.get_input_views(), forward_propagation_0, is_training);
+    neural_network_classification.forward_propagate(batch.get_inputs(), forward_propagation_0, is_training);
 
     DenseForwardPropagation<2>* dense_layer_forward_propagation_0
         = static_cast<DenseForwardPropagation<2>*>(forward_propagation_0.layers[1].get());
@@ -248,7 +248,7 @@ TEST(NeuralNetworkTest, TestSaveLoad)
 
     NeuralNetwork loaded_empty_net(file_path);
 
-    EXPECT_EQ(loaded_empty_net.get_features_number(), 0);
+    EXPECT_EQ(loaded_empty_net.get_inputs_number(), 0);
     EXPECT_EQ(loaded_empty_net.get_layers_number(), 0);
     EXPECT_EQ(loaded_empty_net.get_outputs_number(), 0);
 
@@ -259,7 +259,7 @@ TEST(NeuralNetworkTest, TestSaveLoad)
 
     NeuralNetwork loaded_neural_approx1_network(file_path);
 
-    EXPECT_EQ(neural_approx1_network.get_features_number(), loaded_neural_approx1_network.get_features_number());
+    EXPECT_EQ(neural_approx1_network.get_inputs_number(), loaded_neural_approx1_network.get_inputs_number());
 
     EXPECT_EQ(neural_approx1_network.get_layers_number(), loaded_neural_approx1_network.get_layers_number());
     EXPECT_EQ(neural_approx1_network.get_layer(0)->get_name(), loaded_neural_approx1_network.get_layer(0)->get_name());

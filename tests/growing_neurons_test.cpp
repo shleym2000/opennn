@@ -74,7 +74,7 @@ TEST(GrowingNeuronsTest, NeuronsSelection)
 
     growing_neurons.set_trials_number(1);
     growing_neurons.set_maximum_neurons(7);
-    growing_neurons.set_selection_error_goal(type(1.0e-3f));
+    growing_neurons.set_validation_error_goal(type(1.0e-3f));
     growing_neurons.set_display(false);
 
     //EXPECT_EQ(neural_network.get_layers_neurons_numbers()[0], 1);
@@ -134,7 +134,7 @@ void GrowingNeuronsTest::test_perform_neurons_selection()
 
     growing_neurons.set_trials_number(1);
     growing_neurons.set_maximum_neurons_number(5);
-    growing_neurons.set_selection_error_goal(type(0));
+    growing_neurons.set_validation_error_goal(type(0));
     growing_neurons.set_maximum_selection_failures(1);
     growing_neurons.set_display(false);
 

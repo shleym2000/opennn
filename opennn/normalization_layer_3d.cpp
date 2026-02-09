@@ -13,10 +13,10 @@
 namespace opennn
 {
 
-Normalization3d::Normalization3d(const dimensions& new_input_dimensions,
+Normalization3d::Normalization3d(const shape& new_input_shape,
                                  const string& new_name) : Layer()
 {
-    set(new_input_dimensions[0], new_input_dimensions[1], new_name);
+    set(new_input_shape[0], new_input_shape[1], new_name);
 }
 
 
@@ -32,7 +32,7 @@ Index Normalization3d::get_embedding_dimension() const
 }
 
 
-dimensions Normalization3d::get_input_dimensions() const
+shape Normalization3d::get_input_shape() const
 {
     const Index embedding_dimension = get_embedding_dimension();
 
@@ -40,7 +40,7 @@ dimensions Normalization3d::get_input_dimensions() const
 }
 
 
-dimensions Normalization3d::get_output_dimensions() const
+shape Normalization3d::get_output_shape() const
 {
     const Index embedding_dimension = get_embedding_dimension();
 
@@ -76,7 +76,7 @@ void Normalization3d::set(const Index new_sequence_length,
 
 void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
                                         unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                        const bool&)
+                                        bool)
 {
     const Index batch_size = layer_forward_propagation->batch_size;
     //    const Index sequence_length = get_sequence_length();
@@ -117,17 +117,17 @@ void Normalization3d::forward_propagate(const vector<TensorView>& input_views,
 
 
 void Normalization3d::back_propagate(const vector<TensorView>& input_views,
-                                     const vector<TensorView>& delta_views,
+                                     const vector<TensorView>& output_gradient_views,
                                      unique_ptr<LayerForwardPropagation>& forward_propagation,
                                      unique_ptr<LayerBackPropagation>& back_propagation) const
 {
     const Index batch_size = input_views[0].dims[0];
     const Index embedding_dimension = get_embedding_dimension();
 
-    if(delta_views.size() > 1)
-        add_deltas(delta_views);
+    if(output_gradient_views.size() > 1)
+        add_gradients(output_gradient_views);
 
-    const TensorMap3 deltas = tensor_map<3>(delta_views[0]);
+    const TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
     const TensorMap3 outputs = tensor_map<3>(forward_propagation->outputs);
 
@@ -142,10 +142,10 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     TensorMap1 gamma_derivatives = tensor_map<1>(this_back_propagation->gamma_derivatives);
     TensorMap1 beta_derivatives = tensor_map<1>(this_back_propagation->beta_derivatives);
 
-    Tensor3& scaled_deltas = this_back_propagation->scaled_deltas;
+    Tensor3& scaled_gradients = this_back_propagation->scaled_gradients;
     Tensor3& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
 
-    TensorMap3 input_deltas = tensor_map<3>(this_back_propagation->input_deltas[0]);
+    TensorMap3 input_gradients = tensor_map<3>(this_back_propagation->input_gradients[0]);
 
     Tensor2& aux_2d = this_back_propagation->aux_2d;
 
@@ -153,27 +153,27 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
 
     // Parameters derivatives
 
-    gamma_derivatives.device(*device) = (outputs * deltas).sum(array<Index, 2>({0, 1}));
-    beta_derivatives.device(*device) = deltas.sum(array<Index, 2>({0, 1}));
+    gamma_derivatives.device(*device) = (outputs * output_gradients).sum(array<Index, 2>({0, 1}));
+    beta_derivatives.device(*device) = output_gradients.sum(array<Index, 2>({0, 1}));
 
     // Input derivatives
 /*
-    scaled_deltas.device(*device) = deltas;
-    multiply_matrices(device.get(), scaled_deltas, gammas);
+    scaled_gradients.device(*device) = output_gradients;
+    multiply_matrices(device.get(), scaled_gradients, gammas);
 
-    aux_2d.device(*device) = (scaled_deltas * outputs).sum(array<Index, 1>({2}))
+    aux_2d.device(*device) = (scaled_gradients * outputs).sum(array<Index, 1>({2}))
                                          / (embedding_dimension * (standard_deviations + epsilon));
 
     standard_deviation_derivatives.device(*device) = outputs;
     multiply_matrices(device.get(), standard_deviation_derivatives, aux_2d);
 
-    scaled_deltas.device(*device) = scaled_deltas
+    scaled_gradients.device(*device) = scaled_gradients
                                                 / (standard_deviations.reshape(array<Index, 3>({batch_size, sequence_length, 1}))
                                                        .broadcast(array<Index, 3>({1, 1, embedding_dimension})) + epsilon);
 
-    input_deltas.device(*device) = scaled_deltas - standard_deviation_derivatives;
+    input_gradients.device(*device) = scaled_gradients - standard_deviation_derivatives;
 
-    aux_2d.device(*device) = 1 / type(embedding_dimension) * scaled_deltas.sum(array<Index, 1>({2}));
+    aux_2d.device(*device) = 1 / type(embedding_dimension) * scaled_gradients.sum(array<Index, 1>({2}));
     /*
     input_derivatives.device(*device) = input_derivatives
         - aux_2d.reshape(array<Index, 3>{input_derivatives.dimension(0), input_derivatives.dimension(1), 1})
@@ -254,12 +254,12 @@ void Normalization3dBackPropagation::initialize()
     gamma_derivatives.dims = {embedding_dimension};
     beta_derivatives.dims = {embedding_dimension};
 
-    scaled_deltas.resize(batch_size, sequence_length, embedding_dimension);
+    scaled_gradients.resize(batch_size, sequence_length, embedding_dimension);
     standard_deviation_derivatives.resize(batch_size, sequence_length, embedding_dimension);
     aux_2d.resize(batch_size, sequence_length);
 
-    input_deltas.resize(1);
-    input_deltas[0].dims = {batch_size, sequence_length, embedding_dimension};
+    input_gradients.resize(1);
+    input_gradients[0].dims = {batch_size, sequence_length, embedding_dimension};
 }
 
 

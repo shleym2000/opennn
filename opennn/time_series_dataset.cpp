@@ -16,9 +16,9 @@ namespace opennn
 {
 
 TimeSeriesDataset::TimeSeriesDataset(const Index new_samples_number,
-                                     const dimensions& new_input_dimensions,
-                                     const dimensions& new_target_dimensions)
-    :Dataset(new_samples_number, new_input_dimensions, new_target_dimensions)
+                                     const shape& new_input_shape,
+                                     const shape& new_target_shape)
+    :Dataset(new_samples_number, new_input_shape, new_target_shape)
 {
 
 }
@@ -26,32 +26,32 @@ TimeSeriesDataset::TimeSeriesDataset(const Index new_samples_number,
 
 TimeSeriesDataset::TimeSeriesDataset(const filesystem::path& data_path,
                                      const string& separator,
-                                     const bool& has_header,
-                                     const bool& has_sample_ids,
+                                     bool has_header,
+                                     bool has_sample_ids,
                                      const Codification& data_codification)
     :Dataset(data_path, separator, has_header, has_sample_ids, data_codification)
 {
-    const Index variables_number = get_variables_number();
+    const Index features_number = get_features_number();
 
-    if(variables_number == 1)
-        set_raw_variable_role(0, "InputTarget");
+    if(features_number == 1)
+        set_variable_role(0, "InputTarget");
     else
     {
-        const vector<Index> target_index = get_variable_indices("Target");
-        set_raw_variable_role(target_index[0], "InputTarget");
+        const vector<Index> target_index = get_feature_indices("Target");
+        set_variable_role(target_index[0], "InputTarget");
     }
 
-    input_dimensions = {past_time_steps, get_variables_number("Input")};
-    target_dimensions = { get_variables_number("Target") };
+    input_shape = {past_time_steps, get_features_number("Input")};
+    target_shape = { get_features_number("Target") };
 
     split_samples_sequential(type(0.6), type(0.2), type(0.2));
 
 }
 
 
-const Index& TimeSeriesDataset::get_time_raw_variable_index() const
+const Index& TimeSeriesDataset::get_time_variable_index() const
 {
-    return time_raw_variable_index;
+    return time_variable_index;
 }
 
 
@@ -67,24 +67,24 @@ const Index& TimeSeriesDataset::get_future_time_steps() const
 }
 
 
-Tensor3 TimeSeriesDataset::get_data(const string& sample_role, const string& variable_use) const
+Tensor3 TimeSeriesDataset::get_data(const string& sample_role, const string& feature_use) const
 {
     const vector<Index> sample_indices = get_sample_indices(sample_role);
-    const vector<Index> variable_indices = get_variable_indices(variable_use);
+    const vector<Index> feature_indices = get_feature_indices(feature_use);
 
-    if (sample_indices.empty() || variable_indices.empty()) {
+    if (sample_indices.empty() || feature_indices.empty()) {
         return Tensor3();
     }
 
     const Index samples_number = sample_indices.size();
-    const Index variables_number = variable_indices.size();
+    const Index features_number = feature_indices.size();
 
-    Tensor3 data_3d(samples_number, past_time_steps, variables_number);
+    Tensor3 data_3d(samples_number, past_time_steps, features_number);
     data_3d.setZero();
 
-    if (variable_use == "Input" || variable_use == "InputTarget")
-        fill_input_tensor(sample_indices, variable_indices, data_3d.data());
-    else if (variable_use == "Target")
+    if (feature_use == "Input" || feature_use == "InputTarget")
+        fill_input_tensor(sample_indices, feature_indices, data_3d.data());
+    else if (feature_use == "Target")
         throw runtime_error("get_data for 3D is only implemented for 'Input' variables in TimeSeriesDataset.");
 
     return data_3d;
@@ -103,22 +103,22 @@ TimeSeriesDataset::TimeSeriesData TimeSeriesDataset::get_data() const
 
     TimeSeriesData ts_data;
 
-    const vector<Index> input_variable_indices = get_variable_indices("Input");
-    if(!input_variable_indices.empty())
+    const vector<Index> input_feature_indices = get_feature_indices("Input");
+    if(!input_feature_indices.empty())
     {
-        const Index input_vars_number = input_variable_indices.size();
+        const Index input_vars_number = input_feature_indices.size();
         ts_data.inputs.resize(total_samples, past_time_steps, input_vars_number);
         ts_data.inputs.setZero();
-        fill_input_tensor(all_sample_indices, input_variable_indices, ts_data.inputs.data());
+        fill_input_tensor(all_sample_indices, input_feature_indices, ts_data.inputs.data());
     }
 
-    const vector<Index> target_variable_indices = get_variable_indices("Target");
-    if(!target_variable_indices.empty())
+    const vector<Index> target_feature_indices = get_feature_indices("Target");
+    if(!target_feature_indices.empty())
     {
-        const Index target_vars_number = target_variable_indices.size();
+        const Index target_vars_number = target_feature_indices.size();
         ts_data.targets.resize(total_samples, target_vars_number);
         ts_data.targets.setZero();
-        fill_target_tensor(all_sample_indices, target_variable_indices, ts_data.targets.data());
+        fill_target_tensor(all_sample_indices, target_feature_indices, ts_data.targets.data());
     }
 
     return ts_data;
@@ -137,9 +137,9 @@ void TimeSeriesDataset::set_future_time_steps(const Index new_future_time_steps)
 }
 
 
-void TimeSeriesDataset::set_time_raw_variable_index(const Index new_time_raw_variable_index)
+void TimeSeriesDataset::set_time_variable_index(const Index new_time_variable_index)
 {
-    time_raw_variable_index = new_time_raw_variable_index;
+    time_variable_index = new_time_variable_index;
 }
 
 
@@ -147,18 +147,18 @@ void TimeSeriesDataset::print() const
 {
     if(!display) return;
 
-    const Index variables_number = get_variables_number();
-    const Index input_variables_number = get_variables_number("Input");
+    const Index features_number = get_features_number();
+    const Index input_features_number = get_features_number("Input");
     const Index samples_number = get_samples_number();
-    const Index target_variables_bumber = get_variables_number("Target");
+    const Index target_variables_number = get_features_number("Target");
 
     cout << "Time series dataset object summary:\n"
          << "Number of samples: " << samples_number << "\n"
-         << "Number of variables: " << variables_number << "\n"
-         << "Number of input variables: " << input_variables_number << "\n"
-         << "Number of target variables: " << target_variables_bumber << "\n"
-         << "Input variables dimensions: " << get_dimensions("Input")
-         << "Target variables dimensions: " << get_dimensions("Target")
+         << "Number of variables: " << features_number << "\n"
+         << "Number of input variables: " << input_features_number << "\n"
+         << "Number of target variables: " << target_variables_number << "\n"
+         << "Input variables shape: " << get_shape("Input")
+         << "Target variables shape: " << get_shape("Target")
          << "Past time steps: " << get_past_time_steps() << endl
          << "Future time steps: " << get_future_time_steps() << endl;
 }
@@ -177,11 +177,10 @@ void TimeSeriesDataset::to_XML(XMLPrinter& printer) const
     add_xml_element(printer, "MissingValuesLabel", missing_values_label);
     add_xml_element(printer, "LagsNumber", to_string(get_past_time_steps()));
     add_xml_element(printer, "StepsAhead", to_string(get_future_time_steps()));
-//    add_xml_element(printer, "TimeRawVariable", get_time_raw_variable());
     add_xml_element(printer, "Codification", get_codification_string());
     printer.CloseElement();
 
-    raw_variables_to_XML(printer);
+    variables_to_XML(printer);
 
     samples_to_XML(printer);
 
@@ -218,14 +217,13 @@ void TimeSeriesDataset::from_XML(const XMLDocument& data_set_document)
     set_missing_values_label(read_xml_string(data_source_element, "MissingValuesLabel"));
     set_past_time_steps(stoi(read_xml_string(data_source_element, "LagsNumber")));
     set_future_time_steps(stoi(read_xml_string(data_source_element, "StepsAhead")));
-    //set_time_raw_variable(read_xml_string(data_source_element, "TimeRawVariable"));
     set_codification(read_xml_string(data_source_element, "Codification"));
 
-    // Raw variables
+    // Variables
 
-    const XMLElement* raw_variables_element = data_set_element->FirstChildElement("RawVariables");
+    const XMLElement* variables_element = data_set_element->FirstChildElement("Variables");
 
-    raw_variables_from_XML(raw_variables_element);
+    variables_from_XML(variables_element);
 
     // Samples
 
@@ -247,8 +245,8 @@ void TimeSeriesDataset::from_XML(const XMLDocument& data_set_document)
 
     set_display(read_xml_bool(data_set_element, "Display"));
 
-    input_dimensions = { past_time_steps, get_variables_number("Input") };
-    target_dimensions = { get_variables_number("Target") };
+    input_shape = { past_time_steps, get_features_number("Input") };
+    target_shape = { get_features_number("Target") };
 }
 
 
@@ -256,25 +254,25 @@ void TimeSeriesDataset::read_csv()
 {
     Dataset::read_csv();
 
-    set_default_raw_variables_roles_forecasting();
+    set_default_variables_roles_forecasting();
 
-    const Index variables_number = get_variables_number();
+    const Index features_number = get_features_number();
 
-    if (variables_number == 1)
-        set_raw_variable_role(0, "InputTarget");
+    if (features_number == 1)
+        set_variable_role(0, "InputTarget");
     else
     {
-        const vector<Index> target_indices = get_variable_indices("Target");
+        const vector<Index> target_indices = get_feature_indices("Target");
 
         if(!target_indices.empty())
         {
-            const Index raw_variable_target_index = get_raw_variable_index(target_indices[0]);
-            set_raw_variable_role(raw_variable_target_index, "InputTarget");
+            const Index variable_target_index = get_variable_index(target_indices[0]);
+            set_variable_role(variable_target_index, "InputTarget");
         }
     }
 
-    input_dimensions = {past_time_steps, get_variables_number("Input")};
-    target_dimensions = {get_variables_number("Target")};
+    input_shape = {past_time_steps, get_features_number("Input")};
+    target_shape = {get_features_number("Target")};
 
     const Index samples_number = get_samples_number();
 
@@ -326,35 +324,35 @@ void TimeSeriesDataset::impute_missing_values_unuse()
 void TimeSeriesDataset::impute_missing_values_interpolate()
 {
     const vector<Index> used_sample_indices = get_used_sample_indices();
-    const vector<Index> used_variable_indices = get_used_variable_indices();
-    const vector<Index> input_variable_indices = get_variable_indices("Input");
-    const vector<Index> target_variable_indices = get_variable_indices("Target");
+    const vector<Index> used_feature_indices = get_used_feature_indices();
+    const vector<Index> input_feature_indices = get_feature_indices("Input");
+    const vector<Index> target_feature_indices = get_feature_indices("Target");
 
-    const Tensor1 means = mean(data, used_sample_indices, used_variable_indices);
+    const Tensor1 means = mean(data, used_sample_indices, used_feature_indices);
 
     const Index used_samples_number = used_sample_indices.size();
 
     #pragma omp parallel for
-    for(Index variable_index = 0; variable_index < get_variables_number(); variable_index++)
+    for(Index feature_index = 0; feature_index < get_features_number(); feature_index++)
     {
         for(Index i = 0; i < used_samples_number; i++)
         {
             const Index current_sample_index = used_sample_indices[i];
 
-            if(!isnan(data(current_sample_index, variable_index)))
+            if(!isnan(data(current_sample_index, feature_index)))
                 continue;
 
             Index prev_index = i-1;
             type prev_value = NAN;
             while(prev_index >= 0 && isnan(prev_value))
             {
-                prev_value = data(used_sample_indices[prev_index], variable_index);
+                prev_value = data(used_sample_indices[prev_index], feature_index);
                 if(isnan(prev_value)) prev_index--;
             }
 
             Index start_missing = i;
             Index end_missing = i;
-            while(end_missing < used_samples_number && isnan(data(used_sample_indices[end_missing], variable_index)))
+            while(end_missing < used_samples_number && isnan(data(used_sample_indices[end_missing], feature_index)))
             {
                 end_missing++;
             }
@@ -362,22 +360,22 @@ void TimeSeriesDataset::impute_missing_values_interpolate()
 
             type next_value = NAN;
             if(end_missing < used_samples_number)
-                next_value = data(used_sample_indices[end_missing], variable_index);
+                next_value = data(used_sample_indices[end_missing], feature_index);
 
             for(Index k = 0; k < n_missing; ++k)
             {
                 Index sample_k = used_sample_indices[start_missing + k];
 
                 if(isnan(prev_value))
-                    data(sample_k, variable_index) = type(next_value);
+                    data(sample_k, feature_index) = type(next_value);
                 else if(isnan(next_value))
-                    data(sample_k, variable_index) = type(prev_value);
+                    data(sample_k, feature_index) = type(prev_value);
                 else if(!isnan(prev_value) && !isnan(next_value))
                 {
                     type fraction = type(k + 1) / type(n_missing + 1);
                     type value_interpolated = prev_value + (next_value - prev_value) * fraction;
 
-                    data(sample_k, variable_index) = value_interpolated;
+                    data(sample_k, feature_index) = value_interpolated;
                 }
                 else
                     throw runtime_error("The last " + to_string(sample_k-i+1) + " samples are all missing, delete them.\n");
@@ -464,9 +462,9 @@ void TimeSeriesDataset::fill_gaps()
     type period = 2;
 
     type new_samples_number = (end_time - start_time)/period;
-    type new_variables_number = get_variables_number();
+    type new_features_number = get_features_number();
 
-    Tensor2 new_data(new_samples_number,  new_variables_number);
+    Tensor2 new_data(new_samples_number,  new_features_number);
 
     type timestamp = 0;
 
@@ -498,43 +496,43 @@ Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index past_time_step
         throw runtime_error("Past time steps (" + to_string(past_time_steps) + ") "
                             "is greater than samples number (" + to_string(samples_number) + ") \n");
 
-    const Index raw_variables_number = get_raw_variables_number();
+    const Index variables_number = get_variables_number();
 
-    const Index input_raw_variables_number = get_raw_variables_number("Input");
-    const Index target_raw_variables_number = get_raw_variables_number("Target");
+    const Index input_variables_number = get_variables_number("Input");
+    const Index target_variables_number = get_variables_number("Target");
 
-    Index input_target_raw_variables_number = input_raw_variables_number;
+    Index input_target_variables_number = input_variables_number;
 
-    const vector<Index> input_raw_variable_indices = get_raw_variable_indices("Input");
-    const vector<Index> target_raw_variable_indices = get_raw_variable_indices("Target");
+    const vector<Index> input_variable_indices = get_variable_indices("Input");
+    const vector<Index> target_variable_indices = get_variable_indices("Target");
 
-    for(Index i = 0; i < target_raw_variables_number; i++)
-        if(raw_variables[target_raw_variable_indices[i]].role != "InputTarget")
-            input_target_raw_variables_number++;
+    for(Index i = 0; i < target_variables_number; i++)
+        if(variables[target_variable_indices[i]].role != "InputTarget")
+            input_target_variables_number++;
 
-    Index input_target_numeric_raw_variables_number = 0;
+    Index input_target_numeric_variables_number = 0;
 
     int count = 0;
 
-    for(Index i = 0; i < input_target_raw_variables_number; i++)
+    for(Index i = 0; i < input_target_variables_number; i++)
     {
-        if(i < input_raw_variables_number)
+        if(i < input_variables_number)
         {
-            const Index raw_variable_index = input_raw_variable_indices[i];
+            const Index variable_index = input_variable_indices[i];
 
-            const RawVariableType input_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType input_variable_type = variables[variable_index].type;
 
-            if(input_raw_variable_type == RawVariableType::Numeric)
-                input_target_numeric_raw_variables_number++;
+            if(input_variable_type == VariableType::Numeric)
+                input_target_numeric_variables_number++;
         }
         else
         {
-            const Index raw_variable_index = target_raw_variable_indices[count];
+            const Index variable_index = target_variable_indices[count];
 
-            const RawVariableType target_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType target_variable_type = variables[variable_index].type;
 
-            if(target_raw_variable_type == RawVariableType::Numeric)
-                input_target_numeric_raw_variables_number++;
+            if(target_variable_type == VariableType::Numeric)
+                input_target_numeric_variables_number++;
 
             count++;
         }
@@ -545,18 +543,18 @@ Tensor2 TimeSeriesDataset::calculate_autocorrelations(const Index past_time_step
          (samples_number == past_time_steps + 1 && past_time_steps > 1) ? past_time_steps - 1 :
          past_time_steps;
 
-    Tensor2 autocorrelations(input_target_numeric_raw_variables_number, new_past_time_steps);
+    Tensor2 autocorrelations(input_target_numeric_variables_number, new_past_time_steps);
     Tensor1 autocorrelations_vector(new_past_time_steps);
     Tensor2 input_i;
     Index counter_i = 0;
 
-    for(Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
-        if(raw_variables[i].role == "None" || raw_variables[i].type != RawVariableType::Numeric)
+        if(variables[i].role == "None" || variables[i].type != VariableType::Numeric)
             continue;
 
-        input_i = get_raw_variable_data(i);
-        cout << "Calculating " << raw_variables[i].name << " autocorrelations" << endl;
+        input_i = get_variable_data(i);
+        cout << "Calculating " << variables[i].name << " autocorrelations" << endl;
 
         const TensorMap1 current_input_i(input_i.data(), input_i.dimension(0));
         
@@ -579,38 +577,38 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
     if(past_time_steps > samples_number)
         throw runtime_error("Past time steps (" + to_string(past_time_steps) + ") is greater than samples number (" + to_string(samples_number) + ") \n");
 
-    const Index raw_variables_number = get_raw_variables_number();
+    const Index variables_number = get_variables_number();
 
-    const Index input_raw_variables_number = get_raw_variables_number("Input");
-    const Index target_raw_variables_number = get_raw_variables_number("Target");
+    const Index input_variables_number = get_variables_number("Input");
+    const Index target_variables_number = get_variables_number("Target");
 
-    const Index input_target_raw_variables_number = input_raw_variables_number + target_raw_variables_number;
+    const Index input_target_variables_number = input_variables_number + target_variables_number;
 
-    const vector<Index> input_raw_variable_indices = get_raw_variable_indices("Input");
-    const vector<Index> target_raw_variable_indices = get_raw_variable_indices("Target");
+    const vector<Index> input_variable_indices = get_variable_indices("Input");
+    const vector<Index> target_variable_indices = get_variable_indices("Target");
 
-    Index input_target_numeric_raw_variables_number = 0;
+    Index input_target_numeric_variables_number = 0;
     int count = 0;
 
-    for(Index i = 0; i < input_target_raw_variables_number; i++)
+    for(Index i = 0; i < input_target_variables_number; i++)
     {
-        if(i < input_raw_variables_number)
+        if(i < input_variables_number)
         {
-            const Index raw_variable_index = input_raw_variable_indices[i];
+            const Index variable_index = input_variable_indices[i];
 
-            const RawVariableType input_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType input_variable_type = variables[variable_index].type;
 
-            if(input_raw_variable_type == RawVariableType::Numeric)
-                input_target_numeric_raw_variables_number++;
+            if(input_variable_type == VariableType::Numeric)
+                input_target_numeric_variables_number++;
         }
         else
         {
-            const Index raw_variable_index = target_raw_variable_indices[count];
+            const Index variable_index = target_variable_indices[count];
 
-            const RawVariableType target_raw_variable_type = raw_variables[raw_variable_index].type;
+            const VariableType target_variable_type = variables[variable_index].type;
 
-            if(target_raw_variable_type == RawVariableType::Numeric && raw_variables[raw_variable_index].role != "InputTarget")
-                input_target_numeric_raw_variables_number++;
+            if(target_variable_type == VariableType::Numeric && variables[variable_index].role != "InputTarget")
+                input_target_numeric_variables_number++;
 
             count++;
         }
@@ -620,8 +618,8 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
                                 : (samples_number == past_time_steps + 1) ? (past_time_steps - 1)
                                 : past_time_steps;
 
-    Tensor3 cross_correlations(input_target_numeric_raw_variables_number,
-                                       input_target_numeric_raw_variables_number,
+    Tensor3 cross_correlations(input_target_numeric_variables_number,
+                                       input_target_numeric_variables_number,
                                        new_past_time_steps);
 
     Tensor1 cross_correlations_vector(new_past_time_steps);
@@ -632,26 +630,26 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
     Index counter_i = 0;
     Index counter_j = 0;
 
-    for(Index i = 0; i < raw_variables_number; i++)
+    for(Index i = 0; i < variables_number; i++)
     {
-        if(raw_variables[i].role == "None" || raw_variables[i].type != RawVariableType::Numeric)
+        if(variables[i].role == "None" || variables[i].type != VariableType::Numeric)
             continue;
 
-        input_i = get_raw_variable_data(i);
+        input_i = get_variable_data(i);
 
-        if (display) cout << "Calculating " << raw_variables[i].name << " cross correlations:" << endl;
+        if (display) cout << "Calculating " << variables[i].name << " cross correlations:" << endl;
 
         counter_j = 0;
 
-        for(Index j = 0; j < raw_variables_number; j++)
+        for(Index j = 0; j < variables_number; j++)
         {
-            if(raw_variables[j].role == "None"
-            || raw_variables[j].type != RawVariableType::Numeric)
+            if(variables[j].role == "None"
+            || variables[j].type != VariableType::Numeric)
                 continue;
 
-            input_j = get_raw_variable_data(j);
+            input_j = get_variable_data(j);
 
-            if(display) cout << "  vs. " << raw_variables[j].name << endl;
+            if(display) cout << "  vs. " << variables[j].name << endl;
  
             const TensorMap1 current_input_i(input_i.data(), input_i.dimension(0));
             const TensorMap1 current_input_j(input_j.data(), input_j.dimension(0));
@@ -680,8 +678,8 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
     vector<Index> numeric_vars_indices;
 
-    for(size_t i = 0; i < raw_variables.size(); ++i)
-        if(raw_variables[i].role != "None" && raw_variables[i].type == RawVariableType::Numeric)
+    for(size_t i = 0; i < variables.size(); ++i)
+        if(variables[i].role != "None" && variables[i].type == VariableType::Numeric)
             numeric_vars_indices.push_back(i);
 
     const Index numeric_vars_count = numeric_vars_indices.size();
@@ -691,7 +689,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
     for(Index global_idx : numeric_vars_indices)
     {
-        Tensor2 var_data = get_raw_variable_data(global_idx);
+        Tensor2 var_data = get_variable_data(global_idx);
         ranked_series[global_idx] = calculate_spearman_ranks(var_data.chip(0, 1));
     }
 
@@ -719,7 +717,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
 vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample_indices,
                                                      const Index& batch_size,
-                                                     const bool& shuffle) const
+                                                     bool shuffle) const
 {
     // @todo copied from dataset
 
