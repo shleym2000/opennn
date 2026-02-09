@@ -30,7 +30,7 @@ void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_d
 
     dataset = new_dataset;
 
-    if(!neural_network) return;
+    if(!neural_network || !dataset) return;
 
     const Index outputs_number = neural_network->get_outputs_number();
 

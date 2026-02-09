@@ -34,7 +34,7 @@ TEST(CrossEntropyError2d, BackPropagate)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ inputs_number }, dimensions{ targets_number }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ inputs_number }, shape{ targets_number }, "Logistic"));
 
     neural_network.set_parameters_random();
 
@@ -79,11 +79,11 @@ TEST(CrossEntropyError2d, calculate_binary_error)
     vector<Index> target_raw_variable_indices(1);
     target_raw_variable_indices[0] = Index(3);
 
-    dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
+    dataset.set_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 3 }, dimensions{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 3 }, shape{ 1 }, "Logistic"));
   
 
     Batch batch(5, &dataset);
@@ -95,7 +95,7 @@ TEST(CrossEntropyError2d, calculate_binary_error)
     ForwardPropagation forward_propagation(5, &neural_network);
     BackPropagation back_propagation(5, &cross_entropy_error);
 
-    const vector<TensorView> batch_input_pairs = batch.get_input_views();
+    const vector<TensorView> batch_input_pairs = batch.get_inputs();
     neural_network.forward_propagate(batch_input_pairs, forward_propagation, false);
 
     cross_entropy_error.calculate_binary_error(batch, forward_propagation, back_propagation);
@@ -134,11 +134,11 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
     vector<Index> target_raw_variable_indices = {2, 3};
   
 
-    multipledataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
+    multipledataset.set_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
     multipledataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 2 }, "Logistic"));
 
     Batch batch(5, &multipledataset);
 
@@ -149,7 +149,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
     ForwardPropagation forward_propagation(5, &neural_network);
     BackPropagation back_propagation(5, &cross_entropy_error);
 
-    const vector<TensorView> batch_input_pairs = batch.get_input_views();
+    const vector<TensorView> batch_input_pairs = batch.get_inputs();
     neural_network.forward_propagate(batch_input_pairs, forward_propagation, true);
 
     cross_entropy_error.calculate_multiple_error(batch, forward_propagation, back_propagation);
@@ -165,7 +165,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
 }
 
 
-TEST(CrossEntropyError2d, calculate_binary_output_delta)
+TEST(CrossEntropyError2d, calculate_binary_output_gradients)
 {
     Tensor2 data;
     Dataset dataset(5, { 3 }, { 1 });
@@ -187,11 +187,11 @@ TEST(CrossEntropyError2d, calculate_binary_output_delta)
     vector<Index> target_raw_variable_indices(1);
     target_raw_variable_indices[0] = Index(3);
 
-    dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
+    dataset.set_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 3 }, dimensions{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 3 }, shape{ 1 }, "Logistic"));
 
     Batch batch(5, &dataset);
 
@@ -203,19 +203,19 @@ TEST(CrossEntropyError2d, calculate_binary_output_delta)
     ForwardPropagation forward_propagation(5, &neural_network);
     BackPropagation back_propagation(5, &cross_entropy_error);
 
-    const vector<TensorView> batch_input_pairs = batch.get_input_views();
+    const vector<TensorView> batch_input_pairs = batch.get_inputs();
     neural_network.forward_propagate(batch_input_pairs, forward_propagation, true);
 
-    cross_entropy_error.calculate_binary_output_delta(batch, forward_propagation, back_propagation);
+    cross_entropy_error.calculate_binary_output_gradients(batch, forward_propagation, back_propagation);
 
-    auto deltas = tensor_map<2>(back_propagation.get_output_deltas_tensor_view());
-    auto outputs = tensor_map<2>(forward_propagation.get_last_trainable_layer_outputs_view());
+    auto deltas = tensor_map<2>(back_propagation.get_output_gradients());
+    auto outputs = tensor_map<2>(forward_propagation.get_last_trainable_layer_outputs());
 
     EXPECT_EQ(deltas.dimension(0), outputs.dimension(0));
     EXPECT_EQ(deltas.dimension(1), outputs.dimension(1));
 }
 
-TEST(CrossEntropyError2d, calculate_multiple_output_delta)
+TEST(CrossEntropyError2d, calculate_multiple_output_gradients)
 {
     Tensor2 data;
     Dataset dataset(5, { 3 }, { 1 });
@@ -237,11 +237,11 @@ TEST(CrossEntropyError2d, calculate_multiple_output_delta)
     vector<Index> target_raw_variable_indices(2);
     target_raw_variable_indices = {2,3};
 
-    dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
+    dataset.set_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 2 }, "Logistic"));
 
     Batch batch(5, &dataset);
 
@@ -253,13 +253,13 @@ TEST(CrossEntropyError2d, calculate_multiple_output_delta)
     ForwardPropagation forward_propagation(5, &neural_network);
     BackPropagation back_propagation(5, &cross_entropy_error);
 
-    const vector<TensorView> batch_input_pairs = batch.get_input_views();
+    const vector<TensorView> batch_input_pairs = batch.get_inputs();
     neural_network.forward_propagate(batch_input_pairs, forward_propagation, true);
 
-    cross_entropy_error.calculate_multiple_output_delta(batch, forward_propagation, back_propagation);
+    cross_entropy_error.calculate_multiple_output_gradients(batch, forward_propagation, back_propagation);
 
-    auto deltas = tensor_map<2>(back_propagation.get_output_deltas_tensor_view());
-    auto outputs = tensor_map<2>(forward_propagation.get_last_trainable_layer_outputs_view());
+    auto deltas = tensor_map<2>(back_propagation.get_output_gradients());
+    auto outputs = tensor_map<2>(forward_propagation.get_last_trainable_layer_outputs());
 
     EXPECT_EQ(deltas.dimension(0), outputs.dimension(0));
     EXPECT_EQ(deltas.dimension(1), outputs.dimension(1));
@@ -288,11 +288,11 @@ TEST(CrossEntropyError2d, get_name)
     vector<Index> target_raw_variable_indices(2);
     target_raw_variable_indices = { 2,3 };
 
-    dataset.set_raw_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
+    dataset.set_variable_indices(input_raw_variable_indices, target_raw_variable_indices);
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 2 }, dimensions{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 2 }, "Logistic"));
 
     CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 
@@ -317,11 +317,11 @@ TEST(CrossEntropyError2d, to_XML)
 
     std::vector<Index> input_indices = { 0, 1 };
     std::vector<Index> target_indices = { 2 };
-    dataset.set_raw_variable_indices(input_indices, target_indices);
+    dataset.set_variable_indices(input_indices, target_indices);
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ 2 }, dimensions{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 1 }, "Logistic"));
 
     CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 

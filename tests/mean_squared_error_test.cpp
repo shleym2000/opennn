@@ -49,7 +49,7 @@ TEST(MeanSquaredErrorTest, BackPropagateDense2d)
     dataset.set_sample_roles("Training"); 
 
     NeuralNetwork neural_network; 
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ inputs_number }, dimensions{ dataset.get_target_dimensions()}));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ inputs_number }, shape{ dataset.get_target_shape()}));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -75,7 +75,7 @@ TEST(MeanSquaredErrorTest, BackPropagateRecurrent)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Recurrent>( dimensions{ time_steps, inputs_number }, dimensions{ targets_number }));
+    neural_network.add_layer(make_unique<Recurrent>( shape{ time_steps, inputs_number }, shape{ targets_number }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -94,19 +94,19 @@ TEST(MeanSquaredErrorTest, BackPropagateConvolutional)
     const Index samples_number = 6;
     const Index targets_number = 1;
 
-    const dimensions input_dimensions = { 21, 21, 3 };
-    const dimensions kernel_dimensions = { 3, 3, 3, 1 };
+    const shape input_dimensions = { 21, 21, 3 };
+    const shape kernel_dimensions = { 3, 3, 3, 1 };
 
     ImageDataset dataset(samples_number, { input_dimensions }, { targets_number });
     dataset.set_data_random();
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Convolutional>(dimensions{ input_dimensions }, dimensions{ kernel_dimensions }));
-    const dimensions flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_dimensions();
-    neural_network.add_layer(make_unique<Flatten<4>>(dimensions{ flatten_layer_input_dimensions }));
-    const dimensions dense_layer_input_dimensions = neural_network.get_layer(1).get()->get_output_dimensions();
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ dense_layer_input_dimensions }, dimensions{ dataset.get_target_dimensions() }));
+    neural_network.add_layer(make_unique<Convolutional>(shape{ input_dimensions }, shape{ kernel_dimensions }));
+    const shape flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_shape();
+    neural_network.add_layer(make_unique<Flatten<4>>(shape{ flatten_layer_input_dimensions }));
+    const shape dense_layer_input_dimensions = neural_network.get_layer(1).get()->get_output_shape();
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ dense_layer_input_dimensions }, shape{ dataset.get_target_shape() }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -125,8 +125,8 @@ TEST(MeanSquaredErrorTest, BackPropagatePooling)
     const Index samples_number = 6;
     const Index targets_number = 1;
 
-    const dimensions input_dimensions = { 21, 21, 3 };
-    const dimensions kernel_dimensions = { 3, 3, 3, 1 };
+    const shape input_dimensions = { 21, 21, 3 };
+    const shape kernel_dimensions = { 3, 3, 3, 1 };
 
     ImageDataset dataset(samples_number, { input_dimensions }, { targets_number });
     dataset.set_data_random();
@@ -135,12 +135,12 @@ TEST(MeanSquaredErrorTest, BackPropagatePooling)
     NeuralNetwork neural_network;
 
     neural_network.add_layer(make_unique<Convolutional>(input_dimensions, kernel_dimensions));
-    const dimensions conv_output_dimensions = neural_network.get_layer(0)->get_output_dimensions();
+    const shape conv_output_dimensions = neural_network.get_layer(0)->get_output_shape();
     neural_network.add_layer(make_unique<Pooling>(conv_output_dimensions));
-    const dimensions pool_output_dimensions = neural_network.get_layer(1)->get_output_dimensions();
+    const shape pool_output_dimensions = neural_network.get_layer(1)->get_output_shape();
     neural_network.add_layer(make_unique<Flatten<4>>(pool_output_dimensions));
-    const dimensions flatten_output_dimensions = neural_network.get_layer(2)->get_output_dimensions();
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(flatten_output_dimensions, dataset.get_target_dimensions()));
+    const shape flatten_output_dimensions = neural_network.get_layer(2)->get_output_shape();
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(flatten_output_dimensions, dataset.get_target_shape()));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -170,10 +170,10 @@ TEST(MeanSquaredErrorTest, BackPropagateEmbedding)
 
     NeuralNetwork neural_network;
 
-    neural_network.add_layer(make_unique<Embedding>(dimensions{ inputs_number, sequence_length }, embeding_dim));
-    const dimensions flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_dimensions();
-    neural_network.add_layer(make_unique<Flatten<3>>(dimensions{ flatten_layer_input_dimensions }));
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(dimensions{ flattened_size }, dimensions{ targets_number }));
+    neural_network.add_layer(make_unique<Embedding>(shape{ inputs_number, sequence_length }, embeding_dim));
+    const shape flatten_layer_input_dimensions = neural_network.get_layer(0).get()->get_output_shape();
+    neural_network.add_layer(make_unique<Flatten<3>>(shape{ flatten_layer_input_dimensions }));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ flattened_size }, shape{ targets_number }));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -195,16 +195,16 @@ TEST(MeanSquaredErrorTest, BackPropagateMultiheadAttention)
     const Index head_dimension = random_integer(1, 10);
     const Index embedding_dimension = heads_number * head_dimension;
 
-    const dimensions sample_input_dimensions = { sequence_length, embedding_dimension };
+    const shape sample_input_dimensions = { sequence_length, embedding_dimension };
 
-    const dimensions sample_target_dimensions = { sequence_length * embedding_dimension };
+    const shape sample_target_dimensions = { sequence_length * embedding_dimension };
 
     Dataset dataset(batch_size, sample_input_dimensions, sample_target_dimensions);
     dataset.set_data_random();
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<MultiHeadAttention>(dataset.get_input_dimensions(), heads_number));
-    neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_dimensions()));
+    neural_network.add_layer(make_unique<MultiHeadAttention>(dataset.get_input_shape(), heads_number));
+    neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_shape()));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
@@ -233,10 +233,10 @@ TEST(MeanSquaredErrorTest, BackPropagateLm)
         dataset.get_variable_indices("Input"),
         dataset.get_variable_indices("Target"));
 
-    ApproximationNetwork neural_network({ inputs_number }, { neurons_number }, { dataset.get_target_dimensions()});
+    ApproximationNetwork neural_network({ inputs_number }, { neurons_number }, { dataset.get_target_shape()});
 
     ForwardPropagation forward_propagation(samples_number, &neural_network);
-    neural_network.forward_propagate(batch.get_input_views(), forward_propagation, true);
+    neural_network.forward_propagate(batch.get_inputs(), forward_propagation, true);
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 

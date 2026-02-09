@@ -45,7 +45,7 @@ TEST(StochasticGradientDescentTest, Train)
     neural_network.set_parameters_random();
 
     StochasticGradientDescent stochastic_gradient_descent;
-    stochastic_gradient_descent.set_maximum_epochs_number(1);
+    stochastic_gradient_descent.set_maximum_epochs(1);
     stochastic_gradient_descent.set_display(false);
 
     TrainingResults training_results = stochastic_gradient_descent.train();
@@ -67,7 +67,7 @@ TEST(StochasticGradientDescentTest, Train)
 
     old_error = error;
 
-    stochastic_gradient_descent.set_maximum_epochs_number(10000);
+    stochastic_gradient_descent.set_maximum_epochs(10000);
     stochastic_gradient_descent.set_display(true);
     stochastic_gradient_descent.set_display_period(1000);
 
@@ -83,7 +83,7 @@ TEST(StochasticGradientDescentTest, Train)
     type training_loss_goal = type(0.1);
 
     stochastic_gradient_descent.set_loss_goal(training_loss_goal);
-    stochastic_gradient_descent.set_maximum_epochs_number(1000);
+    stochastic_gradient_descent.set_maximum_epochs(1000);
     stochastic_gradient_descent.set_maximum_time(1000);
 
     training_results = stochastic_gradient_descent.train();
@@ -137,7 +137,7 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
 
     // Test
 
-    stochastic_gradient_descent.set_maximum_epochs_number(1);
+    stochastic_gradient_descent.set_maximum_epochs(1);
     stochastic_gradient_descent.set_display(false);
 
     training_results = stochastic_gradient_descent.train();
@@ -148,7 +148,7 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
 
     transformer.set_parameters_constant(-1);
 
-    stochastic_gradient_descent.set_maximum_epochs_number(1);
+    stochastic_gradient_descent.set_maximum_epochs(1);
 
     training_results = stochastic_gradient_descent.train();
     error = training_results.get_training_error();
@@ -159,7 +159,7 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
 
     old_error = error;
 
-    stochastic_gradient_descent.set_maximum_epochs_number(10000);
+    stochastic_gradient_descent.set_maximum_epochs(10000);
     transformer.set_parameters_constant(-1);
 
     stochastic_gradient_descent.set_display(true);

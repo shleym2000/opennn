@@ -48,7 +48,7 @@ TEST(AdaptiveMomentEstimationTest, TrainApproximation)
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
 
     AdaptiveMomentEstimation adaptive_moment_estimation(&mean_squared_error);
-    adaptive_moment_estimation.set_maximum_epochs_number(1);
+    adaptive_moment_estimation.set_maximum_epochs(1);
     adaptive_moment_estimation.set_display(false);
 
     const TrainingResults training_results = adaptive_moment_estimation.train();
@@ -101,7 +101,7 @@ TEST(AdaptiveMomentEstimationTest, TrainTransformer)
     // adaptive_moment_estimation.set_display(true);
     // adaptive_moment_estimation.set_display_period(100);
     // adaptive_moment_estimation.set_loss_goal(training_loss_goal);
-    // adaptive_moment_estimation.set_maximum_epochs_number(1000);
+    // adaptive_moment_estimation.set_maximum_epochs(1000);
     // adaptive_moment_estimation.set_maximum_time(1000.0);
     // const TrainingResults training_results = adaptive_moment_estimation.train();
 
@@ -125,13 +125,13 @@ TEST(AdaptiveMomentEstimationTest, PerformTrainingLossError)
     MeanSquaredError loss(&neural_network, &dataset);
     AdaptiveMomentEstimation adaptive_moment_estimation(&loss);
 
-    adaptive_moment_estimation.set_maximum_epochs_number(1);
+    adaptive_moment_estimation.set_maximum_epochs(1);
     adaptive_moment_estimation.set_display(false);
 
     TrainingResults training_results = adaptive_moment_estimation.train();
     const type error1 = training_results.get_training_error();
 
-    adaptive_moment_estimation.set_maximum_epochs_number(50);
+    adaptive_moment_estimation.set_maximum_epochs(50);
     // neural_network.set_parameters_constant(-1);
 
     training_results = adaptive_moment_estimation.train();
@@ -158,7 +158,7 @@ TEST(AdaptiveMomentEstimationTest, PerformTrainingLossGoal)
     const type training_loss_goal = type(0.05);
 
     adaptive_moment_estimation.set_loss_goal(training_loss_goal);
-    adaptive_moment_estimation.set_maximum_epochs_number(10000);
+    adaptive_moment_estimation.set_maximum_epochs(10000);
     adaptive_moment_estimation.set_maximum_time(1000.0);
     adaptive_moment_estimation.set_display(false);
 
