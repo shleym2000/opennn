@@ -73,14 +73,12 @@ struct RecurrentForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
+    vector<TensorView*> get_workspace_views() override;
+
     void print() const override;
 
-    Tensor3 current_inputs;
-    Tensor2 current_activation_derivatives;
-
-    Tensor3 activation_derivatives;
-
-    Tensor3 hidden_states;
+    TensorView hidden_states;
+    TensorView activation_derivatives;
 };
 
 
@@ -93,16 +91,6 @@ struct RecurrentBackPropagation final : LayerBackPropagation
     void initialize() override;
 
     void print() const override;
-
-    Tensor2 current_gradients;
-    Tensor2 current_targets;
-
-    Tensor2 combination_gradients;
-    Tensor2 current_combination_gradients;
-
-    Tensor2 combinations_bias_gradients;
-    Tensor3 combinations_input_weight_gradients;
-    Tensor3 combinations_recurrent_weight_gradients;
 
     TensorView bias_gradients;
     TensorView input_weight_gradients;
