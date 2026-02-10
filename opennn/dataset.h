@@ -348,8 +348,6 @@ public:
     vector<Descriptives> calculate_feature_descriptives() const;
     //vector<Descriptives> calculate_used_variable_descriptives() const;
 
-    //vector<Descriptives> calculate_variable_descriptives() const;
-
     vector<Descriptives> calculate_variable_descriptives_positive_samples() const;
     vector<Descriptives> calculate_variable_descriptives_negative_samples() const;
     vector<Descriptives> calculate_variable_descriptives_categories(const Index) const;

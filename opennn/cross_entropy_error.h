@@ -37,16 +37,16 @@ public:
     // Gradient
 
     void calculate_output_gradients(const Batch&,
-                                ForwardPropagation&,
-                                BackPropagation&) const override;
+                                    ForwardPropagation&,
+                                    BackPropagation&) const override;
 
     void calculate_binary_output_gradients(const Batch&,
-                                       ForwardPropagation&,
-                                       BackPropagation&) const;
+                                           ForwardPropagation&,
+                                           BackPropagation&) const;
 
     void calculate_multiple_output_gradients(const Batch&,
-                                         ForwardPropagation&,
-                                         BackPropagation&) const;
+                                             ForwardPropagation&,
+                                             BackPropagation&) const;
 
     // Serialization
 

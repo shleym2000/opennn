@@ -8,7 +8,7 @@ using namespace opennn;
 Tensor4 generate_input_tensor_pooling(const Tensor2& data,
                                               const vector<Index>& row_indices,
                                               const vector<Index>& column_indices,
-                                              const dimensions& input_dimensions)
+                                              const shape& input_dimensions)
 { 
     Tensor4 input_tensor(row_indices.size(),
                                  input_dimensions[0],
@@ -24,10 +24,10 @@ Tensor4 generate_input_tensor_pooling(const Tensor2& data,
 
 
 struct PoolingLayerConfig {
-    dimensions input_dimensions;
-    dimensions pool_dimensions;
-    dimensions stride_dimensions;
-    dimensions padding_dimensions;
+    shape input_dimensions;
+    shape pool_dimensions;
+    shape stride_dimensions;
+    shape padding_dimensions;
     string pooling_method;
     string test_name;
     Tensor4 input_data;
@@ -126,7 +126,7 @@ TEST_P(PoolingLayerTest, Constructor)
                                parameters.test_name);
 
     EXPECT_EQ(pooling_layer.get_name(), "Pooling");
-    EXPECT_EQ(pooling_layer.get_input_dimensions(), parameters.input_dimensions);
+    EXPECT_EQ(pooling_layer.get_input_shape(), parameters.input_dimensions);
     EXPECT_EQ(pooling_layer.get_pool_height(), parameters.pool_dimensions[0]);
     EXPECT_EQ(pooling_layer.get_pool_width(), parameters.pool_dimensions[1]);
     EXPECT_EQ(pooling_layer.get_row_stride(), parameters.stride_dimensions[0]);
@@ -225,7 +225,7 @@ TEST_P(PoolingLayerTest, BackPropagate) {
 
     pooling_layer.back_propagate({ input_view }, { output_pair }, forward_propagation, back_propagation);
 
-    vector<TensorView> input_derivatives_pair = back_propagation.get()->get_input_deltas();
+    vector<TensorView> input_derivatives_pair = back_propagation.get()->get_input_gradients();
 
     EXPECT_EQ(input_derivatives_pair[0].dims[0], batch_size);
     EXPECT_EQ(input_derivatives_pair[0].dims[1], parameters.input_data.dimension(1));

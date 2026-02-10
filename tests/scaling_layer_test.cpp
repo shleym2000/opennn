@@ -10,8 +10,8 @@ TEST(Scaling2dTest, DefaultConstructor)
 {
     Scaling<2> scaling_layer_2d;
 
-    EXPECT_EQ(scaling_layer_2d.get_input_dimensions(), dimensions{0});
-    EXPECT_EQ(scaling_layer_2d.get_output_dimensions(), dimensions{0});
+    EXPECT_EQ(scaling_layer_2d.get_input_shape(), shape{0});
+    EXPECT_EQ(scaling_layer_2d.get_output_shape(), shape{0});
 }
 
 
@@ -19,8 +19,8 @@ TEST(Scaling2dTest, GeneralConstructor)
 {
     Scaling<2> scaling_layer_2d({1});
 
-    EXPECT_EQ(scaling_layer_2d.get_input_dimensions(), dimensions{ 1 });
-    EXPECT_EQ(scaling_layer_2d.get_output_dimensions(), dimensions{ 1 });
+    EXPECT_EQ(scaling_layer_2d.get_input_shape(), shape{ 1 });
+    EXPECT_EQ(scaling_layer_2d.get_output_shape(), shape{ 1 });
     EXPECT_EQ(scaling_layer_2d.get_name(), "Scaling2d");
     EXPECT_EQ(scaling_layer_2d.get_descriptives().size(), 1);
 }

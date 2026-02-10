@@ -23,9 +23,9 @@ void set_layer_parameters_constant(Layer& layer, const type& value)
 
 
 struct ConvolutionalLayerConfig {
-    dimensions input_dimensions;
-    dimensions kernel_dimensions;
-    dimensions stride_dimensions;
+    shape input_dimensions;
+    shape kernel_dimensions;
+    shape stride_dimensions;
     string activation_function;
     string convolution_type;
     bool batch_normalization;
@@ -71,7 +71,7 @@ TEST_P(ConvolutionalLayerTest, Constructor) {
         parameters.batch_normalization,
         parameters.test_name);
 
-    EXPECT_EQ(convolutional_layer.get_input_dimensions(), parameters.input_dimensions);
+    EXPECT_EQ(convolutional_layer.get_input_shape(), parameters.input_dimensions);
     EXPECT_EQ(convolutional_layer.get_kernel_height(), parameters.kernel_dimensions[0]);
     EXPECT_EQ(convolutional_layer.get_kernel_width(), parameters.kernel_dimensions[1]);
     EXPECT_EQ(convolutional_layer.get_kernel_channels(), parameters.kernel_dimensions[2]);
@@ -120,7 +120,7 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
     convolutional_layer.forward_propagate(input_views, forward_propagation, true);
 
     const TensorView output_view = forward_propagation->get_outputs();
-    const dimensions expected_output_dims = convolutional_layer.get_output_dimensions();
+    const shape expected_output_dims = convolutional_layer.get_output_shape();
 
     ASSERT_EQ(output_view.dims.size(), 4);
     EXPECT_EQ(output_view.dims[0], batch_size);
@@ -203,10 +203,10 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
 
     convolutional_layer.back_propagate({ input_view }, { delta_view }, forward_propagation, back_propagation_base);
 
-    const TensorView bias_deltas = back_propagation->bias_deltas;
-    EXPECT_EQ(bias_deltas.size(), convolutional_layer.get_kernels_number());
+    const TensorView bias_gradients = back_propagation->bias_gradients;
+    EXPECT_EQ(bias_gradients.size(), convolutional_layer.get_kernels_number());
 
-    const vector<TensorView>& input_deltas_vector = back_propagation->input_deltas;
+    const vector<TensorView>& input_deltas_vector = back_propagation->input_gradients;
 
     ASSERT_FALSE(input_deltas_vector.empty());
 
