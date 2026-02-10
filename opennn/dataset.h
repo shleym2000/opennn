@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "pch.h"
 #include "correlations.h"
 #include "statistics.h"
 #include "tensors.h"
@@ -140,7 +141,11 @@ public:
     vector<string> get_variable_names() const;
     vector<string> get_variable_names(const string&) const;
 
-    VariableType get_variable_type(const Index index) const {return variables[index].type;}
+    VariableType get_variable_type(const Index index) const
+    {
+        return variables[index].type;
+    }
+    vector<VariableType> get_variable_types(const vector<Index> indices) const;
 
     // Variables get
 
@@ -155,6 +160,8 @@ public:
     vector<Index> get_feature_indices(const Index) const;
     vector<Index> get_feature_indices(const string&) const;
     vector<Index> get_used_feature_indices() const;
+
+    vector<Index> get_feature_dimensions() const;
 
     shape get_shape(const string&) const;
 

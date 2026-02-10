@@ -153,7 +153,21 @@ bool is_binary(const Tensor<type, Rank>& tensor)
     return true;
 }
 
-Tensor2 append_rows(const Tensor<type,2>& , const Tensor<type,2>& );
+Tensor2 append_rows(const Tensor2& , const Tensor2& );
+
+template<typename T>
+vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
+{
+    vector<T> result;
+    result.reserve(indices.size());
+
+    for(Index i : indices)
+        result.push_back(data[i]);
+
+    return result;
+}
+
+vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums);
 
 template <int Rank>
 bool is_constant(const Tensor<type, Rank>& tensor)

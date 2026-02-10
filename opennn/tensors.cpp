@@ -5,7 +5,8 @@
 //
 //   Artificial Intelligence Techniques, SL
 //   artelnics@artelnics.com
-
+#include "tinyxml2.h"
+#include "pch.h"
 #include "tensors.h"
 #include "../eigen/Eigen/Dense"
 
@@ -104,6 +105,47 @@ Tensor2 append_rows(const Tensor<type,2>& starting_matrix, const Tensor<type,2>&
     return final_matrix;
 }
 
+vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums)
+{
+    const Index rows_unfiltered = outputs.dimension(0);
+    const Index variables_to_filter = outputs.dimension(1);
+
+    if(minimums.size() != variables_to_filter || maximums.size() != variables_to_filter)
+        throw runtime_error("Minimums/maximums size mismatch.\n");
+
+    vector<uint8_t> binary_mask_filtered(static_cast<size_t>(rows_unfiltered), 1);
+    Index number_filtered_rows = rows_unfiltered;
+
+    for(Index j = 0; j < variables_to_filter; ++j)
+    {
+        const type minimum = minimums(j);
+        const type maximum = maximums(j);
+        number_filtered_rows = 0;
+
+        for(Index i = 0; i < rows_unfiltered; ++i)
+        {
+            if(!binary_mask_filtered[i])
+                continue;
+
+            const type y = static_cast<type>(outputs(i, j));
+
+            if(y < minimum || y > maximum)
+                binary_mask_filtered[i] = 0;
+            else
+                ++number_filtered_rows;
+        }
+        if(number_filtered_rows == 0) break;
+    }
+
+    vector<Index> feasible_rows;
+    feasible_rows.reserve(static_cast<size_t>(number_filtered_rows));
+
+    for(Index i = 0; i < rows_unfiltered; ++i)
+        if(binary_mask_filtered[i])
+            feasible_rows.push_back(i);
+
+    return feasible_rows;
+}
 
 
 void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3& tensor)

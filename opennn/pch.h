@@ -123,10 +123,6 @@ using namespace Eigen;
 using type = float;
 using shape = vector<Index>;
 
-#include "tinyxml2.h"
-
-using namespace tinyxml2;
-
 using Tensor1 = Tensor<type, 1>;
 using Tensor2 = Tensor<type, 2>;
 using Tensor3 = Tensor<type, 3>;
@@ -142,6 +138,10 @@ using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, AlignedMax>;
 using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, AlignedMax>;
 using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, AlignedMax>;
 using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, AlignedMax>;
+
+#include "tinyxml2.h"
+
+using namespace tinyxml2;
 
 template<typename Base, typename T>
 inline bool is_instance_of(const T* ptr)
