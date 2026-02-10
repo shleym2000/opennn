@@ -5,8 +5,6 @@
 //
 //   Artificial Intelligence Techniques, SL
 //   artelnics@artelnics.com
-#include "tinyxml2.h"
-#include "pch.h"
 #include "tensors.h"
 #include "../eigen/Eigen/Dense"
 

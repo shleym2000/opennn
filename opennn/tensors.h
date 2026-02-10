@@ -399,6 +399,22 @@ Tensor<Index, 1> get_shape(const Tensor<T, n>& tensor)
 }
 
 
+template <int Rank>
+bool is_equal(const Tensor<bool, Rank>& tensor,
+    const bool& value)
+{
+    const Index size = tensor.size();
+
+    for (Index i = 0; i < size; i++)
+    {
+        if (tensor(i) != value)
+            return false;
+    }
+
+    return true;
+}
+
+
 template <typename Type, int Rank>
 bool is_equal(const Tensor<Type, Rank>& tensor,
               const Type& value,
@@ -406,15 +422,11 @@ bool is_equal(const Tensor<Type, Rank>& tensor,
 {
     const Index size = tensor.size();
 
-    for(Index i = 0; i < size; i++)
-        if constexpr (is_same_v<Type, bool>)
-        {
-            if (tensor(i) != value)
-                return false;
-            else
-                if (std::abs(tensor(i) - value) > tolerance)
-                    return false;
-        }
+    for (Index i = 0; i < size; i++)
+    {
+        if (std::abs(tensor(i) - value) > tolerance)
+            return false;
+    }
 
     return true;
 }
