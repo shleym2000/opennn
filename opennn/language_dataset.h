@@ -19,7 +19,7 @@ class LanguageDataset final : public Dataset
 public:
 
     LanguageDataset(const filesystem::path& = "");
-    LanguageDataset(const Index, const Index&, const Index&);
+    LanguageDataset(const Index, Index, Index);
 
     const vector<string>& get_input_vocabulary() const;
     const vector<string>& get_target_vocabulary() const;
@@ -52,9 +52,9 @@ public:
 
     inline static const vector<string> reserved_tokens = {PAD_TOKEN, UNK_TOKEN, START_TOKEN, END_TOKEN};
 
-    shape get_input_shape() const;
+    Shape get_input_shape() const;
 
-    shape get_target_shape() const;
+    Shape get_target_shape() const;
 
 private:
 

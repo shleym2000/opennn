@@ -18,9 +18,9 @@ class ApproximationNetwork : public NeuralNetwork
 
 public:
 
-    ApproximationNetwork(const shape& input_shape,
-                         const shape& complexity_dimensions,
-                         const shape& output_dimensions);
+    ApproximationNetwork(const Shape& input_shape,
+                         const Shape& complexity_dimensions,
+                         const Shape& output_shape);
 };
 
 
@@ -29,9 +29,9 @@ class ClassificationNetwork : public NeuralNetwork
 
 public:
 
-    ClassificationNetwork(const shape& input_shape,
-                          const shape& complexity_dimensions,
-                          const shape& output_dimensions);
+    ClassificationNetwork(const Shape& input_shape,
+                          const Shape& complexity_dimensions,
+                          const Shape& output_shape);
 };
 
 
@@ -40,9 +40,9 @@ class ForecastingNetwork : public NeuralNetwork
 
 public:
 
-    ForecastingNetwork(const shape& input_shape,
-                       const shape& complexity_dimensions,
-                       const shape& output_dimensions);
+    ForecastingNetwork(const Shape& input_shape,
+                       const Shape& complexity_dimensions,
+                       const Shape& output_shape);
 };
 
 
@@ -51,9 +51,9 @@ class AutoAssociationNetwork : public NeuralNetwork
 
 public:
 
-    AutoAssociationNetwork(const shape& input_shape,
-                           const shape& complexity_dimensions,
-                           const shape& output_dimensions);
+    AutoAssociationNetwork(const Shape& input_shape,
+                           const Shape& complexity_dimensions,
+                           const Shape& output_shape);
 };
 
 
@@ -62,9 +62,9 @@ class ImageClassificationNetwork : public NeuralNetwork
 
 public:
 
-    ImageClassificationNetwork(const shape& input_shape,
-                               const shape& complexity_dimensions,
-                               const shape& output_dimensions);
+    ImageClassificationNetwork(const Shape& input_shape,
+                               const Shape& complexity_dimensions,
+                               const Shape& output_shape);
 };
 
 
@@ -73,10 +73,10 @@ class SimpleResNet : public NeuralNetwork
 
 public:
 
-    SimpleResNet(const shape& input_shape,
+    SimpleResNet(const Shape& input_shape,
                  const vector<Index>& blocks_per_stage,
-                 const shape& initial_filters,
-                 const shape& output_dimensions);
+                 const Shape& initial_filters,
+                 const Shape& output_shape);
 };
 
 
@@ -84,11 +84,11 @@ class VGG16 final : public NeuralNetwork
 {
 public:
 
-    VGG16(const shape& input_shape, const shape& target_shape);
+    VGG16(const Shape& input_shape, const Shape& target_shape);
 
     VGG16(const filesystem::path&);
 
-    void set(const shape& input_shape, const shape& target_shape);
+    void set(const Shape& input_shape, const Shape& target_shape);
 
 };
 
@@ -98,9 +98,9 @@ class TextClassificationNetwork : public NeuralNetwork
 
 public:
 
-    TextClassificationNetwork(const shape& input_shape,
-                              const shape& complexity_dimensions,
-                              const shape& output_dimensions,
+    TextClassificationNetwork(const Shape& input_shape,
+                              const Shape& complexity_dimensions,
+                              const Shape& output_shape,
                               const vector<string>& new_input_vocabulary = vector<string>());
 };
 
@@ -110,22 +110,22 @@ class Transformer final : public NeuralNetwork
 public:
 
     Transformer(const Index = 0,
-                const Index& = 0,
-                const Index& = 0,
-                const Index& = 0,
-                const Index& = 0,
-                const Index& = 0,
-                const Index& = 0,
-                const Index& = 0);
+                Index = 0,
+                Index = 0,
+                Index = 0,
+                Index = 0,
+                Index = 0,
+                Index = 0,
+                Index = 0);
 
     void set(const Index = 0,
-             const Index& = 0,
-             const Index& = 0,
-             const Index& = 0,
-             const Index& = 0,
-             const Index& = 0,
-             const Index& = 0,
-             const Index& = 0);
+             Index = 0,
+             Index = 0,
+             Index = 0,
+             Index = 0,
+             Index = 0,
+             Index = 0,
+             Index = 0);
 
     Index get_input_sequence_length() const;
     Index get_decoder_sequence_length() const;

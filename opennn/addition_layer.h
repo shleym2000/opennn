@@ -28,23 +28,23 @@ class Addition final : public Layer
 
 public:
 
-    Addition(const shape& new_input_shape = {}, const string& new_name = "")
+    Addition(const Shape& new_input_shape = {}, const string& new_name = "")
     {
         set(new_input_shape, new_name);
     }
 
-    shape get_input_shape() const override
+    Shape get_input_shape() const override
     {
         return input_shape;
     }
 
-    shape get_output_shape() const override
+    Shape get_output_shape() const override
     {
         return input_shape;
     }
 
 
-    void set(const shape& new_input_shape, const string& new_label)
+    void set(const Shape& new_input_shape, const string& new_label)
     {
         if(!new_input_shape.empty() && new_input_shape.size() != Rank)
             throw runtime_error("Input shape rank for AdditionLayer<" + to_string(Rank) + "> must be " + to_string(Rank));
@@ -63,14 +63,14 @@ public:
     {
         if (input_views.size() != 2)
             throw runtime_error(name + " layer requires exactly two inputs.");
-
+/*
         if (input_views[0].dims != input_views[1].dims)
             throw runtime_error("Input shape for " + name + " must be identical.");
+*/
+        const TensorMapR<Rank> input_1 = tensor_map<Rank>(input_views[0]);
+        const TensorMapR<Rank> input_2 = tensor_map<Rank>(input_views[1]);
 
-        const TensorMap<Tensor<type, Rank>, AlignedMax> input_1 = tensor_map<Rank>(input_views[0]);
-        const TensorMap<Tensor<type, Rank>, AlignedMax> input_2 = tensor_map<Rank>(input_views[1]);
-
-        TensorMap<Tensor<type, Rank>, AlignedMax> outputs = tensor_map<Rank>(forward_propagation->outputs);
+        TensorMapR<Rank> outputs = tensor_map<Rank>(forward_propagation->outputs);
 
         outputs.device(*device) = input_1 + input_2;
     }
@@ -84,10 +84,10 @@ public:
         if (output_gradient_views.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input.");
 
-        const TensorMap<Tensor<type, Rank>, AlignedMax> output_gradients = tensor_map<Rank>(output_gradient_views[0]);
+        const TensorMapR<Rank> output_gradients = tensor_map<Rank>(output_gradient_views[0]);
 
-        TensorMap<Tensor<type, Rank>, AlignedMax> input_gradients_0 = tensor_map<Rank>(back_propagation->input_gradients[0]);
-        TensorMap<Tensor<type, Rank>, AlignedMax> input_gradients_1 = tensor_map<Rank>(back_propagation->input_gradients[1]);
+        TensorMapR<Rank> input_gradients_0 = tensor_map<Rank>(back_propagation->input_gradients[0]);
+        TensorMapR<Rank> input_gradients_1 = tensor_map<Rank>(back_propagation->input_gradients[1]);
 
         input_gradients_0.device(*device) = output_gradients;
         input_gradients_1.device(*device) = output_gradients;
@@ -99,7 +99,7 @@ public:
         if(!element) throw runtime_error(name + " element is nullptr.");
 
         const string new_label = read_xml_string(element, "Label");
-        const shape new_input_shape = string_to_dimensions(read_xml_string(element, "InputDimensions"));
+        const Shape new_input_shape = string_to_dimensions(read_xml_string(element, "InputDimensions"));
 
         set(new_input_shape, new_label);
     }
@@ -174,7 +174,7 @@ public:
 
 private:
 
-    shape input_shape;
+    Shape input_shape;
 };
 
 
@@ -190,9 +190,9 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
 
     void initialize() override
     {
-        const shape output_dimensions = layer->get_output_shape();
-        shape full_dims = { batch_size };
-        full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
+        const Shape output_shape = layer->get_output_shape();
+        Shape full_dims = { batch_size };
+        full_dims.insert(full_dims.end(), output_shape.begin(), output_shape.end());
 
         outputs.dims = full_dims;
     }
@@ -218,13 +218,13 @@ struct AdditionBackPropagation final : LayerBackPropagation
 
     void initialize() override
     {
-        const shape input_shape = layer->get_input_shape();
-        shape full_dims = { batch_size };
+        const Shape input_shape = layer->get_input_shape();
+        Shape full_dims = { batch_size };
         full_dims.insert(full_dims.end(), input_shape.begin(), input_shape.end());
 
         input_gradients_memory.resize(2);
-        input_gradients_memory[0].resize(count_elements(full_dims));
-        input_gradients_memory[1].resize(count_elements(full_dims));
+        input_gradients_memory[0].resize(full_dims.count());
+        input_gradients_memory[1].resize(full_dims.count());
 
         input_gradients.resize(2);
         input_gradients[0].data = input_gradients_memory[0].data();
@@ -237,7 +237,7 @@ struct AdditionBackPropagation final : LayerBackPropagation
     void print() const override
     {
         cout << "Addition Back Propagation:" << endl;
-
+/*
         if(input_gradients.size() >= 1)
         {
             cout << "Input 1 Deltas shape: " << input_gradients[0].dims << endl;
@@ -249,6 +249,7 @@ struct AdditionBackPropagation final : LayerBackPropagation
             cout << "Input 2 Deltas shape: " << input_gradients[1].dims << endl;
             cout << input_gradients[1].data << endl;
         }
+*/
     }
 };
 
@@ -266,9 +267,9 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void initialize() override
     {
-        const shape output_dimensions = layer->get_output_shape();
+        const shape output_shape = layer->get_output_shape();
         shape full_dims = { static_cast<Index>(batch_size) };
-        full_dims.insert(full_dims.end(), output_dimensions.begin(), output_dimensions.end());
+        full_dims.insert(full_dims.end(), output_shape.begin(), output_shape.end());
 
         outputs.set_descriptor(full_dims);
     }

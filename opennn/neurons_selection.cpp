@@ -33,19 +33,19 @@ bool NeuronSelection::has_training_strategy() const
 }
 
 
-const Index& NeuronSelection::get_maximum_neurons() const
+Index NeuronSelection::get_maximum_neurons() const
 {
     return maximum_neurons;
 }
 
 
-const Index& NeuronSelection::get_minimum_neurons() const
+Index NeuronSelection::get_minimum_neurons() const
 {
     return minimum_neurons;
 }
 
 
-const Index& NeuronSelection::get_trials_number() const
+Index NeuronSelection::get_trials_number() const
 {
     return trials_number;
 }
@@ -63,7 +63,7 @@ const type& NeuronSelection::get_validation_error_goal() const
 }
 
 
-const Index& NeuronSelection::get_maximum_epochs_number() const
+Index NeuronSelection::get_maximum_epochs_number() const
 {
     return maximum_epochs;
 }

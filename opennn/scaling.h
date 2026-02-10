@@ -14,21 +14,33 @@ namespace opennn
 {
     //enum class string{None, MinimumMaximum, MeanStandardDeviation, StandardDeviation, Logarithm, ImageMinMax};
 
-    void scale_mean_standard_deviation(TensorMap2, const Index&, const Descriptives&);
-    void scale_standard_deviation(TensorMap2, const Index&, const Descriptives&);
-    void scale_minimum_maximum(TensorMap2, const Index&, const Descriptives&, const type& = type(-1), const type& = type(1));
-    void scale_logarithmic(TensorMap2, const Index&);
+    void scale_mean_standard_deviation(Tensor2&, Index, const Descriptives&);
+    void scale_standard_deviation(Tensor2&, Index, const Descriptives&);
+    void scale_minimum_maximum(Tensor2&, Index, const Descriptives&, const type& = type(-1), const type& = type(1));
+    void scale_logarithmic(Tensor2&, Index);
 
-    void scale_mean_standard_deviation_3d(Tensor3&, const Index&, const Descriptives&);
-    void scale_standard_deviation_3d(Tensor3&, const Index&, const Descriptives&);
-    void scale_minimum_maximum_3d(Tensor3&, const Index&, const Descriptives&, const type&, const type&);
-    void scale_logarithmic_3d(Tensor3&, const Index&);
+    void scale_mean_standard_deviation(TensorMap2, Index, const Descriptives&);
+    void scale_standard_deviation(TensorMap2, Index, const Descriptives&);
+    void scale_minimum_maximum(TensorMap2, Index, const Descriptives&, const type& = type(-1), const type& = type(1));
+    void scale_logarithmic(TensorMap2, Index);
 
-    void unscale_minimum_maximum(TensorMap2, const Index&, const Descriptives&, const type& = type(-1), const type& = type(1));
-    void unscale_mean_standard_deviation(TensorMap2, const Index&, const Descriptives&);
-    void unscale_standard_deviation(TensorMap2, const Index&, const Descriptives&);
-    void unscale_logarithmic(TensorMap2, const Index&);
-    void unscale_image_minimum_maximum(TensorMap2, const Index&);
+
+    void scale_mean_standard_deviation_3d(Tensor3&, Index, const Descriptives&);
+    void scale_standard_deviation_3d(Tensor3&, Index, const Descriptives&);
+    void scale_minimum_maximum_3d(Tensor3&, Index, const Descriptives&, const type&, const type&);
+    void scale_logarithmic_3d(Tensor3&, Index);
+
+    void unscale_minimum_maximum(TensorMap2, Index, const Descriptives&, const type& = type(-1), const type& = type(1));
+    void unscale_mean_standard_deviation(TensorMap2, Index, const Descriptives&);
+    void unscale_standard_deviation(TensorMap2, Index, const Descriptives&);
+    void unscale_logarithmic(TensorMap2, Index);
+    void unscale_image_minimum_maximum(TensorMap2, Index);
+
+    void unscale_minimum_maximum(Tensor2&, Index, const Descriptives&, const type& = type(-1), const type& = type(1));
+    void unscale_mean_standard_deviation(Tensor2&, Index, const Descriptives&);
+    void unscale_standard_deviation(Tensor2&, Index, const Descriptives&);
+    void unscale_logarithmic(Tensor2&, Index);
+    void unscale_image_minimum_maximum(Tensor2&, Index);
 }
 
 // OpenNN: Open Neural Networks Library.

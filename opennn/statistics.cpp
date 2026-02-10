@@ -127,7 +127,7 @@ Histogram::Histogram(const Tensor<Index, 1>& new_frequencies,
 
 
 Histogram::Histogram(const Tensor1& data,
-                     const Index& bins_number)
+                     Index bins_number)
 {
     const type data_maximum = maximum(data);
     const type data_minimum = minimum(data);
@@ -522,7 +522,7 @@ Tensor1 column_maximums(const Tensor2& matrix,
 }
 
 
-type mean(const Tensor1& vector, const Index& begin, const Index& end)
+type mean(const Tensor1& vector, Index begin, Index end)
 {
     if(end == begin) return vector[begin];
 
@@ -908,7 +908,7 @@ BoxPlot box_plot(const Tensor1& data, const vector<Index>& indices)
 }
 
 
-Histogram histogram(const Tensor1& new_vector, const Index& bins_number)
+Histogram histogram(const Tensor1& new_vector, Index bins_number)
 {
     const Index size = new_vector.dimension(0);
     Tensor1 minimums(bins_number);
@@ -1020,7 +1020,7 @@ Histogram histogram(const Tensor1& new_vector, const Index& bins_number)
 }
 
 
-Histogram histogram_centered(const Tensor1& vector, const type& center, const Index& bins_number)
+Histogram histogram_centered(const Tensor1& vector, const type& center, Index bins_number)
 {
     const Index bin_center = (bins_number % 2 == 0) 
         ? Index(type(bins_number) / type(2.0)) 
@@ -1130,7 +1130,7 @@ Tensor<Index, 1> total_frequencies(const Tensor<Histogram, 1>& histograms)
 }
 
 
-vector<Histogram> histograms(const Tensor2& matrix, const Index& bins_number)
+vector<Histogram> histograms(const Tensor2& matrix, Index bins_number)
 {
     const Index columns_number = matrix.dimension(1);
 
@@ -1498,7 +1498,7 @@ Tensor1 mean(const Tensor2& matrix, const vector<Index>& row_indices, const vect
 }
 
 
-type mean(const Tensor2& matrix, const Index& column_index)
+type mean(const Tensor2& matrix, Index column_index)
 {
     const Index rows_number = matrix.dimension(0);
     const Index columns_number = matrix.dimension(1);
@@ -1565,7 +1565,7 @@ Tensor1 median(const Tensor2& matrix)
 }
 
 
-type median(const Tensor2& matrix, const Index& column_index)
+type median(const Tensor2& matrix, Index column_index)
 {
     // median
 
@@ -1723,7 +1723,7 @@ Index maximal_index(const Tensor1& vector)
 }
 
 
-Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, const Index& number)
+Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, Index number)
 {
     vector<type> vector_(input_vector.dimension(0));
     for(Index i = 0; i < input_vector.dimension(0); i++) {
@@ -1762,7 +1762,7 @@ Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, const Index& numbe
 }
 
 
-Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, const Index& number)
+Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, Index number)
 {
     vector<type> vector_(input_vector.dimension(0));
     for(Index i = 0; i < input_vector.dimension(0); i++) {

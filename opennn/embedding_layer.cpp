@@ -13,8 +13,8 @@
 namespace opennn
 {
 
-Embedding::Embedding(const shape& new_input_shape,
-                     const Index& new_embedding_dimension,
+Embedding::Embedding(const Shape& new_input_shape,
+                     Index new_embedding_dimension,
                      const string& new_label) : Layer()
 {
     set(new_input_shape[0], new_input_shape[1], new_embedding_dimension, new_label);
@@ -41,13 +41,13 @@ Index Embedding::get_embedding_dimension() const
 }
 
 
-shape Embedding::get_input_shape() const
+Shape Embedding::get_input_shape() const
 {
     return { sequence_length };
 }
 
 
-shape Embedding::get_output_shape() const
+Shape Embedding::get_output_shape() const
 {
     const Index embedding_dimension = get_embedding_dimension();
 
@@ -62,8 +62,8 @@ vector<TensorView*> Embedding::get_parameter_views()
 
 
 void Embedding::set(const Index new_vocabulary_size,
-                    const Index& new_sequence_length,
-                    const Index& new_embedding_dimension,
+                    Index new_sequence_length,
+                    Index new_embedding_dimension,
                     const string& new_label)
 {
     sequence_length = new_sequence_length;
@@ -227,7 +227,7 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
 
 
 void Embedding::print() const
-{
+{    
     cout << "Embedding Layer" << endl
          << "Label: " << label << endl
          << "Type: Embedding" << endl
@@ -294,9 +294,9 @@ void EmbeddingForwardPropagation::initialize()
 void EmbeddingForwardPropagation::print() const
 {
     cout << "Output shape:" << endl;
-    //       cout << output_dimensions << endl;
+    //       cout << output_shape << endl;
     cout << "Outputs:" << endl;
-    //       cout << TensorMap<Tensor<type,3>>(outputs_data, output_dimensions(0), output_dimensions(1), output_dimensions(2)) << endl;
+    //       cout << TensorMap<Tensor<type,3>>(outputs_data, output_shape(0), output_shape(1), output_shape(2)) << endl;
 }
 
 

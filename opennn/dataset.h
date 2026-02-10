@@ -25,8 +25,8 @@ public:
     enum class Codification { UTF8, SHIFT_JIS };
 
     Dataset(const Index = 0,
-            const shape& = {0},
-            const shape& = {0});
+            const Shape& = {0},
+            const Shape& = {0});
 
     Dataset(const filesystem::path&,
             const string&,
@@ -163,11 +163,11 @@ public:
 
     vector<Index> get_feature_dimensions() const;
 
-    shape get_shape(const string&) const;
+    Shape get_shape(const string&) const;
 
     vector<string> get_feature_scalers(const string&) const;
 
-    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const;
+    virtual vector<vector<Index>> get_batches(const vector<Index>&, Index, bool) const;
 
     const Tensor2& get_data() const;
     Tensor2* get_data_p();
@@ -186,7 +186,7 @@ public:
     //Tensor2 get_variable_data(const Tensor<Index, 1>&) const;
     Tensor2 get_variable_data(const string&) const;
 
-    string get_sample_category(const Index, const Index&) const;
+    string get_sample_category(const Index, Index) const;
     Tensor1 get_sample(const Index) const;
 
     const vector<vector<string>>& get_data_file_preview() const;
@@ -221,14 +221,14 @@ public:
 
     bool is_empty() const;
 
-    shape get_input_shape() const;
-    shape get_target_shape() const;
+    Shape get_input_shape() const;
+    Shape get_target_shape() const;
 
     void get_categorical_info(const string&, vector<Index>&, vector<Index>&) const;
 
     // Set
 
-    void set(const Index = 0, const shape& = {}, const shape& = {});
+    void set(const Index = 0, const Shape& = {}, const Shape& = {});
 
     void set(const filesystem::path&,
              const string&,
@@ -290,7 +290,7 @@ public:
 
     void set_feature_roles(const string&);
 
-    void set_shape(const string&, const shape&);
+    void set_shape(const string&, const Shape&);
 
     // Dataset
 
@@ -489,7 +489,7 @@ public:
 
     // Eigen
 
-    vector<vector<Index>> split_samples(const vector<Index>&, const Index&) const;
+    vector<vector<Index>> split_samples(const vector<Index>&, Index) const;
 
     bool get_has_rows_labels() const;
     //bool get_has_text_data() const;
@@ -536,9 +536,9 @@ protected:
 
     // Dimensions
 
-    shape input_shape;
-    shape target_shape;
-    shape decoder_shape;
+    Shape input_shape;
+    Shape target_shape;
+    Shape decoder_shape;
 
     // Samples
 
@@ -626,13 +626,13 @@ struct Batch
 
     Dataset* dataset = nullptr;
 
-    shape input_shape;
+    Shape input_shape;
     Tensor1 input_tensor;
 
-    shape decoder_shape;
+    Shape decoder_shape;
     Tensor1 decoder_tensor;
 
-    shape target_shape;
+    Shape target_shape;
     Tensor1 target_tensor;
 
     unique_ptr<ThreadPool> thread_pool = nullptr;
@@ -681,7 +681,7 @@ struct BatchCuda
 
     Dataset* dataset = nullptr;
 
-    shape input_shape;
+    Shape input_shape;
     shape decoder_shape;
     shape target_shape;
 

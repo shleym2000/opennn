@@ -16,8 +16,8 @@ namespace opennn
 {
 
 TimeSeriesDataset::TimeSeriesDataset(const Index new_samples_number,
-                                     const shape& new_input_shape,
-                                     const shape& new_target_shape)
+                                     const Shape& new_input_shape,
+                                     const Shape& new_target_shape)
     :Dataset(new_samples_number, new_input_shape, new_target_shape)
 {
 
@@ -49,19 +49,19 @@ TimeSeriesDataset::TimeSeriesDataset(const filesystem::path& data_path,
 }
 
 
-const Index& TimeSeriesDataset::get_time_variable_index() const
+Index TimeSeriesDataset::get_time_variable_index() const
 {
     return time_variable_index;
 }
 
 
-const Index& TimeSeriesDataset::get_past_time_steps() const
+Index TimeSeriesDataset::get_past_time_steps() const
 {
     return past_time_steps;
 }
 
 
-const Index& TimeSeriesDataset::get_future_time_steps() const
+Index TimeSeriesDataset::get_future_time_steps() const
 {
     return future_time_steps;
 }
@@ -716,7 +716,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
 
 vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample_indices,
-                                                     const Index& batch_size,
+                                                     Index batch_size,
                                                      bool shuffle) const
 {
     // @todo copied from dataset

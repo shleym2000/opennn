@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-Normalization3d::Normalization3d(const shape& new_input_shape,
+Normalization3d::Normalization3d(const Shape& new_input_shape,
                                  const string& new_name) : Layer()
 {
     set(new_input_shape[0], new_input_shape[1], new_name);
@@ -32,7 +32,7 @@ Index Normalization3d::get_embedding_dimension() const
 }
 
 
-shape Normalization3d::get_input_shape() const
+Shape Normalization3d::get_input_shape() const
 {
     const Index embedding_dimension = get_embedding_dimension();
 
@@ -40,7 +40,7 @@ shape Normalization3d::get_input_shape() const
 }
 
 
-shape Normalization3d::get_output_shape() const
+Shape Normalization3d::get_output_shape() const
 {
     const Index embedding_dimension = get_embedding_dimension();
 
@@ -55,7 +55,7 @@ vector<TensorView*> Normalization3d::get_parameter_views()
 
 
 void Normalization3d::set(const Index new_sequence_length,
-                          const Index& new_embedding_dimension,
+                          Index new_embedding_dimension,
                           const string& new_label)
 {
     sequence_length = new_sequence_length;

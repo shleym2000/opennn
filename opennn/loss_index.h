@@ -234,7 +234,7 @@ struct BackPropagationLM
     Index samples_number = 0;
 
     Tensor1 output_gradients;
-    shape output_gradient_dimensions;
+    Shape output_gradient_dimensions;
 
     Loss* loss_index = nullptr;
 
@@ -279,7 +279,7 @@ struct BackPropagation
     Tensor2 errors;
     Tensor2 errors_weights;
     Tensor1 output_gradients;
-    shape output_gradient_dimensions;
+    Shape output_gradient_dimensions;
 
     Tensor<type, 0> accuracy;
     Tensor2 predictions;

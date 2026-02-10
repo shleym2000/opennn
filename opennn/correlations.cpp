@@ -29,7 +29,7 @@ namespace opennn
 
 Tensor1 autocorrelations(const ThreadPoolDevice* device,
                                  const Tensor1& x,
-                                 const Index& past_time_steps)
+                                 Index past_time_steps)
 {
     Tensor1 autocorrelation(past_time_steps);
 
@@ -161,7 +161,7 @@ Correlation correlation_spearman(const ThreadPoolDevice* device,
 Tensor1 cross_correlations(const ThreadPoolDevice* device,
                                    const Tensor1& x,
                                    const Tensor1& y,
-                                   const Index& maximum_past_time_steps)
+                                   Index maximum_past_time_steps)
 {
     if(y.size() != x.size())
         throw runtime_error("Both vectors must have the same size.\n");
@@ -431,7 +431,7 @@ type z_correlation_to_r_correlation (const type z_correlation)
 }
 
 
-Tensor1 confidence_interval_z_correlation(const type z_correlation, const Index& n)
+Tensor1 confidence_interval_z_correlation(const type z_correlation, Index n)
 {
     Tensor1 confidence_interval(2);
 
@@ -551,8 +551,8 @@ Correlation logistic_correlation_vector_vector(const ThreadPoolDevice* device,
     dataset.set_variable_scalers("MinimumMaximum");
 
     NeuralNetwork neural_network;
-    shape dim1 = { 1 };
-    shape dim2 = { 1 };
+    Shape dim1 = { 1 };
+    Shape dim2 = { 1 };
     neural_network.add_layer(make_unique<Scaling<2>>(dim1));
     neural_network.add_layer(make_unique<Dense<2>>(dim1, dim2, "Sigmoid"));
 
@@ -629,8 +629,8 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
     dataset.set_variable_scalers("MinimumMaximum");
 
     NeuralNetwork neural_network;
-    shape dim1 = { 1 };
-    shape dim2 = { 1 };
+    Shape dim1 = { 1 };
+    Shape dim2 = { 1 };
     neural_network.add_layer(make_unique<Scaling<2>>(dim1));
     neural_network.add_layer(make_unique<Dense<2>>(dim1, dim2, "Sigmoid"));
 

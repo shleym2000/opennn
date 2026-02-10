@@ -16,8 +16,8 @@ namespace opennn
 {
 
 ImageDataset::ImageDataset(const Index new_samples_number,
-                           const shape& new_input_shape,
-                           const shape& new_target_shape)
+                           const Shape& new_input_shape,
+                           const Shape& new_target_shape)
 {
     if (new_input_shape.size() != 3)
         throw runtime_error("Input shape is not 3");
@@ -457,7 +457,7 @@ void ImageDataset::unscale_features(const string&)
 }
 
 
-void ImageDataset::read_bmp(const shape& new_input_shape)
+void ImageDataset::read_bmp(const Shape& new_input_shape)
 {
     chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
     

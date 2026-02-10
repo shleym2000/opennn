@@ -72,19 +72,19 @@ Correlation correlation_spearman(const ThreadPoolDevice*, const Tensor2&, const 
 type r_correlation_to_z_correlation(const type);
 type z_correlation_to_r_correlation(const type);
 
-Tensor1 confidence_interval_z_correlation(const type, const Index&);
+Tensor1 confidence_interval_z_correlation(const type, Index);
 
 
 // Time series correlation
 
 Tensor1 autocorrelations(const ThreadPoolDevice*,
                                  const Tensor1&,
-                                 const Index&  = 10);
+                                 Index  = 10);
 
 Tensor1 cross_correlations(const ThreadPoolDevice*,
                                    const Tensor1&,
                                    const Tensor1&,
-                                   const Index&);
+                                   Index);
 
 Tensor2 get_correlation_values(const Tensor<Correlation, 2>&);
 

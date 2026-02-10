@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-Pooling3d::Pooling3d(const shape& new_input_shape,
+Pooling3d::Pooling3d(const Shape& new_input_shape,
                      const PoolingMethod& new_pooling_method,
                      const string& new_name) : Layer()
 {
@@ -21,13 +21,13 @@ Pooling3d::Pooling3d(const shape& new_input_shape,
 }
 
 
-shape Pooling3d::get_input_shape() const
+Shape Pooling3d::get_input_shape() const
 {
     return input_shape;
 }
 
 
-shape Pooling3d::get_output_shape() const
+Shape Pooling3d::get_output_shape() const
 {
     return {input_shape[1]};
 }
@@ -45,7 +45,7 @@ string Pooling3d::write_pooling_method() const
 }
 
 
-void Pooling3d::set(const shape& new_input_shape, const PoolingMethod& new_pooling_method, const string& new_label)
+void Pooling3d::set(const Shape& new_input_shape, const PoolingMethod& new_pooling_method, const string& new_label)
 {
     name = "Pooling3d";
     input_shape = new_input_shape;
@@ -180,7 +180,7 @@ void Pooling3dBackPropagation::initialize()
 {
     layer = static_cast<Pooling3d*>(layer);
 
-    const shape layer_input_dimensions = layer->get_input_shape();
+    const Shape layer_input_dimensions = layer->get_input_shape();
 
     input_derivatives.resize(batch_size,
                              layer_input_dimensions[0],

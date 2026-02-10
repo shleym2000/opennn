@@ -221,7 +221,7 @@ vector<vector<Index>> NeuralNetwork::get_layer_output_indices() const
 }
 
 
-Index NeuralNetwork::find_input_index(const vector<Index>& layer_inputs_indices, const Index& layer_index) const
+Index NeuralNetwork::find_input_index(const vector<Index>& layer_inputs_indices, Index layer_index) const
 {
     for(Index i = 0; i < Index(layer_inputs_indices.size()); i++)
         if (layer_inputs_indices[i] == layer_index)
@@ -276,9 +276,9 @@ void NeuralNetwork::set_output_names(const vector<string>& new_output_namess)
 }
 
 
-void NeuralNetwork::set_input_shape(const shape& new_input_shape)
+void NeuralNetwork::set_input_shape(const Shape& new_input_shape)
 {
-    const Index total_inputs = count_elements(new_input_shape);
+    const Index total_inputs = new_input_shape.count();
     input_names.resize(total_inputs);
 
     if(has("Scaling2d"))
@@ -377,9 +377,9 @@ Index NeuralNetwork::get_inputs_number() const
     if(has("Embedding"))
         return get_layer(0)->get_inputs_number();
 
-    const shape input_shape = layers[0]->get_input_shape();
+    const Shape input_shape = layers[0]->get_input_shape();
 
-    return count_elements(input_shape);
+    return input_shape.count();
 }
 
 
@@ -390,13 +390,13 @@ Index NeuralNetwork::get_outputs_number() const
 
     const Layer* last_layer = layers[layers.size() - 1].get();
 
-    const shape output_dimensions = last_layer->get_output_shape();
+    const Shape output_shape = last_layer->get_output_shape();
 
-    return count_elements(output_dimensions);
+    return output_shape.count();
 }
 
 
-shape NeuralNetwork::get_input_shape() const
+Shape NeuralNetwork::get_input_shape() const
 {
     if(layers.empty())
         return {};
@@ -405,7 +405,7 @@ shape NeuralNetwork::get_input_shape() const
 }
 
 
-shape NeuralNetwork::get_output_shape() const
+Shape NeuralNetwork::get_output_shape() const
 {
     if(layers.empty()) 
         return {};
@@ -636,11 +636,11 @@ string NeuralNetwork::get_expression() const
 }
 
 
-Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor<Index, 1>& inputs_dimensions)
+Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor<Index, 1>& input_shape)
 {
-    const Index inputs_dimensions_number = inputs_dimensions.size();
+    const Index input_shape_number = input_shape.size();
 
-    if(inputs_dimensions_number == 2)
+    if(input_shape_number == 2)
     {
         Tensor2 scaled_outputs;
         Tensor2 last_layer_outputs;
@@ -652,23 +652,23 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         if(layers_number == 0)
         {
-            scaled_outputs = TensorMap2(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
+            scaled_outputs = TensorMap2(scaled_inputs_data, input_shape[0], input_shape[1]);
             return scaled_outputs;
         }
 
-        scaled_outputs.resize(inputs_dimensions[0], layers[0]->get_outputs_number());
+        scaled_outputs.resize(input_shape[0], layers[0]->get_outputs_number());
 
         outputs_dimensions = get_shape(scaled_outputs);
 
-        ForwardPropagation forward_propagation(inputs_dimensions[0], this);
+        ForwardPropagation forward_propagation(input_shape[0], this);
 
         bool is_training = false;
 
         if(layers[0]->get_name() == "Scaling2d")
         {
-            TensorView scaled_inputs_tensor(scaled_inputs_data, {inputs_dimensions[0], inputs_dimensions[1]});
+            TensorView scaled_inputs_tensor(scaled_inputs_data, {input_shape[0], input_shape[1]});
 
-            const Tensor<Index, 0> size = inputs_dimensions.prod();
+            const Tensor<Index, 0> size = input_shape.prod();
 
             memcpy(scaled_inputs_tensor.data, scaled_inputs_data, static_cast<size_t>(size(0)*sizeof(type)) );
 
@@ -679,7 +679,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
         }
         else
         {
-            scaled_outputs = TensorMap2(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
+            scaled_outputs = TensorMap2(scaled_inputs_data, input_shape[0], input_shape[1]);
         }
 
         last_layer_outputs = scaled_outputs;
@@ -690,7 +690,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
         {
             if(layers[i]->get_name() != "Unscaling" && layers[i]->get_name() != "Scaling2d")
             {
-                scaled_outputs.resize(inputs_dimensions[0], layers[0]->get_outputs_number());
+                scaled_outputs.resize(input_shape[0], layers[0]->get_outputs_number());
 
                 outputs_dimensions = get_shape(scaled_outputs);
 
@@ -711,7 +711,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         return scaled_outputs;
     }
-    else if(inputs_dimensions_number == 4)
+    else if(input_shape_number == 4)
     {
         /// @todo
         return Tensor2();
@@ -727,7 +727,7 @@ Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
                                                     const Tensor1& point,
                                                     const type& minimum,
                                                     const type& maximum,
-                                                    const Index& points_number) const
+                                                    Index points_number) const
 {
     const Index inputs_number = get_inputs_number();
 
@@ -1042,9 +1042,12 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
         if(!text)
             throw runtime_error("Text is nullptr for LayerInputsIndices element.");
 
+        // @todo fix this change from vector to Shape
+/*
         const vector<Index> input_index = string_to_dimensions(string(text), " ");
         if((size_t)layer_index >= layer_input_indices.size())
             layer_input_indices.push_back(input_index);
+*/
     }
 }
 
@@ -1621,7 +1624,7 @@ void NeuralNetwork::forward_propagate(const vector<TensorViewCuda>& input_views_
 }
 
 
-TensorViewCuda NeuralNetwork::calculate_outputs_cuda(TensorViewCuda input_device, const Index& batch_size)
+TensorViewCuda NeuralNetwork::calculate_outputs_cuda(TensorViewCuda input_device, Index batch_size)
 {
     if (layers.empty())
         return TensorViewCuda();

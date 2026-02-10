@@ -486,9 +486,9 @@ void BackPropagation::set(const Index new_samples_number, const Loss* new_loss)
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    const shape output_dimensions = neural_network_ptr->get_output_shape();
+    const Shape output_shape = neural_network_ptr->get_output_shape();
 
-    const Index outputs_number = output_dimensions[0];
+    const Index outputs_number = output_shape[0];
 
     // First order loss
 
@@ -501,9 +501,9 @@ void BackPropagation::set(const Index new_samples_number, const Loss* new_loss)
     errors_weights.resize(samples_number, outputs_number);
 
     output_gradient_dimensions = { samples_number };
-    output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
+    output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_shape.begin(), output_shape.end());
 
-    const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
+    const Index size = accumulate(output_shape.begin(), output_shape.end(), samples_number, multiplies<>());
 
     output_gradients.resize(size);
 
@@ -778,7 +778,7 @@ Tensor1 Loss::calculate_numerical_input_gradients()
 {
 
     const Index samples_number = dataset->get_samples_number("Training");
-    const shape inputs_dimensions = dataset->get_shape("Input");
+    const Shape input_shape = dataset->get_shape("Input");
 
     const Index values_number = neural_network->get_inputs_number()*samples_number;
 
@@ -1270,7 +1270,7 @@ void BackPropagationLM::set(const Index new_samples_number,
 
     const Index outputs_number = neural_network_ptr->get_outputs_number();
 
-    const shape output_dimensions = neural_network_ptr->get_output_shape();
+    const Shape output_shape = neural_network_ptr->get_output_shape();
 
     neural_network.set(samples_number, neural_network_ptr);
 
@@ -1292,16 +1292,16 @@ void BackPropagationLM::set(const Index new_samples_number,
 
     squared_errors.resize(samples_number);
 
-    output_gradient_dimensions.resize(output_dimensions.size() + 1);
+    output_gradient_dimensions.resize(output_shape.size() + 1);
     output_gradient_dimensions[0] = samples_number;
 
     Index size = samples_number;
 
-    for(Index i = 0; i < Index(output_dimensions.size()); i++)
+    for(Index i = 0; i < Index(output_shape.size()); i++)
     {
-        output_gradient_dimensions[i + 1] = output_dimensions[i];
+        output_gradient_dimensions[i + 1] = output_shape[i];
 
-        size *= output_dimensions[i];
+        size *= output_shape[i];
     }
 
     output_gradients.resize(size);
@@ -1498,9 +1498,9 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    const shape output_dimensions = neural_network_ptr->get_output_shape();
+    const shape output_shape = neural_network_ptr->get_output_shape();
 
-    const Index outputs_number = output_dimensions[0];
+    const Index outputs_number = output_shape[0];
 
     // First order loss
 
@@ -1516,9 +1516,9 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
     // Outputs_delta
 
     shape output_gradient_dimensions = { samples_number };
-    output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_dimensions.begin(), output_dimensions.end());
+    output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_shape.begin(), output_shape.end());
 
-    const Index size = accumulate(output_dimensions.begin(), output_dimensions.end(), samples_number, multiplies<>());
+    const Index size = accumulate(output_shape.begin(), output_shape.end(), samples_number, multiplies<>());
 
     output_gradients.resize(output_gradient_dimensions);
 

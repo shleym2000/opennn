@@ -13,20 +13,20 @@
 namespace opennn
 {
 
-Recurrent::Recurrent(const shape& new_input_shape,
-                     const shape& new_output_shape) : Layer()
+Recurrent::Recurrent(const Shape& new_input_shape,
+                     const Shape& new_output_shape) : Layer()
 {
     set(new_input_shape, new_output_shape);
 }
 
 
-shape Recurrent::get_input_shape() const
+Shape Recurrent::get_input_shape() const
 {
     return input_shape;
 }
 
 
-shape Recurrent::get_output_shape() const
+Shape Recurrent::get_output_shape() const
 {
     return { biases.size() };
 }
@@ -44,7 +44,7 @@ string Recurrent::get_activation_function() const
 }
 
 
-void Recurrent::set(const shape& new_input_shape, const shape& new_output_shape)
+void Recurrent::set(const Shape& new_input_shape, const Shape& new_output_shape)
 {
     if(new_input_shape.size() != 2)
         throw runtime_error("Input shape rank is not 2 for Recurrent (time_steps, inputs).");
@@ -63,7 +63,7 @@ void Recurrent::set(const shape& new_input_shape, const shape& new_output_shape)
 }
 
 
-void Recurrent::set_input_shape(const shape& new_input_shape)
+void Recurrent::set_input_shape(const Shape& new_input_shape)
 {
     if (new_input_shape.size() != 2)
         throw runtime_error("Input shape rank is not 2 for Recurrent (time_steps, inputs).");
@@ -77,7 +77,7 @@ void Recurrent::set_input_shape(const shape& new_input_shape)
 }
 
 
-void Recurrent::set_output_shape(const shape& new_output_shape)
+void Recurrent::set_output_shape(const Shape& new_output_shape)
 {
     const Index inputs_number = input_weights.dims[0];
     const Index outputs_number = new_output_shape[0];
@@ -293,6 +293,7 @@ string Recurrent::get_expression(const vector<string>& feature_names,
 
 void Recurrent::print() const
 {
+/*
     cout << "Recurrent layer" << endl
          << "Time steps: " << get_input_shape()[0] << endl
          << "Input shape: " << get_input_shape()[1] << endl
@@ -301,6 +302,7 @@ void Recurrent::print() const
          << "Input weights shape: " << input_weights.dims << endl
          << "Recurrent weights shape: " << recurrent_weights.dims << endl
          << "Total parameters: " << biases.size() + input_weights.size() + recurrent_weights.size() << endl;
+*/
 }
 
 
@@ -378,10 +380,10 @@ void RecurrentBackPropagation::initialize()
     input_weight_gradients.dims = {inputs_number, outputs_number};
     recurrent_weight_gradients.dims = {outputs_number, outputs_number};
 
-    const shape full_input_shape = { batch_size, time_steps, inputs_number };
+    const Shape full_input_shape = { batch_size, time_steps, inputs_number };
 
     input_gradients_memory.resize(1);
-    input_gradients_memory[0].resize(count_elements(full_input_shape));
+    input_gradients_memory[0].resize(full_input_shape.count());
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
     input_gradients[0].dims = full_input_shape;
