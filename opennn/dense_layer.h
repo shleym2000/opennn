@@ -1139,8 +1139,7 @@ public:
                                             outputs.get_descriptor(),
                                             outputs.data,
                                             dense_forward_propagation->dropout_reserve_space,
-                                            dense_forward_propagation->dropout_reserve_space_size));
-
+                                            dense_forward_propagation->dropout_reserve_space_size)); 
     }
 
 

@@ -511,6 +511,77 @@ void Convolutional::set_input_shape(const shape& new_input_shape)
 }
 
 
+void Convolutional::set_parameters_glorot()
+{
+    const Index fan_in = get_kernel_height() * get_kernel_width() * get_kernel_channels();
+    const Index fan_out = get_kernel_height() * get_kernel_width() * get_kernels_number();
+
+    const type limit = sqrt(6.0f / static_cast<type>(fan_in + fan_out));
+
+    if (biases.size() > 0)
+    {
+        TensorMap1 biases_map(biases.data, biases.size());
+        biases_map.setZero();
+    }
+
+    if (weights.size() > 0)
+    {
+        TensorMap1 weights_map(weights.data, weights.size());
+        set_random_uniform(weights_map, -limit, limit);
+    }
+
+    if (batch_normalization)
+    {
+        if (gammas.size() > 0)
+        {
+            TensorMap1 scales_map(gammas.data, gammas.size());
+            scales_map.setConstant(1.0);
+        }
+        if (betas.size() > 0)
+        {
+            TensorMap1 offsets_map(betas.data, betas.size());
+            offsets_map.setZero();
+        }
+    }
+}
+
+
+void Convolutional::set_parameters_random()
+{
+    if (biases.size() > 0)
+    {
+        TensorMap1 biases_map(biases.data, biases.size());
+        biases_map.setZero();
+    }
+
+    if (weights.size() > 0)
+    {
+        TensorMap1 weights_map(weights.data, weights.size());
+
+        if (activation_function == "RectifiedLinear" ||
+            activation_function == "ScaledExponentialLinear")
+        {
+            const Index fan_in = get_kernel_height() * get_kernel_width() * get_kernel_channels();
+
+            const type limit = sqrt(6.0f / static_cast<type>(fan_in));
+
+            set_random_uniform(weights_map, -limit, limit);
+        }
+        else
+            set_random_uniform(weights_map);
+    }
+
+    if (batch_normalization)
+    {
+        if (gammas.size() > 0)
+            TensorMap1(gammas.data, gammas.size()).setConstant(1.0);
+
+        if (betas.size() > 0)
+            TensorMap1(betas.data, betas.size()).setZero();
+    }
+}
+
+
 pair<Index, Index> Convolutional::get_padding() const
 {
     return { get_padding_height(), get_padding_width() };
@@ -1135,8 +1206,8 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
     // Convolution Workspace
 
-//    convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
-
+    convolution_algorithm = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+    
     cudnnConvolutionFwdAlgoPerf_t fwd_perf_results[CUDNN_CONVOLUTION_FWD_ALGO_COUNT];
 
     int returnedAlgoCount;
@@ -1152,7 +1223,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
         fwd_perf_results));
 
     convolution_algorithm = fwd_perf_results[0].algo;
-
+    
     cudnnGetConvolutionForwardWorkspaceSize(
         layer->get_cudnn_handle(),
         input_tensor_descriptor, kernel_descriptor,

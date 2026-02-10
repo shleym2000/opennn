@@ -378,7 +378,6 @@ void Dataset::set_sample_role(const Index index, const string& new_role)
         throw runtime_error("Unknown sample role: " + new_role + "\n");
 }
 
-
 void Dataset::set_sample_roles(const vector<string>& new_roles)
 {
     const Index samples_number = new_roles.size();
@@ -536,6 +535,23 @@ void Dataset::set_default_variables_roles()
     }
 }
 
+vector<Index> Dataset::get_feature_dimensions() const
+{
+    vector<Index> number_categories;
+    number_categories.reserve(get_used_variables_number());
+
+    for(const Dataset::Variable& variable : variables)
+    {
+        if(variable.role == "None" || variable.role == "Time")
+            continue;
+
+        if(variable.is_categorical())
+            number_categories.push_back(variable.get_categories_number());
+        else
+            number_categories.push_back(1);
+    }
+    return number_categories;
+}
 
 void Dataset::set_default_variables_roles_forecasting()
 {
@@ -582,6 +598,15 @@ void Dataset::set_default_variables_roles_forecasting()
     }
 }
 
+vector<Dataset::VariableType> Dataset::get_variable_types(const vector<Index> indices) const
+{
+    vector<Dataset::VariableType> variable_types(indices.size());
+
+    for (Index i = 0; i < static_cast<Index>(indices.size()) ; i++)
+        variable_types[i] = get_variable_type(indices[i]);
+
+    return variable_types;
+}
 
 void Dataset::set_default_variable_names()
 {

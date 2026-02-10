@@ -48,6 +48,8 @@ type* vector_to_device(const Tensor<type, 1>&);
 
 Tensor<type, 1> vector_from_device(const type*, const size_t&);
 
+string string_from_device(const float*, size_t);
+
 type* matrix_to_device(const Tensor<type, 2>&);
 
 Tensor<type, 2> matrix_from_device(const type*, const size_t&, const size_t&);

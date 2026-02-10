@@ -191,6 +191,27 @@ Tensor<type, 1> vector_from_device(const type* pointer, const size_t& new_size)
 }
 
 
+string string_from_device(const float* pointer, size_t size) 
+{
+    if (size == 0) return "[]";
+
+    vector<float> host_vec(size);
+    cudaError_t err = cudaMemcpy(host_vec.data(), pointer, size * sizeof(float), cudaMemcpyDeviceToHost);
+
+    if (err != cudaSuccess)
+        return "CUDA Memcpy Error: " + std::string(cudaGetErrorString(err));
+    
+
+    ostringstream oss;
+    oss << "[ ";
+    for (size_t i = 0; i < size; ++i) 
+        oss << host_vec[i] << " ";
+    
+    oss << "]";
+    return oss.str();
+}
+
+
 void print_device_data(const type* pointer, const size_t size) {
     type* host_data = new type[size];
     cudaMemcpy(host_data, pointer, size * sizeof(type), cudaMemcpyDeviceToHost);

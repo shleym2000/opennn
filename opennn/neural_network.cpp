@@ -509,7 +509,6 @@ void NeuralNetwork::set_parameters_random()
 {
     const Index layers_number = get_layers_number();
 
-    #pragma omp parallel for
     for(Index i = 0; i < layers_number; i++)
         layers[i]->set_parameters_random();
 }

@@ -92,6 +92,9 @@ public:
 
     void set_input_shape(const shape&) override;
 
+    void set_parameters_glorot() override;
+    void set_parameters_random() override;
+
     // Forward propagation
 
     void preprocess_inputs(const Tensor4&, Tensor4&) const;
