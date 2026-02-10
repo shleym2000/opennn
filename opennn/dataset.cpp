@@ -4106,7 +4106,7 @@ void Dataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, c
 
 void Dataset::fill_target_tensor(const vector<Index>& sample_indices, const vector<Index>& target_indices, type* target_tensor_data) const
 {
-    fill_tensor_data(data, sample_indices, target_indices, target_tensor_data);
+    fill_tensor_data_test(data, sample_indices, target_indices, target_tensor_data);
 }
 
 
