@@ -1,7 +1,7 @@
 //   OpenNN: Open Neural Networks Library
 //   www.opennn.net
 //
-//   I R I S   P L A N T   A P P L I C A T I O N
+//   CONCRETE RECIPES OPTIMIZATION
 //
 //   Artificial Intelligence Techniques SL (Artelnics)
 //   artelnics@artelnics.com
@@ -17,7 +17,7 @@
 #include "../../opennn/model_selection.h"
 #include "../../opennn/testing_analysis.h"
 #include "../../opennn/optimization_algorithm.h"
-#include "../../opennn/stochastic_gradient_descent.h"
+#include "../../opennn/quasi_newton_method.h"
 
 #include "../../opennn/response_optimization.h"
 
@@ -29,22 +29,22 @@ int main()
     {
         cout << "OpenNN Response Optimization Example: Concrete " << endl;
 
-        const Index neurons_number = 3;
-        const type regularization_weight = 0.0001;
-
-        // DataSet
-
         Dataset dataset("../data/concrete.csv", ",", true, false);
 
-        // tentativo  dataset.set_raw_variable_types(Dataset::RawVariableType::Numeric);
+        dataset.set_variable_types(Dataset::VariableType::Numeric);
 
-        //dataset.set_raw_variable_role("SLUMP(cm)", "Target");
-        //dataset.set_raw_variable_role("FLOW(cm)", "Target");
+        dataset.impute_missing_values_mean();
+
+        //dataset.set_variable_role("SLUMP(cm)", "Target");
+        //dataset.set_variable_role("FLOW(cm)", "Target");
         dataset.set_variable_role("Compressive Strength (28-day)(Mpa)", "Target");
 
-        dataset.split_samples_random(type(0.8), type(0), type(0.2));
+        dataset.split_samples_random(type(0.6), type(0.2), type(0.2));
 
         // Neural Network
+
+        const Index neurons_number = 3;
+        const type regularization_weight = 0.0001;
 
         ApproximationNetwork approximation_network(dataset.get_input_shape(), {neurons_number}, dataset.get_target_shape());
 
@@ -53,24 +53,14 @@ int main()
         if(bounding_layer)
             bounding_layer->set_bounding_method("NoBounding");
 
-        // Training strategy
-
         TrainingStrategy training_strategy(&approximation_network, &dataset);
-        training_strategy.set_optimization_algorithm("StochasticGradientDescent");
 
-        StochasticGradientDescent* sgd = (StochasticGradientDescent*)training_strategy.get_optimization_algorithm();
-        sgd->set_batch_size(32);
-        sgd->set_initial_learning_rate(0.01);
-        sgd->set_momentum(0.9);
-        sgd->set_nesterov(true);
-        sgd->set_initial_decay(0.00001);
+        training_strategy.set_optimization_algorithm("AdaptiveMomentEstimation");
 
-        training_strategy.get_loss_index()->set_regularization_method("L2");
+        training_strategy.get_loss_index()->set_regularization_method("L1");
         training_strategy.get_loss_index()->set_regularization_weight(regularization_weight);
 
         TrainingResults training_results = training_strategy.train();
-
-        // Testing analysis
 
         TestingAnalysis testing_analysis(&approximation_network, &dataset);
         testing_analysis.print_goodness_of_fit_analysis();
@@ -78,19 +68,13 @@ int main()
         // 4. RESPONSE OPTIMIZATION
         ResponseOptimization optimizer(&approximation_network, &dataset);
 
-        // --- EXPERIMENT A: Single Objective (Maximize Strength) ---
-        cout << "\n[Experiment A] Maximizing Compressive Strength..." << endl;
+        cout << "\n[Single Objective Experiment] Maximizing Compressive Strength..." << endl;
 
         vector<ResponseOptimization::Condition> single_conds(dataset.get_variables_number());
 
         single_conds[dataset.get_variable_index("Compressive Strength (28-day)(Mpa)")] = {ResponseOptimization::ConditionType::Maximize};
 
-        //optimizer.set_condition("Compressive Strength (28-day)(Mpa)",ResponseOptimization::ConditionType::Maximize);
-
-         cout << "DEBUG: all set before optimizing"  << endl;
-
-        auto [single_res, fs1] = optimizer.perform_response_optimization(single_conds);
-
+        auto [single_results, feature_space_single] = optimizer.perform_response_optimization(single_conds);
 
             cout << "Optimal Recipe for Max Strength:" << endl;
 
@@ -100,40 +84,67 @@ int main()
 
             cout << endl;
 
-            for(Index i=0; i<single_res.dimension(1); ++i)
-                cout << setw(15) << single_res(0, i);
+            for(Index i=0; i<single_results.dimension(1); ++i)
+                cout << setw(15) << single_results(0, i);
             cout << endl;
 
 
         // --- EXPERIMENT B: Multi-Objective (The Trade-off) ---
         // Goals: Maximize Slump, Flow, and Strength while MINIMIZING Cement.
-        cout << "\n[Experiment B] Multi-Objective (Max Slump/Flow/Strength, Min Cement)..." << endl;
+        cout << "\n[Multi-Objective Experiment] Max Strength & Min Cement..." << endl;
 
         vector<ResponseOptimization::Condition> multi_conds(dataset.get_variables_number());
-        multi_conds[dataset.get_variable_index("SLUMP(cm)")] = {ResponseOptimization::ConditionType::Maximize};
-        multi_conds[dataset.get_variable_index("FLOW(cm)")]  = {ResponseOptimization::ConditionType::Maximize};
+
         multi_conds[dataset.get_variable_index("Compressive Strength (28-day)(Mpa)")] = {ResponseOptimization::ConditionType::Maximize};
         multi_conds[dataset.get_variable_index("Cement")] = {ResponseOptimization::ConditionType::Minimize};
 
-        auto [pareto_res, fs2] = optimizer.perform_response_optimization(multi_conds);
+        auto [pareto_results, feature_space_multi] = optimizer.perform_response_optimization(multi_conds);
 
-        cout << "Pareto Front (Found " << pareto_res.dimension(0) << " optimal trade-offs):" << endl;
-        auto names = dataset.get_variable_names();
-        for(auto& n : names) cout << setw(14) << n.substr(0,13);
+        cout << "Pareto Front (Found " << pareto_results.dimension(0) << " optimal trade-offs):" << endl;
+
+        auto variable_names = dataset.get_variable_names();
+
+        for(auto& n : variable_names)
+            cout << setw(14) << n.substr(0,13);
         cout << endl;
 
         // Print first 10 points of the Pareto front
-        Index rows_to_show = min((Index)10, (Index)pareto_res.dimension(0));
-        for(Index i=0; i < rows_to_show; ++i) {
-            for(Index j=0; j < pareto_res.dimension(1); ++j) {
-                cout << setw(14) << fixed << setprecision(2) << pareto_res(i, j);
+        Index rows_to_show = min((Index)10, (Index)pareto_results.dimension(0));
+
+        for(Index i=0; i < rows_to_show; ++i)
+        {
+            for(Index j=0; j < pareto_results.dimension(1); ++j)
+            {
+                cout << setw(14) << fixed << setprecision(2) << pareto_results(i, j);
             }
             cout << endl;
         }
 
         cout << "\nExperiment Complete." << endl;
 
-    } catch (exception& e) {
+        ofstream file("pareto_front.csv");
+
+        // Write Header
+        for(int i = 0; i < variable_names.size(); ++i)
+            file << variable_names[i] << (i == variable_names.size()-1 ? "" : ",");
+
+        file << "\n";
+
+        // Write Data
+        for(Index i=0; i < pareto_results.dimension(0); ++i)
+        {
+            for(Index j=0; j < pareto_results.dimension(1); ++j)
+                file << pareto_results(i, j) << (j == pareto_results.dimension(1)-1 ? "" : ",");
+
+            file << "\n";
+        }
+        file.close();
+        cout << "Results saved to pareto_front.csv" << endl;
+
+    }
+
+    catch (exception& e)
+    {
         cerr << "Error: " << e.what() << endl;
     }
     return 0;
