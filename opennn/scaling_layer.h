@@ -158,7 +158,7 @@ public:
         descriptives = new_descriptives;
     }
 
-    void set_min_max_range(const type min, const type& max)
+    void set_min_max_range(const type min, type max)
     {
         min_range = min;
         max_range = max;

@@ -32,7 +32,7 @@ public:
     void set_positives_weight(const type);
     void set_negatives_weight(const type);
 
-    void set_weights(const type, const type&);
+    void set_weights(const type, type);
 
     void set_weights();
 

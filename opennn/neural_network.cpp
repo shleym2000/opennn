@@ -725,8 +725,8 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
 Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
                                                     const Tensor1& point,
-                                                    const type& minimum,
-                                                    const type& maximum,
+                                                    type minimum,
+                                                    type maximum,
                                                     Index points_number) const
 {
     const Index inputs_number = get_inputs_number();
@@ -751,7 +751,7 @@ Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
 
 Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
 {
-    // Tensor3 image = read_bmp_image(image_path);
+    // Tensor3 image = load_image(image_path);
 
     // Scaling4d* scaling_layer = static_cast<Scaling4d*>(get_first("Scaling4d"));
 

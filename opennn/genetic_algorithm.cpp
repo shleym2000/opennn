@@ -80,7 +80,7 @@ Index GeneticAlgorithm::get_maximum_inputs_number() const
 }
 
 
-const type& GeneticAlgorithm::get_mutation_rate() const
+type GeneticAlgorithm::get_mutation_rate() const
 {
     return mutation_rate;
 }

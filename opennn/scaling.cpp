@@ -52,8 +52,8 @@ void scale_standard_deviation(TensorMap2 matrix,
 void scale_minimum_maximum(TensorMap2 matrix,
                            Index column_index,
                            const Descriptives& column_descriptives,
-                           const type& min_range,
-                           const type& max_range)
+                           type min_range,
+                           type max_range)
 {
     const type minimum = column_descriptives.minimum;
     const type maximum = column_descriptives.maximum;
@@ -109,7 +109,7 @@ void scale_mean_standard_deviation(Tensor2& matrix, Index column_index, const De
 }
 
 
-void scale_minimum_maximum(Tensor2& matrix, Index column_index, const Descriptives& column_descriptives, const type& min_range, const type& max_range)
+void scale_minimum_maximum(Tensor2& matrix, Index column_index, const Descriptives& column_descriptives, type min_range, type max_range)
 {
     TensorMap2 map(matrix.data(), matrix.dimension(0), matrix.dimension(1));
     scale_minimum_maximum(map, column_index, column_descriptives, min_range, max_range);
@@ -169,8 +169,8 @@ void scale_standard_deviation_3d(Tensor3& tensor,
 void scale_minimum_maximum_3d(Tensor3& tensor,
                               Index feature_index,
                               const Descriptives& feature_descriptives,
-                              const type& min_range,
-                              const type& max_range)
+                              type min_range,
+                              type max_range)
 {
     const type minimum = feature_descriptives.minimum;
     const type maximum = feature_descriptives.maximum;
@@ -233,8 +233,8 @@ void scale_logarithmic_3d(Tensor3& tensor, Index feature_index)
 void unscale_minimum_maximum(TensorMap2 matrix,
                              Index column_index,
                              const Descriptives& column_descriptives,
-                             const type& min_range,
-                             const type& max_range)
+                             type min_range,
+                             type max_range)
 {
     const type minimum = column_descriptives.minimum;
     const type maximum = column_descriptives.maximum;
@@ -303,8 +303,8 @@ void unscale_image_minimum_maximum(TensorMap2 matrix, Index column_index)
 void unscale_minimum_maximum(Tensor2& matrix,
                              Index column_index,
                              const Descriptives& column_descriptives,
-                             const type& min_range,
-                             const type& max_range)
+                             type min_range,
+                             type max_range)
 {
     TensorMap2 map(matrix.data(), matrix.dimension(0), matrix.dimension(1));
     unscale_minimum_maximum(map, column_index, column_descriptives, min_range, max_range);

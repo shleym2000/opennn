@@ -407,8 +407,8 @@ void Dataset::set_sample_roles(const vector<Index>& indices, const string& sampl
 
 
 void Dataset::split_samples_random(const type training_samples_ratio,
-                                   const type& validation_samples_ratio,
-                                   const type& testing_samples_ratio)
+                                   type validation_samples_ratio,
+                                   type testing_samples_ratio)
 {
     const Index used_samples_number = get_used_samples_number();
 
@@ -458,8 +458,8 @@ void Dataset::split_samples_random(const type training_samples_ratio,
 
 
 void Dataset::split_samples_sequential(const type training_samples_ratio,
-                                       const type& validation_samples_ratio,
-                                       const type& testing_samples_ratio)
+                                       type validation_samples_ratio,
+                                       type testing_samples_ratio)
 {
     const Index used_samples_number = get_used_samples_number();
 
@@ -4115,15 +4115,15 @@ void Dataset::check_separators(const string& line) const
 }
 
 
-void Dataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_tensor_data) const
+void Dataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
-    fill_tensor_data(data, sample_indices, input_indices, input_tensor_data);
+    fill_tensor_data(data, sample_indices, input_indices, input_data);
 }
 
 
-void Dataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_tensor_data) const
+void Dataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
-    fill_tensor_data_row_major(data, sample_indices, input_indices, input_tensor_data);
+    fill_tensor_data_row_major(data, sample_indices, input_indices, input_data);
 }
 
 

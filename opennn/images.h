@@ -12,20 +12,24 @@
 #include <string>
 #include <filesystem>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../stb_image/stb_image.h"
+
 namespace opennn
 {
+/*
 uint8_t read_u8(ifstream&, const string&);
 uint16_t read_u16_le(ifstream&, const string&);
 uint32_t read_u32_le(ifstream&, const string&);
 int32_t read_s32_le(ifstream&, const string&);
-
-Tensor3 read_bmp_image(const filesystem::path&);
+*/
+Tensor3 load_image(const filesystem::path&);
 
 Tensor3 resize_image(const Tensor3&, Index, Index);
 
 void reflect_image_x(const ThreadPoolDevice*, Tensor3&);
 void reflect_image_y(const ThreadPoolDevice*, Tensor3&);
-void rotate_image(const ThreadPoolDevice*, const Tensor3&, Tensor3&, const type&);
+void rotate_image(const ThreadPoolDevice*, const Tensor3&, Tensor3&, type);
 void translate_image_x(const ThreadPoolDevice*, const Tensor3&, Tensor3&, Index);
 void translate_image_y(const ThreadPoolDevice*, const Tensor3&, Tensor3&, Index);
 }

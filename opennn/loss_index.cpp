@@ -24,7 +24,7 @@ Loss::Loss(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
 }
 
 
-const type& Loss::get_regularization_weight() const
+type Loss::get_regularization_weight() const
 {
     return regularization_weight;
 }

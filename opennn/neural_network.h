@@ -260,7 +260,7 @@ public:
 
     Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
-    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, const type&, const type&, Index = 101) const;
+    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 

@@ -44,7 +44,7 @@ bool InputsSelection::get_display() const
 }
 
 
-const type& InputsSelection::get_validation_error_goal() const
+type InputsSelection::get_validation_error_goal() const
 {
     return validation_error_goal;
 }
@@ -56,7 +56,7 @@ Index InputsSelection::get_maximum_iterations_number() const
 }
 
 
-const type& InputsSelection::get_maximum_time() const
+type InputsSelection::get_maximum_time() const
 {
     return maximum_time;
 }

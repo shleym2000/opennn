@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "pch.h"
 #include "tensors.h"
 #include "dataset.h"
 #include "statistics.h"

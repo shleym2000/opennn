@@ -44,10 +44,10 @@ public:
     void set_bounding_method(const string&);
 
     void set_lower_bounds(const Tensor1&);
-    void set_lower_bound(const Index, const type&);
+    void set_lower_bound(const Index, type);
 
     void set_upper_bounds(const Tensor1&);
-    void set_upper_bound(const Index, const type&);
+    void set_upper_bound(const Index, type);
 
     // Lower and upper bounds
 

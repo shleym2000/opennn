@@ -46,7 +46,7 @@ public:
         return dataset;
     }
 
-    const type& get_regularization_weight() const;
+    type get_regularization_weight() const;
 
     bool get_display() const;
 

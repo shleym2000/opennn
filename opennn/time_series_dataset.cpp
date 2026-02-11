@@ -388,7 +388,7 @@ void TimeSeriesDataset::impute_missing_values_interpolate()
 
 void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
                                           const vector<Index>& input_indices,
-                                          type* input_tensor_data) const
+                                          type* input_data) const
 {
     if (sample_indices.empty() || input_indices.empty())
         return;
@@ -397,7 +397,7 @@ void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
     const Index input_size = input_indices.size();
     const Index total_rows_in_data = data.dimension(0);
 
-    TensorMap3 batch(input_tensor_data, batch_size, past_time_steps, input_size);
+    TensorMap3 batch(input_data, batch_size, past_time_steps, input_size);
     const type* const matrix_data = data.data();
 
 #pragma omp parallel for

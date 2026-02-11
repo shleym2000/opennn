@@ -12,7 +12,7 @@
 namespace opennn
 {
 
-type bound(const type value, const type& minimum, const type& maximum)
+type bound(const type value, type minimum, type maximum)
 {
     return clamp(value, minimum, maximum);
 }
@@ -262,7 +262,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>& vectors, In
 }
 
 
-Index count_between(const Tensor1& vector,const type& minimum, const type& maximum)
+Index count_between(const Tensor1& vector,type minimum, type maximum)
 {
     const Index size = vector.size();
 
@@ -290,8 +290,8 @@ void set_row(Tensor2& matrix, const Tensor1& new_row, Index row_index)
 
 Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
                                               Index column_index,
-                                              const type& minimum,
-                                              const type& maximum)
+                                              type minimum,
+                                              type maximum)
 {
     const Tensor1 column = matrix.chip(column_index,1);
     const Index new_rows_number = count_between(column, minimum, maximum);
@@ -393,7 +393,7 @@ void set_identity(Tensor2& matrix)
 }
 
 
-void sum_diagonal(Tensor2& matrix, const type& value)
+void sum_diagonal(Tensor2& matrix, type value)
 {
     const Index rows_number = matrix.dimension(0);
 

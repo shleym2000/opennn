@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "pch.h"
 #include "correlations.h"
 #include "statistics.h"
 #include "tensors.h"
@@ -332,12 +331,12 @@ public:
     // Splitting
 
     void split_samples_sequential(const type training_ratio = type(0.6),
-                                  const type& selection_ratio = type(0.2),
-                                  const type& testing_ratio = type(0.2));
+                                  type selection_ratio = type(0.2),
+                                  type testing_ratio = type(0.2));
 
     void split_samples_random(const type training_ratio = type(0.6),
-                              const type& selection_ratio = type(0.2),
-                              const type& testing_ratio = type(0.2));
+                              type selection_ratio = type(0.2),
+                              type testing_ratio = type(0.2));
 
     // Unusing
 

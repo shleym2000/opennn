@@ -348,7 +348,7 @@ protected:
 
 
     template <int Rank>
-    void dropout(TensorMapR<Rank> tensor, const type& dropout_rate) const
+    void dropout(TensorMapR<Rank> tensor, type dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 

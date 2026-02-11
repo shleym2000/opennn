@@ -57,7 +57,7 @@ bool NeuronSelection::get_display() const
 }
 
 
-const type& NeuronSelection::get_validation_error_goal() const
+type NeuronSelection::get_validation_error_goal() const
 {
     return validation_error_goal;
 }
@@ -69,7 +69,7 @@ Index NeuronSelection::get_maximum_epochs_number() const
 }
 
 
-const type& NeuronSelection::get_maximum_time() const
+type NeuronSelection::get_maximum_time() const
 {
     return maximum_time;
 }

@@ -1,6 +1,13 @@
 #pragma once
 
+#ifndef EIGEN_USE_THREADS
+#define EIGEN_USE_THREADS
+#endif
+
+#ifndef NDEBUG
 #define NDEBUG
+#endif
+
 #define EIGEN_MAX_ALIGN_BYTES 32
 #define EIGEN_NO_DEBUG
 
@@ -41,8 +48,6 @@
 #include <regex>
 #include <sstream>
 #include <omp.h>
-
-#define EIGEN_USE_THREADS
 
 #include "../eigen/Eigen/Core"
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
@@ -142,6 +147,10 @@ using TensorMap4 = TensorMap<Tensor<type, 4, AlignedMax>, AlignedMax>;
 
 template <int Rank>
 using TensorMapR = TensorMap<Tensor<type, Rank, AlignedMax>, AlignedMax>;
+
+
+using ConstTensorMap4 = TensorMap<const Tensor<type, 4, AlignedMax>, AlignedMax>;
+
 
 #include "tinyxml2.h"
 

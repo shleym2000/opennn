@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "pch.h"
-
 namespace opennn
 {
 
@@ -276,7 +274,7 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
     return array<Index, 5>({a, b, c, d, e});
 }
 
-type bound(const type value, const type& minimum, const type& maximum);
+type bound(const type value, type minimum, type maximum);
 
 void set_row(Tensor2&, const Tensor1&, Index);
 
@@ -287,7 +285,7 @@ void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
 
 void set_identity(Tensor2&);
 
-void sum_diagonal(Tensor2&, const type&);
+void sum_diagonal(Tensor2&, type);
 
 Tensor2 self_kronecker_product(const ThreadPoolDevice*, const Tensor1&);
 
@@ -351,7 +349,7 @@ Index count_NAN(const TensorR<rank>& x)
     return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
 }
 
-Index count_between(const Tensor1&, const type&, const type&);
+Index count_between(const Tensor1&, type, type);
 
 Index count_greater_than(const vector<Index>&, Index);
 
@@ -361,7 +359,7 @@ Tensor<Index, 1> calculate_rank_less(const Tensor1&);
 vector<Index> get_elements_greater_than(const vector<Index>&, Index);
 vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
-Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, Index, const type&, const type&);
+Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, Index, type, type);
 
 //type l2_distance(const type, const TensorMap<Tensor<type, 0> > &);
 type l2_distance(const Tensor1&, const Tensor1&);
@@ -575,7 +573,7 @@ bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
 template <int Rank>
 bool are_equal(const TensorR<Rank>& A,
                const TensorR<Rank>& B,
-               const type& tolerance = type(1.0e-3))
+               type tolerance = type(1.0e-3))
 {
     if(A.size() != B.size())
         throw runtime_error("are_equal: Tensor sizes are different.");

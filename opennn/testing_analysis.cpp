@@ -762,7 +762,7 @@ type TestingAnalysis::calculate_determination(const Tensor1& outputs, const Tens
 
 Tensor<Index, 2> TestingAnalysis::calculate_confusion_binary_classification(const Tensor2& targets,
                                                                             const Tensor2& outputs,
-                                                                            const type& decision_threshold) const
+                                                                            type decision_threshold) const
 {
     const Index testing_samples_number = targets.dimension(0);
 
@@ -912,7 +912,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 
 Tensor<Index, 2> TestingAnalysis::calculate_confusion(const Tensor2& outputs,
                                                       const Tensor2& targets,
-                                                      const type& decision_threshold) const
+                                                      type decision_threshold) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -1318,7 +1318,7 @@ TestingAnalysis::BinaryClassificationRates TestingAnalysis::calculate_binary_cla
 vector<Index> TestingAnalysis::calculate_true_positive_samples(const Tensor2& targets,
                                                                const Tensor2& outputs,
                                                                const vector<Index>& testing_indices,
-                                                               const type& decision_threshold) const
+                                                               type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -1343,7 +1343,7 @@ vector<Index> TestingAnalysis::calculate_true_positive_samples(const Tensor2& ta
 vector<Index> TestingAnalysis::calculate_false_positive_samples(const Tensor2& targets,
                                                                 const Tensor2& outputs,
                                                                 const vector<Index>& testing_indices,
-                                                                const type& decision_threshold) const
+                                                                type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -1365,7 +1365,7 @@ vector<Index> TestingAnalysis::calculate_false_positive_samples(const Tensor2& t
 vector<Index> TestingAnalysis::calculate_false_negative_samples(const Tensor2& targets,
                                                                 const Tensor2& outputs,
                                                                 const vector<Index>& testing_indices,
-                                                                const type& decision_threshold) const
+                                                                type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -1387,7 +1387,7 @@ vector<Index> TestingAnalysis::calculate_false_negative_samples(const Tensor2& t
 vector<Index> TestingAnalysis::calculate_true_negative_samples(const Tensor2& targets,
                                                                const Tensor2& outputs,
                                                                const vector<Index>& testing_indices,
-                                                               const type& decision_threshold) const
+                                                               type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -2142,7 +2142,7 @@ void TestingAnalysis::load(const filesystem::path& file_name)
 
 void TestingAnalysis::GoodnessOfFitAnalysis::set(const Tensor1& new_targets,
                                                  const Tensor1& new_outputs,
-                                                 const type& new_determination)
+                                                 type new_determination)
 {
     targets = new_targets;
     outputs = new_outputs;
