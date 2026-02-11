@@ -23,7 +23,7 @@ void set_layer_parameters_constant(Layer& layer, const type& value)
 
 
 struct ConvolutionalLayerConfig {
-    shape input_dimensions;
+    shape input_shape;
     shape kernel_dimensions;
     shape stride_dimensions;
     string activation_function;
@@ -63,7 +63,7 @@ TEST_P(ConvolutionalLayerTest, Constructor) {
 
     ConvolutionalLayerConfig parameters = GetParam();
 
-    Convolutional convolutional_layer(parameters.input_dimensions,
+    Convolutional convolutional_layer(parameters.input_shape,
         parameters.kernel_dimensions,
         parameters.activation_function,
         parameters.stride_dimensions,
@@ -71,7 +71,7 @@ TEST_P(ConvolutionalLayerTest, Constructor) {
         parameters.batch_normalization,
         parameters.test_name);
 
-    EXPECT_EQ(convolutional_layer.get_input_shape(), parameters.input_dimensions);
+    EXPECT_EQ(convolutional_layer.get_input_shape(), parameters.input_shape);
     EXPECT_EQ(convolutional_layer.get_kernel_height(), parameters.kernel_dimensions[0]);
     EXPECT_EQ(convolutional_layer.get_kernel_width(), parameters.kernel_dimensions[1]);
     EXPECT_EQ(convolutional_layer.get_kernel_channels(), parameters.kernel_dimensions[2]);
@@ -88,7 +88,7 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
 {
     ConvolutionalLayerConfig parameters = GetParam();
 
-    Convolutional convolutional_layer(parameters.input_dimensions,
+    Convolutional convolutional_layer(parameters.input_shape,
         parameters.kernel_dimensions,
         parameters.activation_function,
         parameters.stride_dimensions,
@@ -101,9 +101,9 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
     const Index batch_size = 2;
 
     Tensor4 input_data(batch_size,
-        parameters.input_dimensions[0],
-        parameters.input_dimensions[1],
-        parameters.input_dimensions[2]);
+        parameters.input_shape[0],
+        parameters.input_shape[1],
+        parameters.input_shape[2]);
     input_data.setConstant(1.0);
 
     unique_ptr<LayerForwardPropagation> forward_propagation =
@@ -111,9 +111,9 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
 
     TensorView input_view(input_data.data(),
         { batch_size,
-         parameters.input_dimensions[0],
-         parameters.input_dimensions[1],
-         parameters.input_dimensions[2] });
+         parameters.input_shape[0],
+         parameters.input_shape[1],
+         parameters.input_shape[2] });
 
     vector<TensorView> input_views = { input_view };
 
@@ -153,7 +153,7 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
 {
     ConvolutionalLayerConfig parameters = GetParam();
 
-    Convolutional convolutional_layer(parameters.input_dimensions,
+    Convolutional convolutional_layer(parameters.input_shape,
                                       parameters.kernel_dimensions,
                                       parameters.activation_function,
                                       parameters.stride_dimensions,
@@ -166,9 +166,9 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
     const Index batch_size = 2;
 
     Tensor4 input_data(batch_size,
-                       parameters.input_dimensions[0],
-                       parameters.input_dimensions[1],
-                       parameters.input_dimensions[2]);
+                       parameters.input_shape[0],
+                       parameters.input_shape[1],
+                       parameters.input_shape[2]);
     input_data.setConstant(1.0);
 
     unique_ptr<LayerForwardPropagation> forward_propagation =
@@ -176,7 +176,7 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
 
     forward_propagation->initialize();
 
-    TensorView input_view(input_data.data(), { batch_size, parameters.input_dimensions[0], parameters.input_dimensions[1], parameters.input_dimensions[2] });
+    TensorView input_view(input_data.data(), { batch_size, parameters.input_shape[0], parameters.input_shape[1], parameters.input_shape[2] });
 
     // Forward
 
@@ -215,9 +215,9 @@ TEST_P(ConvolutionalLayerTest, BackPropagate)
     ASSERT_EQ(input_deltas_view.dims.size(), 4);
 
     EXPECT_EQ(input_deltas_view.dims[0], batch_size);
-    EXPECT_EQ(input_deltas_view.dims[1], parameters.input_dimensions[0]);
-    EXPECT_EQ(input_deltas_view.dims[2], parameters.input_dimensions[1]);
-    EXPECT_EQ(input_deltas_view.dims[3], parameters.input_dimensions[2]);
+    EXPECT_EQ(input_deltas_view.dims[1], parameters.input_shape[0]);
+    EXPECT_EQ(input_deltas_view.dims[2], parameters.input_shape[1]);
+    EXPECT_EQ(input_deltas_view.dims[3], parameters.input_shape[2]);
 
     // @todo Calculate numeric gradients and compare with analytical gradients.
 }

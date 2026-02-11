@@ -10,21 +10,21 @@ protected:
     const Index height = 4;
     const Index width = 4;
     const Index channels = 3;
-    const shape input_dimensions = { height, width, channels };
+    const shape input_shape = { height, width, channels };
 
     unique_ptr<Flatten<4>> flatten_layer;
 
     void SetUp() override
     {
-        flatten_layer = make_unique<Flatten<4>>(input_dimensions);
+        flatten_layer = make_unique<Flatten<4>>(input_shape);
     }
 };
 
 
 TEST_F(FlattenLayerTest, Constructor)
 {
-    EXPECT_EQ(flatten_layer->get_input_shape(), input_dimensions);
-    EXPECT_EQ(flatten_layer->get_output_shape(), shape{ height * width * channels });
+    EXPECT_EQ(flatten_layer->get_input_shape(), input_shape);
+    EXPECT_EQ(flatten_layer->get_output_shape(), Shape{ height * width * channels });
     EXPECT_EQ(flatten_layer->get_name(), "Flatten4d");
 }
 
@@ -46,7 +46,7 @@ TEST_F(FlattenLayerTest, ForwardPropagate)
     flatten_layer->forward_propagate({ input_view }, forward_propagation, false);
 
     const TensorView output_pair = forward_propagation->get_outputs();
-    const shape& output_dims = output_pair.dims;
+    const Shape& output_dims = output_pair.dims;
 
     ASSERT_EQ(output_dims.size(), 2) << "Flatten<4> should produce a 2D tensor (batch, features).";
     EXPECT_EQ(output_dims[0], batch_size);
@@ -65,12 +65,12 @@ TEST_F(FlattenLayerTest, BackPropagate)
 
     Tensor4 inputs(batch_size, height, width, channels);
     inputs.setConstant(1.0f);
-    TensorView input_view(inputs.data(), shape{ batch_size, height, width, channels });
+    TensorView input_view(inputs.data(), Shape{ batch_size, height, width, channels });
 
     const Index flattened_size = height * width * channels;
     Tensor2 output_derivatives(batch_size, flattened_size);
     output_derivatives.setConstant(1.0f);
-    TensorView output_derivatives_view(output_derivatives.data(), shape{ batch_size, flattened_size });
+    TensorView output_derivatives_view(output_derivatives.data(), Shape{ batch_size, flattened_size });
     
     flatten_layer->forward_propagate({ input_view }, forward_propagation, true);
     

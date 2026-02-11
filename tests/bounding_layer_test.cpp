@@ -11,7 +11,7 @@ TEST(BoundingTest, Constructor)
 {
     Bounding bounding_layer;
 
-    EXPECT_EQ(bounding_layer.get_output_shape(), shape{0});
+    EXPECT_EQ(bounding_layer.get_output_shape(), Shape{0});
 }
 
 
@@ -64,5 +64,5 @@ TEST(BoundingTest, ForwardPropagate)
     EXPECT_NEAR(outputs(1, 1), type(0.0), tolerance);
     EXPECT_NEAR(outputs(1, 2), type(1.0), tolerance);
 
-    EXPECT_EQ(bounding_layer.get_output_shape(), shape{ columns_number });
+    EXPECT_EQ(bounding_layer.get_output_shape(), Shape{ columns_number });
 }

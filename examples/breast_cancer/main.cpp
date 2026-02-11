@@ -56,6 +56,8 @@ int main()
         TestingAnalysis testing_analysis(&classification_network, &dataset);
         testing_analysis.print_binary_classification_tests();
 
+        TestingAnalysis::RocAnalysis roc = testing_analysis.perform_roc_analysis();
+
         cout << "Good bye!" << endl;
 
         return 0;

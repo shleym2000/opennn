@@ -121,8 +121,8 @@ TEST(NeuralNetworkTest, ForwardPropagate)
     });
 
     Dataset dataset(samples_number,
-                    shape{inputs_number},
-                    shape{outputs_number});
+                    Shape{inputs_number},
+                    Shape{outputs_number});
     dataset.set_data(data);
     dataset.set_sample_roles("Training");
 
