@@ -314,7 +314,10 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
     if(shuffle)
     {
         samples_copy = sample_indices;
-        shuffle_vector_blocks(samples_copy);
+        if (dynamic_cast<const ImageDataset*>(this) != nullptr)
+            shuffle_vector(samples_copy);
+        else
+            shuffle_vector_blocks(samples_copy);
     }
 
     const vector<Index>& samples = shuffle ? samples_copy : sample_indices;

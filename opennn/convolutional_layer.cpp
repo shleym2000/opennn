@@ -557,18 +557,7 @@ void Convolutional::set_parameters_random()
     if (weights.size() > 0)
     {
         TensorMap1 weights_map(weights.data, weights.size());
-
-        if (activation_function == "RectifiedLinear" ||
-            activation_function == "ScaledExponentialLinear")
-        {
-            const Index fan_in = get_kernel_height() * get_kernel_width() * get_kernel_channels();
-
-            const type limit = sqrt(6.0f / static_cast<type>(fan_in));
-
-            set_random_uniform(weights_map, -limit, limit);
-        }
-        else
-            set_random_uniform(weights_map);
+        set_random_uniform(weights_map);
     }
 
     if (batch_normalization)
