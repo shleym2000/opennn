@@ -431,16 +431,16 @@ public:
     cudnnHandle_t get_cudnn_handle();
 
     virtual void forward_propagate(const vector<TensorViewCuda>&,
-                                        unique_ptr<LayerForwardPropagationCuda>&,
-                                        bool)
+                                   unique_ptr<LayerForwardPropagationCuda>&,
+                                   bool)
     {
         throw runtime_error("CUDA forward propagation not implemented for layer type: " + get_name());
     }
 
     virtual void back_propagate(const vector<TensorViewCuda>&,
-                                     const vector<TensorViewCuda>&,
-                                     unique_ptr<LayerForwardPropagationCuda>&,
-                                     unique_ptr<LayerBackPropagationCuda>&) const 
+                                const vector<TensorViewCuda>&,
+                                unique_ptr<LayerForwardPropagationCuda>&,
+                                unique_ptr<LayerBackPropagationCuda>&) const 
     {
         throw runtime_error("CUDA back propagation not implemented for layer type: " + get_name());
     }

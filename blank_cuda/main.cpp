@@ -25,13 +25,13 @@ int main()
 
         ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/melanoma_dataset_bmp_small");
 
-        image_dataset.split_samples_random(0.8, 0.0, 0.2);
+        image_dataset.split_samples_random(0.6, 0.2, 0.2);
 
         // Neural network
 
         ImageClassificationNetwork image_classification_network(
             image_dataset.get_shape("Input"),
-            { 64,128,32 },
+            { 16, 32, 16 },
             image_dataset.get_shape("Target"));
 
         // Training strategy
@@ -44,19 +44,19 @@ int main()
 
         AdaptiveMomentEstimation* adam = dynamic_cast<AdaptiveMomentEstimation*>(training_strategy.get_optimization_algorithm());
         adam->set_display_period(1);
-        adam->set_batch_size(16);
-        adam->set_maximum_epochs(5);
+        adam->set_batch_size(24);
+        adam->set_maximum_epochs(10);
 
         training_strategy.train_cuda();
 
-
         // Testing analysis
 
-        //const TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
+        TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
 
-        //cout << "Calculating confusion...." << endl;
-        //const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
-        //cout << "\nConfusion matrix:\n" << confusion << endl;
+        testing_analysis.set_batch_size(24);
+        cout << "Calculating confusion CUDA...." << endl;
+        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_cuda();
+        cout << "\nConfusion matrix:\n" << confusion << endl;
 
 #endif
 

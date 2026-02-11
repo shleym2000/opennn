@@ -1601,8 +1601,8 @@ vector<vector<TensorViewCuda*>> NeuralNetwork::get_layer_parameter_views_device(
 
 
 void NeuralNetwork::forward_propagate(const vector<TensorViewCuda>& input_views_device,
-                                           ForwardPropagationCuda& forward_propagation,
-                                           bool is_training) const
+                                      ForwardPropagationCuda& forward_propagation,
+                                      bool is_training) const
 {
     const Index layers_number = get_layers_number();
 
@@ -1619,8 +1619,8 @@ void NeuralNetwork::forward_propagate(const vector<TensorViewCuda>& input_views_
 
     for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate(layer_input_views_device[i],
-                                          forward_propagation.layers[i],
-                                          is_training);
+                                     forward_propagation.layers[i],
+                                     is_training);
 }
 
 
