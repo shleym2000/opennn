@@ -18,18 +18,18 @@ class Normalization3d final : public Layer
 
 public:
 
-    Normalization3d(const shape& = shape({0,0}),
+    Normalization3d(const Shape& = Shape({0,0}),
                     const string& = "normalization_layer_3d");
 
     Index get_sequence_length() const;
     Index get_embedding_dimension() const;
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
-    void set(const Index = 0, const Index& = 0, const string& = "normalization_layer_3d");
+    void set(const Index = 0, Index = 0, const string& = "normalization_layer_3d");
 
     void forward_propagate(const vector<TensorView>&,
                            unique_ptr<LayerForwardPropagation>&,

@@ -18,13 +18,13 @@ class MultiHeadAttention final : public Layer
 
 public:
 
-    MultiHeadAttention(const shape& = shape({0,0}),
-                       const Index& = 0,
+    MultiHeadAttention(const Shape& = Shape({0,0}),
+                       Index = 0,
                        const string& = string());
 
-    MultiHeadAttention(const shape&,
-                       const shape&,
-                       const Index& = 0,
+    MultiHeadAttention(const Shape&,
+                       const Shape&,
+                       Index = 0,
                        const string& = string());
 
     Index get_query_sequence_length() const;
@@ -35,16 +35,16 @@ public:
 
     type get_scaling_factor() const;
 
-    shape get_input_shape() const override;
+    Shape get_input_shape() const override;
 
-    shape get_output_shape() const override;
+    Shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
     void set(const Index = 0,
-             const Index& = 0,
-             const Index& = 0,
-             const Index& = 0,
+             Index = 0,
+             Index = 0,
+             Index = 0,
              bool = false,
              const string& = "multihead_attention_layer");
 
@@ -61,11 +61,11 @@ public:
                         unique_ptr<LayerForwardPropagation>&,
                         unique_ptr<LayerBackPropagation>&) const override;
 
-    void calculate_projection(const TensorMap3& inputs,
+    void calculate_projection(const TensorMap3 inputs,
                               const TensorView& weights,
                               const TensorView& biases,
-                              const Index& sequence_length,
-                              const Index& batch_size,
+                              Index sequence_length,
+                              Index batch_size,
                               Tensor4& output) const
     {
         const Index embed_dim = get_embedding_dimension();
@@ -84,12 +84,12 @@ public:
     }
 
     void calculate_projection_gradient(const Tensor4& d_head,
-                                       const TensorMap3& input,
+                                       const TensorMap3 input,
                                        const TensorView& weights,
-                                       TensorMap1& d_bias,
-                                       TensorMap2& d_weights,
-                                       TensorMap3& d_input,
-                                       const Index& batch_size,
+                                       TensorMap1 d_bias,
+                                       TensorMap2 d_weights,
+                                       TensorMap3 d_input,
+                                       Index batch_size,
                                        bool accumulate) const
     {
         const Index embedding_dimension = get_embedding_dimension();

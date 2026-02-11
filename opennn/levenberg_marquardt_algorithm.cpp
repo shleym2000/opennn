@@ -34,7 +34,7 @@ const type& LevenbergMarquardtAlgorithm::get_loss_goal() const
 }
 
 
-const Index& LevenbergMarquardtAlgorithm::get_maximum_validation_failures() const
+Index LevenbergMarquardtAlgorithm::get_maximum_validation_failures() const
 {
     return maximum_validation_failures;
 }

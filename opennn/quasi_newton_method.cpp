@@ -34,7 +34,7 @@ const type& QuasiNewtonMethod::get_loss_goal() const
 }
 
 
-const Index& QuasiNewtonMethod::get_maximum_validation_failures() const
+Index QuasiNewtonMethod::get_maximum_validation_failures() const
 {
     return maximum_validation_failures;
 }

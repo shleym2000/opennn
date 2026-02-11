@@ -238,17 +238,17 @@ void Layer::add_gradients(const vector<TensorView> &output_gradient_views) const
 
 Index Layer::get_inputs_number() const
 {
-    const shape input_shape = get_input_shape();
+    const Shape input_shape = get_input_shape();
 
-    return count_elements(input_shape);
+    return input_shape.count();
 }
 
 
 Index Layer::get_outputs_number() const
 {
-    const shape output_dimensions = get_output_shape();
+    const Shape output_shape = get_output_shape();
 
-    return accumulate(output_dimensions.begin(), output_dimensions.end(), 1, multiplies<Index>());
+    return accumulate(output_shape.begin(), output_shape.end(), 1, multiplies<Index>());
 }
 
 
@@ -260,18 +260,18 @@ void Layer::forward_propagate(const vector<TensorView>&,
 
 
 
-void Layer::set_input_shape(const shape&)
+void Layer::set_input_shape(const Shape&)
 {
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }
 
 
-void Layer::set_output_shape(const shape&)
+void Layer::set_output_shape(const Shape&)
 {
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }
 
-
+/*
 void Layer::softmax(TensorMap2 y) const
 {
     const Index rows_number = y.dimension(0);
@@ -377,7 +377,7 @@ void Layer::softmax(TensorMap4 y) const
         }
     }
 }
-
+*/
 
 void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
                                              TensorMap3 result,

@@ -13,10 +13,10 @@
 namespace opennn
 {
 
-Pooling::Pooling(const shape& new_input_shape,
-                 const shape& new_pool_dimensions,
-                 const shape& new_stride_dimensions,
-                 const shape& new_padding_dimensions,
+Pooling::Pooling(const Shape& new_input_shape,
+                 const Shape& new_pool_dimensions,
+                 const Shape& new_stride_dimensions,
+                 const Shape& new_padding_dimensions,
                  const string& new_pooling_method,
                  const string& new_name) : Layer()
 {
@@ -31,7 +31,7 @@ Pooling::Pooling(const shape& new_input_shape,
 }
 
 
-shape Pooling::get_output_shape() const
+Shape Pooling::get_output_shape() const
 {
     const Index rows_number = get_output_height();
     const Index columns_number = get_output_width();
@@ -113,7 +113,7 @@ string Pooling::get_pooling_method() const
 }
 
 
-shape Pooling::get_input_shape() const
+Shape Pooling::get_input_shape() const
 {
     return input_shape;
 }
@@ -127,10 +127,10 @@ void Pooling::print() const
 }
 
 
-void Pooling::set(const shape& new_input_shape,
-                  const shape& new_pool_dimensions,
-                  const shape& new_stride_dimensions,
-                  const shape& new_padding_dimensions,
+void Pooling::set(const Shape& new_input_shape,
+                  const Shape& new_pool_dimensions,
+                  const Shape& new_stride_dimensions,
+                  const Shape& new_padding_dimensions,
                   const string& new_pooling_method,
                   const string& new_label)
 {
@@ -189,7 +189,7 @@ void Pooling::set(const shape& new_input_shape,
 }
 
 
-void Pooling::set_input_shape(const shape& new_input_shape)
+void Pooling::set_input_shape(const Shape& new_input_shape)
 {
     if (new_input_shape.size() != 3)
         throw runtime_error("Input shape must be 3");
@@ -223,7 +223,7 @@ void Pooling::set_column_stride(const Index new_column_stride)
 
 
 void Pooling::set_pool_size(const Index new_pool_rows_number,
-                            const Index& new_pool_columns_number)
+                            Index new_pool_columns_number)
 {
     pool_height = new_pool_rows_number;
     pool_width = new_pool_columns_number;
@@ -265,7 +265,7 @@ void Pooling::forward_propagate_average_pooling(const Tensor4& inputs,
     PoolingForwardPropagation* this_forward_propagation =
         static_cast<PoolingForwardPropagation*>(forward_propagation.get());
 
-    Tensor<type, 5>& image_patches = this_forward_propagation->image_patches;
+    Tensor5& image_patches = this_forward_propagation->image_patches;
 
     image_patches.device(*device) = inputs.extract_image_patches(
         pool_height,
@@ -320,7 +320,7 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
     const Index pool_size = pool_height * pool_width;
     const Index output_size = output_height * output_width * channels;
 
-    const array<Index, 3> output_dimensions({ output_height, output_width, channels });
+    const array<Index, 3> output_shape({ output_height, output_width, channels });
     const array<Index, 2> reshape_dimensions = { pool_size, output_size };
 
     #pragma omp parallel for
@@ -328,7 +328,7 @@ void Pooling::forward_propagate_max_pooling(const Tensor4& inputs,
     {
         const Tensor2 patches_flat = image_patches.chip(batch_index, 0).reshape(reshape_dimensions);
 
-        maximal_indices.chip(batch_index, 0) = patches_flat.argmax(0).reshape(output_dimensions);
+        maximal_indices.chip(batch_index, 0) = patches_flat.argmax(0).reshape(output_shape);
     }
 }
 
@@ -603,17 +603,17 @@ void PoolingBackPropagation::initialize()
 {
     const Pooling* pooling_layer = static_cast<Pooling*>(layer);
 
-    const shape& input_shape = pooling_layer->get_input_shape();
-    const shape& output_dimensions = pooling_layer->get_output_shape();
+    const Shape& input_shape = pooling_layer->get_input_shape();
+    const Shape& output_shape = pooling_layer->get_output_shape();
 
-    shape full_input_shape = { batch_size };
+    Shape full_input_shape = { batch_size };
     full_input_shape.insert(full_input_shape.end(), input_shape.begin(), input_shape.end());
 
     if (pooling_layer->get_pooling_method() == "AveragePooling")
-        gradients_by_pool_size.resize(batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]);
+        gradients_by_pool_size.resize(batch_size, output_shape[0], output_shape[1], output_shape[2]);
 
     input_gradients_memory.resize(1);
-    input_gradients_memory[0].resize(count_elements(full_input_shape));
+    input_gradients_memory[0].resize(full_input_shape.count());
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
     input_gradients[0].dims = full_input_shape;

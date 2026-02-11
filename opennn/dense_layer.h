@@ -29,10 +29,10 @@ struct DenseForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
-        const shape output_dimensions = dense_layer->get_output_shape();
+        const Shape output_shape = dense_layer->get_output_shape();
 
-        shape full_output_dims = {batch_size};
-        full_output_dims.insert(full_output_dims.end(), output_dimensions.begin(), output_dimensions.end());
+        Shape full_output_dims = {batch_size};
+        full_output_dims.insert(full_output_dims.end(), output_shape.begin(), output_shape.end());
 
         outputs.dims = full_output_dims;
         activation_derivatives.dims = full_output_dims;
@@ -97,13 +97,13 @@ struct DenseBackPropagation final : LayerBackPropagation
             beta_gradients.dims = {outputs_number};
         }
 
-        const shape input_shape = dense_layer->get_input_shape();
+        const Shape input_shape = dense_layer->get_input_shape();
 
-        shape full_input_shape = { batch_size };
+        Shape full_input_shape = { batch_size };
         full_input_shape.insert(full_input_shape.end(), input_shape.begin(), input_shape.end());
 
         input_gradients_memory.resize(1);
-        input_gradients_memory[0].resize(count_elements(full_input_shape));
+        input_gradients_memory[0].resize(full_input_shape.count());
         input_gradients.resize(1);
         input_gradients[0].data = input_gradients_memory[0].data();
         input_gradients[0].dims = full_input_shape;
@@ -152,9 +152,9 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         batch_size = new_samples_number;
 
         const Index parameters_number = layer->get_parameters_number();
-        const shape layer_input_shape = layer->get_input_shape();
+        const Shape layer_input_shape = layer->get_input_shape();
 
-        shape input_shape_vec = {batch_size};
+        Shape input_shape_vec = {batch_size};
         input_shape_vec.insert(input_shape_vec.end(), layer_input_shape.begin(), layer_input_shape.end());
 
         input_gradients[0].dims = input_shape_vec;
@@ -348,8 +348,8 @@ class Dense final : public Layer
 
 public:
 
-    Dense(const shape& new_input_shape = {0},
-          const shape& new_output_shape = {0},
+    Dense(const Shape& new_input_shape = {0},
+          const Shape& new_output_shape = {0},
           const string& new_activation_function = "HyperbolicTangent",
           bool new_batch_normalization = false,
           const string& new_label = "dense2d_layer")
@@ -359,8 +359,8 @@ public:
 
 
     Dense(const Index input_sequence_length,
-          const Index& embedding_dimension,
-          const Index& feed_forward_dimension,
+          Index embedding_dimension,
+          Index feed_forward_dimension,
           const string& new_activation_function,
           const string& new_label)
     {
@@ -372,13 +372,13 @@ public:
     }
 
 
-    shape get_input_shape() const override
+    Shape get_input_shape() const override
     {
         return { weights.dims[0] };
     }
 
 
-    shape get_output_shape() const override
+    Shape get_output_shape() const override
     {
         return { biases.size() };
     }
@@ -413,8 +413,8 @@ public:
     }
 
 
-    void set(const shape& new_input_shape = {},
-             const shape& new_output_shape = {},
+    void set(const Shape& new_input_shape = {},
+             const Shape& new_output_shape = {},
              const string& new_activation_function = "HyperbolicTangent",
              bool new_batch_normalization = false,
              const string& new_label = "dense_layer")
@@ -521,7 +521,7 @@ public:
     }
 
 
-    void set_input_shape(const shape& new_input_shape) override
+    void set_input_shape(const Shape& new_input_shape) override
     {
         const Index inputs_number = new_input_shape[0];
         const Index outputs_number = get_outputs_number();
@@ -531,7 +531,7 @@ public:
     }
 
 
-    void set_output_shape(const shape& new_output_shape) override
+    void set_output_shape(const Shape& new_output_shape) override
     {
         const Index inputs_number = get_inputs_number();
         const Index neurons_number = new_output_shape[0];
@@ -642,7 +642,7 @@ public:
     }
 */
 
-    void apply_batch_normalization_backward(TensorMap2& output_gradients,
+    void apply_batch_normalization_backward(TensorMap2 output_gradients,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             unique_ptr<LayerBackPropagation>& layer_back_propagation) const
     {
@@ -830,7 +830,7 @@ public:
 
 
     void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
-                                           const Index& start_column_index,
+                                           Index start_column_index,
                                            Tensor2& global_jacobian) const override
     {
         const Index batch_size = back_propagation->batch_size;

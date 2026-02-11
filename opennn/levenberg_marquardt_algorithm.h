@@ -28,7 +28,7 @@ public:
    const type& get_minimum_loss_decrease() const;
    const type& get_loss_goal() const;
 
-   const Index& get_maximum_validation_failures() const;
+   Index get_maximum_validation_failures() const;
 
    const type& get_damping_parameter() const;
 

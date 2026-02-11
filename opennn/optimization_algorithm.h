@@ -45,9 +45,9 @@ public:
 
     bool get_display() const;
 
-    const Index& get_display_period() const;
+    Index get_display_period() const;
 
-    const Index& get_save_period() const;
+    Index get_save_period() const;
 
     const string& get_neural_network_file_name() const;
 

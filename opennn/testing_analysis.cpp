@@ -133,7 +133,7 @@ Tensor<TestingAnalysis::GoodnessOfFitAnalysis, 1> TestingAnalysis::perform_goodn
 
     const Index outputs_number = neural_network->get_outputs_number();
 
-    const pair<Tensor<type,2>, Tensor<type,2>> targets_outputs = get_targets_and_outputs("Testing");
+    const pair<Tensor<type,2, AlignedMax>, Tensor<type,2, AlignedMax>> targets_outputs = get_targets_and_outputs("Testing");
 
     // Testing analysis
 
@@ -882,7 +882,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 
     const Index samples_number = targets.dimension(0);
 
-    const shape input_shape = dataset->get_shape("Input");
+    const Shape input_shape = dataset->get_shape("Input");
 
     if(input_shape.size() == 1)
     {
@@ -954,9 +954,7 @@ Tensor2 TestingAnalysis::calculate_roc_curve(const Tensor2& targets, const Tenso
 
     const Index maximum_points_number = 100;
 
-    Index points_number;
-
-    points_number = maximum_points_number;
+    Index points_number = maximum_points_number;
 
     if(targets.dimension(1) != 1)
         throw runtime_error("Number of of target variables (" +  to_string(targets.dimension(1)) + ") must be one.\n");
@@ -1289,7 +1287,7 @@ Tensor1 TestingAnalysis::calculate_maximum_gain(const Tensor2& positive_cumulati
 
 
 vector<Histogram> TestingAnalysis::calculate_output_histogram(const Tensor2& outputs,
-                                                              const Index& bins_number) const
+                                                              Index bins_number) const
 {
     const Tensor1 output_column = outputs.chip(0,1);
 

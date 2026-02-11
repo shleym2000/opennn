@@ -13,8 +13,8 @@
 namespace opennn
 {
 
-MultiHeadAttention::MultiHeadAttention(const shape& new_input_shape,
-                                       const Index& new_heads_number,
+MultiHeadAttention::MultiHeadAttention(const Shape& new_input_shape,
+                                       Index new_heads_number,
                                        const string& new_name) : Layer()
 {
     // Self-attention
@@ -27,9 +27,9 @@ MultiHeadAttention::MultiHeadAttention(const shape& new_input_shape,
         new_name);
 }
 
-MultiHeadAttention::MultiHeadAttention(const shape& new_query_dimensions,
-                                       const shape& new_source_dimensions,
-                                       const Index& new_heads_number,
+MultiHeadAttention::MultiHeadAttention(const Shape& new_query_dimensions,
+                                       const Shape& new_source_dimensions,
+                                       Index new_heads_number,
                                        const string& new_name) : Layer()
 {
     if (new_query_dimensions[1] != new_source_dimensions[1])
@@ -87,13 +87,13 @@ Index MultiHeadAttention::get_head_dimension() const
 }
 
 
-shape MultiHeadAttention::get_input_shape() const
+Shape MultiHeadAttention::get_input_shape() const
 {
     return { query_sequence_length, get_embedding_dimension() };
 }
 
 
-shape MultiHeadAttention::get_output_shape() const
+Shape MultiHeadAttention::get_output_shape() const
 {
     return { query_sequence_length, get_embedding_dimension() };
 }
@@ -109,9 +109,9 @@ vector<TensorView*> MultiHeadAttention::get_parameter_views()
 
 
 void MultiHeadAttention::set(const Index new_query_sequence_length,
-                             const Index& new_source_sequence_length,
-                             const Index& new_embedding_dimension,
-                             const Index& new_heads_number,
+                             Index new_source_sequence_length,
+                             Index new_embedding_dimension,
+                             Index new_heads_number,
                              bool new_use_causal_mask,
                              const string& new_label)
 {
@@ -213,9 +213,9 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
 
     // @todo Optimization: Call the padding mask here if your LanguageDataset provides it
     // apply_key_padding_mask(padding_mask, attention_weights);
-
+/*
     softmax(attention_weights);
-
+*/
     #pragma omp parallel for
     for(Index i = 0; i < total_heads; ++i)
     {
@@ -502,9 +502,9 @@ void MultiHeadAttentionForwardPropagation::initialize()
 
 void MultiHeadAttentionForwardPropagation::print() const
 {
-//    cout << "Output shape:" << output_dimensions << endl
+//    cout << "Output shape:" << output_shape << endl
 //    cout << "Outputs:" << endl;
-    //cout << TensorMap<Tensor<type,3>>(outputs_data, output_dimensions(0), output_dimensions(1), output_dimensions(2)) << endl;
+    //cout << TensorMap<Tensor<type,3>>(outputs_data, output_shape(0), output_shape(1), output_shape(2)) << endl;
 }
 
 

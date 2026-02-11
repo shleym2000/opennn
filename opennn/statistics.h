@@ -72,7 +72,7 @@ struct Histogram
 
     Histogram(const Tensor<Index, 1>&, const Tensor1&, const Tensor1&, const Tensor1&);
 
-    Histogram(const Tensor1&, const Index&);
+    Histogram(const Tensor1&, Index);
 
     Histogram(const Tensor1&);
 
@@ -130,15 +130,15 @@ struct Histogram
 
  // Mean
  type mean(const Tensor1&);
- type mean(const Tensor1&, const Index&, const Index&);
- type mean(const Tensor2&,  const Index&);
+ type mean(const Tensor1&, Index, Index);
+ type mean(const Tensor2&,  Index);
  Tensor1 mean(const Tensor2&);
  Tensor1 mean(const Tensor2&, const vector<Index>&);
  Tensor1 mean(const Tensor2&, const vector<Index>&, const vector<Index>&);
 
  // Median
  type median(const Tensor1&);
- type median(const Tensor2&, const Index&);
+ type median(const Tensor2&, Index);
  Tensor1 median(const Tensor2&);
  Tensor1 median(const Tensor2&, const vector<Index>&);
  Tensor1 median(const Tensor2&, const vector<Index>&, const vector<Index>&);
@@ -150,7 +150,7 @@ struct Histogram
  // Standard deviation
  type standard_deviation(const Tensor1&);
  //type standard_deviation(const Tensor1&, const Tensor<Index, 1>&);
- Tensor1 standard_deviation(const Tensor1&, const Index&);
+ Tensor1 standard_deviation(const Tensor1&, Index);
 
  // Assymetry
  type asymmetry(const Tensor1&);
@@ -174,21 +174,21 @@ struct Histogram
  vector<Descriptives> descriptives(const Tensor2&, const vector<Index>&, const vector<Index>&);
 
  // Histograms
- Histogram histogram(const Tensor1&, const Index&  = 10);
- Histogram histogram_centered(const Tensor1&, const type& = type(0), const Index&  = 10);
+ Histogram histogram(const Tensor1&, Index  = 10);
+ Histogram histogram_centered(const Tensor1&, const type& = type(0), Index  = 10);
  Histogram histogram(const Tensor<bool, 1>&);
- Histogram histogram(const Tensor<Index, 1>&, const Index&  = 10);
- vector<Histogram> histograms(const Tensor2&, const Index& = 10);
+ Histogram histogram(const Tensor<Index, 1>&, Index  = 10);
+ vector<Histogram> histograms(const Tensor2&, Index = 10);
  Tensor<Index, 1> total_frequencies(const vector<Histogram>&);
 
  // Minimal indices
  Index minimal_index(const Tensor1&);
- Tensor<Index, 1> minimal_indices(const Tensor1&, const Index&);
+ Tensor<Index, 1> minimal_indices(const Tensor1&, Index);
  Tensor<Index, 1> minimal_indices(const Tensor2&);
 
  // Maximal indices
  Index maximal_index(const Tensor1&);
- Tensor<Index, 1> maximal_indices(const Tensor1&, const Index&);
+ Tensor<Index, 1> maximal_indices(const Tensor1&, Index);
  Tensor<Index, 1> maximal_indices(const Tensor2&);
 
  // Percentiles

@@ -14,14 +14,14 @@
 namespace opennn
 {
 
-Unscaling::Unscaling(const shape& new_input_shape, const string& label)
+Unscaling::Unscaling(const Shape& new_input_shape, const string& label)
     : Layer()
 {
     set(new_input_shape[0], label);
 }
 
 
-shape Unscaling::get_input_shape() const
+Shape Unscaling::get_input_shape() const
 {
     const Index neurons_number = descriptives.size();
 
@@ -29,7 +29,7 @@ shape Unscaling::get_input_shape() const
 }
 
 
-shape Unscaling::get_output_shape() const
+Shape Unscaling::get_output_shape() const
 {
     const Index neurons_number = descriptives.size();
 
@@ -125,13 +125,13 @@ string Unscaling::get_expression(const vector<string>& new_feature_names,
 }
 
 
-void Unscaling::set_input_shape(const shape& new_input_shape)
+void Unscaling::set_input_shape(const Shape& new_input_shape)
 {
     descriptives.resize(new_input_shape[0]);
 }
 
 
-void Unscaling::set_output_shape(const shape& new_output_shape)
+void Unscaling::set_output_shape(const Shape& new_output_shape)
 {
     descriptives.resize(new_output_shape[0]);
 }
@@ -243,11 +243,11 @@ void Unscaling::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Unscaling");
 
-    const shape output_dimensions = get_output_shape();
+    const Shape output_shape = get_output_shape();
 
-    add_xml_element(printer, "NeuronsNumber", to_string(output_dimensions[0]));
+    add_xml_element(printer, "NeuronsNumber", to_string(output_shape[0]));
 
-    for(Index i = 0; i < output_dimensions[0]; i++)
+    for(Index i = 0; i < output_shape[0]; i++)
     {
         printer.OpenElement("UnscalingNeuron");
         printer.PushAttribute("Index", int(i + 1));
@@ -314,9 +314,9 @@ UnscalingForwardPropagation::UnscalingForwardPropagation(const Index new_batch_s
 
 void UnscalingForwardPropagation::initialize()
 {
-    const shape output_dimensions = static_cast<Unscaling*>(layer)->get_output_shape();
+    const Shape output_shape = static_cast<Unscaling*>(layer)->get_output_shape();
 
-    outputs.dims = {batch_size, output_dimensions[0]};
+    outputs.dims = {batch_size, output_shape[0]};
 }
 
 

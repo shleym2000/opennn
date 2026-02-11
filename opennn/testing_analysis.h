@@ -192,7 +192,7 @@ public:
 
     // Output histogram
 
-    vector<Histogram> calculate_output_histogram(const Tensor2&, const Index& = 10) const;
+    vector<Histogram> calculate_output_histogram(const Tensor2&, Index = 10) const;
 
     // Binary classification rates
 

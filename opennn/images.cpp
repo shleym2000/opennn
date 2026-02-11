@@ -66,7 +66,7 @@ int32_t read_s32_le(ifstream& f, const string& file_path_str_for_error)
 }
 
 
-Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
+Tensor3 read_bmp_image(const filesystem::path& image_path_fs)
 {
     const string image_path_str = image_path_fs.string();
 
@@ -241,8 +241,8 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
 
 
 Tensor3 resize_image(const Tensor<float, 3>& input_image,
-                             const Index& output_height,
-                             const Index& output_width)
+                             Index output_height,
+                             Index output_width)
 {
     const Index input_height = input_image.dimension(0);
     const Index input_width = input_image.dimension(1);
@@ -352,7 +352,7 @@ void rotate_image(const ThreadPoolDevice* device,
 void translate_image_x(const ThreadPoolDevice* device,
                        const Tensor3& input,
                        Tensor3& output,
-                       const Index& shift)
+                       Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));
@@ -388,7 +388,7 @@ void translate_image_x(const ThreadPoolDevice* device,
 void translate_image_y(const ThreadPoolDevice* device,
                        const Tensor3& input,
                        Tensor3& output,
-                       const Index& shift)
+                       Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));

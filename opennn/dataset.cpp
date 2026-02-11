@@ -21,8 +21,8 @@ namespace opennn
 {
 
 Dataset::Dataset(const Index new_samples_number,
-                 const shape& new_input_shape,
-                 const shape& new_target_shape)
+                 const Shape& new_input_shape,
+                 const Shape& new_target_shape)
 {
     set(new_samples_number, new_input_shape, new_target_shape);
 }
@@ -49,13 +49,13 @@ bool Dataset::is_empty() const
     return data.size() == 0;
 }
 
-shape Dataset::get_input_shape() const
+Shape Dataset::get_input_shape() const
 {
     return input_shape;
 }
 
 
-shape Dataset::get_target_shape() const
+Shape Dataset::get_target_shape() const
 {
     return target_shape;
 }
@@ -304,7 +304,7 @@ vector<Index> Dataset::get_sample_roles_vector() const
 
 
 vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
-                                           const Index& batch_size,
+                                           Index batch_size,
                                            bool shuffle) const
 {
     const Index samples_number = sample_indices.size();
@@ -380,7 +380,6 @@ void Dataset::set_sample_role(const Index index, const string& new_role)
     else
         throw runtime_error("Unknown sample role: " + new_role + "\n");
 }
-
 
 void Dataset::set_sample_roles(const vector<string>& new_roles)
 {
@@ -539,6 +538,23 @@ void Dataset::set_default_variables_roles()
     }
 }
 
+vector<Index> Dataset::get_feature_dimensions() const
+{
+    vector<Index> number_categories;
+    number_categories.reserve(get_used_variables_number());
+
+    for(const Dataset::Variable& variable : variables)
+    {
+        if(variable.role == "None" || variable.role == "Time")
+            continue;
+
+        if(variable.is_categorical())
+            number_categories.push_back(variable.get_categories_number());
+        else
+            number_categories.push_back(1);
+    }
+    return number_categories;
+}
 
 void Dataset::set_default_variables_roles_forecasting()
 {
@@ -585,6 +601,15 @@ void Dataset::set_default_variables_roles_forecasting()
     }
 }
 
+vector<Dataset::VariableType> Dataset::get_variable_types(const vector<Index> indices) const
+{
+    vector<Dataset::VariableType> variable_types(indices.size());
+
+    for (Index i = 0; i < static_cast<Index>(indices.size()) ; i++)
+        variable_types[i] = get_variable_type(indices[i]);
+
+    return variable_types;
+}
 
 void Dataset::set_default_variable_names()
 {
@@ -639,7 +664,7 @@ vector<string> Dataset::get_feature_names(const string& variable_role) const
 }
 
 
-shape Dataset::get_shape(const string& variable_role) const
+Shape Dataset::get_shape(const string& variable_role) const
 {
     if (variable_role == "Input")
         return input_shape;
@@ -652,7 +677,7 @@ shape Dataset::get_shape(const string& variable_role) const
 }
 
 
-void Dataset::set_shape(const string& variable_role, const shape& new_dimensions)
+void Dataset::set_shape(const string& variable_role, const Shape& new_dimensions)
 {
     if (variable_role == "Input")
         input_shape = new_dimensions;
@@ -1463,7 +1488,7 @@ Tensor1 Dataset::get_sample(const Index sample_index) const
 }
 
 
-string Dataset::get_sample_category(const Index sample_index, const Index& column_index_start) const
+string Dataset::get_sample_category(const Index sample_index, Index column_index_start) const
 {
     if (variables[column_index_start].type != VariableType::Categorical)
         throw runtime_error("The specified variable is not of categorical type.");
@@ -1532,8 +1557,8 @@ void Dataset::set(const filesystem::path& new_data_path,
 
 
 void Dataset::set(const Index new_samples_number,
-                  const shape& new_input_shape,
-                  const shape& new_target_shape)
+                  const Shape& new_input_shape,
+                  const Shape& new_target_shape)
 {
     if (new_samples_number == 0
         || new_input_shape.empty()
@@ -1542,9 +1567,9 @@ void Dataset::set(const Index new_samples_number,
 
     input_shape = new_input_shape;
 
-    const Index new_inputs_number = count_elements(new_input_shape);
+    const Index new_inputs_number = new_input_shape.count();
 
-    Index new_targets_number = count_elements(new_target_shape);
+    Index new_targets_number = new_target_shape.count();
 
     new_targets_number = (new_targets_number == 2) ? 1 : new_targets_number;
 
@@ -2904,7 +2929,7 @@ void Dataset::print() const
     const Index validation_samples_number = get_samples_number("Validation");
     const Index testing_samples_number = get_samples_number("Testing");
     const Index unused_samples_number = get_samples_number("None");
-
+/*
     cout << "Dataset object summary:\n"
          << "Number of samples: " << samples_number << "\n"
          << "Number of variables: " << features_number << "\n"
@@ -2917,7 +2942,7 @@ void Dataset::print() const
          << "Number of selection samples: " << validation_samples_number << endl
          << "Number of testing samples: " << testing_samples_number << endl
          << "Number of unused samples: " << unused_samples_number << endl;
-
+*/
     //for(const Dataset::Variable& variable : variables)
     //    variable.print();
 }
@@ -4308,7 +4333,7 @@ void Dataset::fix_repeated_names()
 }
 
 
-vector<vector<Index>> Dataset::split_samples(const vector<Index>& sample_indices, const Index& new_batch_size) const
+vector<vector<Index>> Dataset::split_samples(const vector<Index>& sample_indices, Index new_batch_size) const
 {
     const Index samples_number = sample_indices.size();
     Index batch_size = new_batch_size;
@@ -4398,7 +4423,7 @@ void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 
     // Inputs
 
-    const shape& data_set_input_dimensions = dataset->get_shape("Input");
+    const Shape& data_set_input_dimensions = dataset->get_shape("Input");
 
     if(!data_set_input_dimensions.empty())
     {
@@ -4408,7 +4433,7 @@ void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 
     // Targets
 
-    const shape& data_set_target_dimensions = dataset->get_shape("Target");
+    const Shape& data_set_target_dimensions = dataset->get_shape("Target");
 
     if(!data_set_target_dimensions.empty())
     {
@@ -4418,7 +4443,7 @@ void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 
     // Decoder
 
-    // const shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
+    // const Shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
 
     // if(!data_set_decoder_dimensions.empty())
     // {
@@ -4460,10 +4485,10 @@ void Batch::print() const
 
     // cout << "Decoder:" << endl
     //      << "Decoder shape:" << decoder_shape << endl;
-
+/*
     cout << "Targets:" << endl
          << "Target shape:" << target_shape << endl;
-
+*/
     cout << TensorMap2((type*)target_tensor.data(),
                                        target_shape[0],
                                        target_shape[1]) << endl;
@@ -4532,9 +4557,9 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
     samples_number = new_samples_number;
     dataset = new_dataset;
 
-    const shape& data_set_input_dimensions = dataset->get_shape("Input");
-    //const shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
-    const shape& data_set_target_dimensions = dataset->get_shape("Target");
+    const Shape& data_set_input_dimensions = dataset->get_shape("Input");
+    //const Shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
+    const Shape& data_set_target_dimensions = dataset->get_shape("Target");
 
     if(!data_set_input_dimensions.empty())
     {
@@ -4553,7 +4578,7 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
         decoder_shape = { samples_number };
         decoder_shape.insert(decoder_shape.end(), data_set_decoder_dimensions.begin(), data_set_decoder_dimensions.end());
 
-        const Index decoder_size = count_elements(decoder_shape);
+        const Index decoder_size = decoder_shape.count();
 
         CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));

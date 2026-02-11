@@ -24,17 +24,17 @@ class Scaling final : public Layer
 
 public:
 
-    Scaling(const shape& new_input_shape = {})
+    Scaling(const Shape& new_input_shape = {})
     {
         set(new_input_shape);
     }
 
-    shape get_input_shape() const override
+    Shape get_input_shape() const override
     {
         return input_shape;
     }
 
-    shape get_output_shape() const override
+    Shape get_output_shape() const override
     {
         return input_shape;
     }
@@ -109,20 +109,20 @@ public:
     }
 
 
-    void set(const shape& new_input_shape = {})
+    void set(const Shape& new_input_shape = {})
     {
         if (new_input_shape.size() != Rank -1) 
         {
            ostringstream buffer;
            buffer << "OpenNN Exception: Scaling Layer.\n"
-                  << "void set(const shape& new_input_shape) method.\n"
+                  << "void set(const Shape& new_input_shape) method.\n"
                   << "Input shape size must be " << Rank - 1 << ", but is " << new_input_shape.size() << ".\n";
            throw logic_error(buffer.str());
         }
 
         input_shape = new_input_shape;
 
-        const Index new_inputs_number = count_elements(new_input_shape);
+        const Index new_inputs_number = new_input_shape.count();
 
         descriptives.resize(new_inputs_number);
 
@@ -142,12 +142,12 @@ public:
         is_trainable = false;
     }
 
-    void set_input_shape(const shape& new_input_shape) override
+    void set_input_shape(const Shape& new_input_shape) override
     {
         set(new_input_shape);
     }
 
-    void set_output_shape(const shape& new_output_shape) override
+    void set_output_shape(const Shape& new_output_shape) override
     {
         set_input_shape(new_output_shape);
     }
@@ -212,7 +212,7 @@ public:
 
     string write_no_scaling_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : get_output_shape().count();
 
         ostringstream buffer;
 
@@ -226,7 +226,7 @@ public:
 
     string write_minimum_maximum_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : get_output_shape().count();
 
         ostringstream buffer;
 
@@ -254,7 +254,7 @@ public:
 
     string write_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : get_output_shape().count();
 
         ostringstream buffer;
 
@@ -348,7 +348,7 @@ public:
             // I will implement a dummy reshape for now to satisfy Rank:
             // [neurons_number, 1, 1...]
 
-            shape dims(Rank-1, 1);
+            Shape dims(Rank-1, 1);
             dims[0] = neurons_number;
             set(dims);
         }
@@ -439,7 +439,7 @@ public:
 
 private:
 
-    shape input_shape;
+    Shape input_shape;
 
     type* minimums = nullptr;
     type* maximums = nullptr;

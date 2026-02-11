@@ -13,10 +13,10 @@
 namespace opennn
 {
 
-Convolutional::Convolutional(const shape& new_input_shape,
-                             const shape& new_kernel_dimensions,
+Convolutional::Convolutional(const Shape& new_input_shape,
+                             const Shape& new_kernel_dimensions,
                              const string& new_activation_function,
-                             const shape& new_stride_dimensions,
+                             const Shape& new_stride_dimensions,
                              const string& new_convolution_type,
                              bool new_batch_normaliztion,
                              const string& new_name) : Layer()
@@ -119,9 +119,10 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
             is_training);
     
 
-    is_training
-        ? calculate_activations(activation_function, outputs, activation_derivatives)
-        : calculate_activations(activation_function, outputs, TensorMap4(empty_4.data(), empty_4.dimensions()));
+    if(is_training)
+        calculate_activations<4>(activation_function, outputs, activation_derivatives);
+    else
+        calculate_activations<4>(activation_function, outputs, TensorMap4(empty_4.data(), empty_4.dimensions()));
 }
 
 
@@ -266,13 +267,13 @@ Index Convolutional::get_output_width() const
 }
 
 
-shape Convolutional::get_input_shape() const
+Shape Convolutional::get_input_shape() const
 {
     return input_shape;
 }
 
 
-shape Convolutional::get_output_shape() const
+Shape Convolutional::get_output_shape() const
 {
     return { get_output_height(), get_output_width(), get_kernels_number() };
 }
@@ -356,10 +357,10 @@ Index Convolutional::get_padding_width() const
 }
 
 
-void Convolutional::set(const shape& new_input_shape,
-                        const shape& new_kernel_dimensions,
+void Convolutional::set(const Shape& new_input_shape,
+                        const Shape& new_kernel_dimensions,
                         const string& new_activation_function,
-                        const shape& new_stride_dimensions,
+                        const Shape& new_stride_dimensions,
                         const string& new_convolution_type,
                         bool new_batch_normalization,
                         const string& new_label)
@@ -502,7 +503,7 @@ void Convolutional::set_column_stride(const Index new_stride_column)
 }
 
 
-void Convolutional::set_input_shape(const shape& new_input_shape)
+void Convolutional::set_input_shape(const Shape& new_input_shape)
 {
     if (new_input_shape.size() != 3)
         throw runtime_error("Input new_input_shape.size() must be 3");
@@ -676,7 +677,7 @@ void Convolutional::from_XML(const XMLDocument& document)
 
     set_activation_function(read_xml_string(convolutional_layer_element, "Activation"));
 
-    const shape stride_dimensions = string_to_dimensions(read_xml_string(convolutional_layer_element, "StrideDimensions"));
+    const Shape stride_dimensions = string_to_dimensions(read_xml_string(convolutional_layer_element, "StrideDimensions"));
     set_column_stride(stride_dimensions[0]);
     set_row_stride(stride_dimensions[1]);
 
@@ -805,7 +806,7 @@ void ConvolutionalBackPropagation::initialize()
                            kernels_number);
 
     input_gradients_memory.resize(1);
-    input_gradients_memory[0].resize(count_elements({ batch_size, input_height, input_width, channels }));
+    input_gradients_memory[0].resize(Shape({ batch_size, input_height, input_width, channels }).count());
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
     input_gradients[0].dims = { batch_size, input_height, input_width, channels };
@@ -1236,12 +1237,12 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
 void ConvolutionalForwardPropagationCuda::print() const
 {
-    const shape output_dimensions = layer->get_output_shape();
+    const shape output_shape = layer->get_output_shape();
 
     cout << layer->get_name() + " forward propagation" << endl;
 
     cout << "Outputs:" << endl;
-    cout << matrix_4d_from_device(outputs.data, batch_size, output_dimensions[0], output_dimensions[1], output_dimensions[2]) << endl;
+    cout << matrix_4d_from_device(outputs.data, batch_size, output_shape[0], output_shape[1], output_shape[2]) << endl;
 }
 
 

@@ -18,7 +18,7 @@ class ImageDataset : public Dataset
 
 public:
 
-    ImageDataset(const Index = 0, const shape& = {0, 0, 0}, const shape& = {0});
+    ImageDataset(const Index = 0, const Shape& = {0, 0, 0}, const Shape& = {0});
 
     ImageDataset(const filesystem::path&);
 
@@ -58,7 +58,7 @@ public:
     vector<Descriptives> scale_features(const string&) override;
     void unscale_features(const string&);
 
-    void read_bmp(const shape& new_input_shape = { 0, 0, 0 });
+    void read_bmp(const Shape& new_input_shape = { 0, 0, 0 });
 
     void from_XML(const XMLDocument&) override;
     void to_XML(XMLPrinter&) const override;

@@ -121,27 +121,31 @@ using namespace std;
 using namespace Eigen;
 
 using type = float;
-using shape = vector<Index>;
+
+// @todo change this, since it is used a lot and introduces overhead
+// using shape = Eigen::Array<Index, Eigen::Dynamic, 1, 0, 8, 1>;
+//using shape = vector<Index>;
+
+using Tensor1 = Tensor<type, 1, AlignedMax>;
+using Tensor2 = Tensor<type, 2, AlignedMax>;
+using Tensor3 = Tensor<type, 3, AlignedMax>;
+using Tensor4 = Tensor<type, 4, AlignedMax>;
+using Tensor5 = Tensor<type, 5, AlignedMax>;
+
+template <int Rank>
+using TensorR = Tensor<type, Rank, AlignedMax>;
+
+using TensorMap1 = TensorMap<Tensor<type, 1, AlignedMax>, AlignedMax>;
+using TensorMap2 = TensorMap<Tensor<type, 2, AlignedMax>, AlignedMax>;
+using TensorMap3 = TensorMap<Tensor<type, 3, AlignedMax>, AlignedMax>;
+using TensorMap4 = TensorMap<Tensor<type, 4, AlignedMax>, AlignedMax>;
+
+template <int Rank>
+using TensorMapR = TensorMap<Tensor<type, Rank, AlignedMax>, AlignedMax>;
 
 #include "tinyxml2.h"
 
 using namespace tinyxml2;
-
-using Tensor1 = Tensor<type, 1>;
-using Tensor2 = Tensor<type, 2>;
-using Tensor3 = Tensor<type, 3>;
-using Tensor4 = Tensor<type, 4>;
-using Tensor5 = Tensor<type, 5>;
-
-using TensorMap1 = TensorMap<Tensor<type, 1>, AlignedMax>;
-using TensorMap2 = TensorMap<Tensor<type, 2>, AlignedMax>;
-using TensorMap3 = TensorMap<Tensor<type, 3>, AlignedMax>;
-using TensorMap4 = TensorMap<Tensor<type, 4>, AlignedMax>;
-
-using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, AlignedMax>;
-using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, AlignedMax>;
-using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, AlignedMax>;
-using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, AlignedMax>;
 
 template<typename Base, typename T>
 inline bool is_instance_of(const T* ptr)

@@ -37,8 +37,8 @@ public:
 
     const string& get_name() const;
 
-    virtual void set_input_shape(const shape&);
-    virtual void set_output_shape(const shape&);
+    virtual void set_input_shape(const Shape&);
+    virtual void set_output_shape(const Shape&);
 
     void set_label(const string&);
 
@@ -57,8 +57,8 @@ public:
 
     //virtual pair
 
-    virtual shape get_input_shape() const = 0;
-    virtual shape get_output_shape() const = 0;
+    virtual Shape get_input_shape() const = 0;
+    virtual Shape get_output_shape() const = 0;
 
     Index get_inputs_number() const;
 
@@ -85,7 +85,7 @@ public:
                                    unique_ptr<LayerBackPropagationLM>&) const {}
 
     virtual void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>&,
-                                                   const Index&,
+                                                   Index,
                                                    Tensor2&) const {}
 
     virtual void from_XML(const tinyxml2::XMLDocument&) {}
@@ -121,8 +121,8 @@ protected:
 
     template <int Rank>
     void calculate_activations(const string& activation_function,
-                               TensorMap<Tensor<type, Rank>, AlignedMax> activations,
-                               TensorMap<Tensor<type, Rank>, AlignedMax> activation_derivatives) const
+                               TensorMapR<Rank> activations,
+                               TensorMapR<Rank> activation_derivatives) const
     {
         if (activation_function == "Linear")
             linear(activations, activation_derivatives);
@@ -144,7 +144,7 @@ protected:
 
 
     template <int Rank>
-    void binary(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx, type threshold) const
+    void binary(TensorR<Rank>& y, TensorR<Rank>& dy_dx, type threshold) const
     {
         y.device(*device) = (y < threshold).select(type(0), type(1));
 
@@ -155,7 +155,7 @@ protected:
 
 
     template <int Rank>
-    void linear(TensorMap<Tensor<type, Rank>, AlignedMax>, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
+    void linear(TensorMapR<Rank>, TensorMapR<Rank> dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -164,7 +164,7 @@ protected:
 
 
     template <int Rank>
-    void exponential_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
+    void exponential_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         const type alpha = type(1);
 
@@ -177,7 +177,7 @@ protected:
 
 
     template <int Rank>
-    void hyperbolic_tangent(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
+    void hyperbolic_tangent(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         y.device(*device) = y.tanh();
 
@@ -188,7 +188,7 @@ protected:
 
 
     template <int Rank>
-    void logistic(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
+    void logistic(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         y.device(*device) = (type(1) + (-y).exp()).inverse();
 
@@ -199,7 +199,7 @@ protected:
 
 
     template <int Rank>
-    void rectified_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
+    void rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         y.device(*device) = y.cwiseMax(type(0));
 
@@ -210,7 +210,7 @@ protected:
 
 
     template <int Rank>
-    void leaky_rectified_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx, type slope) const
+    void leaky_rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx, type slope) const
     {
         y.device(*device) = (y > type(0)).select(y, slope * y);
 
@@ -221,7 +221,7 @@ protected:
 
 
     template <int Rank>
-    void scaled_exponential_linear(TensorMap<Tensor<type, Rank>, AlignedMax> y, TensorMap<Tensor<type, Rank>, AlignedMax> dy_dx) const
+    void scaled_exponential_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -234,9 +234,58 @@ protected:
         dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
-    void softmax(TensorMap2) const;
-    void softmax(TensorMap3) const;
-    void softmax(TensorMap4) const;
+    template <int Rank>
+    void softmax(TensorMapR<Rank> y) const
+    {
+        // The size of the last dimension (channels/classes)
+        const Index last_dim_size = y.dimension(Rank - 1);
+
+        // Total size of the tensor
+        const Index total_size = y.size();
+
+        // Number of vectors to normalize (flattening all previous dimensions)
+        const Index rows_number = total_size / last_dim_size;
+
+        // Direct pointer access is efficient and rank-agnostic
+        type* data_ptr = y.data();
+
+#pragma omp parallel for
+        for(Index i = 0; i < rows_number; i++)
+        {
+            // Get pointer to the start of the current vector
+            type* vec = data_ptr + (i * last_dim_size);
+
+            // 1. Find Max (for numerical stability)
+            type max_value = -numeric_limits<type>::infinity();
+            for(Index j = 0; j < last_dim_size; j++)
+            {
+                if(vec[j] > max_value)
+                    max_value = vec[j];
+            }
+
+            // 2. Calculate Exponentials and Sum
+            type sum = 0.0;
+            for(Index j = 0; j < last_dim_size; j++)
+            {
+                vec[j] = exp(vec[j] - max_value);
+                sum += vec[j];
+            }
+
+            // 3. Normalize
+            if(sum > 0.0)
+            {
+                const type inv_sum = type(1.0) / sum;
+                for(Index j = 0; j < last_dim_size; j++)
+                {
+                    vec[j] *= inv_sum;
+                }
+            }
+        }
+    }
+
+//    void softmax(TensorMap2) const;
+//    void softmax(TensorMap3) const;
+//    void softmax(TensorMap4) const;
 
     void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 
@@ -244,8 +293,8 @@ protected:
 
     template <int Rank>
     void normalize_batch(
-        TensorMap<Tensor<type, Rank>, AlignedMax>& outputs,
-        TensorMap<Tensor<type, Rank>, AlignedMax>& normalized_outputs,
+        TensorMapR<Rank> outputs,
+        TensorMapR<Rank> normalized_outputs,
         TensorMap1 batch_means,
         TensorMap1 batch_variances,
         Tensor1 running_means,
@@ -291,7 +340,7 @@ protected:
 
 
     template <int Rank>
-    void dropout(TensorMap<Tensor<type, Rank>, AlignedMax> tensor, const type& dropout_rate) const
+    void dropout(TensorMapR<Rank> tensor, const type& dropout_rate) const
     {
         const type scaling_factor = type(1) / (type(1) - dropout_rate);
 
@@ -306,10 +355,10 @@ protected:
 
 
     template <int Rank>
-    void calculate_combinations(const TensorMap<Tensor<type, Rank>, AlignedMax>& inputs,
-                                const TensorMap2& weights,
-                                const TensorMap1& biases,
-                                TensorMap<Tensor<type, Rank>, AlignedMax>& outputs) const
+    void calculate_combinations(const TensorMapR<Rank> inputs,
+                                const TensorMap2 weights,
+                                const TensorMap1 biases,
+                                TensorMapR<Rank> outputs) const
     {
         const Index inputs_size = weights.dimension(0);
         const Index outputs_size = weights.dimension(1);
@@ -332,12 +381,12 @@ protected:
 
 
     template <int Rank>
-    void calculate_gradients(const TensorMap<Tensor<type, Rank>, AlignedMax>& inputs,
-                             const TensorMap<Tensor<type, Rank>, AlignedMax>& output_gradients,
-                             const TensorMap2& weights,
-                             TensorMap2& weight_gradients,
-                             TensorMap1& bias_gradients,
-                             TensorMap<Tensor<type, Rank>, AlignedMax>& input_gradients,
+    void calculate_gradients(const TensorMapR<Rank> inputs,
+                             const TensorMapR<Rank> output_gradients,
+                             const TensorMap2 weights,
+                             TensorMap2 weight_gradients,
+                             TensorMap1 bias_gradients,
+                             TensorMapR<Rank> input_gradients,
                              const bool is_first_layer) const
     {
         const Index inputs_size = weights.dimension(0);

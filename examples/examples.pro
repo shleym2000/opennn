@@ -18,6 +18,7 @@ SUBDIRS += breast_cancer
 SUBDIRS += iris_plant
 SUBDIRS += mnist
 SUBDIRS += translation
+SUBDIRS += concrete
 
 if($$CUDA_ENABLED) {
     SUBDIRS += melanoma_cancer

@@ -22,13 +22,13 @@ GrowingNeurons::GrowingNeurons(const TrainingStrategy* new_training_strategy)
 }
 
 
-const Index& GrowingNeurons::get_neurons_increment() const
+Index GrowingNeurons::get_neurons_increment() const
 {
     return neurons_increment;
 }
 
 
-const Index& GrowingNeurons::get_maximum_validation_failures() const
+Index GrowingNeurons::get_maximum_validation_failures() const
 {
     return maximum_validation_failures;
 }

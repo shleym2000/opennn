@@ -18,19 +18,19 @@ class Recurrent final : public Layer
 
 public:
 
-    Recurrent(const shape & = {0, 0}, const shape& = {0});
+    Recurrent(const Shape& = {0, 0}, const Shape& = {0});
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
     string get_activation_function() const;
 
-    void set(const shape& = {}, const shape& = {});
+    void set(const Shape& = {}, const Shape& = {});
 
-    void set_input_shape(const shape&) override;
-    void set_output_shape(const shape&) override;
+    void set_input_shape(const Shape&) override;
+    void set_output_shape(const Shape&) override;
 
     void set_activation_function(const string&);
 
@@ -52,7 +52,7 @@ public:
 
 private:
 
-    shape input_shape;
+    Shape input_shape;
 
     TensorView biases;
     TensorView input_weights;
@@ -73,14 +73,12 @@ struct RecurrentForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
+    vector<TensorView*> get_workspace_views() override;
+
     void print() const override;
 
-    Tensor3 current_inputs;
-    Tensor2 current_activation_derivatives;
-
-    Tensor3 activation_derivatives;
-
-    Tensor3 hidden_states;
+    TensorView hidden_states;
+    TensorView activation_derivatives;
 };
 
 
@@ -93,16 +91,6 @@ struct RecurrentBackPropagation final : LayerBackPropagation
     void initialize() override;
 
     void print() const override;
-
-    Tensor2 current_gradients;
-    Tensor2 current_targets;
-
-    Tensor2 combination_gradients;
-    Tensor2 current_combination_gradients;
-
-    Tensor2 combinations_bias_gradients;
-    Tensor3 combinations_input_weight_gradients;
-    Tensor3 combinations_recurrent_weight_gradients;
 
     TensorView bias_gradients;
     TensorView input_weight_gradients;

@@ -22,9 +22,9 @@ public:
 
     GrowingNeurons(const TrainingStrategy* = nullptr);
 
-    const Index& get_neurons_increment() const;
+    Index get_neurons_increment() const;
 
-    const Index& get_maximum_validation_failures() const;
+    Index get_maximum_validation_failures() const;
 
     void set_default();
 

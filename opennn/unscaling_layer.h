@@ -19,10 +19,10 @@ class Unscaling final : public Layer
 
 public:
 
-    Unscaling(const shape& = {0}, const string& = "unscaling_layer");
+    Unscaling(const Shape& = {0}, const string& = "unscaling_layer");
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     vector<Descriptives> get_descriptives() const;
 
@@ -33,8 +33,8 @@ public:
 
     void set(const Index = 0, const string& = "unscaling_layer");
 
-    void set_input_shape(const shape&) override;
-    void set_output_shape(const shape&) override;
+    void set_input_shape(const Shape&) override;
+    void set_output_shape(const Shape&) override;
 
     void set_descriptives(const vector<Descriptives>&);
 

@@ -59,13 +59,13 @@ bool Optimizer::get_display() const
 }
 
 
-const Index& Optimizer::get_display_period() const
+Index Optimizer::get_display_period() const
 {
     return display_period;
 }
 
 
-const Index& Optimizer::get_save_period() const
+Index Optimizer::get_save_period() const
 {
     return save_period;
 }
@@ -360,7 +360,7 @@ void Optimizer::set_scaling()
 
     for(size_t i = 0; i < target_feature_indices.size(); ++i)
     {
-        const Index& target_index = target_feature_indices[i];
+        Index target_index = target_feature_indices[i];
 
         auto it = find(input_feature_indices.begin(), input_feature_indices.end(), target_index);
 

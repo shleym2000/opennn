@@ -5,7 +5,8 @@
 //
 //   Artificial Intelligence Techniques, SL
 //   artelnics@artelnics.com
-
+#include "tinyxml2.h"
+#include "pch.h"
 #include "tensors.h"
 #include "../eigen/Eigen/Dense"
 
@@ -63,7 +64,7 @@ Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const Tensor1& ve
 }
 
 
-void divide_columns(const ThreadPoolDevice* device, TensorMap2& matrix, const Tensor1& vector)
+void divide_columns(const ThreadPoolDevice* device, TensorMap2 matrix, const Tensor1& vector)
 {
     // @ Changes to test (the case in which you can divide by 0)
     const Index columns_number = matrix.dimension(1);
@@ -104,6 +105,47 @@ Tensor2 append_rows(const Tensor<type,2>& starting_matrix, const Tensor<type,2>&
     return final_matrix;
 }
 
+vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums)
+{
+    const Index rows_unfiltered = outputs.dimension(0);
+    const Index variables_to_filter = outputs.dimension(1);
+
+    if(minimums.size() != variables_to_filter || maximums.size() != variables_to_filter)
+        throw runtime_error("Minimums/maximums size mismatch.\n");
+
+    vector<uint8_t> binary_mask_filtered(static_cast<size_t>(rows_unfiltered), 1);
+    Index number_filtered_rows = rows_unfiltered;
+
+    for(Index j = 0; j < variables_to_filter; ++j)
+    {
+        const type minimum = minimums(j);
+        const type maximum = maximums(j);
+        number_filtered_rows = 0;
+
+        for(Index i = 0; i < rows_unfiltered; ++i)
+        {
+            if(!binary_mask_filtered[i])
+                continue;
+
+            const type y = static_cast<type>(outputs(i, j));
+
+            if(y < minimum || y > maximum)
+                binary_mask_filtered[i] = 0;
+            else
+                ++number_filtered_rows;
+        }
+        if(number_filtered_rows == 0) break;
+    }
+
+    vector<Index> feasible_rows;
+    feasible_rows.reserve(static_cast<size_t>(number_filtered_rows));
+
+    for(Index i = 0; i < rows_unfiltered; ++i)
+        if(binary_mask_filtered[i])
+            feasible_rows.push_back(i);
+
+    return feasible_rows;
+}
 
 
 void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3& tensor)
@@ -180,7 +222,7 @@ Tensor<Index, 1> calculate_rank_less(const Tensor1& vector)
 }
 
 
-Index count_greater_than(const vector<Index>& data, const Index& bound)
+Index count_greater_than(const vector<Index>& data, Index bound)
 {
     return count_if(data.begin(), data.end(), [&](const Index value) {
         return value > bound;
@@ -188,7 +230,7 @@ Index count_greater_than(const vector<Index>& data, const Index& bound)
 }
 
 
-vector<Index> get_elements_greater_than(const vector<Index>& data, const Index& bound)
+vector<Index> get_elements_greater_than(const vector<Index>& data, Index bound)
 {
     const Index indices_size = count_greater_than(data, bound);
 
@@ -204,7 +246,7 @@ vector<Index> get_elements_greater_than(const vector<Index>& data, const Index& 
 }
 
 
-vector<Index> get_elements_greater_than(const vector<vector<Index>>& vectors, const Index& bound)
+vector<Index> get_elements_greater_than(const vector<vector<Index>>& vectors, Index bound)
 {
     const Index vectors_number = vectors.size();
 
@@ -236,7 +278,7 @@ Index count_between(const Tensor1& vector,const type& minimum, const type& maxim
 }
 
 
-void set_row(Tensor<type,2>& matrix, const Tensor1& new_row, const Index& row_index)
+void set_row(Tensor<type,2>& matrix, const Tensor1& new_row, Index row_index)
 {
     const Index columns_number = new_row.size();
 
@@ -248,7 +290,7 @@ void set_row(Tensor<type,2>& matrix, const Tensor1& new_row, const Index& row_in
 
 
 Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
-                                              const Index& column_index,
+                                              Index column_index,
                                               const type& minimum,
                                               const type& maximum)
 {
@@ -438,7 +480,7 @@ void fill_tensor_data_row_major(const Tensor2& matrix,
 void fill_tensor_sequence(const Tensor2& matrix,
                           const vector<Index>& rows_indices,
                           const vector<Index>& columns_indices,
-                          const Index& past_time_steps,
+                          Index past_time_steps,
                           type* tensor_data)
 {
     if (rows_indices.empty() || columns_indices.empty())
@@ -543,7 +585,7 @@ Tensor2 assemble_matrix_matrix(const Tensor2& x, const Tensor2& y)
 }
 
 
-string dimensions_to_string(const shape& x, const string& separator)
+string dimensions_to_string(const Shape& x, const string& separator)
 {
     const Index size = x.size();
 
@@ -559,9 +601,9 @@ string dimensions_to_string(const shape& x, const string& separator)
 }
 
 
-shape string_to_dimensions(const string& x, const string& separator)
+Shape string_to_dimensions(const string& x, const string& separator)
 {
-    shape result;
+    Shape result;
 
     if (x.empty())
         throw runtime_error("Error: Input string must not be empty.\n");
@@ -604,57 +646,56 @@ type round_to_precision(type x, const int& precision)
 }
 
 
-TensorMap1 tensor_map(const Tensor2& tensor, const Index& index_1)
+TensorMap1 tensor_map(const Tensor2& tensor, Index index_1)
 {
-    return TensorMap1((type*)tensor.data() + tensor.dimension(0)*index_1,
-                                      tensor.dimension(0));
+    return TensorMap1((type*)tensor.data() + tensor.dimension(0)*index_1, tensor.dimension(0));
 }
 
 /*
-TensorMap1 tensor_map_(const TensorMap2& tensor, const Index& index_1)
+TensorMap1 tensor_map_(const TensorMap2 tensor, Index index_1)
 {
     return TensorMap1((type*)tensor.data() + tensor.dimension(0) * index_1,
                                       tensor.dimension(0));
 }
 */
 
-TensorMap2 tensor_map(const Tensor3& tensor, const Index& index_2)
+TensorMap2 tensor_map(const Tensor3& tensor, Index index_2)
 {
     return TensorMap2((type*)tensor.data() +  tensor.dimension(0) * tensor.dimension(1)* index_2,
                                       tensor.dimension(0), tensor.dimension(1));
 }
 
 
-TensorMap3 tensor_map(const Tensor4& tensor, const Index& index_3)
+TensorMap3 tensor_map(const Tensor4& tensor, Index index_3)
 {
     return TensorMap3((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1) * tensor.dimension(2) * index_3,
                                       tensor.dimension(0), tensor.dimension(1), tensor.dimension(2));
 }
 
 
-TensorMap3 tensor_map_(const TensorMap4& tensor, const Index& index_3)
+TensorMap3 tensor_map_(const TensorMap4 tensor, Index index_3)
 {
     return TensorMap3(tensor.data() + tensor.dimension(0) * tensor.dimension(1) * tensor.dimension(2) * index_3,
                                       tensor.dimension(0), tensor.dimension(1), tensor.dimension(2));
 }
 
 
-TensorMap2 tensor_map(const Tensor4& tensor, const Index& index_3, const Index& index_2)
+TensorMap2 tensor_map(const Tensor4& tensor, Index index_3, Index index_2)
 {
     return TensorMap2((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1)*(index_3 * tensor.dimension(2) + index_2),
                                       tensor.dimension(0), tensor.dimension(1));
 }
 
 
-Index get_size(const shape &d)
+Index get_size(const Shape&d)
 {
     return accumulate(d.begin(), d.end(), 1, multiplies<Index>());
 }
 
 
-shape prepend(const Index &x, const shape &d)
+Shape prepend(const Index &x, const Shape&d)
 {
-    shape result = {x};
+    Shape result = {x};
     result.insert(result.end(), d.begin(), d.end());
     return result;
 }

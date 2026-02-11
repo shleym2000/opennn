@@ -265,7 +265,7 @@ bool is_date_time_string(const string& text)
 }
 
 
-time_t date_to_timestamp(const string& date, const Index& gmt, const DateFormat& format)
+time_t date_to_timestamp(const string& date, Index gmt, const DateFormat& format)
 {
     struct tm time_structure = {};
     smatch matches;

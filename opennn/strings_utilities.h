@@ -31,7 +31,7 @@ namespace opennn
 
     enum DateFormat {AUTO, DMY, MDY, YMD};
 
-    time_t date_to_timestamp(const string&, const Index& = 0, const DateFormat& format = AUTO);
+    time_t date_to_timestamp(const string&, Index = 0, const DateFormat& format = AUTO);
 
     void replace_all_appearances(string&, const string&, const string&);
     void replace_all_word_appearances(string&, const string&, const string&);
