@@ -299,6 +299,7 @@ void unscale_image_minimum_maximum(TensorMap2 matrix, Index column_index)
         matrix(i, column_index) *= type(255);
 }
 
+
 void unscale_minimum_maximum(Tensor2& matrix,
                              Index column_index,
                              const Descriptives& column_descriptives,
@@ -310,17 +311,28 @@ void unscale_minimum_maximum(Tensor2& matrix,
 }
 
 
-void unscale_mean_standard_deviation(Tensor2& matrix,
-                                     Index column_index,
-                                     const Descriptives& column_descriptives)
+void unscale_mean_standard_deviation(Tensor2& matrix, Index column_index, const Descriptives& column_descriptives)
 {
     unscale_mean_standard_deviation(TensorMap2(matrix.data(), matrix.dimension(0), matrix.dimension(1)), column_index, column_descriptives);
 }
 
 
+void unscale_standard_deviation(Tensor2& matrix, Index column_index, const Descriptives& descriptives)
+{
+    unscale_standard_deviation(TensorMap2(matrix.data(), matrix.dimension(0), matrix.dimension(1)), column_index, descriptives);
+}
 
 
+void unscale_logarithmic(Tensor2& matrix, Index column_index)
+{
+    unscale_logarithmic(TensorMap2(matrix.data(), matrix.dimension(0), matrix.dimension(1)), column_index);
+}
 
+
+void unscale_image_minimum_maximum(Tensor2& matrix, Index column_index)
+{
+    unscale_image_minimum_maximum(TensorMap2(matrix.data(), matrix.dimension(0), matrix.dimension(1)), column_index);
+}
 
 }
 

@@ -240,7 +240,7 @@ Tensor3 read_bmp_image(const filesystem::path& image_path_fs)
 }
 
 
-Tensor3 resize_image(const Tensor<float, 3>& input_image,
+Tensor3 resize_image(const Tensor3& input_image,
                              Index output_height,
                              Index output_width)
 {
