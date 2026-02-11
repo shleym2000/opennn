@@ -33,6 +33,15 @@ struct Shape {
         }
     }
 
+    template<typename InputIt, typename = typename enable_if<!is_integral<InputIt>::value>::type>
+    Shape(InputIt first, InputIt last) {
+        rank = 0;
+        while (first != last && rank < MaxRank) {
+            dims[rank++] = static_cast<Index>(*first);
+            ++first;
+        }
+    }
+
     // --- ACCESO DIRECTO ---
 
     // Esto permite hacer: Index n = my_shape[0];
@@ -109,6 +118,18 @@ struct Shape {
         }
         os << "]";
         return os;
+    }
+
+    bool operator==(const Shape& other) const noexcept {
+        if (rank != other.rank) return false;
+        for (size_t i = 0; i < rank; ++i) {
+            if (dims[i] != other.dims[i]) return false;
+        }
+        return true;
+    }
+
+    bool operator!=(const Shape& other) const noexcept {
+        return !(*this == other);
     }
 };
 
@@ -515,24 +536,19 @@ bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
 }
 
 
-template <typename Type, int Rank>
+template <int Rank>
 bool are_equal(const TensorR<Rank>& tensor_1,
                const TensorR<Rank>& tensor_2,
-               const Type& tolerance = 0.001)
+               const type& tolerance = type(1.0e-3))
 {
     if (tensor_1.size() != tensor_2.size())
-        throw runtime_error("Tensor sizes are different");
+        throw runtime_error("are_equal: Tensor sizes are different.");
 
     const Index size = tensor_1.size();
 
     for(Index i = 0; i < size; i++)
-        if constexpr (is_same_v<Type, bool>)
-        {
-            if (tensor_1(i) != tensor_2(i))
-                return false;
-            else if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
-                return false;
-        }
+        if(abs(tensor_1(i) - tensor_2(i)) > tolerance)
+            return false;
 
     return true;
 }

@@ -107,14 +107,14 @@ Histogram::Histogram(const Index bins_number)
 
 
 Histogram::Histogram(const Tensor1&new_centers,
-                     const Tensor<Index, 1>&new_frequencies)
+                     const Tensor1&new_frequencies)
 {
     centers = new_centers;
     frequencies = new_frequencies;
 }
 
 
-Histogram::Histogram(const Tensor<Index, 1>& new_frequencies,
+Histogram::Histogram(const Tensor1& new_frequencies,
                      const Tensor1& new_centers,
                      const Tensor1& new_minimums,
                      const Tensor1& new_maximums)
@@ -138,7 +138,7 @@ Histogram::Histogram(const Tensor1& data,
     for(Index i = 0; i < bins_number; i++)
         new_centers(i) = data_minimum + (type(0.5) * step) + (step * type(i));
 
-    Tensor<Index, 1> new_frequencies(bins_number);
+    Tensor1 new_frequencies(bins_number);
     new_frequencies.setZero();
 
     type value;
@@ -177,7 +177,7 @@ Histogram::Histogram(const Tensor1& probability_data)
     for(size_t i = 0; i < bins_number; i++)
         new_centers(i) = data_minimum + (type(0.5) * step) + (step * type(i));
 
-    Tensor<Index, 1> new_frequencies(bins_number);
+    Tensor1 new_frequencies(bins_number);
     new_frequencies.setZero();
 
     type value;
@@ -355,33 +355,21 @@ void Histogram::save(const filesystem::path& histogram_file_name) const
 
 type minimum(const Tensor1& vector)
 {
-    const Index size = vector.dimension(0);
+    if(vector.size() == 0) return type(NAN);
 
-    if(size == 0) return type(NAN);
+    const Tensor<type, 0> m = vector.minimum();
 
-    type minimum = numeric_limits<type>::max();
-
-    for(Index i = 0; i < size; i++)
-        if(vector(i) < minimum && !isnan(vector(i)))
-            minimum = vector(i);
-
-    return minimum;
+    return m(0);
 }
 
 
-Index minimum(const Tensor<Index, 1>& vector)
+type minimum(const Tensor2& matrix)
 {
-    const Index size = vector.size();
+    if(matrix.size() == 0) return type(NAN);
 
-    if(size == 0) return Index(NAN);
+    const Tensor<type, 0> m = matrix.minimum();
 
-    Index minimum = numeric_limits<Index>::max();
-
-    for(Index i = 0; i < size; i++)
-        if(vector(i) < minimum)
-            minimum = vector(i);
-
-    return minimum;
+    return m(0);
 }
 
 
@@ -407,19 +395,33 @@ type minimum(const Tensor1& data, const vector<Index>& indices)
 }
 
 
+// Index minimum(const Tensor<Index, 1>& vector)
+// {
+//     if(vector.size() == 0) return 0;
+
+//     const Tensor<Index, 0> m = vector.minimum();
+
+//     return m(0);
+// }
+
+
 type maximum(const Tensor1& vector)
 {
-    const Index size = vector.dimension(0);
+    if(vector.size() == 0) return type(NAN);
 
-    if(size == 0) return type(NAN);
+    const Tensor<type, 0> m = vector.maximum();
 
-    type maximum = -numeric_limits<type>::max();
+    return m(0);
+}
 
-    for(Index i = 0; i < size; i++)
-        if(!isnan(vector(i)) && vector(i) > maximum)
-            maximum = vector(i);
 
-    return maximum;
+type maximum(const Tensor2& matrix)
+{
+    if(matrix.size() == 0) return type(NAN);
+
+    const Tensor<type, 0> m = matrix.maximum();
+
+    return m(0);
 }
 
 
@@ -445,20 +447,14 @@ type maximum(const Tensor1& data, const vector<Index>& indices)
 }
 
 
-Index maximum(const Tensor<Index, 1>& vector)
-{
-    const Index size = vector.size();
+// Index maximum(const Tensor<Index, 1>& vector)
+// {
+//     if(vector.size() == 0) return 0;
 
-    if(size == 0) return Index(NAN);
+//     const Tensor<Index, 0> m = vector.maximum();
 
-    Index maximum = -numeric_limits<Index>::max();
-
-    for(Index i = 0; i < size; i++)
-        if(vector(i) > maximum)
-            maximum = vector(i);
-
-    return maximum;
-}
+//     return m(0);
+// }
 
 
 Tensor1 column_maximums(const Tensor2& matrix,
@@ -915,7 +911,7 @@ Histogram histogram(const Tensor1& new_vector, Index bins_number)
     Tensor1 maximums(bins_number);
 
     Tensor1 centers(bins_number);
-    Tensor<Index, 1> frequencies(bins_number);
+    Tensor1 frequencies(bins_number);
     frequencies.setZero();
 
     vector<type> unique_values;
@@ -1030,7 +1026,7 @@ Histogram histogram_centered(const Tensor1& vector, const type& center, Index bi
     Tensor1 maximums(bins_number);
 
     Tensor1 centers(bins_number);
-    Tensor<Index, 1> frequencies(bins_number);
+    Tensor1 frequencies(bins_number);
     frequencies.setZero();
 
     const type min = minimum(vector);
@@ -1095,7 +1091,7 @@ Histogram histogram(const Tensor<bool, 1>& v)
     Tensor1 centers(2);
     centers.setValues({type(0), type(1)});
 
-    Tensor<Index, 1> frequencies(2);
+    Tensor1 frequencies(2);
     frequencies.setZero();
 
     // Calculate bins frequency

@@ -11,8 +11,8 @@ TEST(Normalization3dTest, DefaultConstructor)
 {
     Normalization3d normalization_3d;
 
-    EXPECT_EQ(normalization_3d.get_input_shape(), shape({0,0}));
-    EXPECT_EQ(normalization_3d.get_output_shape(), shape({0,0}));
+    EXPECT_EQ(normalization_3d.get_input_shape(), Shape({0,0}));
+    EXPECT_EQ(normalization_3d.get_output_shape(), Shape({0,0}));
 
 }
 
@@ -22,7 +22,7 @@ TEST(Normalization3dTest, GeneralConstructor)
     const Index sequence_length = random_integer(1,10);
     const Index embedding_dimension = random_integer(1,10);
 
-    Normalization3d normalization_3d(shape({sequence_length, embedding_dimension}));
+    Normalization3d normalization_3d(Shape({sequence_length, embedding_dimension}));
 
     EXPECT_EQ(normalization_3d.get_sequence_length(), sequence_length);
     EXPECT_EQ(normalization_3d.get_embedding_dimension(), embedding_dimension);

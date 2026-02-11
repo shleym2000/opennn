@@ -1919,7 +1919,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
         {
             const Index categories_number = variable.get_categories_number();
 
-            Tensor<Index, 1> categories_frequencies(categories_number);
+            Tensor1 categories_frequencies(categories_number);
             categories_frequencies.setZero();
             Tensor1 centers(categories_number);
 
@@ -1943,7 +1943,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
 
         case VariableType::Binary:
         {
-            Tensor<Index, 1> binary_frequencies(2);
+            Tensor1 binary_frequencies(2);
             binary_frequencies.setZero();
 
             for(Index j = 0; j < used_samples_number; j++)

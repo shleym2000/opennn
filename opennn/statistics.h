@@ -68,9 +68,9 @@ struct Histogram
 {
     Histogram(const Index = 0);
 
-    Histogram(const Tensor1&, const Tensor<Index, 1>&);
+    Histogram(const Tensor1&, const Tensor1&);
 
-    Histogram(const Tensor<Index, 1>&, const Tensor1&, const Tensor1&, const Tensor1&);
+    Histogram(const Tensor1&, const Tensor1&, const Tensor1&, const Tensor1&);
 
     Histogram(const Tensor1&, Index);
 
@@ -104,95 +104,91 @@ struct Histogram
 
     Tensor1 centers;
 
-    Tensor<Index, 1> frequencies;
+    Tensor1 frequencies;
 };
 
 // Minimum
+type minimum(const Tensor1&);
+type minimum(const Tensor2&);
+type minimum(const Tensor1&, const vector<Index>&);
+//Index minimum(const Tensor<Index, 1>&);
+Tensor1 column_minimums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
 
- type minimum(const Tensor1&);
- type minimum(const Tensor1&, const vector<Index>&);
- Index minimum(const Tensor<Index, 1>&);
- type minimum(const Tensor2&);
- Tensor1 column_minimums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
+// Maximum
+type maximum(const Tensor1&);
+type maximum(const Tensor2&);
+type maximum(const Tensor1&, const vector<Index>&);
+//Index maximum(const Tensor<Index, 1>&);
+Tensor1 column_maximums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
 
- // Maximum
+// Range
+type range(const Tensor1&);
 
- type maximum(const Tensor1&);
- type maximum(const Tensor1&, const vector<Index>&);
- Index maximum(const Tensor<Index, 1>&);
- //type maximum(const Tensor2&);
- Tensor1 column_maximums(const Tensor2&, 
-	                             const vector<Index>& = vector<Index>(), 
-	                             const vector<Index>& = vector<Index>());
+// Mean
+type mean(const Tensor1&);
+type mean(const Tensor1&, Index, Index);
+type mean(const Tensor2&,  Index);
+Tensor1 mean(const Tensor2&);
+Tensor1 mean(const Tensor2&, const vector<Index>&);
+Tensor1 mean(const Tensor2&, const vector<Index>&, const vector<Index>&);
 
- // Range
- type range(const Tensor1&);
+// Median
+type median(const Tensor1&);
+type median(const Tensor2&, Index);
+Tensor1 median(const Tensor2&);
+Tensor1 median(const Tensor2&, const vector<Index>&);
+Tensor1 median(const Tensor2&, const vector<Index>&, const vector<Index>&);
 
- // Mean
- type mean(const Tensor1&);
- type mean(const Tensor1&, Index, Index);
- type mean(const Tensor2&,  Index);
- Tensor1 mean(const Tensor2&);
- Tensor1 mean(const Tensor2&, const vector<Index>&);
- Tensor1 mean(const Tensor2&, const vector<Index>&, const vector<Index>&);
+// Variance
+type variance(const Tensor1&);
+type variance(const Tensor1&, const Tensor<Index, 1>&);
 
- // Median
- type median(const Tensor1&);
- type median(const Tensor2&, Index);
- Tensor1 median(const Tensor2&);
- Tensor1 median(const Tensor2&, const vector<Index>&);
- Tensor1 median(const Tensor2&, const vector<Index>&, const vector<Index>&);
+// Standard deviation
+type standard_deviation(const Tensor1&);
+//type standard_deviation(const Tensor1&, const Tensor<Index, 1>&);
+Tensor1 standard_deviation(const Tensor1&, Index);
 
- // Variance
- type variance(const Tensor1&);
- type variance(const Tensor1&, const Tensor<Index, 1>&);
+// Assymetry
+type asymmetry(const Tensor1&);
 
- // Standard deviation
- type standard_deviation(const Tensor1&);
- //type standard_deviation(const Tensor1&, const Tensor<Index, 1>&);
- Tensor1 standard_deviation(const Tensor1&, Index);
+// Kurtosis
+type kurtosis(const Tensor1&);
 
- // Assymetry
- type asymmetry(const Tensor1&);
+// Quartiles
+Tensor1 quartiles(const Tensor1&);
+Tensor1 quartiles(const Tensor1&, const vector<Index>&);
 
- // Kurtosis
- type kurtosis(const Tensor1&);
+// Box plot
+BoxPlot box_plot(const Tensor1&);
+BoxPlot box_plot(const Tensor1&, const vector<Index>&);
 
- // Quartiles
- Tensor1 quartiles(const Tensor1&);
- Tensor1 quartiles(const Tensor1&, const vector<Index>&);
+// Descriptives vector
+Descriptives vector_descriptives(const Tensor1&);
 
- // Box plot
- BoxPlot box_plot(const Tensor1&);
- BoxPlot box_plot(const Tensor1&, const vector<Index>&);
+// Descriptives matrix
+vector<Descriptives> descriptives(const Tensor2&);
+vector<Descriptives> descriptives(const Tensor2&, const vector<Index>&, const vector<Index>&);
 
- // Descriptives vector
- Descriptives vector_descriptives(const Tensor1&);
+// Histograms
+Histogram histogram(const Tensor1&, Index  = 10);
+Histogram histogram_centered(const Tensor1&, const type& = type(0), Index  = 10);
+Histogram histogram(const Tensor<bool, 1>&);
+Histogram histogram(const Tensor<Index, 1>&, Index  = 10);
+vector<Histogram> histograms(const Tensor2&, Index = 10);
+Tensor<Index, 1> total_frequencies(const vector<Histogram>&);
 
- // Descriptives matrix
- vector<Descriptives> descriptives(const Tensor2&);
- vector<Descriptives> descriptives(const Tensor2&, const vector<Index>&, const vector<Index>&);
+// Minimal indices
+Index minimal_index(const Tensor1&);
+Tensor<Index, 1> minimal_indices(const Tensor1&, Index);
+Tensor<Index, 1> minimal_indices(const Tensor2&);
 
- // Histograms
- Histogram histogram(const Tensor1&, Index  = 10);
- Histogram histogram_centered(const Tensor1&, const type& = type(0), Index  = 10);
- Histogram histogram(const Tensor<bool, 1>&);
- Histogram histogram(const Tensor<Index, 1>&, Index  = 10);
- vector<Histogram> histograms(const Tensor2&, Index = 10);
- Tensor<Index, 1> total_frequencies(const vector<Histogram>&);
+// Maximal indices
+Index maximal_index(const Tensor1&);
+Tensor<Index, 1> maximal_indices(const Tensor1&, Index);
+Tensor<Index, 1> maximal_indices(const Tensor2&);
 
- // Minimal indices
- Index minimal_index(const Tensor1&);
- Tensor<Index, 1> minimal_indices(const Tensor1&, Index);
- Tensor<Index, 1> minimal_indices(const Tensor2&);
-
- // Maximal indices
- Index maximal_index(const Tensor1&);
- Tensor<Index, 1> maximal_indices(const Tensor1&, Index);
- Tensor<Index, 1> maximal_indices(const Tensor2&);
-
- // Percentiles
- Tensor1 percentiles(const Tensor1&);
+// Percentiles
+Tensor1 percentiles(const Tensor1&);
 }
 
 // OpenNN: Open Neural Networks Library.
