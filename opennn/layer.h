@@ -21,6 +21,14 @@ struct LayerBackPropagationLM;
 struct LayerForwardPropagationCuda;
 struct LayerBackPropagationCuda;
 
+#ifdef _MSC_VER
+#define FORCE_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define FORCE_INLINE __attribute__((always_inline)) inline
+#else
+#define FORCE_INLINE inline
+#endif
+
 class Layer
 {
 
@@ -144,7 +152,7 @@ protected:
 
 
     template <int Rank>
-    void binary(TensorR<Rank>& y, TensorR<Rank>& dy_dx, type threshold) const
+    FORCE_INLINE void binary(TensorR<Rank>& y, TensorR<Rank>& dy_dx, type threshold) const
     {
         y.device(*device) = (y < threshold).select(type(0), type(1));
 
@@ -155,7 +163,7 @@ protected:
 
 
     template <int Rank>
-    void linear(TensorMapR<Rank>, TensorMapR<Rank> dy_dx) const
+    FORCE_INLINE void linear(TensorMapR<Rank>, TensorMapR<Rank> dy_dx) const
     {
         if (dy_dx.size() == 0) return;
 
@@ -164,7 +172,7 @@ protected:
 
 
     template <int Rank>
-    void exponential_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
+    FORCE_INLINE void exponential_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         const type alpha = type(1);
 
@@ -177,7 +185,7 @@ protected:
 
 
     template <int Rank>
-    void hyperbolic_tangent(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
+    FORCE_INLINE void hyperbolic_tangent(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         y.device(*device) = y.tanh();
 
@@ -188,7 +196,7 @@ protected:
 
 
     template <int Rank>
-    void logistic(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
+    FORCE_INLINE void logistic(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         y.device(*device) = (type(1) + (-y).exp()).inverse();
 
@@ -199,7 +207,7 @@ protected:
 
 
     template <int Rank>
-    void rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
+    FORCE_INLINE void rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         y.device(*device) = y.cwiseMax(type(0));
 
@@ -210,7 +218,7 @@ protected:
 
 
     template <int Rank>
-    void leaky_rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx, type slope) const
+    FORCE_INLINE void leaky_rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx, type slope) const
     {
         y.device(*device) = (y > type(0)).select(y, slope * y);
 
@@ -221,7 +229,7 @@ protected:
 
 
     template <int Rank>
-    void scaled_exponential_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
+    FORCE_INLINE void scaled_exponential_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
         const type lambda = type(1.0507);
 
@@ -235,7 +243,7 @@ protected:
     }
 
     template <int Rank>
-    void softmax(TensorMapR<Rank> y) const
+    FORCE_INLINE void softmax(TensorMapR<Rank> y) const
     {
         // The size of the last dimension (channels/classes)
         const Index last_dim_size = y.dimension(Rank - 1);

@@ -47,15 +47,17 @@ struct Shape
         }
     }
 
-    const Index& operator[](size_t i) const {
+    const Index& operator[](size_t i) const noexcept
+    {
         return shape[i];
     }
 
-    Index& operator[](size_t i) {
+    Index& operator[](size_t i) noexcept
+    {
         return shape[i];
     }
 
-    Index& back()
+    Index& back() noexcept
     {
         return shape[rank - 1];
     }
@@ -154,15 +156,18 @@ struct Shape
         return os;
     }
 
-    bool operator==(const Shape& other) const noexcept {
+    bool operator==(const Shape& other) const noexcept
+    {
         if (rank != other.rank) return false;
-        for (size_t i = 0; i < rank; ++i) {
+
+        for (size_t i = 0; i < rank; ++i)
             if (shape[i] != other.shape[i]) return false;
-        }
+
         return true;
     }
 
-    bool operator!=(const Shape& other) const noexcept {
+    bool operator!=(const Shape& other) const noexcept
+    {
         return !(*this == other);
     }
 };
@@ -181,9 +186,15 @@ struct TensorView
         shape = new_shape;
     }
 
-    Index rank() const { return shape.size(); }
+    Index rank() const noexcept
+    {
+        return shape.size();
+    }
 
-    Index size() const { return shape.count(); }
+    Index size() const noexcept
+    {
+        return shape.count();
+    }
 
     void print() const
     {
