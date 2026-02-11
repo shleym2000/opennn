@@ -13,100 +13,138 @@
 namespace opennn
 {
 
-struct Shape {
-    static constexpr size_t MaxRank = 8;
+struct Shape
+{
+    static constexpr size_t MaxRank = 6;
     Index dims[MaxRank] = {0};
     size_t rank = 0;
 
-    // Constructores...
     Shape() noexcept = default;
-    Shape(std::initializer_list<Index> list) {
-        rank = std::min(list.size(), MaxRank);
+
+    Shape(initializer_list<Index> list)
+    {
+        rank = min(list.size(), MaxRank);
         size_t i = 0;
-        for (Index d : list) if (i < rank) dims[i++] = d;
+        for (Index d : list)
+            if (i < rank)
+                dims[i++] = d;
     }
 
-    Shape(size_t n, Index value) {
+    Shape(size_t n, Index value)
+    {
         rank = (n > MaxRank) ? MaxRank : n;
-        for (size_t i = 0; i < rank; ++i) {
-            dims[i] = value;
-        }
+
+        for (size_t i = 0; i < rank; ++i)
+            dims[i] = value;        
     }
 
-    // --- ACCESO DIRECTO ---
-
-    // Esto permite hacer: Index n = my_shape[0];
-    const Index& operator[](size_t i) const {
-        // assert(i < rank); // Opcional: para depuración
+    const Index& operator[](size_t i) const
+    {
+        // assert(i < rank);
         return dims[i];
     }
 
-    // Esto permite hacer: my_shape[0] = 128;
-    Index& operator[](size_t i) {
-        // assert(i < rank); // Opcional: para depuración
+    Index& operator[](size_t i)
+    {
+        // assert(i < rank);
         return dims[i];
     }
 
-    // El método back() que añadimos antes
-    Index& back() { return dims[rank - 1]; }
-    const Index& back() const { return dims[rank - 1]; }
+    Index& back()
+    {
+        return dims[rank - 1];
+    }
 
-    // --- MÉTODOS DE COMPATIBILIDAD ---
-    size_t size() const noexcept { return rank; }
+    const Index& back() const
+    {
+        return dims[rank - 1];
+    }
+
+    size_t size() const noexcept
+    {
+        return rank;
+    }
+
     bool empty() const noexcept { return rank == 0; }
-    Index* begin() noexcept { return dims; }
-    Index* end() noexcept { return dims + rank; }
-    const Index* begin() const noexcept { return dims; }
-    const Index* end() const noexcept { return dims + rank; }
 
-    void push_back(Index d) {
-        if (rank < MaxRank) dims[rank++] = d;
+    Index* begin() noexcept
+    {
+        return dims;
+    }
+
+    Index* end() noexcept
+    {
+        return dims + rank;
+    }
+
+    const Index* begin() const noexcept
+    {
+        return dims;
+    }
+
+    const Index* end() const noexcept
+    {
+        return dims + rank;
+    }
+
+    void push_back(Index d)
+    {
+        if (rank < MaxRank)
+            dims[rank++] = d;
     }
 
 
-    void insert(const Index* /*pos*/, const Index* first, const Index* last) {
-        while (first != last) {
+    void insert(const Index* /*pos*/, const Index* first, const Index* last)
+    {
+        while (first != last)
+        {
             this->push_back(*first);
             ++first;
         }
     }
 
 
-    Index count() const noexcept {
+    Index count() const noexcept
+    {
         if (rank == 0) return 0;
+
         Index total = 1;
-        for (size_t i = 0; i < rank; ++i) {
+
+        for (size_t i = 0; i < rank; ++i)
             total *= dims[i];
-        }
+
         return total;
     }
 
-    void clear() noexcept {
+    void clear() noexcept
+    {
         rank = 0;
     }
 
-
-    void resize(size_t n) {
-        if (n > MaxRank) {
-            // Esto es crítico para no corromper la pila (stack)
+    void resize(size_t n)
+    {
+        if (n > MaxRank)
             throw std::out_of_range("Shape::resize: rank exceeds MaxRank (8)");
-        }
+
         rank = n;
     }
 
 
-    void resize(size_t n, Index value) {
+    void resize(size_t n, Index value)
+    {
         resize(n);
-        for (size_t i = 0; i < rank; ++i) {
-            dims[i] = value;
-        }
+
+        for (size_t i = 0; i < rank; ++i)
+            dims[i] = value;        
     }
 
-    friend ostream& operator<<(ostream& os, const Shape& s) {
+    friend ostream& operator<<(ostream& os, const Shape& s)
+    {
         os << "[ ";
-        for (size_t i = 0; i < s.rank; ++i) {
+
+        for (size_t i = 0; i < s.rank; ++i)
             os << s.dims[i] << (i < s.rank - 1 ? ", " : " ");
-        }
+
         os << "]";
         return os;
     }
@@ -126,7 +164,10 @@ struct TensorView
         dims = new_shape;
     }
 
-    Index rank() const { return dims.size(); }
+    Index rank() const
+    {
+        return dims.size();
+    }
 
     Index size() const
     {
