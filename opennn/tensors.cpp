@@ -83,7 +83,7 @@ void divide_columns(const ThreadPoolDevice* device, TensorMap2 matrix, const Ten
 
 
 
-Tensor2 append_rows(const Tensor<type,2>& starting_matrix, const Tensor<type,2>& block)
+Tensor2 append_rows(const Tensor2& starting_matrix, const Tensor2& block)
 {
     if (starting_matrix.size() == 0)
         return block;
@@ -277,7 +277,7 @@ Index count_between(const Tensor1& vector,const type& minimum, const type& maxim
 }
 
 
-void set_row(Tensor<type,2>& matrix, const Tensor1& new_row, Index row_index)
+void set_row(Tensor2& matrix, const Tensor1& new_row, Index row_index)
 {
     const Index columns_number = new_row.size();
 
@@ -303,7 +303,7 @@ Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>& matrix,
 
     bool check_conditions = false;
 
-    Tensor<type,2> new_matrix(new_rows_number, columns_number);
+    Tensor2 new_matrix(new_rows_number, columns_number);
 
     Index row_index = 0;
 

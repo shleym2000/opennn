@@ -120,7 +120,7 @@ TEST_P(ConvolutionalLayerTest, ForwardPropagate)
     convolutional_layer.forward_propagate(input_views, forward_propagation, true);
 
     const TensorView output_view = forward_propagation->get_outputs();
-    const shape expected_output_dims = convolutional_layer.get_output_shape();
+    const Shape expected_output_dims = convolutional_layer.get_output_shape();
 
     ASSERT_EQ(output_view.dims.size(), 4);
     EXPECT_EQ(output_view.dims[0], batch_size);

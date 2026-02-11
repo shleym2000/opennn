@@ -246,9 +246,9 @@ TEST(MeanSquaredErrorTest, BackPropagateLm)
     BackPropagationLM back_propagation_lm(samples_number, &mean_squared_error);
     mean_squared_error.back_propagate_lm(batch, forward_propagation, back_propagation_lm);
 
-    const Tensor2 numerical_jacobian = mean_squared_error.calculate_numerical_jacobian();
-    const Tensor1 numerical_gradient = mean_squared_error.calculate_numerical_gradient();
-    const Tensor2 numerical_hessian = mean_squared_error.calculate_numerical_hessian();
+    Tensor2 numerical_jacobian = mean_squared_error.calculate_numerical_jacobian();
+    Tensor1 numerical_gradient = mean_squared_error.calculate_numerical_gradient();
+    Tensor2 numerical_hessian = mean_squared_error.calculate_numerical_hessian();
 
     EXPECT_NEAR(back_propagation_lm.error(), back_propagation.error(), type(1.0e-3));
     EXPECT_EQ(are_equal(back_propagation_lm.squared_errors_jacobian, numerical_jacobian), true);
