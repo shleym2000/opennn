@@ -356,7 +356,7 @@ void push_back(Tensor<T, 1, AlignedMax>& tensor, const T& value)
 string dimensions_to_string(const Shape&, const string& = " ");
 Shape string_to_dimensions(const string&, const string& = " ");
 
-Shape prepend(Index, const Shape&);
+Shape prepend(const Index&, const Shape&);
 
 Index get_size(const Shape&);
 
@@ -408,7 +408,7 @@ TensorMap2 tensor_map(const Tensor3&, Index);
 TensorMap3 tensor_map(const Tensor4&, Index);
 TensorMap2 tensor_map(const Tensor4&, Index, Index);
 
-TensorMap3 tensor_map_(const TensorMap4&, Index);
+TensorMap3 tensor_map_(const TensorMap4, Index);
 //TensorMap1 tensor_map_(const TensorMap2&, Index);
 
 template <Index rank>
