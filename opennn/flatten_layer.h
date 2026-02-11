@@ -234,12 +234,12 @@ struct FlattenForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const Shape output_shape = layer->get_output_shape();
-        outputs.dims = {batch_size, output_shape[0]};
+        outputs.shape = {batch_size, output_shape[0]};
     }
 
     void print() const override
     {
-        cout << "Flatten Outputs Dimensions:" << endl << outputs.dims << endl;
+        cout << "Flatten Outputs Dimensions:" << endl << outputs.shape << endl;
     }
 };
 
@@ -265,13 +265,13 @@ struct FlattenBackPropagation final : LayerBackPropagation
         input_gradients_memory[0].resize(full_input_shape.count());
         input_gradients.resize(1);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].dims = full_input_shape;
+        input_gradients[0].shape = full_input_shape;
     }
 
     void print() const override
     {
         /*
-        cout << "Flatten Deltas Dimensions:" << endl << input_gradients[0].dims << endl;
+        cout << "Flatten Deltas Dimensions:" << endl << input_gradients[0].shape << endl;
 */
     }
 };

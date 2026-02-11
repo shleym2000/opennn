@@ -25,7 +25,7 @@ Embedding::Embedding(const Shape& new_input_shape,
 
 Index Embedding::get_vocabulary_size() const
 {
-    return weights.dims[0];
+    return weights.shape[0];
 }
 
 
@@ -37,7 +37,7 @@ Index Embedding::get_sequence_length() const
 
 Index Embedding::get_embedding_dimension() const
 {
-    return weights.dims[1];
+    return weights.shape[1];
 }
 
 
@@ -69,7 +69,7 @@ void Embedding::set(const Index new_vocabulary_size,
     sequence_length = new_sequence_length;
     label = new_label;
 
-    weights.dims = {new_vocabulary_size, new_embedding_dimension};
+    weights.shape = {new_vocabulary_size, new_embedding_dimension};
 
     positional_encoding.resize(sequence_length, new_embedding_dimension);
     positional_encoding.setZero();
@@ -122,8 +122,8 @@ void Embedding::set_parameters_glorot()
 {
     if(weights.size() == 0) return;
 
-    const Index vocabulary_size = weights.dims[0];
-    const Index embedding_dimension = weights.dims[1];
+    const Index vocabulary_size = weights.shape[0];
+    const Index embedding_dimension = weights.shape[1];
 
     const type limit = sqrt(type(6.0) / (vocabulary_size + embedding_dimension));
 
@@ -164,7 +164,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
         {
             const Index token_id = inputs(sample_index, word_index);
 
-            if (token_id < 0 || token_id >= weights.dims[0])
+            if (token_id < 0 || token_id >= weights.shape[0])
                 throw runtime_error("Invalid token_id \n");
 
             const auto embedding = weights_map.chip(token_id, 0);
@@ -191,8 +191,8 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
     const Index embedding_dimension = get_embedding_dimension();
-    const Index batch_size = input_views[0].dims[0];
-    const Index sequence_length = input_views[0].dims[1];
+    const Index batch_size = input_views[0].shape[0];
+    const Index sequence_length = input_views[0].shape[1];
 
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 
@@ -237,9 +237,9 @@ void Embedding::print() const
          << "Sequence length: " << get_sequence_length() << endl
          << "Embedding dimension: " << get_embedding_dimension() << endl
          << "Dropout rate: " << dropout_rate << endl
-         << "Weights shape: " << weights.dims << endl;
+         << "Weights shape: " << weights.shape << endl;
 
-    cout << "Weights:\n " << weights.dims << endl;
+    cout << "Weights:\n " << weights.shape << endl;
     cout << "Positional encoding:\n" << positional_encoding << endl;
 }
 
@@ -287,7 +287,7 @@ void EmbeddingForwardPropagation::initialize()
     const Index sequence_length = embedding_layer->get_sequence_length();
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
 
-    outputs.dims = {batch_size, sequence_length, embedding_dimension};
+    outputs.shape = {batch_size, sequence_length, embedding_dimension};
 }
 
 
@@ -314,7 +314,7 @@ void EmbeddingBackPropagation::initialize()
     const Index embedding_dimension = embedding_layer->get_embedding_dimension();
     const Index vocabulary_size = embedding_layer->get_vocabulary_size();
 
-    weight_gradients.dims = {vocabulary_size, embedding_dimension};
+    weight_gradients.shape = {vocabulary_size, embedding_dimension};
 }
 
 

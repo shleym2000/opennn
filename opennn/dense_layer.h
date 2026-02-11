@@ -34,15 +34,15 @@ struct DenseForwardPropagation final : LayerForwardPropagation
         Shape full_output_dims = {batch_size};
         full_output_dims.insert(full_output_dims.end(), output_shape.begin(), output_shape.end());
 
-        outputs.dims = full_output_dims;
-        activation_derivatives.dims = full_output_dims;
+        outputs.shape = full_output_dims;
+        activation_derivatives.shape = full_output_dims;
 
         if (dense_layer->get_batch_normalization())
         {
             const Index outputs_number = dense_layer->get_outputs_number();
-            means.dims = {outputs_number};
-            standard_deviations.dims = {outputs_number};
-            normalized_outputs.dims = full_output_dims;
+            means.shape = {outputs_number};
+            standard_deviations.shape = {outputs_number};
+            normalized_outputs.shape = full_output_dims;
         }
     }
 
@@ -88,13 +88,13 @@ struct DenseBackPropagation final : LayerBackPropagation
         const Index outputs_number = layer->get_outputs_number();
         const Index inputs_number = layer->get_input_shape()[0];
 
-        bias_gradients.dims = {outputs_number};
-        weight_gradients.dims = {inputs_number, outputs_number};
+        bias_gradients.shape = {outputs_number};
+        weight_gradients.shape = {inputs_number, outputs_number};
 
         if (dense_layer->get_batch_normalization())
         {
-            gamma_gradients.dims = {outputs_number};
-            beta_gradients.dims = {outputs_number};
+            gamma_gradients.shape = {outputs_number};
+            beta_gradients.shape = {outputs_number};
         }
 
         const Shape input_shape = dense_layer->get_input_shape();
@@ -106,7 +106,7 @@ struct DenseBackPropagation final : LayerBackPropagation
         input_gradients_memory[0].resize(full_input_shape.count());
         input_gradients.resize(1);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].dims = full_input_shape;
+        input_gradients[0].shape = full_input_shape;
     }
 
 
@@ -157,9 +157,9 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         Shape input_shape_vec = {batch_size};
         input_shape_vec.insert(input_shape_vec.end(), layer_input_shape.begin(), layer_input_shape.end());
 
-        input_gradients[0].dims = input_shape_vec;
+        input_gradients[0].shape = input_shape_vec;
 
-        squared_errors_Jacobian.dims = {batch_size, parameters_number};
+        squared_errors_Jacobian.shape = {batch_size, parameters_number};
     }
 
     vector<TensorView*> get_workspace_views() override
@@ -223,7 +223,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_batch_normalization())
         {
-            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            Shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             batch_means.resize(batch_normalization_dims);
             bn_saved_inv_variance.resize(batch_normalization_dims);
@@ -374,7 +374,7 @@ public:
 
     Shape get_input_shape() const override
     {
-        return { weights.dims[0] };
+        return { weights.shape[0] };
     }
 
 
@@ -425,8 +425,8 @@ public:
         if (new_output_shape.size() != 1)
             throw runtime_error("Output shape size is not 1");
 
-        biases.dims = { new_output_shape[0] };
-        weights.dims = { new_input_shape[0], new_output_shape[0] };
+        biases.shape = { new_output_shape[0] };
+        weights.shape = { new_input_shape[0], new_output_shape[0] };
 
         set_activation_function(new_activation_function);
 
@@ -436,8 +436,8 @@ public:
 
         if (batch_normalization)
         {
-            gammas.dims = {outputs_number};
-            betas.dims = {outputs_number};
+            gammas.shape = {outputs_number};
+            betas.shape = {outputs_number};
             running_means.resize(outputs_number);
             running_standard_deviations.resize(outputs_number);
         }
@@ -453,7 +453,7 @@ public:
 
         if (batch_normalization)
         {
-            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            Shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             betas_device.set_descriptor(batch_normalization_dims);
             gammas_device.set_descriptor(batch_normalization_dims);
@@ -526,8 +526,8 @@ public:
         const Index inputs_number = new_input_shape[0];
         const Index outputs_number = get_outputs_number();
 
-        biases.dims = { outputs_number };
-        weights.dims = { inputs_number, outputs_number };
+        biases.shape = { outputs_number };
+        weights.shape = { inputs_number, outputs_number };
     }
 
 
@@ -536,8 +536,8 @@ public:
         const Index inputs_number = get_inputs_number();
         const Index neurons_number = new_output_shape[0];
 
-        biases.dims = { neurons_number };
-        weights.dims = { inputs_number, neurons_number };
+        biases.shape = { neurons_number };
+        weights.shape = { inputs_number, neurons_number };
     }
 
 

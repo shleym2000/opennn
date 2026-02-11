@@ -16,7 +16,7 @@ namespace opennn
 struct Shape
 {
     static constexpr size_t MaxRank = 6;
-    Index dims[MaxRank] = {0};
+    Index shape[MaxRank] = {0};
     size_t rank = 0;
 
     Shape() noexcept = default;
@@ -27,7 +27,7 @@ struct Shape
         size_t i = 0;
         for (Index d : list)
             if (i < rank)
-                dims[i++] = d;
+                shape[i++] = d;
     }
 
     Shape(size_t n, Index value)
@@ -35,29 +35,34 @@ struct Shape
         rank = (n > MaxRank) ? MaxRank : n;
 
         for (size_t i = 0; i < rank; ++i)
-            dims[i] = value;        
+            shape[i] = value;
     }
 
-    const Index& operator[](size_t i) const
-    {
-        // assert(i < rank);
-        return dims[i];
+    template<typename InputIt, typename = typename enable_if<!is_integral<InputIt>::value>::type>
+    Shape(InputIt first, InputIt last) {
+        rank = 0;
+        while (first != last && rank < MaxRank) {
+            shape[rank++] = static_cast<Index>(*first);
+            ++first;
+        }
     }
 
-    Index& operator[](size_t i)
-    {
-        // assert(i < rank);
-        return dims[i];
+    const Index& operator[](size_t i) const {
+        return shape[i];
+    }
+
+    Index& operator[](size_t i) {
+        return shape[i];
     }
 
     Index& back()
     {
-        return dims[rank - 1];
+        return shape[rank - 1];
     }
 
     const Index& back() const
     {
-        return dims[rank - 1];
+        return shape[rank - 1];
     }
 
     size_t size() const noexcept
@@ -69,28 +74,28 @@ struct Shape
 
     Index* begin() noexcept
     {
-        return dims;
+        return shape;
     }
 
     Index* end() noexcept
     {
-        return dims + rank;
+        return shape + rank;
     }
 
     const Index* begin() const noexcept
     {
-        return dims;
+        return shape;
     }
 
     const Index* end() const noexcept
     {
-        return dims + rank;
+        return shape + rank;
     }
 
     void push_back(Index d)
     {
         if (rank < MaxRank)
-            dims[rank++] = d;
+            shape[rank++] = d;
     }
 
 
@@ -111,7 +116,7 @@ struct Shape
         Index total = 1;
 
         for (size_t i = 0; i < rank; ++i)
-            total *= dims[i];
+            total *= shape[i];
 
         return total;
     }
@@ -135,7 +140,7 @@ struct Shape
         resize(n);
 
         for (size_t i = 0; i < rank; ++i)
-            dims[i] = value;        
+            shape[i] = value;
     }
 
     friend ostream& operator<<(ostream& os, const Shape& s)
@@ -143,10 +148,22 @@ struct Shape
         os << "[ ";
 
         for (size_t i = 0; i < s.rank; ++i)
-            os << s.dims[i] << (i < s.rank - 1 ? ", " : " ");
+            os << s.shape[i] << (i < s.rank - 1 ? ", " : " ");
 
         os << "]";
         return os;
+    }
+
+    bool operator==(const Shape& other) const noexcept {
+        if (rank != other.rank) return false;
+        for (size_t i = 0; i < rank; ++i) {
+            if (shape[i] != other.shape[i]) return false;
+        }
+        return true;
+    }
+
+    bool operator!=(const Shape& other) const noexcept {
+        return !(*this == other);
     }
 };
 
@@ -154,54 +171,42 @@ struct Shape
 struct TensorView
 {
     type* data = nullptr;
-    Shape dims;
+    Shape shape;
 
     TensorView() noexcept = default;
 
     TensorView(type* new_data, const Shape& new_shape) noexcept
     {
         data = new_data;
-        dims = new_shape;
+        shape = new_shape;
     }
 
-    Index rank() const
-    {
-        return dims.size();
-    }
+    Index rank() const { return shape.size(); }
 
-    Index size() const
-    {
-        if (dims.empty()) return 0;
-
-        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
-    }
+    Index size() const { return shape.count(); }
 
     void print() const
     {
-        if(!data || dims.empty())
+        if(!data || shape.empty())
         {
             cout << "TensorView: Empty or Null" << endl;
             return;
         }
 
-        cout << "Dims: (";
-        for(size_t i = 0; i < dims.size(); ++i)
-            cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
-
-        cout << ")" << endl;
+        cout << "Shape: " << shape << endl;
 
         const Index total_size = size();
-        const Index last_dim_stride = dims.back();
+        const Index last_dim_stride = shape.back();
 
         for(Index i = 0; i < total_size; ++i)
         {
             cout << data[i] << " ";
 
-            if (dims.size() > 1 && (i + 1) % last_dim_stride == 0)
+            if (shape.size() > 1 && (i + 1) % last_dim_stride == 0)
                 cout << endl;
         }
 
-        if (dims.size() == 1 || total_size % last_dim_stride != 0)
+        if (shape.size() == 1 || total_size % last_dim_stride != 0)
             cout << endl;
     }
 };
@@ -394,8 +399,8 @@ void push_back(Tensor<T, 1, AlignedMax>& tensor, const T& value)
     tensor = new_tensor;
 }
 
-string dimensions_to_string(const Shape&, const string& = " ");
-Shape string_to_dimensions(const string&, const string& = " ");
+string shape_to_string(const Shape&, const string& = " ");
+Shape string_to_shape(const string&, const string& = " ");
 
 Shape prepend(const Index&, const Shape&);
 
@@ -465,29 +470,29 @@ TensorMapR<rank> tensor_map(const TensorView& tensor_view)
     if constexpr (rank == 2)
         if (tensor_view.rank() == 4)
             return TensorMap2(tensor_view.data,
-                              tensor_view.dims[0],
-                              tensor_view.size() / tensor_view.dims[0]);
+                              tensor_view.shape[0],
+                              tensor_view.size() / tensor_view.shape[0]);
 
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap1(tensor_view.data, tensor_view.dims[0]);
+        return TensorMap1(tensor_view.data, tensor_view.shape[0]);
     else if constexpr (rank == 2)
         return TensorMap2(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1]);
     else if constexpr (rank == 3)
         return TensorMap3(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1],
-                          tensor_view.dims[2]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2]);
     else if constexpr (rank == 4)
         return TensorMap4(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1],
-                          tensor_view.dims[2],
-                          tensor_view.dims[3]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2],
+                          tensor_view.shape[3]);
     else
         static_assert(rank >= 1 && rank <= 4, "Unsupported tensor rank");
 }
@@ -556,24 +561,19 @@ bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
 }
 
 
-template <typename Type, int Rank>
+template <int Rank>
 bool are_equal(const TensorR<Rank>& tensor_1,
                const TensorR<Rank>& tensor_2,
-               const Type& tolerance = 0.001)
+               const type& tolerance = type(1.0e-3))
 {
     if (tensor_1.size() != tensor_2.size())
-        throw runtime_error("Tensor sizes are different");
+        throw runtime_error("are_equal: Tensor sizes are different.");
 
     const Index size = tensor_1.size();
 
     for(Index i = 0; i < size; i++)
-        if constexpr (is_same_v<Type, bool>)
-        {
-            if (tensor_1(i) != tensor_2(i))
-                return false;
-            else if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
-                return false;
-        }
+        if(abs(tensor_1(i) - tensor_2(i)) > tolerance)
+            return false;
 
     return true;
 }
@@ -595,7 +595,7 @@ struct TensorViewCuda
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
-    void set_descriptor(const Shape& dims)
+    void set_descriptor(const Shape& shape)
     {
         if (descriptor_handle == nullptr)
         {
@@ -609,10 +609,10 @@ struct TensorViewCuda
         }
 
         int n = 1, c = 1, h = 1, w = 1;
-        if (dims.size() > 0) n = static_cast<int>(dims[0]);
-        if (dims.size() > 1) c = static_cast<int>(dims[1]);
-        if (dims.size() > 2) h = static_cast<int>(dims[2]);
-        if (dims.size() > 3) w = static_cast<int>(dims[3]);
+        if (shape.size() > 0) n = static_cast<int>(shape[0]);
+        if (shape.size() > 1) c = static_cast<int>(shape[1]);
+        if (shape.size() > 2) h = static_cast<int>(shape[2]);
+        if (shape.size() > 3) w = static_cast<int>(shape[3]);
 
         CHECK_CUDNN(cudnnSetTensor4dDescriptor(descriptor_handle.get(), CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w));
     }
@@ -642,7 +642,7 @@ struct TensorCuda
     shared_ptr<cudnnTensorStruct> descriptor_handle = nullptr;
 
     TensorCuda() = default;
-    explicit TensorCuda(const Shape& dims) { resize(dims); }
+    explicit TensorCuda(const Shape& shape) { resize(shape); }
 
     ~TensorCuda() { if (data) cudaFree(data); }
 
@@ -673,9 +673,9 @@ struct TensorCuda
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
-    void resize(const Shape& dims)
+    void resize(const Shape& shape)
     {
-        set_descriptor(dims);
+        set_descriptor(shape);
         const size_t total_elements = size();
         const size_t bytes = total_elements * sizeof(float);
         if (data) cudaFree(data);
@@ -683,7 +683,7 @@ struct TensorCuda
         CHECK_CUDA(cudaMemset(data, 0, bytes));
     }
 
-    void set_descriptor(const Shape& dims)
+    void set_descriptor(const Shape& shape)
     {
         if (descriptor_handle == nullptr)
         {
@@ -697,10 +697,10 @@ struct TensorCuda
         }
 
         int n = 1, c = 1, h = 1, w = 1;
-        if (dims.size() > 0) n = static_cast<int>(dims[0]);
-        if (dims.size() > 1) c = static_cast<int>(dims[1]);
-        if (dims.size() > 2) h = static_cast<int>(dims[2]);
-        if (dims.size() > 3) w = static_cast<int>(dims[3]);
+        if (shape.size() > 0) n = static_cast<int>(shape[0]);
+        if (shape.size() > 1) c = static_cast<int>(shape[1]);
+        if (shape.size() > 2) h = static_cast<int>(shape[2]);
+        if (shape.size() > 3) w = static_cast<int>(shape[3]);
 
         CHECK_CUDNN(cudnnSetTensor4dDescriptor(descriptor_handle.get(), CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w));
     }

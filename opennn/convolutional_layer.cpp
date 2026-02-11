@@ -14,9 +14,9 @@ namespace opennn
 {
 
 Convolutional::Convolutional(const Shape& new_input_shape,
-                             const Shape& new_kernel_dimensions,
+                             const Shape& new_kernel_shape,
                              const string& new_activation_function,
-                             const Shape& new_stride_dimensions,
+                             const Shape& new_stride_shape,
                              const string& new_convolution_type,
                              bool new_batch_normaliztion,
                              const string& new_name) : Layer()
@@ -24,9 +24,9 @@ Convolutional::Convolutional(const Shape& new_input_shape,
     name = "Convolutional";
 
     set(new_input_shape,
-        new_kernel_dimensions,
+        new_kernel_shape,
         new_activation_function,
-        new_stride_dimensions,
+        new_stride_shape,
         new_convolution_type,
         new_batch_normaliztion,
         new_name);
@@ -299,25 +299,25 @@ Index Convolutional::get_row_stride() const
 
 Index Convolutional::get_kernel_height() const
 {
-    return weights.dims[0];
+    return weights.shape[0];
 }
 
 
 Index Convolutional::get_kernel_width() const
 {
-    return weights.dims[1];
+    return weights.shape[1];
 }
 
 
 Index Convolutional::get_kernel_channels() const
 {
-    return weights.dims[2];
+    return weights.shape[2];
 }
 
 
 Index Convolutional::get_kernels_number() const
 {
-    return weights.dims[3];
+    return weights.shape[3];
 }
 
 
@@ -358,47 +358,47 @@ Index Convolutional::get_padding_width() const
 
 
 void Convolutional::set(const Shape& new_input_shape,
-                        const Shape& new_kernel_dimensions,
+                        const Shape& new_kernel_shape,
                         const string& new_activation_function,
-                        const Shape& new_stride_dimensions,
+                        const Shape& new_stride_shape,
                         const string& new_convolution_type,
                         bool new_batch_normalization,
                         const string& new_label)
 {
-    if(new_kernel_dimensions.size() != 4)
+    if(new_kernel_shape.size() != 4)
         throw runtime_error("Kernel shape must be 4");
 
-    if (new_stride_dimensions.size() != 2)
+    if (new_stride_shape.size() != 2)
         throw runtime_error("Stride shape must be 2");
 
-    if (new_kernel_dimensions[0] > new_input_shape[0] || new_kernel_dimensions[1] > new_input_shape[1])
+    if (new_kernel_shape[0] > new_input_shape[0] || new_kernel_shape[1] > new_input_shape[1])
         throw runtime_error("kernel shape cannot be bigger than input shape");
 
-    if (new_kernel_dimensions[2] != new_input_shape[2])
+    if (new_kernel_shape[2] != new_input_shape[2])
         throw runtime_error("kernel_channels must match input_channels dimension");
 
-    if (new_stride_dimensions[0] > new_input_shape[0] || new_stride_dimensions[1] > new_input_shape[1])
+    if (new_stride_shape[0] > new_input_shape[0] || new_stride_shape[1] > new_input_shape[1])
         throw runtime_error("Stride shape cannot be bigger than input shape");
 
-    if (new_convolution_type == "Same" && (new_kernel_dimensions[0] % 2 == 0 || new_kernel_dimensions[1] % 2 == 0))
+    if (new_convolution_type == "Same" && (new_kernel_shape[0] % 2 == 0 || new_kernel_shape[1] % 2 == 0))
         throw runtime_error("Kernel shape (height and width) must be odd (3x3,5x5 etc) when using 'Same' padding mode to ensure symmetric padding.");
 
     input_shape = new_input_shape;
 
-    const Index kernel_height = new_kernel_dimensions[0];
-    const Index kernel_width = new_kernel_dimensions[1];
-    const Index kernel_channels = new_kernel_dimensions[2];
-    const Index kernels_number = new_kernel_dimensions[3];
+    const Index kernel_height = new_kernel_shape[0];
+    const Index kernel_width = new_kernel_shape[1];
+    const Index kernel_channels = new_kernel_shape[2];
+    const Index kernels_number = new_kernel_shape[3];
 
-    set_row_stride(new_stride_dimensions[0]);
-    set_column_stride(new_stride_dimensions[1]);
+    set_row_stride(new_stride_shape[0]);
+    set_column_stride(new_stride_shape[1]);
 
     set_activation_function(new_activation_function);
 
     set_convolution_type(new_convolution_type);
 
-    biases.dims = {kernels_number};
-    weights.dims = {kernel_height, kernel_width, kernel_channels, kernels_number};
+    biases.shape = {kernels_number};
+    weights.shape = {kernel_height, kernel_width, kernel_channels, kernels_number};
 
     batch_normalization = new_batch_normalization;
 
@@ -407,13 +407,13 @@ void Convolutional::set(const Shape& new_input_shape,
         running_means.resize(kernels_number);
         running_standard_deviations.resize(kernels_number);
 
-        gammas.dims = {kernels_number};
-        betas.dims = {kernels_number};
+        gammas.shape = {kernels_number};
+        betas.shape = {kernels_number};
     }
     else
     {
-        gammas.dims.clear();
-        betas.dims.clear();
+        gammas.shape.clear();
+        betas.shape.clear();
     }
 
     set_label(new_label);
@@ -425,7 +425,7 @@ void Convolutional::set(const Shape& new_input_shape,
 
     if (batch_normalization)
     {
-        const shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
+        const Shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
 
         gammas_device.set_descriptor(batch_normalization_dims);
         betas_device.set_descriptor(batch_normalization_dims);
@@ -558,18 +558,7 @@ void Convolutional::set_parameters_random()
     if (weights.size() > 0)
     {
         TensorMap1 weights_map(weights.data, weights.size());
-
-        if (activation_function == "RectifiedLinear" ||
-            activation_function == "ScaledExponentialLinear")
-        {
-            const Index fan_in = get_kernel_height() * get_kernel_width() * get_kernel_channels();
-
-            const type limit = sqrt(6.0f / static_cast<type>(fan_in));
-
-            set_random_uniform(weights_map, -limit, limit);
-        }
-        else
-            set_random_uniform(weights_map);
+        set_random_uniform(weights_map);
     }
 
     if (batch_normalization)
@@ -639,8 +628,8 @@ void Convolutional::print() const
     cout << "Convolutional layer" << endl
          << "Input shape: " << input_shape << endl
          << "Output shape: " << get_output_shape() << endl
-         << "Biases shape: " << biases.dims << endl
-         << "Weights shape: " << weights.dims << endl
+         << "Biases shape: " << biases.shape << endl
+         << "Weights shape: " << weights.shape << endl
          << "biases:" << endl;
     //cout << biases << endl;
     cout << "Weights:" << endl;
@@ -653,13 +642,13 @@ void Convolutional::to_XML(XMLPrinter& printer) const
     printer.OpenElement("Convolutional");
 
     add_xml_element(printer, "Label", label);
-    add_xml_element(printer, "InputDimensions", dimensions_to_string(input_shape));
+    add_xml_element(printer, "InputDimensions", shape_to_string(input_shape));
     add_xml_element(printer, "KernelsNumber", to_string(get_kernels_number()));
     add_xml_element(printer, "KernelsHeight", to_string(get_kernel_height()));
     add_xml_element(printer, "KernelsWidth", to_string(get_kernel_width()));
     add_xml_element(printer, "KernelsChannels", to_string(get_kernel_channels()));
     add_xml_element(printer, "Activation", activation_function);
-    add_xml_element(printer, "StrideDimensions", dimensions_to_string({ get_column_stride(), get_row_stride() }));
+    add_xml_element(printer, "StrideDimensions", shape_to_string({ get_column_stride(), get_row_stride() }));
     add_xml_element(printer, "Convolution", convolution_type);
     add_xml_element(printer, "BatchNormalization", to_string(batch_normalization));
 /*
@@ -684,13 +673,13 @@ void Convolutional::from_XML(const XMLDocument& document)
 
     set_label(read_xml_string(convolutional_layer_element, "Label"));
 
-    set_input_shape(string_to_dimensions(read_xml_string(convolutional_layer_element, "InputDimensions")));
+    set_input_shape(string_to_shape(read_xml_string(convolutional_layer_element, "InputDimensions")));
 
     set_activation_function(read_xml_string(convolutional_layer_element, "Activation"));
 
-    const Shape stride_dimensions = string_to_dimensions(read_xml_string(convolutional_layer_element, "StrideDimensions"));
-    set_column_stride(stride_dimensions[0]);
-    set_row_stride(stride_dimensions[1]);
+    const Shape stride_shape = string_to_shape(read_xml_string(convolutional_layer_element, "StrideDimensions"));
+    set_column_stride(stride_shape[0]);
+    set_row_stride(stride_shape[1]);
 
     set_convolution_type(read_xml_string(convolutional_layer_element, "Convolution"));
 
@@ -750,16 +739,16 @@ void ConvolutionalForwardPropagation::initialize()
                                input_width + (padding_width*2),
                                input_channels);
 
-    outputs.dims = {batch_size, output_height, output_width, kernels_number};
+    outputs.shape = {batch_size, output_height, output_width, kernels_number};
 
-    activation_derivatives.dims = { batch_size, output_height, output_width, kernels_number };
+    activation_derivatives.shape = { batch_size, output_height, output_width, kernels_number };
 
     // Batch Normalization
 
     if (convolutional_layer->get_batch_normalization())
     {
-        means.dims = { kernels_number };
-        standard_deviations.dims = { kernels_number };
+        means.shape = { kernels_number };
+        standard_deviations.shape = { kernels_number };
     } 
 }
 
@@ -781,9 +770,9 @@ void ConvolutionalForwardPropagation::print() const
 {
     cout << "Convolutional layer shape" << endl
          << "Outputs:" << endl
-         << outputs.dims << endl
+         << outputs.shape << endl
          << "Activation derivatives:" << endl
-         << activation_derivatives.dims << endl;
+         << activation_derivatives.shape << endl;
 }
 
 
@@ -807,9 +796,9 @@ void ConvolutionalBackPropagation::initialize()
     const Index kernel_channels = convolutional_layer->get_kernel_channels();
     const Index kernels_number = convolutional_layer->get_kernels_number();
 
-    bias_gradients.dims = {kernels_number};
+    bias_gradients.shape = {kernels_number};
 
-    weight_gradients.dims = { kernel_height, kernel_width, kernel_channels, kernels_number };
+    weight_gradients.shape = { kernel_height, kernel_width, kernel_channels, kernels_number };
 
     rotated_weights.resize(kernel_height,
                            kernel_width,
@@ -820,14 +809,14 @@ void ConvolutionalBackPropagation::initialize()
     input_gradients_memory[0].resize(Shape({ batch_size, input_height, input_width, channels }).count());
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
-    input_gradients[0].dims = { batch_size, input_height, input_width, channels };
+    input_gradients[0].shape = { batch_size, input_height, input_width, channels };
 
     // Batch Normalization
 
     if (convolutional_layer->get_batch_normalization())
     {
-        gamma_gradients.dims = {kernels_number};
-        beta_gradients.dims = {kernels_number};
+        gamma_gradients.shape = {kernels_number};
+        beta_gradients.shape = {kernels_number};
     }
 }
 
@@ -849,9 +838,9 @@ void ConvolutionalBackPropagation::print() const
 {
     cout << "Convolutional layer back propagation shape" << endl
          << "Biases derivatives:\n" << endl
-         << bias_gradients.dims << endl
+         << bias_gradients.shape << endl
          << "Synaptic weights derivatives:\n" << endl
-         << weight_gradients.dims << endl;
+         << weight_gradients.shape << endl;
 }
 
 
@@ -1238,7 +1227,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
+        Shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
 
         batch_means.resize(batch_normalization_dims);
         bn_saved_inv_variance.resize(batch_normalization_dims);
@@ -1248,7 +1237,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
 void ConvolutionalForwardPropagationCuda::print() const
 {
-    const shape output_shape = layer->get_output_shape();
+    const Shape output_shape = layer->get_output_shape();
 
     cout << layer->get_name() + " forward propagation" << endl;
 
@@ -1408,7 +1397,7 @@ vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views_de
 
 void ConvolutionalBackPropagationCuda::print() const
 {
-    const shape input_shape = layer->get_input_shape();
+    const Shape input_shape = layer->get_input_shape();
 
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 

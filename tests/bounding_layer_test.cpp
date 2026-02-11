@@ -43,7 +43,7 @@ TEST(BoundingTest, ForwardPropagate)
         make_unique<BoundingForwardPropagation>(rows_number, &bounding_layer);
 
     auto eigen_dimensions = inputs.dimensions();
-    shape dims_vector(eigen_dimensions.begin(), eigen_dimensions.end());
+    Shape dims_vector(eigen_dimensions.begin(), eigen_dimensions.end());
 
     TensorView input_view(inputs.data(), dims_vector);
 

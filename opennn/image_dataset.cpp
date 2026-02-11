@@ -296,7 +296,7 @@ Tensor2 ImageDataset::perform_augmentation(const Tensor2& input_tensor)
 {
     throw runtime_error("Image Augmentation is not yet implemented. Please check back in a future version.");
 /*
-    const shape input_shape = get_shape("Input");
+    const Shape input_shape = get_shape("Input");
 
     const Index samples_number = input_shape[0];
 //    const Index input_height = input_shape[0];

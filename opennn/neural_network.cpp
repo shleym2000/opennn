@@ -1044,7 +1044,7 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
 
         // @todo fix this change from vector to Shape
 /*
-        const vector<Index> input_index = string_to_dimensions(string(text), " ");
+        const vector<Index> input_index = string_to_shape(string(text), " ");
         if((size_t)layer_index >= layer_input_indices.size())
             layer_input_indices.push_back(input_index);
 */

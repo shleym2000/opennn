@@ -16,7 +16,7 @@ TEST(StatisticsTest, CountEmptyBins)
     // Test
 
     Tensor1 centers;
-    Tensor<Index, 1> frecuencies;
+    Tensor1 frecuencies;
 
     centers.resize(3);
     centers.setValues({ type(1),type(2),type(3) });
@@ -64,7 +64,7 @@ TEST(StatisticsTest, CalculateMinimumFrequency)
     Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
-    Tensor<Index, 1> frecuencies(3);
+    Tensor1 frecuencies(3);
     frecuencies.setValues({1,1,0});
 
     Histogram histogram_1(centers,frecuencies);
@@ -108,7 +108,7 @@ TEST(StatisticsTest, CalculateMaximumFrequency)
     Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
-    Tensor<Index, 1> frecuencies(3);
+    Tensor1 frecuencies(3);
     frecuencies.setValues({1,0,1});
 
     Histogram histogram_1(centers,frecuencies);
@@ -138,7 +138,7 @@ TEST(StatisticsTest, CalculateMostPopulatedBin)
     Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
-    Tensor<Index, 1> frecuencies(3);
+    Tensor1 frecuencies(3);
     frecuencies.setValues({0,0,1});
 
     Histogram histogram_1(centers,frecuencies);
@@ -177,7 +177,7 @@ TEST(StatisticsTest, CalculateMinimalCenters)
     Tensor1 centers(7);
     centers.setValues({ type(1),type(2),type(4),type(6),type(7),type(8), type(12) });
 
-    Tensor<Index, 1> frecuencies(7);
+    Tensor1 frecuencies(7);
     frecuencies.setValues({ 6,2,2,1,1,1,1 });
     
     Histogram histogram(centers, frecuencies);
@@ -245,7 +245,7 @@ TEST(StatisticsTest, CalculateMaximalCenters)
     Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
-    Tensor<Index, 1> frecuencies(3);
+    Tensor1 frecuencies(3);
     frecuencies.setValues({1,1,0});
 
     Histogram histogram_1(centers,frecuencies);
@@ -267,7 +267,7 @@ TEST(StatisticsTest, CalculateBin)
     Tensor1 centers(3);
     centers.setValues({ type(2),type(4),type(6)});
 
-    Tensor<Index, 1> frecuencies(3);
+    Tensor1 frecuencies(3);
     frecuencies.setValues({0,0,0});
 
     Histogram histogram_1(centers,frecuencies);
@@ -298,7 +298,7 @@ TEST(StatisticsTest, CalculateFrequency)
     Tensor1 centers(3);
     centers.setValues({type(1),type(2),type(3)});
 
-    Tensor<Index, 1> frecuencies(3);
+    Tensor1 frecuencies(3);
     frecuencies.setValues({0,1,2});
 
     Histogram histogram_1(centers,frecuencies);
@@ -792,7 +792,7 @@ TEST(StatisticsTest, Histogram)
     Tensor1 vector;
 
     Tensor1 centers;
-    Tensor<Index, 1> frequencies;
+    Tensor1 frequencies;
     
     // Test
 
@@ -826,7 +826,7 @@ TEST(StatisticsTest, Histogram)
     EXPECT_EQ(frequencies[8], 1);
     EXPECT_EQ(frequencies[9], 2);
 
-    Tensor<Index, 0> sum_frec_1 = frequencies.sum();
+    Tensor<type, 0> sum_frec_1 = frequencies.sum();
 
     EXPECT_EQ(sum_frec_1(0), 11);
 
@@ -840,7 +840,7 @@ TEST(StatisticsTest, Histogram)
     centers = histogram_2.centers;
     frequencies = histogram_2.frequencies;
 
-    Tensor<Index, 0> sum_frec_2;
+    Tensor<type, 0> sum_frec_2;
     sum_frec_2 = frequencies.sum();
 
     EXPECT_EQ(sum_frec_2(0), 20);

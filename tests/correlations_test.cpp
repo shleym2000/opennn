@@ -330,7 +330,7 @@ TEST_F(CorrelationsTest, Autocorrelation)
     Index size = 1000;
     Tensor <type, 1> x(size);
     Tensor <type, 1> y;
-    Tensor <type, 1> correlation;
+    Tensor1 correlation;
 
     for(Index i = 0; i < size; i++)
     {

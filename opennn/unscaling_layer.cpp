@@ -316,14 +316,14 @@ void UnscalingForwardPropagation::initialize()
 {
     const Shape output_shape = static_cast<Unscaling*>(layer)->get_output_shape();
 
-    outputs.dims = {batch_size, output_shape[0]};
+    outputs.shape = {batch_size, output_shape[0]};
 }
 
 
 void UnscalingForwardPropagation::print() const
 {
     cout << "Outputs:" << endl
-         << outputs.dims << endl;
+         << outputs.shape << endl;
 }
 
 REGISTER(Layer, Unscaling, "Unscaling")

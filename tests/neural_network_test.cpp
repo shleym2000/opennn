@@ -143,7 +143,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     TensorView dense_activations = dense_layer_forward_propagation->outputs;
 
-    EXPECT_EQ(dense_activations.dims[0], 5);
+    EXPECT_EQ(dense_activations.shape[0], 5);
 
     ClassificationNetwork neural_network_classification({inputs_number}, {neurons_number}, {outputs_number});
 
@@ -159,7 +159,7 @@ TEST(NeuralNetworkTest, ForwardPropagate)
 
     TensorView dense_activations_0 = dense_layer_forward_propagation_0->outputs;
 
-    EXPECT_EQ(dense_activations_0.dims[0], 5);
+    EXPECT_EQ(dense_activations_0.shape[0], 5);
 }
 
 

@@ -235,7 +235,7 @@ public:
         {
             if (output_view.rank() == 4)
             {
-                const Index batch_size = output_view.dims[0];
+                const Index batch_size = output_view.shape[0];
                 const Index features = output_view.size() / batch_size;
 
                 if (reinterpret_cast<uintptr_t>(output_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)

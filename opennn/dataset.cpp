@@ -314,7 +314,10 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
     if(shuffle)
     {
         samples_copy = sample_indices;
-        shuffle_vector_blocks(samples_copy);
+        if (dynamic_cast<const ImageDataset*>(this) != nullptr)
+            shuffle_vector(samples_copy);
+        else
+            shuffle_vector_blocks(samples_copy);
     }
 
     const vector<Index>& samples = shuffle ? samples_copy : sample_indices;
@@ -535,6 +538,7 @@ void Dataset::set_default_variables_roles()
     }
 }
 
+
 vector<Index> Dataset::get_feature_dimensions() const
 {
     vector<Index> number_categories;
@@ -545,11 +549,11 @@ vector<Index> Dataset::get_feature_dimensions() const
         if(variable.role == "None" || variable.role == "Time")
             continue;
 
-        if(variable.is_categorical())
-            number_categories.push_back(variable.get_categories_number());
-        else
-            number_categories.push_back(1);
+        variable.is_categorical()
+            ? number_categories.push_back(variable.get_categories_number())
+            : number_categories.push_back(1);
     }
+
     return number_categories;
 }
 
@@ -959,7 +963,7 @@ void Dataset::set_variable_indices(const vector<Index>& input_variables,
     }
 
     const Index input_dimensions_num = get_features_number("Input");
-    const Index target_dimensions_num = get_features_number("Target");
+    const Index target_shape_num = get_features_number("Target");
 
     TimeSeriesDataset* ts_dataset = dynamic_cast<TimeSeriesDataset*>(this);
 
@@ -968,7 +972,7 @@ void Dataset::set_variable_indices(const vector<Index>& input_variables,
     else
         set_shape("Input", {input_dimensions_num});
 
-    set_shape("Target", {target_dimensions_num});
+    set_shape("Target", {target_shape_num});
 }
 
 
@@ -1916,7 +1920,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
         {
             const Index categories_number = variable.get_categories_number();
 
-            Tensor<Index, 1> categories_frequencies(categories_number);
+            Tensor1 categories_frequencies(categories_number);
             categories_frequencies.setZero();
             Tensor1 centers(categories_number);
 
@@ -1940,7 +1944,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
 
         case VariableType::Binary:
         {
-            Tensor<Index, 1> binary_frequencies(2);
+            Tensor1 binary_frequencies(2);
             binary_frequencies.setZero();
 
             for(Index j = 0; j < used_samples_number; j++)
@@ -4430,11 +4434,11 @@ void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 
     // Targets
 
-    const Shape& data_set_target_dimensions = dataset->get_shape("Target");
+    const Shape& data_set_target_shape = dataset->get_shape("Target");
 
-    if(!data_set_target_dimensions.empty())
+    if(!data_set_target_shape.empty())
     {
-        target_shape = prepend(samples_number, data_set_target_dimensions);
+        target_shape = prepend(samples_number, data_set_target_shape);
         target_tensor.resize(get_size(target_shape));
     }
 
@@ -4556,7 +4560,7 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
 
     const Shape& data_set_input_dimensions = dataset->get_shape("Input");
     //const Shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
-    const Shape& data_set_target_dimensions = dataset->get_shape("Target");
+    const Shape& data_set_target_shape = dataset->get_shape("Target");
 
     if(!data_set_input_dimensions.empty())
     {
@@ -4581,13 +4585,13 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));
     }
     */
-    if(!data_set_target_dimensions.empty())
+    if(!data_set_target_shape.empty())
     {
         num_target_features = dataset->get_features_number("Target");
         const Index target_size = samples_number * num_target_features;
 
         target_shape = { samples_number };
-        target_shape.insert(target_shape.end(), data_set_target_dimensions.begin(), data_set_target_dimensions.end());
+        target_shape.insert(target_shape.end(), data_set_target_shape.begin(), data_set_target_shape.end());
 
         targets_host.resize(target_size);
         targets_device.resize({samples_number, num_target_features});
