@@ -2213,7 +2213,6 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
     const Index confusion_matrix_size = (outputs_number == 1) ? 3 : (outputs_number + 1);
 
     Tensor<Index, 2> total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
-
     total_confusion_matrix.setZero();
 
     BatchCuda testing_batch(batch_size, dataset);
@@ -2229,7 +2228,6 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
 
         if (current_batch_size != batch_size)
         {
-        //    testing_batch.free();
             testing_forward_propagation.free();
             testing_batch.set(current_batch_size, dataset);
             testing_forward_propagation.set(current_batch_size, neural_network);
