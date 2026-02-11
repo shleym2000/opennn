@@ -68,7 +68,7 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
     NeuralNetwork neural_network;
 
     neural_network.add_layer(make_unique<Embedding>(
-        shape{vocabulary_size, sequence_length},
+        Shape{vocabulary_size, sequence_length},
         embedding_dimension,
         "embedding_layer"
         ));

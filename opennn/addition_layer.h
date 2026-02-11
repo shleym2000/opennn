@@ -267,8 +267,8 @@ struct AdditionForwardPropagationCuda : public LayerForwardPropagationCuda
 
     void initialize() override
     {
-        const shape output_shape = layer->get_output_shape();
-        shape full_dims = { static_cast<Index>(batch_size) };
+        const Shape output_shape = layer->get_output_shape();
+        Shape full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), output_shape.begin(), output_shape.end());
 
         outputs.set_descriptor(full_dims);
@@ -293,8 +293,8 @@ struct AdditionBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override
     {
-        const shape input_shape = layer->get_input_shape();
-        shape full_dims = { static_cast<Index>(batch_size) };
+        const Shape input_shape = layer->get_input_shape();
+        Shape full_dims = { static_cast<Index>(batch_size) };
         full_dims.insert(full_dims.end(), input_shape.begin(), input_shape.end());
 
         input_gradients.resize(2);

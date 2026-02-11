@@ -23,9 +23,9 @@ void set_layer_parameters_constant(Layer& layer, const type& value)
 
 
 struct ConvolutionalLayerConfig {
-    shape input_dimensions;
-    shape kernel_dimensions;
-    shape stride_dimensions;
+    Shape input_dimensions;
+    Shape kernel_dimensions;
+    Shape stride_dimensions;
     string activation_function;
     string convolution_type;
     bool batch_normalization;

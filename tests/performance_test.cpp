@@ -52,7 +52,7 @@ TEST(PerformanceTest, ImageClassification)
     /*
     image_data_set.set("Training");
 
-    const shape complexity_dimensions = { 8 };
+    const Shape complexity_dimensions = { 8 };
 
     NeuralNetwork neural_network(NeuralNetwork::ModelType::ImageClassification,
         image_data_set.get_input_shape(),

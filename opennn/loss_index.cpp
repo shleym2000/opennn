@@ -1498,7 +1498,7 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    const shape output_shape = neural_network_ptr->get_output_shape();
+    const Shape output_shape = neural_network_ptr->get_output_shape();
 
     const Index outputs_number = output_shape[0];
 
@@ -1515,7 +1515,7 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
 
     // Outputs_delta
 
-    shape output_gradient_dimensions = { samples_number };
+    Shape output_gradient_dimensions = { samples_number };
     output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_shape.begin(), output_shape.end());
 
     const Index size = accumulate(output_shape.begin(), output_shape.end(), samples_number, multiplies<>());

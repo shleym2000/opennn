@@ -8,7 +8,7 @@ using namespace opennn;
 Tensor4 generate_input_tensor_pooling(const Tensor2& data,
                                               const vector<Index>& row_indices,
                                               const vector<Index>& column_indices,
-                                              const shape& input_dimensions)
+                                              const Shape& input_dimensions)
 { 
     Tensor4 input_tensor(row_indices.size(),
                                  input_dimensions[0],
@@ -24,10 +24,10 @@ Tensor4 generate_input_tensor_pooling(const Tensor2& data,
 
 
 struct PoolingLayerConfig {
-    shape input_dimensions;
-    shape pool_dimensions;
-    shape stride_dimensions;
-    shape padding_dimensions;
+    Shape input_dimensions;
+    Shape pool_dimensions;
+    Shape stride_dimensions;
+    Shape padding_dimensions;
     string pooling_method;
     string test_name;
     Tensor4 input_data;

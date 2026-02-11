@@ -86,8 +86,8 @@ TEST(Dense3dTest, GeneralConstructor)
 
     opennn::Dense<3> dense_3d({sequence_length, input_embedding}, {output_embedding}, "HyperbolicTangent");
 
-    const shape input_dims = dense_3d.get_input_shape();
-    const shape output_dims = dense_3d.get_output_shape();
+    const Shape input_dims = dense_3d.get_input_shape();
+    const Shape output_dims = dense_3d.get_output_shape();
 
     EXPECT_EQ(input_dims[0], sequence_length);
     EXPECT_EQ(output_dims[0], output_embedding);

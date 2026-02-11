@@ -425,7 +425,7 @@ void Convolutional::set(const Shape& new_input_shape,
 
     if (batch_normalization)
     {
-        const shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
+        const Shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
 
         gammas_device.set_descriptor(batch_normalization_dims);
         betas_device.set_descriptor(batch_normalization_dims);
@@ -1227,7 +1227,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
     if (convolutional_layer->get_batch_normalization())
     {
-        shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
+        Shape batch_normalization_dims = { 1, kernels_number, 1, 1 };
 
         batch_means.resize(batch_normalization_dims);
         bn_saved_inv_variance.resize(batch_normalization_dims);
@@ -1237,7 +1237,7 @@ void ConvolutionalForwardPropagationCuda::initialize()
 
 void ConvolutionalForwardPropagationCuda::print() const
 {
-    const shape output_shape = layer->get_output_shape();
+    const Shape output_shape = layer->get_output_shape();
 
     cout << layer->get_name() + " forward propagation" << endl;
 
@@ -1397,7 +1397,7 @@ vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views_de
 
 void ConvolutionalBackPropagationCuda::print() const
 {
-    const shape input_shape = layer->get_input_shape();
+    const Shape input_shape = layer->get_input_shape();
 
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 

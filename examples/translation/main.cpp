@@ -47,7 +47,7 @@ int main()
         const Index vocabulary_size = 50;
         const Index embedding_dimension = 32;
         const Index heads_number = 4;
-        const shape outputs_number = { 1 };
+        const Shape outputs_number = { 1 };
 
         Transformer transformer;
 

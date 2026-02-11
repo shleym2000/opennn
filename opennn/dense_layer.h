@@ -223,7 +223,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_batch_normalization())
         {
-            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            Shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             batch_means.resize(batch_normalization_dims);
             bn_saved_inv_variance.resize(batch_normalization_dims);
@@ -453,7 +453,7 @@ public:
 
         if (batch_normalization)
         {
-            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            Shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             betas_device.set_descriptor(batch_normalization_dims);
             gammas_device.set_descriptor(batch_normalization_dims);

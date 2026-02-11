@@ -43,7 +43,7 @@ TEST(MultiHeadAttention, ForwardPropagateSelfAttention)
     const Index embedding_dimension = heads_number * head_dimension;
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<MultiHeadAttention>(shape({sequence_length, embedding_dimension}), heads_number));
+    neural_network.add_layer(make_unique<MultiHeadAttention>(Shape({sequence_length, embedding_dimension}), heads_number));
 
     Tensor3 inputs_1(batch_size, sequence_length, embedding_dimension);
     inputs_1.setRandom();

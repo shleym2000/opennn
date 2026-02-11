@@ -42,8 +42,8 @@ TEST(LevenbergMarquardtAlgorithmTest, Train)
 
     NeuralNetwork neural_network;
 
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 1 },
-        shape{ 1 },
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 1 },
+        Shape{ 1 },
         "Linear"));
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);

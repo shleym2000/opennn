@@ -682,8 +682,8 @@ struct BatchCuda
     Dataset* dataset = nullptr;
 
     Shape input_shape;
-    shape decoder_shape;
-    shape target_shape;
+    Shape decoder_shape;
+    Shape target_shape;
 
     vector<float> inputs_host;
     vector<float> decoder_host;
