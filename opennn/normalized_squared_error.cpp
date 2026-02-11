@@ -172,41 +172,49 @@ void NormalizedSquaredError::calculate_output_gradients(const Batch& batch,
                                                     ForwardPropagation&,
                                                     BackPropagation& back_propagation) const
 {
-    // Dataset
-
-    const Index total_samples_number = dataset->get_samples_number();
-
-    // Batch
+    const Index total_samples_number = dataset->get_used_samples_number();
 
     const Index samples_number = batch.get_samples_number();
-
-    // Back propagation
-
     const Tensor2& errors = back_propagation.errors;
-
     const TensorView output_gradient_views = back_propagation.get_output_gradients();
 
     TensorMap2 output_gradients = tensor_map<2>(output_gradient_views);
 
-    const type coefficient = type(2*total_samples_number) / (type(samples_number)*normalization_coefficient);
+    const type coefficient = type(2.0 * total_samples_number) / (type(samples_number) * normalization_coefficient);
 
-    output_gradients.device(*device) = coefficient*errors;
+    output_gradients.device(*device) = coefficient * errors;
 }
 
 
-void NormalizedSquaredError::calculate_output_gradients_lm(const Batch&,
+void NormalizedSquaredError::calculate_squared_errors_lm(const Batch& batch,
+                                                         const ForwardPropagation&,
+                                                         BackPropagationLM& back_propagation_lm) const
+{
+    const Index total_samples_number = dataset->get_used_samples_number();
+    const Index batch_samples_number = batch.get_samples_number();
+
+    const Tensor2& errors = back_propagation_lm.errors;
+    Tensor1& squared_errors = back_propagation_lm.squared_errors;
+
+    const type coefficient = sqrt(type(2.0 * total_samples_number) / (type(batch_samples_number) * normalization_coefficient));
+
+    squared_errors.device(*device) = errors.reshape(array_1(errors.size())) * coefficient;
+}
+
+
+void NormalizedSquaredError::calculate_output_gradients_lm(const Batch& batch,
                                                        ForwardPropagation&,
                                                        BackPropagationLM & back_propagation) const
 {
-    const Tensor2& errors = back_propagation.errors;
-    const Tensor1& squared_errors = back_propagation.squared_errors;
+    const Index total_samples_number = dataset->get_used_samples_number();
+    const Index batch_samples_number = batch.get_samples_number();
 
-    const TensorView output_gradients_pair = back_propagation.get_output_gradients();
+    const TensorView output_gradients_view = back_propagation.get_output_gradients();
+    TensorMap2 output_gradients = tensor_map<2>(output_gradients_view);
 
-    TensorMap2 output_gradients = tensor_map<2>(output_gradients_pair);
+    const type coefficient = sqrt(type(2.0 * total_samples_number) / (type(batch_samples_number) * normalization_coefficient));
 
-    output_gradients.device(*device) = errors;
-    divide_columns(device.get(), output_gradients, squared_errors);
+    output_gradients.setConstant(coefficient);
 }
 
 
