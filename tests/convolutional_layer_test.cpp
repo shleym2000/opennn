@@ -23,7 +23,7 @@ void set_layer_parameters_constant(Layer& layer, const type& value)
 
 
 struct ConvolutionalLayerConfig {
-    Shape input_dimensions;
+    Shape input_shape;
     Shape kernel_shape;
     Shape stride_shape;
     string activation_function;

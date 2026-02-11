@@ -573,17 +573,18 @@ bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
 
 
 template <int Rank>
-bool are_equal(const TensorR<Rank>& tensor_1,
-               const TensorR<Rank>& tensor_2,
+bool are_equal(const TensorR<Rank>& A,
+               const TensorR<Rank>& B,
                const type& tolerance = type(1.0e-3))
 {
-    if (tensor_1.size() != tensor_2.size())
+    if(A.size() != B.size())
         throw runtime_error("are_equal: Tensor sizes are different.");
 
-    const Index size = tensor_1.size();
+    const type* a = A.data();
+    const type* b = B.data();
 
-    for(Index i = 0; i < size; i++)
-        if(abs(tensor_1(i) - tensor_2(i)) > tolerance)
+    for(Index i = 0; i < A.size(); ++i)
+        if(abs(a[i] - b[i]) > tolerance)
             return false;
 
     return true;

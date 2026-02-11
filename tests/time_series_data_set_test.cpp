@@ -61,7 +61,7 @@ TEST(TimeSeriesDataset, Autocorrelations)
 TEST(TimeSeriesDataset, CrossCorrelations)
 {
 
-    Shape input_dimensions = { 2 };
+    Shape input_shape = { 2 };
     Shape target_shape = { 2 };
 
     TimeSeriesDataset dataset(6, input_shape, target_shape);
@@ -100,7 +100,7 @@ TEST(TimeSeriesDataset, CrossCorrelations)
 TEST(TimeSeriesDataset, test_transform_time_series)
 {
 
-    Shape input_dimensions = { 1 };
+    Shape input_shape = { 1 };
     Shape target_shape = { 2 };
 
     TimeSeriesDataset dataset(9, input_shape, target_shape);
@@ -151,7 +151,7 @@ TEST(TimeSeriesDataset, test_transform_time_series)
 TEST(TimeSeriesDataset, test_set_steps_ahead_number)
 {
 
-    Shape input_dimensions = { 1 };
+    Shape input_shape = { 1 };
     Shape target_shape = { 2 };
 
     TimeSeriesDataset dataset(4, input_shape, target_shape);

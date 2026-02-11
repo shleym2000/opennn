@@ -561,6 +561,8 @@ struct LayerBackPropagationLM
     bool is_first_layer = false;
 
     vector<TensorView> input_gradients;
+
+    vector<Tensor1> input_gradients_memory;
 };
 
 

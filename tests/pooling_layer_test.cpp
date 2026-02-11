@@ -24,7 +24,7 @@ Tensor4 generate_input_tensor_pooling(const Tensor2& data,
 
 
 struct PoolingLayerConfig {
-    Shape input_dimensions;
+    Shape input_shape;
     Shape pool_dimensions;
     Shape stride_shape;
     Shape padding_dimensions;
