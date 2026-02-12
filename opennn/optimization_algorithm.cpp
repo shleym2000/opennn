@@ -313,10 +313,17 @@ void Optimizer::set_scaling()
         scaling_layer->set_descriptives(input_variable_descriptives);
         scaling_layer->set_scalers(input_variable_scalers);
     }
-    else if(neural_network->has("Scaling4d"))
+    else if (neural_network->has("Scaling4d"))
     {
         ImageDataset* image_dataset = static_cast<ImageDataset*>(dataset);
+
         image_dataset->scale_features("Input");
+
+        if (neural_network->get_first("Scaling4d"))
+        {
+            Scaling<4>* scaling_layer = static_cast<Scaling<4>*>(neural_network->get_first("Scaling4d"));
+            scaling_layer->set_scalers("ImageMinMax");
+        }
     }
 
     if(!neural_network->has("Unscaling"))

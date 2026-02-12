@@ -27,12 +27,16 @@ int main()
 
         image_dataset.split_samples_random(0.6, 0.2, 0.2);
 
+        image_dataset.print();
+
         // Neural network
 
         ImageClassificationNetwork image_classification_network(
             image_dataset.get_shape("Input"),
             { 32, 64, 16 },
             image_dataset.get_shape("Target"));
+
+        image_classification_network.print();
 
         // Training strategy
 

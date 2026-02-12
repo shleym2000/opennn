@@ -177,7 +177,9 @@ ImageClassificationNetwork::ImageClassificationNetwork(const Shape& input_shape,
 
     reference_all_layers();
 
-    add_layer(make_unique<Scaling<4>>(input_shape));
+    auto scaling_layer = make_unique<Scaling<4>>(input_shape);
+    scaling_layer->set_scalers("ImageMinMax");
+    add_layer(move(scaling_layer));
 
     const Index complexity_size = complexity_dimensions.size();
     

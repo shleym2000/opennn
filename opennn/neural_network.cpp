@@ -1085,19 +1085,13 @@ void NeuralNetwork::print() const
 
     cout << "Features number: " << get_inputs_number() << endl;
 
-    cout << get_feature_names() << endl;
-
     const Index layers_number = get_layers_number();
 
     cout << "Layers number: " << layers_number << endl;
 
     for(Index i = 0; i < layers_number; i++)
-    {
-        cout << "\nLayer " << i << ": " << endl;
-
-        layers[i]->print();
-    }
-
+        cout << "\nLayer " << i << ": " << layers[i]->get_name() << endl;
+    
     cout << "Outputs number: " << get_outputs_number() << endl;
 
     cout << "Outputs:" << endl

@@ -2929,7 +2929,7 @@ void Dataset::print() const
     const Index validation_samples_number = get_samples_number("Validation");
     const Index testing_samples_number = get_samples_number("Testing");
     const Index unused_samples_number = get_samples_number("None");
-/*
+
     cout << "Dataset object summary:\n"
          << "Number of samples: " << samples_number << "\n"
          << "Number of variables: " << features_number << "\n"
@@ -2942,7 +2942,7 @@ void Dataset::print() const
          << "Number of selection samples: " << validation_samples_number << endl
          << "Number of testing samples: " << testing_samples_number << endl
          << "Number of unused samples: " << unused_samples_number << endl;
-*/
+
     //for(const Dataset::Variable& variable : variables)
     //    variable.print();
 }
