@@ -865,7 +865,7 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
     Index dense2d_layers_number = 0;
 
     for(Index i = 0; i < layers_number; i++)
-        if (layers[i]->get_name() == "Dense" && layers[i]->get_label().find("classification") == string::npos)
+        if (layers[i]->get_name() == "Dense2d" && layers[i]->get_label().find("classification") == string::npos)
             dense2d_layers_number++;
 
     Tensor<string, 2> information(dense2d_layers_number, 4);
@@ -877,7 +877,7 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
         const string& name = layers[i]->get_name();
         const string label = layers[i]->get_label();
 
-        if (name != "Dense" || label.find("classification") != string::npos)
+        if (name != "Dense2d" || label.find("classification") != string::npos)
             continue;
 
         information(dense2d_layer_index, 0) = label;
@@ -1000,6 +1000,7 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
     const Index layers_number = read_xml_index(layers_element, "LayersNumber");
 
     layers.clear();
+    layer_input_indices.clear();
 
     const XMLElement* start_element = layers_element->FirstChildElement("LayersNumber");
 
@@ -1027,9 +1028,6 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
     if(!layer_input_indices_element)
         throw runtime_error("LayerInputIndices element is nullptr.\n");
 
-    layer_input_indices.resize(layers.size());
-    layer_input_indices.clear();
-
     for(const XMLElement* layer_inputs_indices_element = layer_input_indices_element->FirstChildElement("LayerInputsIndices");
          layer_inputs_indices_element;
          layer_inputs_indices_element = layer_inputs_indices_element->NextSiblingElement("LayerInputsIndices"))
@@ -1042,12 +1040,8 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
         if(!text)
             throw runtime_error("Text is nullptr for LayerInputsIndices element.");
 
-        // @todo fix this change from vector to Shape
-/*
-        const vector<Index> input_index = string_to_shape(string(text), " ");
-        if((size_t)layer_index >= layer_input_indices.size())
-            layer_input_indices.push_back(input_index);
-*/
+        Shape input_shape = string_to_shape(string(text), " ");
+        layer_input_indices[layer_index] = vector<Index>(input_shape.begin(), input_shape.end());
     }
 }
 

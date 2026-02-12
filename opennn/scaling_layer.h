@@ -11,6 +11,7 @@
 #include "layer.h"
 #include "statistics.h"
 #include "scaling.h"
+#include "strings_utilities.h"
 
 namespace opennn
 {
@@ -24,7 +25,7 @@ class Scaling final : public Layer
 
 public:
 
-    Scaling(const Shape& new_input_shape = {})
+    Scaling(const Shape& new_input_shape = Shape(Rank - 1, 0))
     {
         set(new_input_shape);
     }
@@ -332,58 +333,31 @@ public:
 
         const Index neurons_number = read_xml_index(scaling_layer_element, "NeuronsNumber");
         
-        // @todo
-        
         if constexpr (Rank == 2)
-        {
             set({ neurons_number });
-        }
         else
-        {
-            // Try to read generic InputDimensions if we were to add them.
-            // But following 2D code strictly, it only reads NeuronsNumber.
-            // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
-            // However, to make it compile for Rank > 2, I need to pass correct size.
-            // If XML doesn't validation shape, we can't fully restore shape.
-            // I will implement a dummy reshape for now to satisfy Rank:
-            // [neurons_number, 1, 1...]
-
-            Shape shape(Rank-1, 1);
-            shape[0] = neurons_number;
-            set(shape);
-        }
+            set(Shape(Rank - 1, neurons_number));
 
         const XMLElement* start_element = scaling_layer_element->FirstChildElement("NeuronsNumber");
 
-        for(Index i = 0; i < neurons_number; i++) {
+        for(Index i = 0; i < neurons_number; i++)
+        {
             const XMLElement* scaling_neuron_element = start_element->NextSiblingElement("ScalingNeuron");
-            if(!scaling_neuron_element) {
+            if(!scaling_neuron_element)
                 throw runtime_error("Scaling neuron " + to_string(i + 1) + " is nullptr.\n");
-            }
-
-            unsigned index = 0;
-            scaling_neuron_element->QueryUnsignedAttribute("Index", &index);
-            if (index != i + 1) {
-                throw runtime_error("Index " + to_string(index) + " is not correct.\n");
-            }
 
             const XMLElement* descriptives_element = scaling_neuron_element->FirstChildElement("Descriptives");
-
-            if(!descriptives_element)
-                throw runtime_error("Descriptives element " + to_string(i + 1) + " is nullptr.\n");
-/*
-            if (descriptives_element->GetText()) {
-                const vector<string> descriptives_string = get_tokens(descriptives_element->GetText(), " ");
+            if (descriptives_element && descriptives_element->GetText()) {
+                const vector<string> tokens = get_tokens(descriptives_element->GetText(), " ");
                 descriptives[i].set(
-                    type(stof(descriptives_string[0])),
-                    type(stof(descriptives_string[1])),
-                    type(stof(descriptives_string[2])),
-                    type(stof(descriptives_string[3]))
+                    type(stof(tokens[0])),
+                    type(stof(tokens[1])),
+                    type(stof(tokens[2])),
+                    type(stof(tokens[3]))
                     );
             }
-*/
-            scalers[i] = read_xml_string(scaling_neuron_element, "Scaler");
 
+            scalers[i] = read_xml_string(scaling_neuron_element, "Scaler");
             start_element = scaling_neuron_element;
         }
     }
@@ -392,9 +366,9 @@ public:
     {
         printer.OpenElement(name.c_str());
 
-        add_xml_element(printer, "NeuronsNumber", to_string(get_output_shape().size() == 0 ? 0 : accumulate(get_output_shape().begin(), get_output_shape().end(), 1, multiplies<Index>())));
-
         const Index outputs_number = get_outputs_number();
+
+        add_xml_element(printer, "NeuronsNumber", to_string(outputs_number));
 
         for(Index i = 0; i < outputs_number; i++)
         {
