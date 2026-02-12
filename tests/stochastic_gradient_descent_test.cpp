@@ -101,7 +101,7 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
 
     Index context_length = 0;
     Index context_dimension = 0;
-    Index input_dimensions = 0;
+    Index input_shape = 0;
 
     LanguageDataset language_dataset;
 
@@ -120,7 +120,7 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
 
     Index inputs_number = 2;
     context_length = 3;
-    input_dimensions = 5;
+    input_shape = 5;
     context_dimension = 6;
 
     depth = 4;
@@ -128,9 +128,9 @@ TEST(StochasticGradientDescentTest, TrainTransformer)
     heads_number = 4;
     layers_number = 1;
 /*
-    language_dataset.set_data_random_language_model(samples_number, inputs_number, context_length, input_dimensions, context_dimension);
+    language_dataset.set_data_random_language_model(samples_number, inputs_number, context_length, input_shape, context_dimension);
 
-    transformer.set({ inputs_number, context_length, input_dimensions, context_dimension,
+    transformer.set({ inputs_number, context_length, input_shape, context_dimension,
                         depth, dense_depth, heads_number, layers_number });
 
     stochastic_gradient_descent.set_loss_goal(NUMERIC_LIMITS_MIN);

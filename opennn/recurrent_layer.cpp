@@ -54,9 +54,9 @@ void Recurrent::set(const Shape& new_input_shape, const Shape& new_output_shape)
     const Index inputs_number = new_input_shape[1];
     const Index outputs_number = new_output_shape[0];
 
-    biases.dims = {outputs_number};
-    input_weights.dims = {inputs_number, outputs_number};
-    recurrent_weights.dims = {outputs_number, outputs_number};
+    biases.shape = {outputs_number};
+    input_weights.shape = {inputs_number, outputs_number};
+    recurrent_weights.shape = {outputs_number, outputs_number};
 
     label = "recurrent_layer";
     name = "Recurrent";
@@ -73,18 +73,18 @@ void Recurrent::set_input_shape(const Shape& new_input_shape)
     const Index inputs_number = input_shape[1];
     const Index outputs_number = get_outputs_number();
 
-    input_weights.dims = {inputs_number, outputs_number};
+    input_weights.shape = {inputs_number, outputs_number};
 }
 
 
 void Recurrent::set_output_shape(const Shape& new_output_shape)
 {
-    const Index inputs_number = input_weights.dims[0];
+    const Index inputs_number = input_weights.shape[0];
     const Index outputs_number = new_output_shape[0];
 
-    biases.dims = {outputs_number};
-    input_weights.dims = {inputs_number, outputs_number};
-    recurrent_weights.dims = {outputs_number, outputs_number};
+    biases.shape = {outputs_number};
+    input_weights.shape = {inputs_number, outputs_number};
+    recurrent_weights.shape = {outputs_number, outputs_number};
 }
 
 
@@ -105,10 +105,10 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
                                   bool is_training)
 {
-    const Index batch_size = input_views[0].dims[0];
-    const Index past_time_steps = input_views[0].dims[1];
-    const Index input_size = input_views[0].dims[2];
-    const Index output_size = biases.dims[0];
+    const Index batch_size = input_views[0].shape[0];
+    const Index past_time_steps = input_views[0].shape[1];
+    const Index input_size = input_views[0].shape[2];
+    const Index output_size = biases.shape[0];
 
     TensorMap3 input_sequences = tensor_map<3>(input_views[0]);
     auto* recurrent_forward_propagation = static_cast<RecurrentForwardPropagation*>(forward_propagation.get());
@@ -165,9 +165,9 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
                                unique_ptr<LayerForwardPropagation>& forward_propagation,
                                unique_ptr<LayerBackPropagation>& back_propagation) const
 {
-    const Index batch_size = input_views[0].dims[0];
-    const Index past_time_steps = input_views[0].dims[1];
-    const Index neurons_number = biases.dims[0];
+    const Index batch_size = input_views[0].shape[0];
+    const Index past_time_steps = input_views[0].shape[1];
+    const Index neurons_number = biases.shape[0];
 
     TensorMap3 input_sequences = tensor_map<3>(input_views[0]);
     TensorMap2 external_output_gradients = tensor_map<2>(output_gradient_views[0]);
@@ -298,9 +298,9 @@ void Recurrent::print() const
          << "Time steps: " << get_input_shape()[0] << endl
          << "Input shape: " << get_input_shape()[1] << endl
          << "Output shape: " << get_output_shape()[0] << endl
-         << "Biases shape: " << biases.dims << endl
-         << "Input weights shape: " << input_weights.dims << endl
-         << "Recurrent weights shape: " << recurrent_weights.dims << endl
+         << "Biases shape: " << biases.shape << endl
+         << "Input weights shape: " << input_weights.shape << endl
+         << "Recurrent weights shape: " << recurrent_weights.shape << endl
          << "Total parameters: " << biases.size() + input_weights.size() + recurrent_weights.size() << endl;
 */
 }
@@ -314,7 +314,7 @@ void Recurrent::from_XML(const XMLDocument& document)
         throw runtime_error("Recurrent layer element is nullptr.\n");
 
     set_label(read_xml_string(recurrent_layer_element,"Label"));
-    set_input_shape(string_to_dimensions(read_xml_string(recurrent_layer_element, "InputDimensions")));
+    set_input_shape(string_to_shape(read_xml_string(recurrent_layer_element, "InputDimensions")));
     set_output_shape({ read_xml_index(recurrent_layer_element, "NeuronsNumber") });
     set_activation_function(read_xml_string(recurrent_layer_element, "Activation"));
 }
@@ -325,7 +325,7 @@ void Recurrent::to_XML(XMLPrinter& printer) const
     printer.OpenElement("Recurrent");
 
     add_xml_element(printer, "Label", get_label());
-    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_shape()));
+    add_xml_element(printer, "InputDimensions", shape_to_string(get_input_shape()));
     add_xml_element(printer, "NeuronsNumber", to_string(get_output_shape()[0]));
     add_xml_element(printer, "Activation", activation_function);
 
@@ -348,9 +348,9 @@ void RecurrentForwardPropagation::initialize()
     const Index outputs_num = layer->get_outputs_number();
     const Index steps = layer->get_input_shape()[0];
 
-    outputs.dims = {batch, outputs_num};
-    hidden_states.dims = {batch, steps, outputs_num};
-    activation_derivatives.dims = {batch, steps, outputs_num};
+    outputs.shape = {batch, outputs_num};
+    hidden_states.shape = {batch, steps, outputs_num};
+    activation_derivatives.shape = {batch, steps, outputs_num};
 }
 
 
@@ -364,9 +364,9 @@ void RecurrentForwardPropagation::print() const
 {
     cout << "Recurrent forward propagation" << endl
          << "Batch size: " << batch_size << endl
-         << "Output shape: " << outputs.dims << endl
-         << "Hidden states shape: " << hidden_states.dims << endl
-         << "Activation derivatives shape: " << activation_derivatives.dims << endl;
+         << "Output shape: " << outputs.shape << endl
+         << "Hidden states shape: " << hidden_states.shape << endl
+         << "Activation derivatives shape: " << activation_derivatives.shape << endl;
 }
 
 
@@ -376,9 +376,9 @@ void RecurrentBackPropagation::initialize()
     const Index inputs_number = layer->get_input_shape()[1];
     const Index time_steps = layer->get_input_shape()[0];
 
-    bias_gradients.dims = {outputs_number};
-    input_weight_gradients.dims = {inputs_number, outputs_number};
-    recurrent_weight_gradients.dims = {outputs_number, outputs_number};
+    bias_gradients.shape = {outputs_number};
+    input_weight_gradients.shape = {inputs_number, outputs_number};
+    recurrent_weight_gradients.shape = {outputs_number, outputs_number};
 
     const Shape full_input_shape = { batch_size, time_steps, inputs_number };
 
@@ -386,7 +386,7 @@ void RecurrentBackPropagation::initialize()
     input_gradients_memory[0].resize(full_input_shape.count());
     input_gradients.resize(1);
     input_gradients[0].data = input_gradients_memory[0].data();
-    input_gradients[0].dims = full_input_shape;
+    input_gradients[0].shape = full_input_shape;
 }
 
 
@@ -395,9 +395,9 @@ void RecurrentBackPropagation::print() const
     cout << "Recurrent back propagation" << endl
          << "Batch size: " << batch_size << endl
          << "Input gradients number: " << input_gradients_memory.size() << endl
-         << "Bias gradients shape: " << bias_gradients.dims << endl
-         << "Input weight gradients shape: " << input_weight_gradients.dims << endl
-         << "Recurrent weight gradients shape: " << recurrent_weight_gradients.dims << endl;
+         << "Bias gradients shape: " << bias_gradients.shape << endl
+         << "Input weight gradients shape: " << input_weight_gradients.shape << endl
+         << "Recurrent weight gradients shape: " << recurrent_weight_gradients.shape << endl;
 }
 
 

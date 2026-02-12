@@ -34,9 +34,9 @@ public:
 
     bool get_display() const;
 
-    const type& get_validation_error_goal() const;
+    type get_validation_error_goal() const;
     Index get_maximum_epochs_number() const;
-    const type& get_maximum_time() const;
+    type get_maximum_time() const;
 
     void set(const TrainingStrategy* = nullptr);
 

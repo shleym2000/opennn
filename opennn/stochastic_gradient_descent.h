@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "pch.h"
-
 #include "optimization_algorithm.h"
 
 namespace opennn
@@ -30,12 +28,12 @@ public:
 
     StochasticGradientDescent(const Loss* = nullptr);
 
-    const type& get_initial_learning_rate() const;
-    const type& get_initial_decay() const;
-    const type& get_momentum() const;
+    type get_initial_learning_rate() const;
+    type get_initial_decay() const;
+    type get_momentum() const;
     bool get_nesterov() const;
 
-    const type& get_loss_goal() const;
+    type get_loss_goal() const;
 
     void set_default();
 
@@ -53,7 +51,7 @@ public:
     void set_loss_goal(const type);
     void set_maximum_time(const type);
 
-    void update_parameters(BackPropagation& , StochasticGradientDescentData&, const type&) const;
+    void update_parameters(BackPropagation& , StochasticGradientDescentData&, type) const;
 
     TrainingResults train() override;
 

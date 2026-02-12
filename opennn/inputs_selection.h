@@ -42,9 +42,9 @@ public:
 
     bool get_display() const;
 
-    const type& get_validation_error_goal() const;
+    type get_validation_error_goal() const;
     Index get_maximum_iterations_number() const;
-    const type& get_maximum_time() const;
+    type get_maximum_time() const;
 
     virtual Index get_minimum_inputs_number() const = 0;
     virtual Index get_maximum_inputs_number() const = 0;

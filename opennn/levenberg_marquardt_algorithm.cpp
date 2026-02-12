@@ -22,13 +22,13 @@ LevenbergMarquardtAlgorithm::LevenbergMarquardtAlgorithm(const Loss* new_loss)
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_minimum_loss_decrease() const
+type LevenbergMarquardtAlgorithm::get_minimum_loss_decrease() const
 {
     return minimum_loss_decrease;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_loss_goal() const
+type LevenbergMarquardtAlgorithm::get_loss_goal() const
 {
     return training_loss_goal;
 }
@@ -40,25 +40,25 @@ Index LevenbergMarquardtAlgorithm::get_maximum_validation_failures() const
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_damping_parameter() const
+type LevenbergMarquardtAlgorithm::get_damping_parameter() const
 {
     return damping_parameter;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_damping_parameter_factor() const
+type LevenbergMarquardtAlgorithm::get_damping_parameter_factor() const
 {
     return damping_parameter_factor;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_minimum_damping_parameter() const
+type LevenbergMarquardtAlgorithm::get_minimum_damping_parameter() const
 {
     return minimum_damping_parameter;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_maximum_damping_parameter() const
+type LevenbergMarquardtAlgorithm::get_maximum_damping_parameter() const
 {
     return maximum_damping_parameter;
 }

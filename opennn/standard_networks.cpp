@@ -185,24 +185,24 @@ ImageClassificationNetwork::ImageClassificationNetwork(const Shape& input_shape,
     
     for(Index i = 0; i < complexity_size; i++)
     {
-        const Shape kernel_dimensions = { 3, 3, get_output_shape()[2], complexity_dimensions[i] };
-        const Shape stride_dimensions = { 1, 1 };
+        const Shape kernel_shape = { 3, 3, get_output_shape()[2], complexity_dimensions[i] };
+        const Shape stride_shape = { 1, 1 };
         
         add_layer(make_unique<Convolutional>(get_output_shape(),
-                                             kernel_dimensions,
+                                             kernel_shape,
                                              "RectifiedLinear",
-                                             stride_dimensions,
+                                             stride_shape,
                                              "Same",
                                              false, // Batch normalization
                                              "convolutional_layer_" + to_string(i + 1)));
         
         const Shape pool_dimensions = { 2, 2 };
-        const Shape pooling_stride_dimensions = { 2, 2 };
+        const Shape pooling_stride_shape = { 2, 2 };
         const Shape padding_dimensions = { 0, 0 };
         
         add_layer(make_unique<Pooling>(get_output_shape(),
                                        pool_dimensions,
-                                       pooling_stride_dimensions,
+                                       pooling_stride_shape,
                                        padding_dimensions,
                                        "MaxPooling",
                                        "pooling_layer_" + to_string(i + 1)));
@@ -882,7 +882,7 @@ string Transformer::calculate_outputs(const string& source)
 
         const TensorView output_view = forward_propagation.get_outputs();
 
-        const Index vocabulary_size = output_view.dims[2];
+        const Index vocabulary_size = output_view.shape[2];
 
         const TensorMap3 probabilities(output_view.data, batch_size, decoder_sequence_length, vocabulary_size);
 

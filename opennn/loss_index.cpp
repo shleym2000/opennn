@@ -24,7 +24,7 @@ Loss::Loss(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
 }
 
 
-const type& Loss::get_regularization_weight() const
+type Loss::get_regularization_weight() const
 {
     return regularization_weight;
 }
@@ -252,27 +252,21 @@ void Loss::calculate_layers_squared_errors_jacobian_lm(const Batch& batch,
 
     const vector<Index> layer_parameter_numbers = neural_network->get_layer_parameter_numbers();
 
-    constexpr Index MASK = ~(EIGEN_MAX_ALIGN_BYTES - 1);
+    const Index alignment_elements = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
+    const Index mask_elements = ~(alignment_elements - 1);
 
     Index index = 0;
-
     for(Index i = 0; i < layers_number; i++)
     {
-        layers[i]->insert_squared_errors_Jacobian_lm(back_propagation_lm.neural_network.layers[i],
-                                                     index,
-                                                     back_propagation_lm.squared_errors_jacobian);
+        layers[i]->insert_squared_errors_Jacobian_lm(back_propagation_lm.neural_network.layers[i], index, back_propagation_lm.squared_errors_jacobian);
 
-        const vector<TensorView*> parameter_views = layers[i]->get_parameter_views();
-
-        for(const TensorView* tensor_view : parameter_views)
+        for(const TensorView* tensor_view : layers[i]->get_parameter_views())
         {
             const Index view_size = tensor_view->size();
-
             if(view_size > 0)
-                index += (view_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
+                index += (view_size + alignment_elements - 1) & mask_elements;
         }
     }
-
 }
 
 
@@ -837,75 +831,50 @@ Tensor2 Loss::calculate_numerical_jacobian()
 {
     const Index samples_number = dataset->get_samples_number("Training");
     const vector<Index> sample_indices = dataset->get_sample_indices("Training");
-
     const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
     const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     Batch batch(samples_number, dataset);
-    // batch.fill(sample_indices, input_feature_indices, {}, target_feature_indices);
     batch.fill(sample_indices, input_feature_indices, target_feature_indices);
 
     ForwardPropagation forward_propagation(samples_number, neural_network);
-
     BackPropagationLM back_propagation_lm(samples_number, this);
 
-    BackPropagation back_propagation(samples_number, this);
-
     Tensor1 parameters = neural_network->get_parameters();
-
     const Index parameters_number = parameters.size();
 
-    neural_network->forward_propagate(batch.get_inputs(),
-                                      parameters,
-                                      forward_propagation);
+    const Index total_error_terms = back_propagation_lm.squared_errors.size();
 
-    calculate_errors_lm(batch, forward_propagation, back_propagation_lm);
-
-    calculate_squared_errors_lm(batch, forward_propagation, back_propagation_lm);
-
-    type h;
+    type perturbation;
 
     Tensor1 parameters_forward(parameters);
     Tensor1 parameters_backward(parameters);
 
-    Tensor1 error_terms_forward(parameters_number);
-    Tensor1 error_terms_backward(parameters_number);
+    Tensor1 error_terms_forward(total_error_terms);
+    Tensor1 error_terms_backward(total_error_terms);
 
-    Tensor2 jacobian(samples_number,parameters_number);
+    Tensor2 jacobian(total_error_terms, parameters_number);
 
     for(Index j = 0; j < parameters_number; j++)
     {
-        h = calculate_h(parameters(j));
+        perturbation = calculate_h(parameters(j));
 
-        parameters_backward(j) -= h;
-        neural_network->forward_propagate(batch.get_inputs(),
-                                          parameters_backward,
-                                          forward_propagation);
-
+        parameters_backward(j) -= perturbation;
+        neural_network->forward_propagate(batch.get_inputs(), parameters_backward, forward_propagation);
         calculate_errors_lm(batch, forward_propagation, back_propagation_lm);
-
         calculate_squared_errors_lm(batch, forward_propagation, back_propagation_lm);
-
         error_terms_backward = back_propagation_lm.squared_errors;
+        parameters_backward(j) += perturbation;
 
-        parameters_backward(j) += h;
-
-        parameters_forward(j) += h;
-
-        neural_network->forward_propagate(batch.get_inputs(),
-                                          parameters_forward,
-                                          forward_propagation);
-
+        parameters_forward(j) += perturbation;
+        neural_network->forward_propagate(batch.get_inputs(), parameters_forward, forward_propagation);
         calculate_errors_lm(batch, forward_propagation, back_propagation_lm);
-
         calculate_squared_errors_lm(batch, forward_propagation, back_propagation_lm);
-
         error_terms_forward = back_propagation_lm.squared_errors;
+        parameters_forward(j) -= perturbation;
 
-        parameters_forward(j) -= h;
-
-        for(Index i = 0; i < samples_number; i++)
-            jacobian(i, j) = (error_terms_forward(i) - error_terms_backward(i))/(type(2.0)*h);
+        for(Index i = 0; i < total_error_terms; i++)
+            jacobian(i, j) = (error_terms_forward(i) - error_terms_backward(i)) / (type(2.0) * perturbation);
     }
 
     return jacobian;
@@ -1254,57 +1223,74 @@ void BackPropagationLM::set(const Index new_samples_number,
                             Loss *new_loss)
 {
     loss_index = new_loss;
-
     samples_number = new_samples_number;
 
-    if(!loss_index)
-        return;
+    if(!loss_index) return;
 
     NeuralNetwork* neural_network_ptr = loss_index->get_neural_network();
 
-    if(!neural_network_ptr)
-        return;
+    if(!neural_network_ptr) return;
 
-    const Index parameters_number =
-        neural_network_ptr->get_parameters_number();
+    // --- 1. CALCULAR TAMAÑO DE PARÁMETROS CON ALINEACIÓN (8 elementos = 32 bytes) ---
+    const Index alignment_elements = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
+    const Index mask_elements = ~(alignment_elements - 1);
+    Index padded_parameters_number = 0;
 
-    const Index outputs_number = neural_network_ptr->get_outputs_number();
+    const Index layers_number = neural_network_ptr->get_layers_number();
 
-    const Shape output_shape = neural_network_ptr->get_output_shape();
-
-    neural_network.set(samples_number, neural_network_ptr);
-
-    loss = type(0);
-
-    gradient.resize(parameters_number);
-
-    regularization_gradient.resize(parameters_number);
-    regularization_gradient.setZero();
-
-    squared_errors_jacobian.resize(samples_number, parameters_number);
-
-    hessian.resize(parameters_number, parameters_number);
-
-    regularization_hessian.resize(parameters_number, parameters_number);
-    regularization_hessian.setZero();
-
-    errors.resize(samples_number, outputs_number);
-
-    squared_errors.resize(samples_number);
-
-    output_gradient_dimensions.resize(output_shape.size() + 1);
-    output_gradient_dimensions[0] = samples_number;
-
-    Index size = samples_number;
-
-    for(Index i = 0; i < Index(output_shape.size()); i++)
+    for(Index i = 0; i < layers_number; i++)
     {
-        output_gradient_dimensions[i + 1] = output_shape[i];
+        const vector<TensorView*> parameter_views = neural_network_ptr->get_layer(i)->get_parameter_views();
 
-        size *= output_shape[i];
+        for(const TensorView* view : parameter_views)
+        {
+            const Index view_size = view->size();
+
+            if(view_size > 0)
+            {
+                // Redondeamos el tamaño de cada vista al múltiplo de 8 elementos (32 bytes)
+                padded_parameters_number += (view_size + alignment_elements - 1) & mask_elements;
+            }
+        }
     }
 
-    output_gradients.resize(size);
+    // --- 2. CONFIGURAR ESTRUCTURAS DE LA RED ---
+    neural_network.set(samples_number, neural_network_ptr);
+
+    // --- 3. RESERVAR MEMORIA PARA LOS TENSORES LM ---
+    loss = type(0);
+
+    // Gradientes
+    gradient.resize(padded_parameters_number);
+    gradient.setZero();
+
+    regularization_gradient.resize(padded_parameters_number);
+    regularization_gradient.setZero();
+
+    // Jacobiano: Filas = Muestras * Salidas, Columnas = Parámetros con Padding
+    const Index outputs_number = neural_network_ptr->get_outputs_number();
+    const Index total_error_terms = samples_number * outputs_number;
+
+    squared_errors_jacobian.resize(total_error_terms, padded_parameters_number);
+    squared_errors_jacobian.setZero();
+
+    hessian.resize(padded_parameters_number, padded_parameters_number);
+    hessian.setZero();
+
+    regularization_hessian.resize(padded_parameters_number, padded_parameters_number);
+    regularization_hessian.setZero();
+
+    // --- 4. CONFIGURAR ERRORES Y SALIDAS ---
+    errors.resize(samples_number, outputs_number);
+    squared_errors.resize(total_error_terms);
+
+    const Shape output_shape = neural_network_ptr->get_output_shape();
+    output_gradient_dimensions = { samples_number };
+    output_gradient_dimensions.insert(output_gradient_dimensions.end(), output_shape.begin(), output_shape.end());
+
+    const Index total_output_size = accumulate(output_shape.begin(), output_shape.end(), samples_number, multiplies<Index>());
+    output_gradients.resize(total_output_size);
+    output_gradients.setZero();
 }
 
 

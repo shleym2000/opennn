@@ -8,12 +8,12 @@ using namespace opennn;
 Tensor4 generate_input_tensor_pooling(const Tensor2& data,
                                               const vector<Index>& row_indices,
                                               const vector<Index>& column_indices,
-                                              const Shape& input_dimensions)
+                                              const Shape& input_shape)
 { 
     Tensor4 input_tensor(row_indices.size(),
-                                 input_dimensions[0],
-                                 input_dimensions[1],
-                                 input_dimensions[2]);
+                                 input_shape[0],
+                                 input_shape[1],
+                                 input_shape[2]);
 
     type* tensor_data = input_tensor.data();
 
@@ -24,9 +24,9 @@ Tensor4 generate_input_tensor_pooling(const Tensor2& data,
 
 
 struct PoolingLayerConfig {
-    Shape input_dimensions;
+    Shape input_shape;
     Shape pool_dimensions;
-    Shape stride_dimensions;
+    Shape stride_shape;
     Shape padding_dimensions;
     string pooling_method;
     string test_name;
@@ -118,19 +118,19 @@ TEST_P(PoolingLayerTest, Constructor)
 {
     PoolingLayerConfig parameters = GetParam();
 
-    Pooling pooling_layer(parameters.input_dimensions,
+    Pooling pooling_layer(parameters.input_shape,
                                parameters.pool_dimensions,
-                               parameters.stride_dimensions,
+                               parameters.stride_shape,
                                parameters.padding_dimensions,
                                parameters.pooling_method,
                                parameters.test_name);
 
     EXPECT_EQ(pooling_layer.get_name(), "Pooling");
-    EXPECT_EQ(pooling_layer.get_input_shape(), parameters.input_dimensions);
+    EXPECT_EQ(pooling_layer.get_input_shape(), parameters.input_shape);
     EXPECT_EQ(pooling_layer.get_pool_height(), parameters.pool_dimensions[0]);
     EXPECT_EQ(pooling_layer.get_pool_width(), parameters.pool_dimensions[1]);
-    EXPECT_EQ(pooling_layer.get_row_stride(), parameters.stride_dimensions[0]);
-    EXPECT_EQ(pooling_layer.get_column_stride(), parameters.stride_dimensions[1]);
+    EXPECT_EQ(pooling_layer.get_row_stride(), parameters.stride_shape[0]);
+    EXPECT_EQ(pooling_layer.get_column_stride(), parameters.stride_shape[1]);
     EXPECT_EQ(pooling_layer.get_padding_height(), parameters.padding_dimensions[0]);
     EXPECT_EQ(pooling_layer.get_padding_width(), parameters.padding_dimensions[1]);
     EXPECT_EQ(pooling_layer.get_pooling_method(), parameters.pooling_method);
@@ -143,9 +143,9 @@ TEST_P(PoolingLayerTest, ForwardPropagate)
     PoolingLayerConfig parameters = GetParam();
 
     Pooling pooling_layer(
-        parameters.input_dimensions,
+        parameters.input_shape,
         parameters.pool_dimensions,
-        parameters.stride_dimensions,
+        parameters.stride_shape,
         parameters.padding_dimensions,
         parameters.pooling_method,
         parameters.test_name
@@ -158,18 +158,18 @@ TEST_P(PoolingLayerTest, ForwardPropagate)
 
     TensorView input_view( parameters.input_data.data(),
         { batch_size,
-          parameters.input_dimensions[0],
-          parameters.input_dimensions[1],
-          parameters.input_dimensions[2] } );
+          parameters.input_shape[0],
+          parameters.input_shape[1],
+          parameters.input_shape[2] } );
 
     pooling_layer.forward_propagate({ input_view }, forward_propagation, false);
 
     TensorView output_pair = forward_propagation->get_outputs();
 
-    EXPECT_EQ(output_pair.dims[0], batch_size);
-    EXPECT_EQ(output_pair.dims[1], parameters.expected_output.dimension(1));
-    EXPECT_EQ(output_pair.dims[2], parameters.expected_output.dimension(2));
-    EXPECT_EQ(output_pair.dims[3], parameters.expected_output.dimension(3));
+    EXPECT_EQ(output_pair.shape[0], batch_size);
+    EXPECT_EQ(output_pair.shape[1], parameters.expected_output.dimension(1));
+    EXPECT_EQ(output_pair.shape[2], parameters.expected_output.dimension(2));
+    EXPECT_EQ(output_pair.shape[3], parameters.expected_output.dimension(3));
 
     TensorMap4 output_tensor(output_pair.data,
                                              batch_size,
@@ -197,9 +197,9 @@ TEST_P(PoolingLayerTest, BackPropagate) {
     PoolingLayerConfig parameters = GetParam();
 
     Pooling pooling_layer(
-        parameters.input_dimensions,
+        parameters.input_shape,
         parameters.pool_dimensions,
-        parameters.stride_dimensions,
+        parameters.stride_shape,
         parameters.padding_dimensions,
         parameters.pooling_method,
         parameters.test_name
@@ -215,9 +215,9 @@ TEST_P(PoolingLayerTest, BackPropagate) {
 
     TensorView input_view( parameters.input_data.data(),
         { batch_size,
-          parameters.input_dimensions[0],
-          parameters.input_dimensions[1],
-          parameters.input_dimensions[2] } );
+          parameters.input_shape[0],
+          parameters.input_shape[1],
+          parameters.input_shape[2] } );
 
     pooling_layer.forward_propagate({ input_view }, forward_propagation, true);
 
@@ -227,8 +227,8 @@ TEST_P(PoolingLayerTest, BackPropagate) {
 
     vector<TensorView> input_derivatives_pair = back_propagation.get()->get_input_gradients();
 
-    EXPECT_EQ(input_derivatives_pair[0].dims[0], batch_size);
-    EXPECT_EQ(input_derivatives_pair[0].dims[1], parameters.input_data.dimension(1));
-    EXPECT_EQ(input_derivatives_pair[0].dims[2], parameters.input_data.dimension(2));
-    EXPECT_EQ(input_derivatives_pair[0].dims[3], parameters.input_data.dimension(3));
+    EXPECT_EQ(input_derivatives_pair[0].shape[0], batch_size);
+    EXPECT_EQ(input_derivatives_pair[0].shape[1], parameters.input_data.dimension(1));
+    EXPECT_EQ(input_derivatives_pair[0].shape[2], parameters.input_data.dimension(2));
+    EXPECT_EQ(input_derivatives_pair[0].shape[3], parameters.input_data.dimension(3));
 }

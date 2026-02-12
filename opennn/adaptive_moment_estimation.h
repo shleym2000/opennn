@@ -29,13 +29,13 @@ public:
 
    AdaptiveMomentEstimation(const Loss* = nullptr);
    
-   const type& get_learning_rate() const;
-   const type& get_beta_1() const;
-   const type& get_beta_2() const;
+   type get_learning_rate() const;
+   type get_beta_1() const;
+   type get_beta_2() const;
 
    // Stopping criteria
 
-   const type& get_loss_goal() const;
+   type get_loss_goal() const;
 
    // Set
 

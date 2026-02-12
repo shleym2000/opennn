@@ -15,9 +15,9 @@ namespace opennn
 {
 
 Descriptives::Descriptives(const type new_minimum,
-                           const type& new_maximum,
-                           const type& new_mean,
-                           const type& new_standard_deviation) :
+                           type new_maximum,
+                           type new_mean,
+                           type new_standard_deviation) :
     minimum(new_minimum),
     maximum(new_maximum),
     mean(new_mean),
@@ -35,8 +35,8 @@ Tensor1 Descriptives::to_tensor() const
 }
 
 
-void Descriptives::set(const type new_minimum, const type& new_maximum,
-                       const type& new_mean, const type& new_standard_deviation)
+void Descriptives::set(const type new_minimum, type new_maximum,
+                       type new_mean, type new_standard_deviation)
 {
     minimum = new_minimum;
     maximum = new_maximum;
@@ -56,10 +56,10 @@ void Descriptives::print(const string& title) const
 
 
 BoxPlot::BoxPlot(const type new_minimum,
-                 const type& new_first_quartile,
-                 const type& new_median,
-                 const type& new_third_quartile,
-                 const type& new_maximum)
+                 type new_first_quartile,
+                 type new_median,
+                 type new_third_quartile,
+                 type new_maximum)
 {
     minimum = new_minimum;
     first_quartile = new_first_quartile;
@@ -70,10 +70,10 @@ BoxPlot::BoxPlot(const type new_minimum,
 
 
 void BoxPlot::set(const type new_minimum,
-                  const type& new_first_quartile,
-                  const type& new_median,
-                  const type& new_third_quartile,
-                  const type& new_maximum)
+                  type new_first_quartile,
+                  type new_median,
+                  type new_third_quartile,
+                  type new_maximum)
 {
     minimum = new_minimum;
     first_quartile = new_first_quartile;
@@ -1016,7 +1016,7 @@ Histogram histogram(const Tensor1& new_vector, Index bins_number)
 }
 
 
-Histogram histogram_centered(const Tensor1& vector, const type& center, Index bins_number)
+Histogram histogram_centered(const Tensor1& vector, type center, Index bins_number)
 {
     const Index bin_center = (bins_number % 2 == 0) 
         ? Index(type(bins_number) / type(2.0)) 

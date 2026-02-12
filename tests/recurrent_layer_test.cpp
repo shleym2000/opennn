@@ -63,7 +63,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
         recurrent_layer.forward_propagate(input_tensor, fw_prop, is_training);
 
         TensorView outputs_view = fw_prop->get_outputs();
-        TensorMap2 output_tensor(outputs_view.data, outputs_view.dims[0], outputs_view.dims[1]);
+        TensorMap2 output_tensor(outputs_view.data, outputs_view.shape[0], outputs_view.shape[1]);
 
         EXPECT_NEAR(output_tensor(0, 0), 0.924642, 1e-5);
     }
@@ -93,7 +93,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
         recurrent_layer.forward_propagate(input_tensor, fw_prop, is_training);
 
         TensorView outputs_view = fw_prop->get_outputs();
-        TensorMap2 output_tensor(outputs_view.data, outputs_view.dims[0], outputs_view.dims[1]);
+        TensorMap2 output_tensor(outputs_view.data, outputs_view.shape[0], outputs_view.shape[1]);
 
         EXPECT_NEAR(output_tensor(0, 0), 0.824956, 1e-5);
     }
@@ -123,7 +123,7 @@ TEST(RecurrentLayerTest, ForwardPropagate)
         recurrent_layer.forward_propagate(input_tensor, fw_prop, is_training);
 
         TensorView outputs_view = fw_prop->get_outputs();
-        TensorMap2 output_tensor(outputs_view.data, outputs_view.dims[0], outputs_view.dims[1]);
+        TensorMap2 output_tensor(outputs_view.data, outputs_view.shape[0], outputs_view.shape[1]);
 
         EXPECT_NEAR(output_tensor(0, 0), 2.196, 1e-5);
     }

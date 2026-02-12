@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "pch.h"
-
 namespace opennn
 {
 

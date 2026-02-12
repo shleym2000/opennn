@@ -725,8 +725,8 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
 Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
                                                     const Tensor1& point,
-                                                    const type& minimum,
-                                                    const type& maximum,
+                                                    type minimum,
+                                                    type maximum,
                                                     Index points_number) const
 {
     const Index inputs_number = get_inputs_number();
@@ -751,7 +751,7 @@ Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
 
 Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
 {
-    // Tensor3 image = read_bmp_image(image_path);
+    // Tensor3 image = load_image(image_path);
 
     // Scaling4d* scaling_layer = static_cast<Scaling4d*>(get_first("Scaling4d"));
 
@@ -1044,7 +1044,7 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
 
         // @todo fix this change from vector to Shape
 /*
-        const vector<Index> input_index = string_to_dimensions(string(text), " ");
+        const vector<Index> input_index = string_to_shape(string(text), " ");
         if((size_t)layer_index >= layer_input_indices.size())
             layer_input_indices.push_back(input_index);
 */
@@ -1491,23 +1491,26 @@ void NeuralNetworkBackPropagationLM::set(const Index new_batch_size,
                                          NeuralNetwork* new_neural_network)
 {
     batch_size = new_batch_size;
-
     neural_network = new_neural_network;
 
-    const Index layers_number = neural_network->get_layers_number();
+    if(!neural_network) return;
 
+    const Index layers_number = neural_network->get_layers_number();
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
+    const Index outputs_number = neural_network->get_outputs_number();
+    const Index total_error_terms = batch_size * outputs_number;
+
+    layers.clear();
     layers.resize(layers_number);
 
     const Index first_trainable = neural_network->get_first_trainable_layer_index();
     const Index last_trainable = neural_network->get_last_trainable_layer_index();
 
     for(Index i = first_trainable; i <= last_trainable; i++)
-        layers[i] = make_unique<DenseBackPropagationLM>(batch_size, neural_network_layers[i].get());
+        layers[i] = make_unique<DenseBackPropagationLM>(total_error_terms, neural_network_layers[i].get());
 
     const vector<vector<TensorView*>> layer_workspace_views = get_layer_workspace_views();
-
     const Index workspace_size = get_size(layer_workspace_views);
 
     if(workspace_size == 0) return;
@@ -1526,7 +1529,8 @@ vector<vector<TensorView *> > NeuralNetworkBackPropagationLM::get_layer_workspac
     vector<vector<TensorView*>> layer_workspace_views(layers_number);
 
     for(Index i = 0; i < layers_number; i++)
-        layer_workspace_views[i] = layers[i]->get_workspace_views();
+        if(layers[i])
+            layer_workspace_views[i] = layers[i]->get_workspace_views();
 
     return layer_workspace_views;
 }

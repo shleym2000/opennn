@@ -99,7 +99,7 @@ void Bounding::set_input_shape(const Shape& new_input_shape)
 }
 
 
-void Bounding::set_lower_bound(const Index index, const type& new_lower_bound)
+void Bounding::set_lower_bound(const Index index, type new_lower_bound)
 {
     const Shape output_shape = get_output_shape();
 
@@ -135,7 +135,7 @@ void Bounding::set_upper_bounds(const Tensor1& new_upper_bounds)
 }
 
 
-void Bounding::set_upper_bound(const Index index, const type& new_upper_bound)
+void Bounding::set_upper_bound(const Index index, type new_upper_bound)
 {
     const Shape output_shape = get_output_shape();
 
@@ -169,8 +169,8 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
 #pragma omp parallel for
     for(Index j = 0; j < columns_number; j++)
     {
-        const type& lower_bound = lower_bounds(j);
-        const type& upper_bound = upper_bounds(j);
+        type lower_bound = lower_bounds(j);
+        type upper_bound = upper_bounds(j);
 
         for(Index i = 0; i < rows_number; i++)
             outputs(i, j) = clamp(inputs(i, j), lower_bound, upper_bound);
@@ -292,7 +292,7 @@ void BoundingForwardPropagation::initialize()
 {
     const Index neurons_number = static_cast<Bounding*>(layer)->get_output_shape()[0];
 
-    outputs.dims = {batch_size, neurons_number};
+    outputs.shape = {batch_size, neurons_number};
 }
 
 
@@ -300,7 +300,7 @@ void BoundingForwardPropagation::print() const
 {
 /*
     cout << "Outputs:" << endl
-         << outputs.dims << endl;
+         << outputs.shape << endl;
 */
 }
 

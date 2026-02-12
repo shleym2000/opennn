@@ -63,9 +63,9 @@ TEST(Dense2dTest, ForwardPropagate)
 
     const TensorView output_view = forward_propagation->get_outputs();
 
-    ASSERT_EQ(output_view.dims.size(), 2) << "Output should be a 2D tensor.";
-    EXPECT_EQ(output_view.dims[0], batch_size);
-    EXPECT_EQ(output_view.dims[1], outputs_number);
+    ASSERT_EQ(output_view.shape.size(), 2) << "Output should be a 2D tensor.";
+    EXPECT_EQ(output_view.shape[0], batch_size);
+    EXPECT_EQ(output_view.shape[1], outputs_number);
 }
 
 
@@ -123,9 +123,9 @@ TEST(Dense3dTest, ForwardPropagate)
 
     const TensorView output_view = forward_propagation->get_outputs();
 
-    ASSERT_EQ(output_view.dims.size(), 3);
-    EXPECT_EQ(output_view.dims[0], batch_size);
+    ASSERT_EQ(output_view.shape.size(), 3);
+    EXPECT_EQ(output_view.shape[0], batch_size);
 
-    EXPECT_EQ(output_view.dims[1], sequence_length);
-    EXPECT_EQ(output_view.dims[2], output_embedding);
+    EXPECT_EQ(output_view.shape[1], sequence_length);
+    EXPECT_EQ(output_view.shape[2], output_embedding);
 }

@@ -59,7 +59,7 @@ Index MultiHeadAttention::get_source_sequence_length() const
 
 Index MultiHeadAttention::get_embedding_dimension() const
 {
-    return query_biases.dims[0];
+    return query_biases.shape[0];
 }
 
 
@@ -124,17 +124,17 @@ void MultiHeadAttention::set(const Index new_query_sequence_length,
     if (heads_number <= 0 || new_embedding_dimension % heads_number != 0)
         throw runtime_error("MultiHeadAttention Error: The embedding dimension must be divisible by the number of heads.");
 
-    query_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    query_biases.dims = {new_embedding_dimension};
+    query_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    query_biases.shape = {new_embedding_dimension};
 
-    key_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    key_biases.dims = {new_embedding_dimension};
+    key_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    key_biases.shape = {new_embedding_dimension};
 
-    value_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    value_biases.dims = {new_embedding_dimension};
+    value_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    value_biases.shape = {new_embedding_dimension};
 
-    projection_weights.dims = {new_embedding_dimension, new_embedding_dimension};
-    projection_biases.dims = {new_embedding_dimension};
+    projection_weights.shape = {new_embedding_dimension, new_embedding_dimension};
+    projection_biases.shape = {new_embedding_dimension};
 
     use_causal_mask = new_use_causal_mask;
 
@@ -496,7 +496,7 @@ void MultiHeadAttentionForwardPropagation::initialize()
 
     concatenated_attention_outputs.resize(batch_size, query_sequence_length, embedding_dimension);
 
-    outputs.dims = {batch_size, query_sequence_length, embedding_dimension};
+    outputs.shape = {batch_size, query_sequence_length, embedding_dimension};
 }
 
 
@@ -518,19 +518,19 @@ void MultiHeadAttentionBackPropagation::initialize()
     const Index heads_number = multihead_attention_layer->get_heads_number();
     const Index head_dimension = multihead_attention_layer->get_head_dimension();
 
-    query_weight_gradients.dims = {embedding_dimension, embedding_dimension};
-    key_weight_gradients.dims = {embedding_dimension, embedding_dimension};
-    value_weight_gradients.dims = {embedding_dimension, embedding_dimension};
-    projection_weight_gradients.dims = {embedding_dimension, embedding_dimension};
+    query_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    key_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    value_weight_gradients.shape = {embedding_dimension, embedding_dimension};
+    projection_weight_gradients.shape = {embedding_dimension, embedding_dimension};
 
-    query_bias_gradients.dims = {embedding_dimension};
-    key_bias_gradients.dims = {embedding_dimension};
-    value_bias_gradients.dims = {embedding_dimension};
-    projection_bias_gradients.dims = {embedding_dimension};
+    query_bias_gradients.shape = {embedding_dimension};
+    key_bias_gradients.shape = {embedding_dimension};
+    value_bias_gradients.shape = {embedding_dimension};
+    projection_bias_gradients.shape = {embedding_dimension};
 
     input_gradients.resize(2);
-    input_gradients[0].dims = {batch_size, query_sequence_length, embedding_dimension};
-    input_gradients[1].dims = {batch_size, source_sequence_length, embedding_dimension};
+    input_gradients[0].shape = {batch_size, query_sequence_length, embedding_dimension};
+    input_gradients[1].shape = {batch_size, source_sequence_length, embedding_dimension};
 
     // Auxiliar
 

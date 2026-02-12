@@ -22,13 +22,13 @@ QuasiNewtonMethod::QuasiNewtonMethod(const Loss* new_loss)
 }
 
 
-const type& QuasiNewtonMethod::get_minimum_loss_decrease() const
+type QuasiNewtonMethod::get_minimum_loss_decrease() const
 {
     return minimum_loss_decrease;
 }
 
 
-const type& QuasiNewtonMethod::get_loss_goal() const
+type QuasiNewtonMethod::get_loss_goal() const
 {
     return training_loss_goal;
 }
@@ -710,7 +710,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
     ForwardPropagation& forward_propagation,
     BackPropagation& back_propagation,
     QuasiNewtonMethodData& optimization_data,
-    const type& current_loss)
+    type current_loss)
 {
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 

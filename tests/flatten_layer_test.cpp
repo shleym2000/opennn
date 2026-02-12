@@ -10,20 +10,20 @@ protected:
     const Index height = 4;
     const Index width = 4;
     const Index channels = 3;
-    const Shape input_dimensions = { height, width, channels };
+    const Shape input_shape{ height, width, channels };
 
     unique_ptr<Flatten<4>> flatten_layer;
 
     void SetUp() override
     {
-        flatten_layer = make_unique<Flatten<4>>(input_dimensions);
+        flatten_layer = make_unique<Flatten<4>>(input_shape);
     }
 };
 
 
 TEST_F(FlattenLayerTest, Constructor)
 {
-    EXPECT_EQ(flatten_layer->get_input_shape(), input_dimensions);
+    EXPECT_EQ(flatten_layer->get_input_shape(), input_shape);
     EXPECT_EQ(flatten_layer->get_output_shape(), Shape{ height * width * channels });
     EXPECT_EQ(flatten_layer->get_name(), "Flatten4d");
 }
@@ -46,7 +46,7 @@ TEST_F(FlattenLayerTest, ForwardPropagate)
     flatten_layer->forward_propagate({ input_view }, forward_propagation, false);
 
     const TensorView output_pair = forward_propagation->get_outputs();
-    const Shape& output_dims = output_pair.dims;
+    const Shape& output_dims = output_pair.shape;
 
     ASSERT_EQ(output_dims.size(), 2) << "Flatten<4> should produce a 2D tensor (batch, features).";
     EXPECT_EQ(output_dims[0], batch_size);
@@ -83,16 +83,16 @@ TEST_F(FlattenLayerTest, BackPropagate)
     const TensorView& input_derivative_view = input_derivative_views[0];
 
     ASSERT_EQ(input_derivative_view.rank(), 4) << "Input derivative rank should be 4.";
-    EXPECT_EQ(input_derivative_view.dims[0], batch_size);
-    EXPECT_EQ(input_derivative_view.dims[1], height);
-    EXPECT_EQ(input_derivative_view.dims[2], width);
-    EXPECT_EQ(input_derivative_view.dims[3], channels);
+    EXPECT_EQ(input_derivative_view.shape[0], batch_size);
+    EXPECT_EQ(input_derivative_view.shape[1], height);
+    EXPECT_EQ(input_derivative_view.shape[2], width);
+    EXPECT_EQ(input_derivative_view.shape[3], channels);
 
     TensorMap<const Tensor<const type, 4>> input_derivatives_map(input_derivative_view.data,
-        input_derivative_view.dims[0],
-        input_derivative_view.dims[1],
-        input_derivative_view.dims[2],
-        input_derivative_view.dims[3]);
+        input_derivative_view.shape[0],
+        input_derivative_view.shape[1],
+        input_derivative_view.shape[2],
+        input_derivative_view.shape[3]);
 
     const type tolerance = 1e-7f;
     bool all_values_are_correct = true;

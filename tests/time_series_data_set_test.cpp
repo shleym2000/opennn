@@ -17,10 +17,10 @@ TEST(TimeSeriesDataset, DefaultConstructor)
 
 TEST(TimeSeriesDataset, GeneralConstructor)
 {
-    Shape input_dimensions = { 1 };
-    Shape target_dimensions = { 1 };
+    Shape input_shape = { 1 };
+    Shape target_shape = { 1 };
 
-    TimeSeriesDataset time_series_data_set_3(1, input_dimensions, target_dimensions);
+    TimeSeriesDataset time_series_data_set_3(1, input_shape, target_shape);
 
     EXPECT_EQ(time_series_data_set_3.get_variables_number(), 2);
     EXPECT_EQ(time_series_data_set_3.get_samples_number(), 1);
@@ -61,10 +61,10 @@ TEST(TimeSeriesDataset, Autocorrelations)
 TEST(TimeSeriesDataset, CrossCorrelations)
 {
 
-    Shape input_dimensions = { 2 };
-    Shape target_dimensions = { 2 };
+    Shape input_shape = { 2 };
+    Shape target_shape = { 2 };
 
-    TimeSeriesDataset dataset(6, input_dimensions, target_dimensions);
+    TimeSeriesDataset dataset(6, input_shape, target_shape);
     
     Index lags_number;
 
@@ -100,10 +100,10 @@ TEST(TimeSeriesDataset, CrossCorrelations)
 TEST(TimeSeriesDataset, test_transform_time_series)
 {
 
-    Shape input_dimensions = { 1 };
-    Shape target_dimensions = { 2 };
+    Shape input_shape = { 1 };
+    Shape target_shape = { 2 };
 
-    TimeSeriesDataset dataset(9, input_dimensions, target_dimensions);
+    TimeSeriesDataset dataset(9, input_shape, target_shape);
 
     Tensor2 data;
 
@@ -151,10 +151,10 @@ TEST(TimeSeriesDataset, test_transform_time_series)
 TEST(TimeSeriesDataset, test_set_steps_ahead_number)
 {
 
-    Shape input_dimensions = { 1 };
-    Shape target_dimensions = { 2 };
+    Shape input_shape = { 1 };
+    Shape target_shape = { 2 };
 
-    TimeSeriesDataset dataset(4, input_dimensions, target_dimensions);
+    TimeSeriesDataset dataset(4, input_shape, target_shape);
 
     Tensor2 data;
     
@@ -177,10 +177,10 @@ TEST(TimeSeriesDataset, test_set_steps_ahead_number)
 TEST(TimeSeriesDataset, test_set_lags_number)
 {
 
-    Shape input_dimensions = { 1 };
-    Shape target_dimensions = { 2 };
+    Shape input_shape = { 1 };
+    Shape target_shape = { 2 };
 
-    TimeSeriesDataset dataset(4, input_dimensions, target_dimensions);
+    TimeSeriesDataset dataset(4, input_shape, target_shape);
 
     Tensor2 data;
     // Test

@@ -15,11 +15,11 @@ namespace opennn
 
 struct Descriptives
 {
-    Descriptives(const type = type(NAN), const type& = type(NAN), const type& = type(NAN), const type& = type(NAN));
+    Descriptives(const type = type(NAN), type = type(NAN), type = type(NAN), type = type(NAN));
 
     Tensor1 to_tensor() const;
 
-    void set(const type = type(NAN), const type& = type(NAN), const type& = type(NAN), const type& = type(NAN));
+    void set(const type = type(NAN), type = type(NAN), type = type(NAN), type = type(NAN));
 
     void save(const filesystem::path&) const;
 
@@ -41,16 +41,16 @@ struct Descriptives
 struct BoxPlot
 {
     BoxPlot(const type = type(NAN),
-            const type& = type(NAN),
-            const type& = type(NAN),
-            const type& = type(NAN),
-            const type& = type(NAN));
+            type = type(NAN),
+            type = type(NAN),
+            type = type(NAN),
+            type = type(NAN));
 
     void set(const type = type(NAN),
-             const type& = type(NAN),
-             const type& = type(NAN),
-             const type& = type(NAN),
-             const type& = type(NAN));
+             type = type(NAN),
+             type = type(NAN),
+             type = type(NAN),
+             type = type(NAN));
 
     type minimum = type(NAN);
 
@@ -171,7 +171,7 @@ vector<Descriptives> descriptives(const Tensor2&, const vector<Index>&, const ve
 
 // Histograms
 Histogram histogram(const Tensor1&, Index  = 10);
-Histogram histogram_centered(const Tensor1&, const type& = type(0), Index  = 10);
+Histogram histogram_centered(const Tensor1&, type = type(0), Index  = 10);
 Histogram histogram(const Tensor<bool, 1>&);
 Histogram histogram(const Tensor<Index, 1>&, Index  = 10);
 vector<Histogram> histograms(const Tensor2&, Index = 10);

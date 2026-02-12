@@ -22,19 +22,19 @@ StochasticGradientDescent::StochasticGradientDescent(const Loss* new_loss)
 }
 
 
-const type& StochasticGradientDescent::get_initial_learning_rate() const
+type StochasticGradientDescent::get_initial_learning_rate() const
 {
     return initial_learning_rate;
 }
 
 
-const type& StochasticGradientDescent::get_initial_decay() const
+type StochasticGradientDescent::get_initial_decay() const
 {
     return initial_decay;
 }
 
 
-const type& StochasticGradientDescent::get_momentum() const
+type StochasticGradientDescent::get_momentum() const
 {
     return momentum;
 }
@@ -46,7 +46,7 @@ bool StochasticGradientDescent::get_nesterov() const
 }
 
 
-const type& StochasticGradientDescent::get_loss_goal() const
+type StochasticGradientDescent::get_loss_goal() const
 {
     return training_loss_goal;
 }
@@ -131,7 +131,7 @@ void StochasticGradientDescent::set_maximum_time(const type new_maximum_time)
 
 void StochasticGradientDescent::update_parameters(BackPropagation& back_propagation,
                                                   StochasticGradientDescentData& optimization_data,
-                                                  const type& learning_rate) const
+                                                  type learning_rate) const
 {
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 

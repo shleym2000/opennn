@@ -62,7 +62,7 @@ TEST(AdaptiveMomentEstimationTest, TrainTransformer)
     // constexpr Index batch_size = 1;
     // constexpr Index input_length = 2;
     // constexpr Index decoder_length = 3;
-    // constexpr Index input_dimensions = 5;
+    // constexpr Index input_shape = 5;
     // constexpr Index context_dimension = 6;
     // constexpr Index depth = 4;
     // constexpr Index dense_depth = 6;
@@ -87,7 +87,7 @@ TEST(AdaptiveMomentEstimationTest, TrainTransformer)
     // opennn::Transformer transformer({
     //     input_length,
     //     decoder_length,
-    //     input_dimensions,
+    //     input_shape,
     //     context_dimension,
     //     depth,
     //     dense_depth,

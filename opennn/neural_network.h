@@ -235,7 +235,7 @@ public:
         {
             if (output_view.rank() == 4)
             {
-                const Index batch_size = output_view.dims[0];
+                const Index batch_size = output_view.shape[0];
                 const Index features = output_view.size() / batch_size;
 
                 if (reinterpret_cast<uintptr_t>(output_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)
@@ -260,7 +260,7 @@ public:
 
     Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
-    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, const type&, const type&, Index = 101) const;
+    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
