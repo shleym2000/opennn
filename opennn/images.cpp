@@ -10,15 +10,9 @@
 #include "images.h"
 #include "tensors.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../stb_image/stb_image.h"
-
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "../stb_image/stb_image_resize2.h"
-
 namespace opennn
 {
-/*
+
 struct RGBQuad
 {
     uint8_t blue;
@@ -70,32 +64,13 @@ int32_t read_s32_le(ifstream& f, const string& file_path_str_for_error)
                      (static_cast<uint32_t>(b3) << 24);
     return static_cast<int32_t>(u_val);
 }
-*/
+
 
 Tensor3 load_image(const filesystem::path& path)
 {
-    int width, height, channels;
+    const string image_path_str = path.string();
 
-    unsigned char* data = stbi_load(path.string().c_str(), &width, &height, &channels, 3);
-    if (!data) throw runtime_error("Could not load image: " + path.string());
-
-    Tensor3 image_tensor(height, width, 3);
-    float* tensor_ptr = image_tensor.data();
-
-
-#pragma omp parallel for
-    for (int i = 0; i < height * width * 3; ++i)
-    {
-        tensor_ptr[i] = static_cast<float>(data[i]);
-    }
-
-    stbi_image_free(data);
-    return image_tensor;
-
-/*
-    const string image_path_str = image_path_fs.string();
-
-    ifstream file(image_path_fs, ios::binary);
+    ifstream file(path, ios::binary);
 
     if(!file)
         throw runtime_error("Cannot open BMP file: " + image_path_str);
@@ -248,7 +223,6 @@ Tensor3 load_image(const filesystem::path& path)
     file.close();
 
     return image;
-*/
 }
 
 
@@ -256,19 +230,6 @@ Tensor3 resize_image(const Tensor3& input_image,
                      Index output_height,
                      Index output_width)
 {
-    if (input_image.dimension(0) == output_height && input_image.dimension(1) == output_width)
-        return input_image;
-
-    const Index channels = input_image.dimension(2);
-    Tensor3 output_image(output_height, output_width, channels);
-
-    stbir_resize_float_linear(input_image.data(), (int)input_image.dimension(1), (int)input_image.dimension(0), 0,
-        output_image.data(), (int)output_width, (int)output_height, 0,
-        STBIR_RGB);
-
-    return output_image;
-
-/*
     const Index input_height = input_image.dimension(0);
     const Index input_width = input_image.dimension(1);
     const Index channels = input_image.dimension(2);
@@ -318,7 +279,6 @@ Tensor3 resize_image(const Tensor3& input_image,
         }
 
     return output_image;
-*/
 }
 
 
