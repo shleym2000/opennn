@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "pch.h"
+
 namespace opennn
 {
     void set_seed(Index seed);

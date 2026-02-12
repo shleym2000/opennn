@@ -29,6 +29,8 @@ int main()
 
         image_dataset.print();
 
+        cin.get();
+
         // Neural network
 
         ImageClassificationNetwork image_classification_network(

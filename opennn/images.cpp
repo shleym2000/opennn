@@ -75,20 +75,21 @@ int32_t read_s32_le(ifstream& f, const string& file_path_str_for_error)
 Tensor3 load_image(const filesystem::path& path)
 {
     int width, height, channels;
-    // Force 3 channels (RGB) for consistency
-    unsigned char* data = stbi_load(path.string().c_str(), &width, &height, &channels, 3);
 
+    unsigned char* data = stbi_load(path.string().c_str(), &width, &height, &channels, 3);
     if (!data) throw runtime_error("Could not load image: " + path.string());
 
     Tensor3 image_tensor(height, width, 3);
+    float* tensor_ptr = image_tensor.data();
 
-    for (int y = 0; y < height; ++y)
-        for (int x = 0; x < width; ++x)
-            for (int c = 0; c < 3; ++c)
-                image_tensor(y, x, c) = static_cast<float>(data[(y * width + x) * 3 + c]);
+
+#pragma omp parallel for
+    for (int i = 0; i < height * width * 3; ++i)
+    {
+        tensor_ptr[i] = static_cast<float>(data[i]);
+    }
 
     stbi_image_free(data);
-
     return image_tensor;
 
 /*
@@ -255,21 +256,15 @@ Tensor3 resize_image(const Tensor3& input_image,
                      Index output_height,
                      Index output_width)
 {
-    const Index input_height = input_image.dimension(0);
-    const Index input_width = input_image.dimension(1);
-    const Index channels = input_image.dimension(2);
+    if (input_image.dimension(0) == output_height && input_image.dimension(1) == output_width)
+        return input_image;
 
+    const Index channels = input_image.dimension(2);
     Tensor3 output_image(output_height, output_width, channels);
 
-    stbir_resize_float_linear(input_image.data(),
-                              (int)input_width,
-                              (int)input_height,
-                              0,
-                              output_image.data(),
-                              (int)output_width,
-                              (int)output_height,
-                              0,
-                              (channels == 1) ? STBIR_1CHANNEL : STBIR_RGB);
+    stbir_resize_float_linear(input_image.data(), (int)input_image.dimension(1), (int)input_image.dimension(0), 0,
+        output_image.data(), (int)output_width, (int)output_height, 0,
+        STBIR_RGB);
 
     return output_image;
 
