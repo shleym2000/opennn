@@ -314,9 +314,8 @@ UnscalingForwardPropagation::UnscalingForwardPropagation(const Index new_batch_s
 
 void UnscalingForwardPropagation::initialize()
 {
-    const Shape output_shape = static_cast<Unscaling*>(layer)->get_output_shape();
-
-    outputs.shape = {batch_size, output_shape[0]};
+    const Shape layer_output_shape = layer->get_output_shape();
+    outputs.shape = prepend(batch_size, layer_output_shape);
 }
 
 

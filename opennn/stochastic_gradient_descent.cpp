@@ -480,9 +480,9 @@ void StochasticGradientDescentData::set(StochasticGradientDescent* new_stochasti
 
     const Loss* loss_index = stochastic_gradient_descent->get_loss_index();
 
-    const NeuralNetwork* neural_network = loss_index->get_neural_network();
+    NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const Index parameters_number = neural_network->get_parameters().size();
 
     parameter_updates.resize(parameters_number);
     parameter_updates.setZero();

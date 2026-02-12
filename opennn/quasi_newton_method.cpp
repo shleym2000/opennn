@@ -333,7 +333,7 @@ TrainingResults QuasiNewtonMethod::train()
 
     QuasiNewtonMethodData optimization_data(this);
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const Index parameters_number = neural_network->get_parameters().size();
 
     // Main loop
 

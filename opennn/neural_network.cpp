@@ -1145,7 +1145,7 @@ void NeuralNetwork::load_parameters_binary(const filesystem::path& file_name)
     if(!file.is_open())
         throw runtime_error("Cannot open binary file: " + file_name.string() + "\n");
 
-    const Index parameters_number = get_parameters_number();
+    const Index parameters_number = parameters.size();
 
 //    Tensor1 new_parameters(parameters_number);
 
