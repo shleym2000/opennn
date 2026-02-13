@@ -10,7 +10,7 @@
 #include "dataset.h"
 #include "loss_index.h"
 #include "cross_entropy_error_3d.h"
-#include <Eigen/LU>
+#include "../eigen/Eigen/LU"
 
 namespace opennn
 {
@@ -1110,27 +1110,27 @@ Tensor2 Loss::calculate_inverse_hessian()
     Tensor2 numerical_hessian = calculate_numerical_hessian();
     const Index parameters_number = numerical_hessian.dimension(0);
 
-    using MatrixType = Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
-    Eigen::Map<MatrixType> hessian_map(numerical_hessian.data(), parameters_number, parameters_number);
+    using MatrixType = Matrix<type, Dynamic, Dynamic, ColMajor>;
+    Map<MatrixType> hessian_map(numerical_hessian.data(), parameters_number, parameters_number);
 
-    Eigen::FullPivLU<MatrixType> hessian_decomposition(hessian_map);
+    FullPivLU<MatrixType> hessian_decomposition(hessian_map);
 
     if(!hessian_decomposition.isInvertible())
     {
         MatrixType hessian_damped = hessian_map + MatrixType::Identity(parameters_number, parameters_number) * 1e-4;
 
-        Eigen::FullPivLU<MatrixType> hessian_decomposition_damped(hessian_damped);
+        FullPivLU<MatrixType> hessian_decomposition_damped(hessian_damped);
 
         MatrixType hessian_map_inverse = hessian_decomposition_damped.inverse();
 
         Tensor2 hessian_inverse(parameters_number, parameters_number);
-        Eigen::Map<MatrixType>(hessian_inverse.data(), parameters_number, parameters_number) = hessian_map_inverse;
+        Map<MatrixType>(hessian_inverse.data(), parameters_number, parameters_number) = hessian_map_inverse;
         return hessian_inverse;
     }
 
     MatrixType hessian_map_inverse = hessian_decomposition.inverse();
     Tensor2 hessian_inverse(parameters_number, parameters_number);
-    Eigen::Map<MatrixType>(hessian_inverse.data(), parameters_number, parameters_number) = hessian_map_inverse;
+    Map<MatrixType>(hessian_inverse.data(), parameters_number, parameters_number) = hessian_map_inverse;
 
     return hessian_inverse;
 }
