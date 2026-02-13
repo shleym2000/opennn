@@ -53,7 +53,7 @@
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "../eigen/Eigen/src/Core/util/DisableStupidWarnings.h"
 
-#define OPENNN_CUDA // Comment this line to disable cuda files
+//#define OPENNN_CUDA // Comment this line to disable cuda files
 
 #ifdef OPENNN_CUDA
 
@@ -144,6 +144,7 @@ using TensorMap1 = TensorMap<Tensor<type, 1, AlignedMax>, AlignedMax>;
 using TensorMap2 = TensorMap<Tensor<type, 2, AlignedMax>, AlignedMax>;
 using TensorMap3 = TensorMap<Tensor<type, 3, AlignedMax>, AlignedMax>;
 using TensorMap4 = TensorMap<Tensor<type, 4, AlignedMax>, AlignedMax>;
+using TensorMap5 = TensorMap<Tensor<type, 5, AlignedMax>, AlignedMax>;
 
 template <int Rank>
 using TensorMapR = TensorMap<Tensor<type, Rank, AlignedMax>, AlignedMax>;

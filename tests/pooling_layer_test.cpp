@@ -137,9 +137,8 @@ TEST_P(PoolingLayerTest, Constructor)
 }
 
 
-TEST_P(PoolingLayerTest, ForwardPropagate) 
+TEST_P(PoolingLayerTest, ForwardPropagate)
 {
-
     PoolingLayerConfig parameters = GetParam();
 
     Pooling pooling_layer(
@@ -150,11 +149,14 @@ TEST_P(PoolingLayerTest, ForwardPropagate)
         parameters.pooling_method,
         parameters.test_name
     );
-    
+
     const Index batch_size = parameters.input_data.dimension(0);
 
     unique_ptr<LayerForwardPropagation> forward_propagation =
         make_unique<PoolingForwardPropagation>(batch_size, &pooling_layer);
+
+    Tensor1 workspace(get_size(forward_propagation->get_workspace_views()));
+    link(workspace.data(), forward_propagation->get_workspace_views());
 
     TensorView input_view( parameters.input_data.data(),
         { batch_size,
@@ -171,24 +173,17 @@ TEST_P(PoolingLayerTest, ForwardPropagate)
     EXPECT_EQ(output_pair.shape[2], parameters.expected_output.dimension(2));
     EXPECT_EQ(output_pair.shape[3], parameters.expected_output.dimension(3));
 
-    TensorMap4 output_tensor(output_pair.data,
-                                             batch_size,
-                                             parameters.expected_output.dimension(1),
-                                             parameters.expected_output.dimension(2),
-                                             parameters.expected_output.dimension(3));
+    TensorMap4 output_tensor = tensor_map<4>(output_pair);
 
     for (Index b = 0; b < batch_size; ++b) {
         for (Index h = 0; h < parameters.expected_output.dimension(1); ++h) {
             for (Index w = 0; w < parameters.expected_output.dimension(2); ++w) {
                 for (Index c = 0; c < parameters.expected_output.dimension(3); ++c) {
-                    EXPECT_NEAR(output_tensor(b, h, w, c), parameters.expected_output(b, h, w, c), 1e-5)
-                        << "Mismatch at batch=" << b << ", height=" << h
-                        << ", width=" << w << ", channel=" << c;
+                    EXPECT_NEAR(output_tensor(b, h, w, c), parameters.expected_output(b, h, w, c), 1e-5);
                 }
             }
         }
     }
-
 }
 
 
@@ -213,6 +208,9 @@ TEST_P(PoolingLayerTest, BackPropagate) {
     unique_ptr<LayerBackPropagation> back_propagation =
         make_unique<PoolingBackPropagation>(batch_size, &pooling_layer);
 
+    Tensor1 workspace_fw(get_size(forward_propagation->get_workspace_views()));
+    link(workspace_fw.data(), forward_propagation->get_workspace_views());
+
     TensorView input_view( parameters.input_data.data(),
         { batch_size,
           parameters.input_shape[0],
@@ -225,7 +223,7 @@ TEST_P(PoolingLayerTest, BackPropagate) {
 
     pooling_layer.back_propagate({ input_view }, { output_pair }, forward_propagation, back_propagation);
 
-    vector<TensorView> input_derivatives_pair = back_propagation.get()->get_input_gradients();
+    vector<TensorView> input_derivatives_pair = back_propagation->get_input_gradients();
 
     EXPECT_EQ(input_derivatives_pair[0].shape[0], batch_size);
     EXPECT_EQ(input_derivatives_pair[0].shape[1], parameters.input_data.dimension(1));
