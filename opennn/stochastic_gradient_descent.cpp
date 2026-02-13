@@ -10,6 +10,7 @@
 #include "dataset.h"
 #include "neural_network.h"
 #include "loss_index.h"
+#include "cross_entropy_error_3d.h"
 #include "stochastic_gradient_descent.h"
 
 namespace opennn
@@ -513,6 +514,8 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
     const bool has_validation = dataset->has_validation();
 
+    const bool is_classification_model = is_instance_of<CrossEntropyError3d>(loss_index);
+
     const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
     const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
     //const vector<Index> decoder_feature_indices = dataset->get_feature_indices("Decoder");
@@ -529,22 +532,31 @@ TrainingResults StochasticGradientDescent::train_cuda()
                                                      ? min(validation_samples_number, batch_size)
                                                      : 0;
 
-    BatchCuda training_batch(training_batch_size, dataset);
-    unique_ptr<BatchCuda> validation_batch;
+    BatchCuda training_batch_a(training_batch_size, dataset);
+    BatchCuda training_batch_b(training_batch_size, dataset);
+    BatchCuda* current_training_batch = &training_batch_a;
+    BatchCuda* next_training_batch = &training_batch_b;
+
+    BatchCuda* validation_batch_a = nullptr;
+    BatchCuda* validation_batch_b = nullptr;
+    BatchCuda* current_validation_batch = nullptr;
+    BatchCuda* next_validation_batch = nullptr;
 
     const Index training_batches_number = (training_batch_size != 0)
                                               ? training_samples_number / training_batch_size
                                               : 0;
 
     const Index validation_batches_number = (validation_batch_size != 0)
-                                               ? validation_samples_number / validation_batch_size
-                                               : 0;
+                                                ? validation_samples_number / validation_batch_size
+                                                : 0;
 
     vector<vector<Index>> training_batches(training_batches_number);
     vector<vector<Index>> validation_batches(validation_batches_number);
 
-    vector<Index> training_batch_indices(training_batch_size);
-    vector<Index> selection_batch_indices(training_batch_size);
+    cudaStream_t memory_stream;
+    cudaStreamCreate(&memory_stream);
+    cudaEvent_t batch_ready_event;
+    cudaEventCreate(&batch_ready_event);
 
     // Neural network
 
@@ -570,14 +582,20 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
     if (has_validation)
     {
-        validation_batch = make_unique<BatchCuda>(validation_batch_size, dataset);
+        validation_batch_a = new BatchCuda(validation_batch_size, dataset);
+        validation_batch_b = new BatchCuda(validation_batch_size, dataset);
+        current_validation_batch = validation_batch_a;
+        next_validation_batch = validation_batch_b;
+
         validation_forward_propagation = make_unique<ForwardPropagationCuda>(validation_batch_size, neural_network);
         validation_back_propagation = make_unique<BackPropagationCuda>(validation_batch_size, loss_index);
     }
 
-    //type training_loss = type(0);
     type training_error = type(0);
+    type training_accuracy = type(0);
+
     type validation_error = type(0);
+    type validation_accuracy = type(0);
 
     Index validation_failures = 0;
 
@@ -605,53 +623,79 @@ TrainingResults StochasticGradientDescent::train_cuda()
 
         training_batches = dataset->get_batches(training_sample_indices, training_batch_size, shuffle);
 
-        const Index batches_number = training_batches.size();
-
-        //training_loss = type(0);
         training_error = type(0);
+
+        if (is_classification_model) training_accuracy = type(0);
 
         optimization_data.iteration = 0;
 
-        for(Index iteration = 0; iteration < batches_number; iteration++)
+        if (training_batches_number > 0)
+        {
+            current_training_batch->fill_host(training_batches[0],
+                                              input_feature_indices,
+                                              target_feature_indices);
+
+            current_training_batch->copy_device_async(training_batches[0].size(), memory_stream);
+            cudaEventRecord(batch_ready_event, memory_stream);
+        }
+
+        if (training_batches_number > 1)
+        {
+            next_training_batch->fill_host(training_batches[1],
+                                           input_feature_indices,
+                                           target_feature_indices);
+        }
+
+        for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {
             optimization_data.iteration++;
 
-            // Dataset
+            cudaStreamWaitEvent(0, batch_ready_event, 0);
 
-            training_batch.fill(training_batches[iteration],
-                                     input_feature_indices,
-                                     //decoder_feature_indices,
-                                     target_feature_indices);
+            if(iteration + 1 < training_batches_number)
+            {
+                next_training_batch->copy_device_async(training_batches[iteration+1].size(), memory_stream);
+                cudaEventRecord(batch_ready_event, memory_stream);
+            }
 
             // Neural network
 
-            neural_network->forward_propagate(training_batch.get_inputs_device(),
-                                                   training_forward_propagation,
-                                                   is_training);
+            neural_network->forward_propagate(current_training_batch->get_inputs_device(),
+                                              training_forward_propagation,
+                                              is_training);
 
             // Loss index
 
-            loss_index->back_propagate(training_batch,
-                                            training_forward_propagation,
-                                            training_back_propagation);
-
-            results.training_error_history(epoch) = training_back_propagation.error();
+            loss_index->back_propagate(*current_training_batch,
+                                       training_forward_propagation,
+                                       training_back_propagation);
 
             training_error += training_back_propagation.error();
-            //training_loss += training_back_propagation.loss;
+
+            if (is_classification_model)
+                training_accuracy += training_back_propagation.accuracy();
 
             // Gradient
 
             update_parameters(training_back_propagation, optimization_data);
 
-            //if(display && epoch % display_period == 0)      display_progress_bar(iteration, batches_number - 1);
+            if(iteration + 2 < training_batches_number)
+            {
+                next_training_batch->fill_host(training_batches[iteration+2],
+                                               input_feature_indices,
+                                               target_feature_indices);
+            }
+
+            swap(current_training_batch, next_training_batch);
         }
 
 
         // Loss
 
-        //training_loss /= type(batches_number);
-        training_error /= type(batches_number);
+        training_error /= type(training_batches_number);
+
+        if (is_classification_model)
+            training_accuracy /= type(training_batches_number);
 
         results.training_error_history(epoch) = training_error;
 
@@ -660,38 +704,69 @@ TrainingResults StochasticGradientDescent::train_cuda()
             validation_batches = dataset->get_batches(validation_sample_indices, validation_batch_size, shuffle);
 
             validation_error = type(0);
+            if (is_classification_model) validation_accuracy = type(0);
+
+            if (validation_batches_number > 0)
+            {
+                current_validation_batch->fill_host(validation_batches[0],
+                                                    input_feature_indices,
+                                                    target_feature_indices);
+
+                current_validation_batch->copy_device_async(validation_batches[0].size(), memory_stream);
+                cudaEventRecord(batch_ready_event, memory_stream);
+            }
+
+            if (validation_batches_number > 1)
+            {
+                next_validation_batch->fill_host(validation_batches[1],
+                                                 input_feature_indices,
+                                                 target_feature_indices);
+            }
 
             for(Index iteration = 0; iteration < validation_batches_number; iteration++)
             {
-                // Dataset
+                cudaStreamWaitEvent(0, batch_ready_event, 0);
 
-                validation_batch->fill(validation_batches[iteration],
-                                           input_feature_indices,
-                                           //decoder_feature_indices,
-                                           target_feature_indices);
+                if(iteration + 1 < validation_batches_number)
+                {
+                    next_validation_batch->copy_device_async(validation_batches[iteration + 1].size(), memory_stream);
+                    cudaEventRecord(batch_ready_event, memory_stream);
+                }
 
                 // Neural network
 
-                neural_network->forward_propagate(validation_batch->get_inputs_device(),
-                                                       *validation_forward_propagation,
-                                                       is_training);
-
-                results.validation_error_history(epoch) = validation_error;
+                neural_network->forward_propagate(current_validation_batch->get_inputs_device(),
+                                                  *validation_forward_propagation,
+                                                  is_training);
 
                 // Loss
 
-                loss_index->calculate_error(*validation_batch,
-                                                 *validation_forward_propagation,
-                                                 *validation_back_propagation);
+                loss_index->calculate_error(*current_validation_batch,
+                                            *validation_forward_propagation,
+                                            *validation_back_propagation);
 
                 validation_error += validation_back_propagation->error();
+
+                if (is_classification_model)
+                    validation_accuracy += validation_back_propagation->accuracy();
+
+                if(iteration + 2 < validation_batches_number)
+                {
+                    next_validation_batch->fill_host(validation_batches[iteration + 2],
+                                                     input_feature_indices,
+                                                     target_feature_indices);
+                }
+
+                swap(current_validation_batch, next_validation_batch);
             }
 
             validation_error /= type(validation_batches_number);
+            if (is_classification_model) validation_accuracy /= type(validation_batches_number);
 
             results.validation_error_history(epoch) = validation_error;
 
-            if (epoch != 0 && results.validation_error_history(epoch) > results.validation_error_history(epoch - 1)) validation_failures++;
+            if (epoch != 0 && results.validation_error_history(epoch) > results.validation_error_history(epoch - 1))
+                validation_failures++;
         }
 
         // Elapsed time
@@ -701,7 +776,9 @@ TrainingResults StochasticGradientDescent::train_cuda()
         if (display && epoch % display_period == 0)
         {
             cout << "Training error: " << training_error << endl;
-            if (has_validation) cout << "Validation error: " << validation_error << endl << endl;
+            if (is_classification_model) cout << "Training accuracy: " << training_accuracy << endl;
+            if (has_validation) cout << "Validation error: " << validation_error << endl;
+            if (has_validation && is_classification_model) cout << "Validation accuracy: " << validation_accuracy << endl;
             cout << "Elapsed time: " << write_time(elapsed_time) << endl;
         }
 
@@ -747,6 +824,15 @@ TrainingResults StochasticGradientDescent::train_cuda()
         }
     }
 
+    cudaStreamDestroy(memory_stream);
+    cudaEventDestroy(batch_ready_event);
+
+    if (has_validation)
+    {
+        delete validation_batch_a;
+        delete validation_batch_b;
+    }
+
     set_unscaling();
 
     neural_network->copy_parameters_host();
@@ -760,36 +846,26 @@ TrainingResults StochasticGradientDescent::train_cuda()
 void StochasticGradientDescent::update_parameters(BackPropagationCuda& back_propagation,
                                                        SGDOptimizationDataCuda& optimization_data) const
 {
-
     NeuralNetwork* neural_network = back_propagation.loss_index->get_neural_network();
+
+    const Index parameters_number = neural_network->get_parameters_number();
 
     float* parameters_device_data = neural_network->get_parameters_device().data;
 
     const float current_learning_rate = static_cast<float>(initial_learning_rate / (1.0 + static_cast<double>(optimization_data.iteration) * initial_decay));
     const float momentum_f = static_cast<float>(momentum);
 
-    const float* output_gradient_views = back_propagation.neural_network.workspace.data;
+    const float* gradients_device = back_propagation.neural_network.workspace.data;
 
-    // @todo do it in vector form without loop.
-/*
-    for(Index parameter_index = 0; parameter_index < Index(parameter_views.size()); ++parameter_index)
-    {
-        float* params_d = parameter_views[parameter_index].data;
-        const Index param_size = parameter_views[parameter_index].size;
-        const float* grads_d = output_gradient_views[parameter_index].data;
-        float* velocity_d = optimization_data.velocity[layer_index][parameter_index];
-
-        sgd_update_device(
-            param_size,
-            params_d,
-            velocity_d,
-            grads_d,
-            current_learning_rate,
-            momentum_f,
-            nesterov
-            );
-    }
-*/
+    sgd_update_device(
+        parameters_number,
+        parameters_device_data,
+        optimization_data.velocity.data,
+        gradients_device,
+        current_learning_rate,
+        momentum_f,
+        nesterov
+    );
 }
 
 
@@ -807,9 +883,9 @@ void SGDOptimizationDataCuda::set(StochasticGradientDescent* new_stochastic_grad
 
     const Index parameters_number = neural_network->get_parameters_number();
 
-    //velocity.resize(parameters_number);
+    velocity.resize({parameters_number});
 
-    //CHECK_CUDA(cudaMemset(velocity, 0, parameters_number * sizeof(float));
+    CHECK_CUDA(cudaMemset(velocity.data, 0, parameters_number * sizeof(float)));
 }
 
 

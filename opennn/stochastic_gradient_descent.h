@@ -121,7 +121,7 @@ struct SGDOptimizationDataCuda final : public OptimizerData
 
     Index iteration = 0;
 
-    TensorViewCuda velocity;
+    TensorCuda velocity;
 };
 
 #endif

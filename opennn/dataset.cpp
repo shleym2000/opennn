@@ -4522,32 +4522,64 @@ TensorView Batch::get_targets() const
 
 
 #ifdef OPENNN_CUDA
-
+    
 void BatchCuda::fill(const vector<Index>& sample_indices,
                      const vector<Index>& input_indices,
                      //const vector<Index>& decoder_indices,
                      const vector<Index>& target_indices)
 {
-    ImageDataset* image_dataset = dynamic_cast<ImageDataset*>(dataset);
+    fill_host(sample_indices, input_indices, target_indices);
 
-    if (image_dataset != nullptr)
-        image_dataset->fill_input_tensor_row_major(sample_indices, input_indices, inputs_host.data());
-    else
-        dataset->fill_input_tensor(sample_indices, input_indices, inputs_host.data());
-
-    //dataset->fill_decoder_tensor(sample_indices, decoder_indices, decoder_host);
-
-    dataset->fill_target_tensor(sample_indices, target_indices, targets_host.data());
-    
     const Index batch_size = sample_indices.size();
 
     copy_device(batch_size);
 }
 
 
+void BatchCuda::fill_host(const vector<Index>& sample_indices,
+                          const vector<Index>& input_indices,
+                          //const vector<Index>& decoder_indices,
+                          const vector<Index>& target_indices)
+{
+    ImageDataset* image_dataset = dynamic_cast<ImageDataset*>(dataset);
+
+    if (image_dataset != nullptr)
+        image_dataset->fill_input_tensor_row_major(sample_indices, input_indices, inputs_host);
+    else
+        dataset->fill_input_tensor(sample_indices, input_indices, inputs_host);
+
+    //dataset->fill_decoder_tensor(sample_indices, decoder_indices, decoder_host);
+
+    dataset->fill_target_tensor(sample_indices, target_indices, targets_host);
+}
+
+
+
 BatchCuda::BatchCuda(const Index new_samples_number, Dataset* new_dataset)
 {
     set(new_samples_number, new_dataset);
+}
+
+
+BatchCuda::~BatchCuda()
+{
+    if (inputs_host)
+    {
+        cudaFreeHost(inputs_host);
+        inputs_host = nullptr;
+    }
+
+    if (decoder_host)
+    {
+        cudaFreeHost(decoder_host);
+        decoder_host = nullptr;
+    }
+
+    if (targets_host)
+    {
+        cudaFreeHost(targets_host);
+        targets_host = nullptr;
+    }
 }
 
 
@@ -4570,7 +4602,13 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
         input_shape = { samples_number };
         input_shape.insert(input_shape.end(), data_set_input_dimensions.begin(), data_set_input_dimensions.end());
 
-        inputs_host.resize(input_size);
+        if (input_size > inputs_host_allocated_size)
+        {
+            if (inputs_host) cudaFreeHost(inputs_host);
+            CHECK_CUDA(cudaMallocHost(&inputs_host, input_size * sizeof(float)));
+            inputs_host_allocated_size = input_size;
+        }
+
         inputs_device.resize({samples_number, num_input_features});
     }
     /*
@@ -4581,7 +4619,13 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
 
         const Index decoder_size = decoder_shape.count();
 
-        CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
+        if (decoder_size > decoder_host_allocated_size)
+        {
+            if (decoder_host) cudaFreeHost(decoder_host);
+            CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
+            decoder_host_allocated_size = decoder_size;
+        }
+
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));
     }
     */
@@ -4593,7 +4637,13 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
         target_shape = { samples_number };
         target_shape.insert(target_shape.end(), data_set_target_shape.begin(), data_set_target_shape.end());
 
-        targets_host.resize(target_size);
+        if (target_size > targets_host_allocated_size)
+        {
+            if (targets_host) cudaFreeHost(targets_host);
+            CHECK_CUDA(cudaMallocHost(&targets_host, target_size * sizeof(float)));
+            targets_host_allocated_size = target_size;
+        }
+
         targets_device.resize({samples_number, num_target_features});
     }
 }
@@ -4604,8 +4654,18 @@ void BatchCuda::copy_device(const Index current_batch_size)
     const Index input_size = current_batch_size * num_input_features;
     const Index target_size = current_batch_size * num_target_features;
 
-    CHECK_CUDA(cudaMemcpy(inputs_device.data, inputs_host.data(), input_size * sizeof(float), cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemcpy(targets_device.data, targets_host.data(), target_size * sizeof(float), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(inputs_device.data, inputs_host, input_size * sizeof(float), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(targets_device.data, targets_host, target_size * sizeof(float), cudaMemcpyHostToDevice));
+}
+
+
+void BatchCuda::copy_device_async(const Index current_batch_size, cudaStream_t stream)
+{
+    const Index input_size = current_batch_size * num_input_features;
+    const Index target_size = current_batch_size * num_target_features;
+
+    CHECK_CUDA(cudaMemcpyAsync(inputs_device.data, inputs_host, input_size * sizeof(float), cudaMemcpyHostToDevice, stream));
+    CHECK_CUDA(cudaMemcpyAsync(targets_device.data, targets_host, target_size * sizeof(float), cudaMemcpyHostToDevice, stream));
 }
 
 

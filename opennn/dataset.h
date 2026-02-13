@@ -641,11 +641,11 @@ struct Batch
 
 #ifdef OPENNN_CUDA
 
+
 struct BatchCuda
 {
     BatchCuda(const Index = 0, Dataset* = nullptr);
-
-    //~BatchCuda() { free(); }
+    ~BatchCuda();
 
     void set(const Index, Dataset*);
 
@@ -654,8 +654,10 @@ struct BatchCuda
               //const vector<Index>&,
               const vector<Index> & = vector<Index>());
 
-    //BatchCuda(const BatchCuda&) = delete;
-    //BatchCuda& operator=(const BatchCuda&) = delete;
+    void fill_host(const vector<Index>&,
+                   const vector<Index>&,
+                   //const vector<Index>&,
+                   const vector<Index> & = vector<Index>());
 
     vector<TensorViewCuda> get_inputs_device() const;
     TensorViewCuda get_targets_device() const;
@@ -667,8 +669,7 @@ struct BatchCuda
     Tensor2 get_targets_from_device() const;
 
     void copy_device(const Index);
-
-//    void free();
+    void copy_device_async(const Index, cudaStream_t);
 
     void print() const;
 
@@ -684,14 +685,19 @@ struct BatchCuda
     Shape decoder_shape;
     Shape target_shape;
 
-    vector<float> inputs_host;
-    vector<float> decoder_host;
-    vector<float> targets_host;
+    float* inputs_host = nullptr;
+    float* decoder_host = nullptr;
+    float* targets_host = nullptr;
+
+    Index inputs_host_allocated_size = 0;
+    Index decoder_host_allocated_size = 0;
+    Index targets_host_allocated_size = 0;
 
     TensorCuda inputs_device;
     TensorCuda decoder_device;
     TensorCuda targets_device;
 };
+
 
 #endif
 
