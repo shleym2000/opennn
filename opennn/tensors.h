@@ -504,8 +504,16 @@ TensorMapR<rank> tensor_map(const TensorView& tensor_view)
                           tensor_view.shape[1],
                           tensor_view.shape[2],
                           tensor_view.shape[3]);
+    else if constexpr (rank == 5)
+        return TensorMap5(tensor_view.data,
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2],
+                          tensor_view.shape[3],
+                          tensor_view.shape[4]);
+
     else
-        static_assert(rank >= 1 && rank <= 4, "Unsupported tensor rank");
+        static_assert(rank >= 1 && rank <= 5, "Unsupported tensor rank");
 }
 
 

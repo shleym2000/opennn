@@ -149,9 +149,9 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
-    void print() const override;
+    vector<TensorView*> get_workspace_views() override;
 
-    Tensor5 image_patches;
+    void print() const override;
 
     Tensor<Index, 4> maximal_indices;
 };
@@ -164,8 +164,6 @@ struct PoolingBackPropagation final : LayerBackPropagation
     void initialize() override;
 
     void print() const override;
-
-    Tensor4 gradients_by_pool_size;
 };
 
 
