@@ -734,7 +734,7 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
 
     Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
-    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense"));
+    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense2d"));
 
     dense_2d->set_activation_function("Softmax");
     scaling_layer->set_display(false);
@@ -844,7 +844,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     Scaling<2>* scaling_layer = static_cast<Scaling<2>*>(neural_network.get_first("Scaling2d"));
 
-    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense"));
+    Dense<2>* dense_2d = static_cast<Dense<2>*>(neural_network.get_first("Dense2d"));
 
     dense_2d->set_activation_function("Softmax");
 

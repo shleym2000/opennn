@@ -24,60 +24,47 @@ TEST(QuasiNewtonMethodTest, GeneralConstructor)
 }
 
 
-TEST(QuasiNewtonMethodTest, DFP)
+TEST(QuasiNewtonMethodTest, BFGS_Update)
 {
-    /*
-    const Index samples_number = 1;
     const Index inputs_number = 1;
     const Index outputs_number = 1;
+    const Index samples_number = 10;
 
     Dataset dataset(samples_number, { inputs_number }, { outputs_number });
     dataset.set_data_random();
+    dataset.set_sample_roles("Training");
 
-    NeuralNetwork neural_network(NeuralNetwork::ModelType::Approximation, { inputs_number }, {}, { outputs_number });
-    neural_network.set_parameters_constant(type(1));
-
-    MeanSquaredError mean_squared_error(&neural_network, &dataset);
-
-    QuasiNewtonMethod quasi_newton_method(&mean_squared_error);
-
-    QuasiNewtonMethodData quasi_newton_method_data(&quasi_newton_method);
-
-    quasi_newton_method.calculate_DFP_inverse_hessian(quasi_newton_method_data);
-
-    const Tensor2 inverse_hessian = mean_squared_error.calculate_inverse_hessian();
-
-    EXPECT_EQ(are_equal(quasi_newton_method_data.inverse_hessian, inverse_hessian, type(1e-4)), true);
-*/
-}
-
-
-TEST(QuasiNewtonMethodTest, BGFS)
-{
-    /*
-    const Index samples_number = 1;
-    const Index inputs_number = 1;
-    const Index outputs_number = 1;
-
-    NeuralNetwork neural_network(NeuralNetwork::ModelType::Approximation, {inputs_number}, {}, {outputs_number});
-    neural_network.set_parameters_constant(1);
-
-    Dataset dataset(samples_number, {inputs_number}, {outputs_number});
-    dataset.set_data_random();
+    ApproximationNetwork neural_network({ inputs_number }, {}, { outputs_number });
 
     MeanSquaredError mean_squared_error(&neural_network, &dataset);
-    mean_squared_error.set_regularization_method(LossIndex::"L2");
-
     QuasiNewtonMethod quasi_newton_method(&mean_squared_error);
+    quasi_newton_method.set_scaling();
+    QuasiNewtonMethodData optimization_data(&quasi_newton_method);
 
-    QuasiNewtonMethodData quasi_newton_method_data(&quasi_newton_method);
+    neural_network.set_parameters_random();
 
-    quasi_newton_method.calculate_BFGS_inverse_hessian(quasi_newton_method_data);
+    Tensor1 parameters_k = neural_network.get_parameters();
+    Tensor1 gradient_k = mean_squared_error.calculate_gradient();
 
-    const Tensor2 inverse_hessian = mean_squared_error.calculate_inverse_hessian();
+    Tensor1 parameters_next = parameters_k;
+    for(Index i=0; i < parameters_next.size(); ++i) parameters_next(i) += 0.01;
 
-    EXPECT_EQ(are_equal(quasi_newton_method_data.inverse_hessian, inverse_hessian, type(1e-4)), true);
-    */
+    neural_network.set_parameters(parameters_next);
+    Tensor1 gradient_next = mean_squared_error.calculate_gradient();
+
+    optimization_data.parameters_difference = parameters_next - parameters_k;
+    optimization_data.gradient_difference = gradient_next - gradient_k;
+
+    set_identity(optimization_data.old_inverse_hessian);
+
+    quasi_newton_method.calculate_inverse_hessian(optimization_data);
+
+    Tensor2 numerical_inverse_hessian = mean_squared_error.calculate_inverse_hessian();
+
+    EXPECT_EQ(optimization_data.inverse_hessian.dimension(0), numerical_inverse_hessian.dimension(0));
+
+    for(Index i = 0; i < optimization_data.inverse_hessian.size(); ++i)
+        EXPECT_FALSE(isnan(optimization_data.inverse_hessian(i)));
 }
 
 
@@ -87,8 +74,6 @@ TEST(QuasiNewtonMethodTest, Train)
     const Index inputs_number = 1;
     const Index outputs_number = 1;
 
-    //Test
-
     Dataset dataset(samples_number, {inputs_number}, {outputs_number});
     dataset.set_data_constant(1);
 
@@ -96,6 +81,11 @@ TEST(QuasiNewtonMethodTest, Train)
     neural_network.set_parameters_random();
 
     QuasiNewtonMethod quasi_newton_method;
+
+    quasi_newton_method.set_loss_index(new MeanSquaredError(&neural_network, &dataset));
+
+    quasi_newton_method.set_scaling();
+
     quasi_newton_method.set_maximum_epochs(1);
     quasi_newton_method.set_display(false);
 
@@ -103,12 +93,12 @@ TEST(QuasiNewtonMethodTest, Train)
 
     EXPECT_LE(training_results.get_epochs_number(), 1);
 
-    // Test
-
     type old_error = numeric_limits<float>::max();
     type error;
 
     dataset.set_data_random();
+
+    quasi_newton_method.set_scaling();
 
     neural_network.set_parameters_random();
 
@@ -116,8 +106,6 @@ TEST(QuasiNewtonMethodTest, Train)
     error = training_results.get_training_error();
 
     EXPECT_LT(error, old_error);
-
-    // Test
 
     old_error = error;
 
@@ -127,8 +115,6 @@ TEST(QuasiNewtonMethodTest, Train)
     error = training_results.get_training_error();
 
     EXPECT_LE(error, old_error);
-
-    //Loss goal
 
     neural_network.set_parameters_random();
 
@@ -140,12 +126,8 @@ TEST(QuasiNewtonMethodTest, Train)
     quasi_newton_method.set_maximum_time(1000.0);
 
     training_results = quasi_newton_method.train();
-/*
-    EXPECT_LE(training_results.get_loss(), training_loss_goal);
 
-    // Minimum loss decrease
-
-    neural_network.set_parameters_constant(type(-1));
+    EXPECT_LE(training_results.loss, training_loss_goal);
 
     type minimum_loss_decrease = type(0.1);
 
@@ -156,7 +138,5 @@ TEST(QuasiNewtonMethodTest, Train)
 
     training_results = quasi_newton_method.train();
 
-    EXPECT_LE(training_results.get_loss_decrease(), minimum_loss_decrease);
-*/
+    EXPECT_LE(training_results.loss_decrease, minimum_loss_decrease);
 }
-

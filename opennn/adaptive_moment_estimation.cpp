@@ -470,7 +470,7 @@ void AdaptiveMomentEstimationData::set(AdaptiveMomentEstimation* new_adaptive_mo
     Loss* loss_index = new_adaptive_moment_estimation->get_loss_index();
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const Index parameters_number = neural_network->get_parameters().size();
 
     gradient_exponential_decay.resize(parameters_number);
     gradient_exponential_decay.setZero();

@@ -1,7 +1,7 @@
 ###################################################################################################
 #                                                                                                 #
 #   OpenNN: Open Neural Networks Library                                                          #
-#   www.opennn.net                                                                      #
+#   www.opennn.net                                                                                #
 #                                                                                                 #
 #   B R E A S T   C A N C E R   P R O J E C T                                                     #
 #                                                                                                 #
@@ -27,12 +27,6 @@ SOURCES = main.cpp
 win32 {
     DEFINES += _HAS_STD_BYTE=0
     DEFINES += WIN32_LEAN_AND_MEAN
-}
-
-win32-g++{
-    QMAKE_LFLAGS += -static-libgcc
-    QMAKE_LFLAGS += -static-libstdc++
-    QMAKE_LFLAGS += -static
 }
 
 win32-msvc* {

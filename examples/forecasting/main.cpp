@@ -36,7 +36,7 @@ int main()
     {
         cout << "OpenNN. Forecasting Example." << endl;
 
-        throw runtime_error("Forecasting Example is not yet implemented. Please check back in a future version.");
+        //throw runtime_error("Forecasting Example is not yet implemented. Please check back in a future version.");
 
         TimeSeriesDataset time_series_dataset("../data/funcion_seno_inputTarget.csv", ",", false, false);
         // TimeSeriesDataset time_series_dataset("../data/madridNO2forecasting_copy.csv", ",", true, false);
@@ -67,7 +67,7 @@ int main()
                                                {time_series_dataset.get_target_shape()});
 
 
-/*
+
         // Layer* layer_ptr_scaling = forecasting_network.get_first("Scaling3d");
         // Scaling3d* scaling_layer = dynamic_cast<Scaling3d*>(layer_ptr_scaling);
         // scaling_layer->set_scalers("None");
@@ -165,7 +165,7 @@ int main()
         //     cout << "Output: " << outputs << endl;
         //     cout << "Target: " << input_views[i+1].second << endl;
         // }
-*/
+
         cout << "Good bye!" << endl;
 
         return 0;

@@ -10,6 +10,7 @@
 #include "dataset.h"
 #include "loss_index.h"
 #include "cross_entropy_error_3d.h"
+#include <Eigen/LU>
 
 namespace opennn
 {
@@ -1106,32 +1107,34 @@ Tensor2 Loss::calculate_numerical_hessian()
 
 Tensor2 Loss::calculate_inverse_hessian()
 {
-    Tensor2 H = calculate_numerical_hessian();
+    Tensor2 numerical_hessian = calculate_numerical_hessian();
+    const Index parameters_number = numerical_hessian.dimension(0);
 
-    const Index parameters_number = H.dimension(0);
+    using MatrixType = Eigen::Matrix<type, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
+    Eigen::Map<MatrixType> hessian_map(numerical_hessian.data(), parameters_number, parameters_number);
 
-    type determinant = 1;
+    Eigen::FullPivLU<MatrixType> hessian_decomposition(hessian_map);
 
-    for(Index i = 0; i < parameters_number; i++)
-        determinant *= H(i, i);
-
-    if(abs(determinant) < NUMERIC_LIMITS_MIN)
-        throw runtime_error("Hessian is not invertible.");
-
-    Tensor2 H_inv(parameters_number, parameters_number);
-    H_inv.setZero();
-
-    for(Index i = 0; i < parameters_number; i++)
+    if(!hessian_decomposition.isInvertible())
     {
-        for(Index j = 0; j < parameters_number; j++)
-        {
-            const type cofactor = ((i + j) % 2 == 0 ? 1 : -1) * H(j, i);
-            H_inv(i, j) = cofactor / determinant;
-        }
+        MatrixType hessian_damped = hessian_map + MatrixType::Identity(parameters_number, parameters_number) * 1e-4;
+
+        Eigen::FullPivLU<MatrixType> hessian_decomposition_damped(hessian_damped);
+
+        MatrixType hessian_map_inverse = hessian_decomposition_damped.inverse();
+
+        Tensor2 hessian_inverse(parameters_number, parameters_number);
+        Eigen::Map<MatrixType>(hessian_inverse.data(), parameters_number, parameters_number) = hessian_map_inverse;
+        return hessian_inverse;
     }
 
-    return H_inv;
+    MatrixType hessian_map_inverse = hessian_decomposition.inverse();
+    Tensor2 hessian_inverse(parameters_number, parameters_number);
+    Eigen::Map<MatrixType>(hessian_inverse.data(), parameters_number, parameters_number) = hessian_map_inverse;
+
+    return hessian_inverse;
 }
+
 
 type Loss::calculate_h(const type x)
 {
@@ -1231,7 +1234,6 @@ void BackPropagationLM::set(const Index new_samples_number,
 
     if(!neural_network_ptr) return;
 
-    // --- 1. CALCULAR TAMAÑO DE PARÁMETROS CON ALINEACIÓN (8 elementos = 32 bytes) ---
     const Index alignment_elements = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
     const Index mask_elements = ~(alignment_elements - 1);
     Index padded_parameters_number = 0;
@@ -1247,27 +1249,20 @@ void BackPropagationLM::set(const Index new_samples_number,
             const Index view_size = view->size();
 
             if(view_size > 0)
-            {
-                // Redondeamos el tamaño de cada vista al múltiplo de 8 elementos (32 bytes)
                 padded_parameters_number += (view_size + alignment_elements - 1) & mask_elements;
-            }
         }
     }
 
-    // --- 2. CONFIGURAR ESTRUCTURAS DE LA RED ---
     neural_network.set(samples_number, neural_network_ptr);
 
-    // --- 3. RESERVAR MEMORIA PARA LOS TENSORES LM ---
     loss = type(0);
 
-    // Gradientes
     gradient.resize(padded_parameters_number);
     gradient.setZero();
 
     regularization_gradient.resize(padded_parameters_number);
     regularization_gradient.setZero();
 
-    // Jacobiano: Filas = Muestras * Salidas, Columnas = Parámetros con Padding
     const Index outputs_number = neural_network_ptr->get_outputs_number();
     const Index total_error_terms = samples_number * outputs_number;
 
@@ -1280,7 +1275,6 @@ void BackPropagationLM::set(const Index new_samples_number,
     regularization_hessian.resize(padded_parameters_number, padded_parameters_number);
     regularization_hessian.setZero();
 
-    // --- 4. CONFIGURAR ERRORES Y SALIDAS ---
     errors.resize(samples_number, outputs_number);
     squared_errors.resize(total_error_terms);
 
