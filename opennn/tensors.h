@@ -560,7 +560,7 @@ Tensor<Index, 1> get_shape(const Tensor<T, n, AlignedMax>& tensor)
 
 
 template <int Rank>
-bool is_equal(const Tensor<bool, Rank>& tensor,
+bool is_equal(const Tensor<bool, Rank, AlignedMax>& tensor,
     const bool& value)
 {
     const Index size = tensor.size();
