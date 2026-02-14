@@ -13,59 +13,211 @@
 namespace opennn
 {
 
-inline Index count_elements(const shape& dims)
+struct Shape
 {
-    return accumulate(dims.begin(), dims.end(), 1, multiplies<Index>());
-}
+    static constexpr size_t MaxRank = 6;
+    Index shape[MaxRank] = {0};
+    size_t rank = 0;
+
+    Shape() noexcept = default;
+
+    Shape(initializer_list<Index> list)
+    {
+        rank = min(list.size(), MaxRank);
+        size_t i = 0;
+        for (Index d : list)
+            if (i < rank)
+                shape[i++] = d;
+    }
+
+    Shape(size_t n, Index value)
+    {
+        rank = (n > MaxRank) ? MaxRank : n;
+
+        for (size_t i = 0; i < rank; ++i)
+            shape[i] = value;
+    }
+
+    template<typename InputIt, typename = typename enable_if<!is_integral<InputIt>::value>::type>
+    Shape(InputIt first, InputIt last) {
+        rank = 0;
+        while (first != last && rank < MaxRank) {
+            shape[rank++] = static_cast<Index>(*first);
+            ++first;
+        }
+    }
+
+    const Index& operator[](size_t i) const noexcept
+    {
+        return shape[i];
+    }
+
+    Index& operator[](size_t i) noexcept
+    {
+        return shape[i];
+    }
+
+    Index& back() noexcept
+    {
+        return shape[rank - 1];
+    }
+
+    const Index& back() const
+    {
+        return shape[rank - 1];
+    }
+
+    size_t size() const noexcept
+    {
+        return rank;
+    }
+
+    bool empty() const noexcept { return rank == 0; }
+
+    Index* begin() noexcept
+    {
+        return shape;
+    }
+
+    Index* end() noexcept
+    {
+        return shape + rank;
+    }
+
+    const Index* begin() const noexcept
+    {
+        return shape;
+    }
+
+    const Index* end() const noexcept
+    {
+        return shape + rank;
+    }
+
+    void push_back(Index d)
+    {
+        if (rank < MaxRank)
+            shape[rank++] = d;
+    }
+
+
+    void insert(const Index* /*pos*/, const Index* first, const Index* last)
+    {
+        while (first != last)
+        {
+            this->push_back(*first);
+            ++first;
+        }
+    }
+
+
+    Index count() const noexcept
+    {
+        if (rank == 0) return 0;
+
+        Index total = 1;
+
+        for (size_t i = 0; i < rank; ++i)
+            total *= shape[i];
+
+        return total;
+    }
+
+    void clear() noexcept
+    {
+        rank = 0;
+    }
+
+    void resize(size_t n)
+    {
+        if (n > MaxRank)
+            throw std::out_of_range("Shape::resize: rank exceeds MaxRank (8)");
+
+        rank = n;
+    }
+
+
+    void resize(size_t n, Index value)
+    {
+        resize(n);
+
+        for (size_t i = 0; i < rank; ++i)
+            shape[i] = value;
+    }
+
+    friend ostream& operator<<(ostream& os, const Shape& s)
+    {
+        os << "[ ";
+
+        for (size_t i = 0; i < s.rank; ++i)
+            os << s.shape[i] << (i < s.rank - 1 ? ", " : " ");
+
+        os << "]";
+        return os;
+    }
+
+    bool operator==(const Shape& other) const noexcept
+    {
+        if (rank != other.rank) return false;
+
+        for (size_t i = 0; i < rank; ++i)
+            if (shape[i] != other.shape[i]) return false;
+
+        return true;
+    }
+
+    bool operator!=(const Shape& other) const noexcept
+    {
+        return !(*this == other);
+    }
+};
+
 
 struct TensorView
 {
     type* data = nullptr;
-    shape dims;
+    Shape shape;
 
     TensorView() noexcept = default;
 
-    TensorView(type* new_data, const ::shape& new_shape) noexcept
+    TensorView(type* new_data, const Shape& new_shape) noexcept
     {
         data = new_data;
-        dims = new_shape;
+        shape = new_shape;
     }
 
-    Index rank() const { return dims.size(); }
-
-    Index size() const
+    Index rank() const noexcept
     {
-        if (dims.empty()) return 0;
+        return shape.size();
+    }
 
-        return accumulate(dims.begin(), dims.end(), static_cast<Index>(1), multiplies<Index>());
+    Index size() const noexcept
+    {
+        return shape.count();
     }
 
     void print() const
     {
-        if(!data || dims.empty())
+        if(!data || shape.empty())
         {
             cout << "TensorView: Empty or Null" << endl;
             return;
         }
 
-        cout << "Dims: (";
-        for(size_t i = 0; i < dims.size(); ++i)
-            cout << dims[i] << (i < dims.size() - 1 ? ", " : "");
-
-        cout << ")" << endl;
+        cout << "Shape: " << shape << endl;
 
         const Index total_size = size();
-        const Index last_dim_stride = dims.back();
+        const Index last_dim_stride = shape.back();
 
         for(Index i = 0; i < total_size; ++i)
         {
             cout << data[i] << " ";
 
-            if (dims.size() > 1 && (i + 1) % last_dim_stride == 0)
+            if (shape.size() > 1 && (i + 1) % last_dim_stride == 0)
                 cout << endl;
         }
 
-        if (dims.size() == 1 || total_size % last_dim_stride != 0)
+        if (shape.size() == 1 || total_size % last_dim_stride != 0)
             cout << endl;
     }
 };
@@ -82,14 +234,14 @@ template<typename T, size_t N>
 using array = Eigen::array<T, N>;
 
 template <typename Index>
-Eigen::array<IndexPair<Index>, 1> axes(const Index a, const Index& b)
+Eigen::array<IndexPair<Index>, 1> axes(const Index a, Index b)
 {
     return Eigen::array<IndexPair<Index>, 1>({IndexPair<Index>(a, b)});
 }
 
 
 template <typename Index>
-Eigen::array<IndexPair<Index>, 2> axes(const Index a1, const Index& b1, const Index& a2, const Index& b2)
+Eigen::array<IndexPair<Index>, 2> axes(const Index a1, Index b1, Index a2, Index b2)
 {
     return Eigen::array<IndexPair<Index>, 2>({IndexPair<Index>(a1, b1), IndexPair<Index>(a2, b2)});
 }
@@ -101,32 +253,32 @@ inline Eigen::array<Index, 1> array_1(const Index a)
 }
 
 
-inline Eigen::array<Index, 2> array_2(const Index a, const Index& b)
+inline Eigen::array<Index, 2> array_2(const Index a, Index b)
 {
     return Eigen::array<Index, 2>({a, b});
 }
 
 
-inline Eigen::array<Index, 3> array_3(const Index a, const Index& b, const Index& c)
+inline Eigen::array<Index, 3> array_3(const Index a, Index b, Index c)
 {
     return Eigen::array<Index, 3>({a, b, c});
 }
 
 
-inline Eigen::array<Index, 4> array_4(const Index a, const Index& b, const Index& c, const Index& d)
+inline Eigen::array<Index, 4> array_4(const Index a, Index b, Index c, Index d)
 {
     return Eigen::array<Index, 4>({a, b, c, d});
 }
 
 
-inline array<Index, 5> array_5(const Index a, const Index& b, const Index& c, const Index& d, const Index& e)
+inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e)
 {
     return array<Index, 5>({a, b, c, d, e});
 }
 
-type bound(const type value, const type& minimum, const type& maximum);
+type bound(const type value, type minimum, type maximum);
 
-void set_row(Tensor2&, const Tensor1&, const Index&);
+void set_row(Tensor2&, const Tensor1&, Index);
 
 void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
 
@@ -135,14 +287,14 @@ void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
 
 void set_identity(Tensor2&);
 
-void sum_diagonal(Tensor2&, const type&);
+void sum_diagonal(Tensor2&, type);
 
 Tensor2 self_kronecker_product(const ThreadPoolDevice*, const Tensor1&);
 
-void divide_columns(const ThreadPoolDevice*, TensorMap2&, const Tensor1&);
+void divide_columns(const ThreadPoolDevice*, TensorMap2, const Tensor1&);
 
 template <int Rank>
-bool is_binary(const Tensor<type, Rank>& tensor)
+bool is_binary(const TensorR<Rank>& tensor)
 {
     const Index size = tensor.size();
 
@@ -170,7 +322,7 @@ vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
 vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums);
 
 template <int Rank>
-bool is_constant(const Tensor<type, Rank>& tensor)
+bool is_constant(const TensorR<Rank>& tensor)
 {
     const Index size = tensor.size();
 
@@ -194,22 +346,22 @@ bool is_constant(const Tensor<type, Rank>& tensor)
 void save_csv(const Tensor<type,2>&, const filesystem::path&);
 
 template<int rank>
-Index count_NAN(const Tensor<type, rank>& x)
+Index count_NAN(const TensorR<rank>& x)
 {
     return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
 }
 
-Index count_between(const Tensor1&, const type&, const type&);
+Index count_between(const Tensor1&, type, type);
 
-Index count_greater_than(const vector<Index>&, const Index&);
+Index count_greater_than(const vector<Index>&, Index);
 
 Tensor<Index, 1> calculate_rank_greater(const Tensor1&);
 Tensor<Index, 1> calculate_rank_less(const Tensor1&);
 
-vector<Index> get_elements_greater_than(const vector<Index>&, const Index&);
-vector<Index> get_elements_greater_than(const vector<vector<Index>>&, const Index&);
+vector<Index> get_elements_greater_than(const vector<Index>&, Index);
+vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
-Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, const Index&, const type&, const type&);
+Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, Index, type, type);
 
 //type l2_distance(const type, const TensorMap<Tensor<type, 0> > &);
 type l2_distance(const Tensor1&, const Tensor1&);
@@ -220,10 +372,10 @@ void fill_tensor_data_row_major(const Tensor2&, const vector<Index>&, const vect
 
 void fill_tensor_data(const Tensor2&, const vector<Index>&, const vector<Index>&, type*);
 
-void fill_tensor_sequence(const Tensor2&, const vector<Index>&, const vector<Index>&, const Index&, type*);
+void fill_tensor_sequence(const Tensor2&, const vector<Index>&, const vector<Index>&, Index, type*);
 
 template <typename Type, int Rank>
-bool contains(const Tensor<Type, Rank>& vector, const Type& value)
+bool contains(const TensorR<Rank>& vector, const Type& value)
 {
     Tensor<Type, 1> copy(vector);
 
@@ -244,7 +396,7 @@ Tensor2 assemble_vector_matrix(const Tensor1&, const Tensor2&);
 Tensor2 assemble_matrix_matrix(const Tensor2&, const Tensor2&);
 
 template <typename T>
-void push_back(Tensor<T, 1>& tensor, const T& value)
+void push_back(Tensor<T, 1, AlignedMax>& tensor, const T& value)
 {
     const int new_size = tensor.dimension(0) + 1;
 
@@ -258,12 +410,12 @@ void push_back(Tensor<T, 1>& tensor, const T& value)
     tensor = new_tensor;
 }
 
-string dimensions_to_string(const shape&, const string& = " ");
-shape string_to_dimensions(const string&, const string& = " ");
+string shape_to_string(const Shape&, const string& = " ");
+Shape string_to_shape(const string&, const string& = " ");
 
-shape prepend(const Index&, const shape&);
+Shape prepend(const Index&, const Shape&);
 
-Index get_size(const shape&);
+Index get_size(const Shape&);
 
 template <typename T>
 string vector_to_string(const vector<T>& x, const string& separator = " ")
@@ -294,7 +446,7 @@ string tensor_to_string(const Tensor<T, Rank>& x, const string& separator = " ")
 
 
 template <typename T, size_t Rank>
-void string_to_tensor(const string& input, Tensor<T, Rank>& x)
+void string_to_tensor(const string& input, Tensor<T, Rank, AlignedMax>& x)
 {
     istringstream stream(input);
     T value;
@@ -307,17 +459,17 @@ void string_to_tensor(const string& input, Tensor<T, Rank>& x)
 
 type round_to_precision(type, const int&);
 
-TensorMap1 tensor_map(const Tensor2&, const Index&);
+TensorMap1 tensor_map(const Tensor2&, Index);
 
-TensorMap2 tensor_map(const Tensor3&, const Index&);
-TensorMap3 tensor_map(const Tensor4&, const Index&);
-TensorMap2 tensor_map(const Tensor4&, const Index&, const Index&);
+TensorMap2 tensor_map(const Tensor3&, Index);
+TensorMap3 tensor_map(const Tensor4&, Index);
+TensorMap2 tensor_map(const Tensor4&, Index, Index);
 
-TensorMap3 tensor_map_(const TensorMap4&, const Index&);
-//TensorMap1 tensor_map_(const TensorMap2&, const Index&);
+TensorMap3 tensor_map_(const TensorMap4, Index);
+//TensorMap1 tensor_map_(const TensorMap2&, Index);
 
 template <Index rank>
-TensorMap<Tensor<type, rank>, AlignedMax> tensor_map(const TensorView& tensor_view)
+TensorMapR<rank> tensor_map(const TensorView& tensor_view)
 {
     if(!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
@@ -329,31 +481,39 @@ TensorMap<Tensor<type, rank>, AlignedMax> tensor_map(const TensorView& tensor_vi
     if constexpr (rank == 2)
         if (tensor_view.rank() == 4)
             return TensorMap2(tensor_view.data,
-                              tensor_view.dims[0],
-                              tensor_view.size() / tensor_view.dims[0]);
+                              tensor_view.shape[0],
+                              tensor_view.size() / tensor_view.shape[0]);
 
     if (tensor_view.rank() != rank)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap1(tensor_view.data, tensor_view.dims[0]);
+        return TensorMap1(tensor_view.data, tensor_view.shape[0]);
     else if constexpr (rank == 2)
         return TensorMap2(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1]);
     else if constexpr (rank == 3)
         return TensorMap3(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1],
-                          tensor_view.dims[2]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2]);
     else if constexpr (rank == 4)
         return TensorMap4(tensor_view.data,
-                          tensor_view.dims[0],
-                          tensor_view.dims[1],
-                          tensor_view.dims[2],
-                          tensor_view.dims[3]);
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2],
+                          tensor_view.shape[3]);
+    else if constexpr (rank == 5)
+        return TensorMap5(tensor_view.data,
+                          tensor_view.shape[0],
+                          tensor_view.shape[1],
+                          tensor_view.shape[2],
+                          tensor_view.shape[3],
+                          tensor_view.shape[4]);
+
     else
-        static_assert(rank >= 1 && rank <= 4, "Unsupported tensor rank");
+        static_assert(rank >= 1 && rank <= 5, "Unsupported tensor rank");
 }
 
 
@@ -389,7 +549,7 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 
 
 template<class T, int n>
-Tensor<Index, 1> get_shape(const Tensor<T, n>& tensor)
+Tensor<Index, 1> get_shape(const Tensor<T, n, AlignedMax>& tensor)
 {
     Tensor<Index, 1> shape(n);
 
@@ -416,7 +576,7 @@ bool is_equal(const Tensor<bool, Rank>& tensor,
 
 
 template <typename Type, int Rank>
-bool is_equal(const Tensor<Type, Rank>& tensor,
+bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
               const Type& value,
               const Type& tolerance = 0.001)
 {
@@ -432,24 +592,20 @@ bool is_equal(const Tensor<Type, Rank>& tensor,
 }
 
 
-template <typename Type, int Rank>
-bool are_equal(const Tensor<Type, Rank>& tensor_1,
-               const Tensor<Type, Rank>& tensor_2,
-               const Type& tolerance = 0.001)
+template <int Rank>
+bool are_equal(const TensorR<Rank>& A,
+               const TensorR<Rank>& B,
+               type tolerance = type(1.0e-3))
 {
-    if (tensor_1.size() != tensor_2.size())
-        throw runtime_error("Tensor sizes are different");
+    if(A.size() != B.size())
+        throw runtime_error("are_equal: Tensor sizes are different.");
 
-    const Index size = tensor_1.size();
+    const type* a = A.data();
+    const type* b = B.data();
 
-    for(Index i = 0; i < size; i++)
-        if constexpr (is_same_v<Type, bool>)
-        {
-            if (tensor_1(i) != tensor_2(i))
-                return false;
-            else if (abs(tensor_1(i) - tensor_2(i)) > tolerance)
-                return false;
-        }
+    for(Index i = 0; i < A.size(); ++i)
+        if(abs(a[i] - b[i]) > tolerance)
+            return false;
 
     return true;
 }
@@ -471,7 +627,7 @@ struct TensorViewCuda
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
-    void set_descriptor(const shape& dims)
+    void set_descriptor(const Shape& shape)
     {
         if (descriptor_handle == nullptr)
         {
@@ -485,10 +641,10 @@ struct TensorViewCuda
         }
 
         int n = 1, c = 1, h = 1, w = 1;
-        if (dims.size() > 0) n = static_cast<int>(dims[0]);
-        if (dims.size() > 1) c = static_cast<int>(dims[1]);
-        if (dims.size() > 2) h = static_cast<int>(dims[2]);
-        if (dims.size() > 3) w = static_cast<int>(dims[3]);
+        if (shape.size() > 0) n = static_cast<int>(shape[0]);
+        if (shape.size() > 1) c = static_cast<int>(shape[1]);
+        if (shape.size() > 2) h = static_cast<int>(shape[2]);
+        if (shape.size() > 3) w = static_cast<int>(shape[3]);
 
         CHECK_CUDNN(cudnnSetTensor4dDescriptor(descriptor_handle.get(), CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w));
     }
@@ -518,7 +674,7 @@ struct TensorCuda
     shared_ptr<cudnnTensorStruct> descriptor_handle = nullptr;
 
     TensorCuda() = default;
-    explicit TensorCuda(const shape& dims) { resize(dims); }
+    explicit TensorCuda(const Shape& shape) { resize(shape); }
 
     ~TensorCuda() { if (data) cudaFree(data); }
 
@@ -549,9 +705,9 @@ struct TensorCuda
         return descriptor_handle ? descriptor_handle.get() : nullptr;
     }
 
-    void resize(const shape& dims)
+    void resize(const Shape& shape)
     {
-        set_descriptor(dims);
+        set_descriptor(shape);
         const size_t total_elements = size();
         const size_t bytes = total_elements * sizeof(float);
         if (data) cudaFree(data);
@@ -559,7 +715,7 @@ struct TensorCuda
         CHECK_CUDA(cudaMemset(data, 0, bytes));
     }
 
-    void set_descriptor(const shape& dims)
+    void set_descriptor(const Shape& shape)
     {
         if (descriptor_handle == nullptr)
         {
@@ -573,10 +729,10 @@ struct TensorCuda
         }
 
         int n = 1, c = 1, h = 1, w = 1;
-        if (dims.size() > 0) n = static_cast<int>(dims[0]);
-        if (dims.size() > 1) c = static_cast<int>(dims[1]);
-        if (dims.size() > 2) h = static_cast<int>(dims[2]);
-        if (dims.size() > 3) w = static_cast<int>(dims[3]);
+        if (shape.size() > 0) n = static_cast<int>(shape[0]);
+        if (shape.size() > 1) c = static_cast<int>(shape[1]);
+        if (shape.size() > 2) h = static_cast<int>(shape[2]);
+        if (shape.size() > 3) w = static_cast<int>(shape[3]);
 
         CHECK_CUDNN(cudnnSetTensor4dDescriptor(descriptor_handle.get(), CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w));
     }

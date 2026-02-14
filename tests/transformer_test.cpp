@@ -18,7 +18,7 @@ TEST(Transformer, GeneralConstructor)
 
     const Index input_length = random_integer(1, 10);
     const Index context_length = random_integer(1, 10);
-    const Index input_dimensions = random_integer(1, 10);
+    const Index input_shape = random_integer(1, 10);
     const Index context_dimension = random_integer(1, 10);
     const Index embedding_depth = random_integer(1, 10);
     const Index dense_depth = random_integer(1, 10);
@@ -27,7 +27,7 @@ TEST(Transformer, GeneralConstructor)
 /*
     Transformer transformer(input_length, 
                             context_length, 
-                            input_dimensions, 
+                            input_shape, 
                             context_dimension, 
                             embedding_depth, 
                             dense_depth,
@@ -47,14 +47,14 @@ TEST(Transformer, GeneralConstructor)
 
     input_length = 2;
     context_length = 3;
-    input_dimensions = 5;
+    input_shape = 5;
     context_dimension = 6;
     embedding_depth = 10;
     dense_depth = 12;
     heads_number = 4;
     layers_number = 1;
 
-    Transformer transformer_3({ input_length, context_length, input_dimensions, context_dimension,
+    Transformer transformer_3({ input_length, context_length, input_shape, context_dimension,
                                 embedding_depth, dense_depth, heads_number, layers_number });
 
     EXPECT_EQ(transformer_3.get_layers_number() == 2 + 7 * layers_number + 10 * layers_number + 1);
@@ -63,7 +63,7 @@ TEST(Transformer, GeneralConstructor)
 
     layers_number = 3;
 
-    Transformer transformer_4({ input_length, context_length, input_dimensions, context_dimension,
+    Transformer transformer_4({ input_length, context_length, input_shape, context_dimension,
                                 embedding_depth, dense_depth, heads_number, layers_number });
 
     EXPECT_EQ(transformer_4.get_layers_number() == 2 + 7 * layers_number + 10 * layers_number + 1);
@@ -86,7 +86,7 @@ TEST(Transformer, Outputs)
 
     Index input_length = 1;
     Index context_length = 1;
-    Index input_dimensions = 1;
+    Index input_shape = 1;
     Index context_dimension = 1;
     Index embedding_depth = 1;
     Index dense_depth = 1;
@@ -94,7 +94,7 @@ TEST(Transformer, Outputs)
     Index layers_number = 1;
     Index batch_size = 1;
 
-    Transformer transformer(input_length, context_length, input_dimensions, context_dimension,
+    Transformer transformer(input_length, context_length, input_shape, context_dimension,
                       embedding_depth, dense_depth, heads_number, layers_number);
 
     transformer.set_parameters_constant(type(0));
@@ -109,7 +109,7 @@ TEST(Transformer, Outputs)
 
     EXPECT_EQ(outputs.dimension(0), batch_size);
     EXPECT_EQ(outputs.dimension(1), input_length);
-    EXPECT_EQ(outputs.dimension(2), input_dimensions);
+    EXPECT_EQ(outputs.dimension(2), input_shape);
 
     //EXPECT_EQ(outputs.abs() < type(NUMERIC_LIMITS_MIN));
     
@@ -254,7 +254,7 @@ TEST(Transformer, ForwardPropagate)
 
     Index input_length = 4;
     Index context_length = 3;
-    Index input_dimensions = 5;
+    Index input_shape = 5;
     Index context_dimension = 6;
 
     Index embedding_depth = 4;
@@ -272,7 +272,7 @@ TEST(Transformer, ForwardPropagate)
             data(i, j) = type(rand() % context_dimension);
         
         for(Index j = 0; j < 2 * input_length; j++)
-            data(i, j + context_length) = type(rand() % input_dimensions);
+            data(i, j + context_length) = type(rand() % input_shape);
     }
         
     dataset.set(data);
@@ -297,7 +297,7 @@ TEST(Transformer, ForwardPropagate)
 
     batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
         
-    transformer.set({ input_length, context_length, input_dimensions, context_dimension,
+    transformer.set({ input_length, context_length, input_shape, context_dimension,
                         embedding_depth, dense_depth, heads_number, layers_number });
 
     ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
@@ -312,7 +312,7 @@ TEST(Transformer, ForwardPropagate)
     EXPECT_EQ(dense_activations.rank() == 3);
     EXPECT_EQ(dense_activations.dimension(0) == batch_size);
     EXPECT_EQ(dense_activations.dimension(1) == input_length);
-    EXPECT_EQ(dense_activations.dimension(2) == input_dimensions + 1);
+    EXPECT_EQ(dense_activations.dimension(2) == input_shape + 1);
 
     EXPECT_EQ(check_activations_sums(dense_activations));
 
@@ -323,7 +323,7 @@ TEST(Transformer, ForwardPropagate)
 
         input_length = 2;
         context_length = 3;
-        input_dimensions = 5;
+        input_shape = 5;
         context_dimension = 6;
 
         embedding_depth = 4;
@@ -341,7 +341,7 @@ TEST(Transformer, ForwardPropagate)
                 data(i, j) = type(rand() % context_dimension);
 
             for(Index j = 0; j < 2 * input_length; j++)
-                data(i, j + context_length) = type(rand() % input_dimensions);
+                data(i, j + context_length) = type(rand() % input_shape);
         }
 
         dataset.set(data);
@@ -366,7 +366,7 @@ TEST(Transformer, ForwardPropagate)
 
         batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
 
-        transformer.set({ input_length, context_length, input_dimensions, context_dimension,
+        transformer.set({ input_length, context_length, input_shape, context_dimension,
                           embedding_depth, dense_depth, heads_number, layers_number });
 
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);
@@ -381,7 +381,7 @@ TEST(Transformer, ForwardPropagate)
         EXPECT_EQ(dense_activations.rank() == 3);
         EXPECT_EQ(dense_activations.dimension(0) == batch_size);
         EXPECT_EQ(dense_activations.dimension(1) == input_length);
-        EXPECT_EQ(dense_activations.dimension(2) == input_dimensions + 1);
+        EXPECT_EQ(dense_activations.dimension(2) == input_shape + 1);
 
         EXPECT_EQ(check_activations_sums(dense_activations));
     }

@@ -16,8 +16,8 @@ namespace opennn
 {
 
 TimeSeriesDataset::TimeSeriesDataset(const Index new_samples_number,
-                                     const shape& new_input_shape,
-                                     const shape& new_target_shape)
+                                     const Shape& new_input_shape,
+                                     const Shape& new_target_shape)
     :Dataset(new_samples_number, new_input_shape, new_target_shape)
 {
 
@@ -49,19 +49,19 @@ TimeSeriesDataset::TimeSeriesDataset(const filesystem::path& data_path,
 }
 
 
-const Index& TimeSeriesDataset::get_time_variable_index() const
+Index TimeSeriesDataset::get_time_variable_index() const
 {
     return time_variable_index;
 }
 
 
-const Index& TimeSeriesDataset::get_past_time_steps() const
+Index TimeSeriesDataset::get_past_time_steps() const
 {
     return past_time_steps;
 }
 
 
-const Index& TimeSeriesDataset::get_future_time_steps() const
+Index TimeSeriesDataset::get_future_time_steps() const
 {
     return future_time_steps;
 }
@@ -388,7 +388,7 @@ void TimeSeriesDataset::impute_missing_values_interpolate()
 
 void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
                                           const vector<Index>& input_indices,
-                                          type* input_tensor_data) const
+                                          type* input_data) const
 {
     if (sample_indices.empty() || input_indices.empty())
         return;
@@ -397,7 +397,7 @@ void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
     const Index input_size = input_indices.size();
     const Index total_rows_in_data = data.dimension(0);
 
-    TensorMap3 batch(input_tensor_data, batch_size, past_time_steps, input_size);
+    TensorMap3 batch(input_data, batch_size, past_time_steps, input_size);
     const type* const matrix_data = data.data();
 
 #pragma omp parallel for
@@ -716,7 +716,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
 
 vector<vector<Index>> TimeSeriesDataset::get_batches(const vector<Index>& sample_indices,
-                                                     const Index& batch_size,
+                                                     Index batch_size,
                                                      bool shuffle) const
 {
     // @todo copied from dataset

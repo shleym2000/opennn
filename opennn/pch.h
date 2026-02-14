@@ -1,6 +1,13 @@
 #pragma once
 
+#ifndef EIGEN_USE_THREADS
+#define EIGEN_USE_THREADS
+#endif
+
+#ifndef NDEBUG
 #define NDEBUG
+#endif
+
 #define EIGEN_MAX_ALIGN_BYTES 32
 #define EIGEN_NO_DEBUG
 
@@ -42,13 +49,11 @@
 #include <sstream>
 #include <omp.h>
 
-#define EIGEN_USE_THREADS
-
 #include "../eigen/Eigen/Core"
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "../eigen/Eigen/src/Core/util/DisableStupidWarnings.h"
 
-//#define OPENNN_CUDA // Comment this line to disable cuda files
+#define OPENNN_CUDA // Comment this line to disable cuda files
 
 #ifdef OPENNN_CUDA
 
@@ -121,23 +126,32 @@ using namespace std;
 using namespace Eigen;
 
 using type = float;
-using shape = vector<Index>;
 
-using Tensor1 = Tensor<type, 1>;
-using Tensor2 = Tensor<type, 2>;
-using Tensor3 = Tensor<type, 3>;
-using Tensor4 = Tensor<type, 4>;
-using Tensor5 = Tensor<type, 5>;
+// @todo change this, since it is used a lot and introduces overhead
+// using shape = Eigen::Array<Index, Eigen::Dynamic, 1, 0, 8, 1>;
+//using shape = vector<Index>;
 
-using TensorMap1 = TensorMap<Tensor<type, 1>, AlignedMax>;
-using TensorMap2 = TensorMap<Tensor<type, 2>, AlignedMax>;
-using TensorMap3 = TensorMap<Tensor<type, 3>, AlignedMax>;
-using TensorMap4 = TensorMap<Tensor<type, 4>, AlignedMax>;
+using Tensor1 = Tensor<type, 1, AlignedMax>;
+using Tensor2 = Tensor<type, 2, AlignedMax>;
+using Tensor3 = Tensor<type, 3, AlignedMax>;
+using Tensor4 = Tensor<type, 4, AlignedMax>;
+using Tensor5 = Tensor<type, 5, AlignedMax>;
 
-using ConstTensorMap1 = TensorMap<const Tensor<type, 1>, AlignedMax>;
-using ConstTensorMap2 = TensorMap<const Tensor<type, 2>, AlignedMax>;
-using ConstTensorMap3 = TensorMap<const Tensor<type, 3>, AlignedMax>;
-using ConstTensorMap4 = TensorMap<const Tensor<type, 4>, AlignedMax>;
+template <int Rank>
+using TensorR = Tensor<type, Rank, AlignedMax>;
+
+using TensorMap1 = TensorMap<Tensor<type, 1, AlignedMax>, AlignedMax>;
+using TensorMap2 = TensorMap<Tensor<type, 2, AlignedMax>, AlignedMax>;
+using TensorMap3 = TensorMap<Tensor<type, 3, AlignedMax>, AlignedMax>;
+using TensorMap4 = TensorMap<Tensor<type, 4, AlignedMax>, AlignedMax>;
+using TensorMap5 = TensorMap<Tensor<type, 5, AlignedMax>, AlignedMax>;
+
+template <int Rank>
+using TensorMapR = TensorMap<Tensor<type, Rank, AlignedMax>, AlignedMax>;
+
+
+using ConstTensorMap4 = TensorMap<const Tensor<type, 4, AlignedMax>, AlignedMax>;
+
 
 #include "tinyxml2.h"
 

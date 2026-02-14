@@ -13,7 +13,7 @@
 namespace opennn
 {
 
-Pooling3d::Pooling3d(const shape& new_input_shape,
+Pooling3d::Pooling3d(const Shape& new_input_shape,
                      const PoolingMethod& new_pooling_method,
                      const string& new_name) : Layer()
 {
@@ -21,13 +21,13 @@ Pooling3d::Pooling3d(const shape& new_input_shape,
 }
 
 
-shape Pooling3d::get_input_shape() const
+Shape Pooling3d::get_input_shape() const
 {
     return input_shape;
 }
 
 
-shape Pooling3d::get_output_shape() const
+Shape Pooling3d::get_output_shape() const
 {
     return {input_shape[1]};
 }
@@ -45,7 +45,7 @@ string Pooling3d::write_pooling_method() const
 }
 
 
-void Pooling3d::set(const shape& new_input_shape, const PoolingMethod& new_pooling_method, const string& new_label)
+void Pooling3d::set(const Shape& new_input_shape, const PoolingMethod& new_pooling_method, const string& new_label)
 {
     name = "Pooling3d";
     input_shape = new_input_shape;
@@ -169,7 +169,7 @@ void Pooling3dForwardPropagation::initialize()
     const Pooling3d* pooling_layer = static_cast<Pooling3d*>(layer);
 
     const Index features = pooling_layer->get_output_shape()[0];
-    outputs.dims = {batch_size, features};
+    outputs.shape = {batch_size, features};
 
     if (pooling_layer->get_pooling_method() == Pooling3d::PoolingMethod::MaxPooling)
         maximal_indices.resize(batch_size, features);
@@ -180,7 +180,7 @@ void Pooling3dBackPropagation::initialize()
 {
     layer = static_cast<Pooling3d*>(layer);
 
-    const shape layer_input_dimensions = layer->get_input_shape();
+    const Shape layer_input_dimensions = layer->get_input_shape();
 
     input_derivatives.resize(batch_size,
                              layer_input_dimensions[0],
@@ -207,7 +207,7 @@ Pooling3dBackPropagation::Pooling3dBackPropagation(const Index new_batch_size, L
 void Pooling3d::to_XML(XMLPrinter& printer) const
 {
     printer.OpenElement("Pooling3d");
-    add_xml_element(printer, "InputDimensions", dimensions_to_string(get_input_shape()));
+    add_xml_element(printer, "InputDimensions", shape_to_string(get_input_shape()));
     add_xml_element(printer, "PoolingMethod", write_pooling_method());
     printer.CloseElement();
 }
@@ -217,7 +217,7 @@ void Pooling3d::from_XML(const XMLDocument& document)
     const XMLElement* element = document.FirstChildElement("Pooling3d");
     if(!element) throw runtime_error("Pooling3d element is nullptr.");
 
-    set_input_shape(string_to_dimensions(read_xml_string(element, "InputDimensions")));
+    set_input_shape(string_to_shape(read_xml_string(element, "InputDimensions")));
     set_pooling_method(read_xml_string(element, "PoolingMethod"));
 }
 
@@ -225,8 +225,8 @@ void Pooling3d::from_XML(const XMLDocument& document)
 void Pooling3d::print() const
 {
     cout << "Pooling3d layer" << endl
-         << "Input shape: " << dimensions_to_string(input_shape) << endl
-         << "Output shape: " << dimensions_to_string(get_output_shape()) << endl
+         << "Input shape: " << shape_to_string(input_shape) << endl
+         << "Output shape: " << shape_to_string(get_output_shape()) << endl
          << "Pooling Method: " << write_pooling_method() << endl;
 }
 

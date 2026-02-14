@@ -68,7 +68,7 @@ TEST(CrossEntropyError3DTest, BackPropagateZero)
     NeuralNetwork neural_network;
 
     neural_network.add_layer(make_unique<Embedding>(
-        shape{vocabulary_size, sequence_length},
+        Shape{vocabulary_size, sequence_length},
         embedding_dimension,
         "embedding_layer"
         ));
@@ -106,7 +106,7 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
 /*
     batch_size = type(1) + rand() % 5;
     inputs_number = type(1) + rand() % 5;
-    input_dimensions = type(1) + rand() % 5;
+    input_shape = type(1) + rand() % 5;
     depth = type(1) + rand() % 5;
 
     // Dataset
@@ -115,7 +115,7 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
 
     for (Index i = 0; i < batch_size; i++)
         for (Index j = 0; j < 2 * inputs_number; j++)
-            data(i, j) = type(rand() % (input_dimensions + 1));
+            data(i, j) = type(rand() % (input_shape + 1));
 
     dataset.set_data(data);
 
@@ -139,10 +139,10 @@ TEST(CrossEntropyError3DTest, BackPropagateRandom)
 
     neural_network.set();
 
-    Embedding* embedding_layer = new Embedding(input_dimensions, inputs_number, depth);
+    Embedding* embedding_layer = new Embedding(input_shape, inputs_number, depth);
     neural_network.add_layer(embedding_layer);
 
-    Dense3d* dense_layer_3d = new Dense3d(inputs_number, depth, input_dimensions + 1);
+    Dense3d* dense_layer_3d = new Dense3d(inputs_number, depth, input_shape + 1);
     neural_network.add_layer(dense_layer_3d);
 
     forward_propagation.set(batch_size, &neural_network);
@@ -186,7 +186,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         
         inputs_number = 4;
         context_length = 6;
-        input_dimensions = 11;
+        input_shape = 11;
         context_dimension = 10;
 
         depth = 4; 
@@ -196,7 +196,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
         
         bool is_training = true;
         
-        dataset.set_data_random_language_model(batch_size, inputs_number, context_length, input_dimensions, context_dimension);
+        dataset.set_data_random_language_model(batch_size, inputs_number, context_length, input_shape, context_dimension);
 
         dataset.set_sample_roles("Training");
 
@@ -209,7 +209,7 @@ void CrossEntropyError3DTest::test_calculate_gradient_transformer()
 
         batch.fill(training_samples_indices, input_variables_indices, decoder_variables_indices, target_variables_indices);
         
-        transformer.set({ inputs_number, context_length, input_dimensions, context_dimension,
+        transformer.set({ inputs_number, context_length, input_shape, context_dimension,
                           depth, dense_depth, heads_number, layers_number });
         
         ForwardPropagation forward_propagation(dataset.get_samples_number("Training"), &transformer);

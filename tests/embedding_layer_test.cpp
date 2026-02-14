@@ -22,12 +22,12 @@ TEST(Embedding, DefaultConstructor)
 
 
 TEST(Embedding, GeneralConstructor)
-{    
-    const shape input_dimensions = {1, 2, 3};
+{
+    const Shape input_shape{1, 2, 3};
 
-    const Index vocabulary_size = input_dimensions[0];
-    const Index sequence_length = input_dimensions[1];
-    const Index embedding_dimension = input_dimensions[2];
+    const Index vocabulary_size = input_shape[0];
+    const Index sequence_length = input_shape[1];
+    const Index embedding_dimension = input_shape[2];
 
     Embedding embedding_layer({vocabulary_size, sequence_length}, embedding_dimension);
 
@@ -45,7 +45,7 @@ TEST(Embedding, ForwardPropagate)
     const Index embedding_dimension = random_integer(1, 10);
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<Embedding>(shape{vocabulary_size, sequence_length}, embedding_dimension));
+    neural_network.add_layer(make_unique<Embedding>(Shape{vocabulary_size, sequence_length}, embedding_dimension));
 
     Embedding embedding_layer({vocabulary_size, sequence_length}, embedding_dimension);
     embedding_layer.set_parameters_random();
@@ -78,10 +78,10 @@ TEST(EmbeddingForwardPropagationTest, GetOutputPairReturnsCorrectDataAndShape)
     const TensorMap3 out = tensor_map<3>(output_view);
 
     EXPECT_EQ(output_view.data, forward.outputs.data);
-    ASSERT_EQ(output_view.dims.size(), 3);
-    EXPECT_EQ(output_view.dims[0], batch_size);
-    EXPECT_EQ(output_view.dims[1], sequence_length);
-    EXPECT_EQ(output_view.dims[2], embedding_dimension);
+    ASSERT_EQ(output_view.shape.size(), 3);
+    EXPECT_EQ(output_view.shape[0], batch_size);
+    EXPECT_EQ(output_view.shape[1], sequence_length);
+    EXPECT_EQ(output_view.shape[2], embedding_dimension);
 }
 
 
@@ -94,11 +94,11 @@ TEST(Embedding, BackPropagate)
     const Index vocabulary_size = language_dataset.get_input_vocabulary_size();
     const Index sequence_length = language_dataset.get_maximum_input_sequence_length();
 
-    shape input_dimensions = { vocabulary_size, sequence_length };
+    Shape input_shape{ vocabulary_size, sequence_length };
 
     NeuralNetwork neural_network;
 
-    neural_network.add_layer(make_unique<Embedding>(input_dimensions, embedding_dimension));
+    neural_network.add_layer(make_unique<Embedding>(input_shape, embedding_dimension));
     neural_network.add_layer(make_unique<Flatten<3>>(neural_network.get_output_shape()));
     neural_network.add_layer(make_unique<opennn::Dense<3>>(neural_network.get_output_shape(), language_dataset.get_target_shape(), "Logistic"));
 
@@ -110,15 +110,15 @@ TEST(Embedding, BackPropagate)
     unique_ptr<LayerForwardPropagation> forward_propagation =
         make_unique<EmbeddingForwardPropagation>(batch_size, first_layer);
 
-    shape input_dims_vector(inputs.dimensions().begin(), inputs.dimensions().end());
+    Shape input_dims_vector(inputs.dimensions().begin(), inputs.dimensions().end());
     TensorView input_view(inputs.data(), input_dims_vector);
 
     first_layer->forward_propagate({ input_view }, forward_propagation, false);
 
     const TensorView embedding_output_view = forward_propagation->get_outputs();
 
-    ASSERT_EQ(embedding_output_view.dims.size(), 3);
-    EXPECT_EQ(embedding_output_view.dims[0], batch_size); 
-    EXPECT_EQ(embedding_output_view.dims[1], sequence_length);
-    EXPECT_EQ(embedding_output_view.dims[2], embedding_dimension);
+    ASSERT_EQ(embedding_output_view.shape.size(), 3);
+    EXPECT_EQ(embedding_output_view.shape[0], batch_size);
+    EXPECT_EQ(embedding_output_view.shape[1], sequence_length);
+    EXPECT_EQ(embedding_output_view.shape[2], embedding_dimension);
 }

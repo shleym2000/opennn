@@ -29,20 +29,20 @@ struct DenseForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const auto* dense_layer = static_cast<const Dense<Rank>*>(layer);
-        const shape output_dimensions = dense_layer->get_output_shape();
+        const Shape output_shape = dense_layer->get_output_shape();
 
-        shape full_output_dims = {batch_size};
-        full_output_dims.insert(full_output_dims.end(), output_dimensions.begin(), output_dimensions.end());
+        Shape full_output_dims = {batch_size};
+        full_output_dims.insert(full_output_dims.end(), output_shape.begin(), output_shape.end());
 
-        outputs.dims = full_output_dims;
-        activation_derivatives.dims = full_output_dims;
+        outputs.shape = full_output_dims;
+        activation_derivatives.shape = full_output_dims;
 
         if (dense_layer->get_batch_normalization())
         {
             const Index outputs_number = dense_layer->get_outputs_number();
-            means.dims = {outputs_number};
-            standard_deviations.dims = {outputs_number};
-            normalized_outputs.dims = full_output_dims;
+            means.shape = {outputs_number};
+            standard_deviations.shape = {outputs_number};
+            normalized_outputs.shape = full_output_dims;
         }
     }
 
@@ -88,25 +88,25 @@ struct DenseBackPropagation final : LayerBackPropagation
         const Index outputs_number = layer->get_outputs_number();
         const Index inputs_number = layer->get_input_shape()[0];
 
-        bias_gradients.dims = {outputs_number};
-        weight_gradients.dims = {inputs_number, outputs_number};
+        bias_gradients.shape = {outputs_number};
+        weight_gradients.shape = {inputs_number, outputs_number};
 
         if (dense_layer->get_batch_normalization())
         {
-            gamma_gradients.dims = {outputs_number};
-            beta_gradients.dims = {outputs_number};
+            gamma_gradients.shape = {outputs_number};
+            beta_gradients.shape = {outputs_number};
         }
 
-        const shape input_shape = dense_layer->get_input_shape();
+        const Shape input_shape = dense_layer->get_input_shape();
 
-        shape full_input_shape = { batch_size };
+        Shape full_input_shape = { batch_size };
         full_input_shape.insert(full_input_shape.end(), input_shape.begin(), input_shape.end());
 
         input_gradients_memory.resize(1);
-        input_gradients_memory[0].resize(count_elements(full_input_shape));
+        input_gradients_memory[0].resize(full_input_shape.count());
         input_gradients.resize(1);
         input_gradients[0].data = input_gradients_memory[0].data();
-        input_gradients[0].dims = full_input_shape;
+        input_gradients[0].shape = full_input_shape;
     }
 
 
@@ -152,19 +152,24 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         batch_size = new_samples_number;
 
         const Index parameters_number = layer->get_parameters_number();
-        const shape layer_input_shape = layer->get_input_shape();
+        const Shape layer_input_shape = layer->get_input_shape();
 
-        shape input_shape_vec = {batch_size};
+        Shape input_shape_vec = {batch_size};
         input_shape_vec.insert(input_shape_vec.end(), layer_input_shape.begin(), layer_input_shape.end());
 
-        input_gradients[0].dims = input_shape_vec;
+        input_gradients_memory.resize(1);
+        input_gradients_memory[0].resize(input_shape_vec.count());
 
-        squared_errors_Jacobian.dims = {batch_size, parameters_number};
+        input_gradients.resize(1);
+        input_gradients[0].data = input_gradients_memory[0].data();
+        input_gradients[0].shape = input_shape_vec;
+
+        squared_errors_Jacobian.shape = {batch_size, parameters_number};
     }
 
     vector<TensorView*> get_workspace_views() override
     {
-        return {&squared_errors_Jacobian };
+        return {&squared_errors_Jacobian};
     }
 
     void print() const override
@@ -223,7 +228,7 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
 
         if (dense_layer->get_batch_normalization())
         {
-            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            Shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             batch_means.resize(batch_normalization_dims);
             bn_saved_inv_variance.resize(batch_normalization_dims);
@@ -348,8 +353,8 @@ class Dense final : public Layer
 
 public:
 
-    Dense(const shape& new_input_shape = {0},
-          const shape& new_output_shape = {0},
+    Dense(const Shape& new_input_shape = {0},
+          const Shape& new_output_shape = {0},
           const string& new_activation_function = "HyperbolicTangent",
           bool new_batch_normalization = false,
           const string& new_label = "dense2d_layer")
@@ -359,8 +364,8 @@ public:
 
 
     Dense(const Index input_sequence_length,
-          const Index& embedding_dimension,
-          const Index& feed_forward_dimension,
+          Index embedding_dimension,
+          Index feed_forward_dimension,
           const string& new_activation_function,
           const string& new_label)
     {
@@ -372,13 +377,13 @@ public:
     }
 
 
-    shape get_input_shape() const override
+    Shape get_input_shape() const override
     {
-        return { weights.dims[0] };
+        return { weights.shape[0] };
     }
 
 
-    shape get_output_shape() const override
+    Shape get_output_shape() const override
     {
         return { biases.size() };
     }
@@ -413,8 +418,8 @@ public:
     }
 
 
-    void set(const shape& new_input_shape = {},
-             const shape& new_output_shape = {},
+    void set(const Shape& new_input_shape = {},
+             const Shape& new_output_shape = {},
              const string& new_activation_function = "HyperbolicTangent",
              bool new_batch_normalization = false,
              const string& new_label = "dense_layer")
@@ -425,8 +430,8 @@ public:
         if (new_output_shape.size() != 1)
             throw runtime_error("Output shape size is not 1");
 
-        biases.dims = { new_output_shape[0] };
-        weights.dims = { new_input_shape[0], new_output_shape[0] };
+        biases.shape = { new_output_shape[0] };
+        weights.shape = { new_input_shape[0], new_output_shape[0] };
 
         set_activation_function(new_activation_function);
 
@@ -436,8 +441,8 @@ public:
 
         if (batch_normalization)
         {
-            gammas.dims = {outputs_number};
-            betas.dims = {outputs_number};
+            gammas.shape = {outputs_number};
+            betas.shape = {outputs_number};
             running_means.resize(outputs_number);
             running_standard_deviations.resize(outputs_number);
         }
@@ -453,7 +458,7 @@ public:
 
         if (batch_normalization)
         {
-            shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
+            Shape batch_normalization_dims = { 1, outputs_number, 1, 1 };
 
             betas_device.set_descriptor(batch_normalization_dims);
             gammas_device.set_descriptor(batch_normalization_dims);
@@ -521,23 +526,23 @@ public:
     }
 
 
-    void set_input_shape(const shape& new_input_shape) override
+    void set_input_shape(const Shape& new_input_shape) override
     {
         const Index inputs_number = new_input_shape[0];
         const Index outputs_number = get_outputs_number();
 
-        biases.dims = { outputs_number };
-        weights.dims = { inputs_number, outputs_number };
+        biases.shape = { outputs_number };
+        weights.shape = { inputs_number, outputs_number };
     }
 
 
-    void set_output_shape(const shape& new_output_shape) override
+    void set_output_shape(const Shape& new_output_shape) override
     {
         const Index inputs_number = get_inputs_number();
         const Index neurons_number = new_output_shape[0];
 
-        biases.dims = { neurons_number };
-        weights.dims = { inputs_number, neurons_number };
+        biases.shape = { neurons_number };
+        weights.shape = { inputs_number, neurons_number };
     }
 
 
@@ -642,7 +647,7 @@ public:
     }
 */
 
-    void apply_batch_normalization_backward(TensorMap2& output_gradients,
+    void apply_batch_normalization_backward(TensorMap2 output_gradients,
                                             unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                             unique_ptr<LayerBackPropagation>& layer_back_propagation) const
     {
@@ -779,7 +784,7 @@ public:
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();
         const Index biases_number = biases.size();
-        const Index samples_number = inputs.dimension(0);
+        const Index total_rows = output_gradients.dimension(0);
 
         const DenseForwardPropagation<Rank>* dense2d_layer_forward_propagation =
             static_cast<DenseForwardPropagation<Rank>*>(forward_propagation.get());
@@ -800,10 +805,10 @@ public:
             output_gradients.device(*device) = output_gradients * activation_derivatives;
 
         if constexpr(Rank == 2)
-            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{samples_number, biases_number})
+            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{total_rows, biases_number})
                 .device(*device) = output_gradients;
         else
-            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{samples_number, biases_number})
+            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{total_rows, biases_number})
                 .device(*device) = output_gradients.sum(array<Index, Rank-2>{1});
 
         for(Index j = 0; j < outputs_number; j++)
@@ -815,7 +820,7 @@ public:
                 const auto input_i = inputs.chip(i, Rank - 1);
                 const auto derivative = delta_j * input_i;
 
-                const Index weight_column_index = biases_number + i*outputs_number + j;
+                const Index weight_column_index = biases_number + j * outputs_number + i;
 
                 if constexpr(Rank == 2)
                     squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative;
@@ -830,57 +835,62 @@ public:
 
 
     void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
-                                           const Index& start_column_index,
+                                           Index start_column_index,
                                            Tensor2& global_jacobian) const override
     {
-        const Index batch_size = back_propagation->batch_size;
-        constexpr Index MASK = ~(EIGEN_MAX_ALIGN_BYTES - 1);
+        const Index alignment_elements = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
+        const Index mask_elements = ~(alignment_elements - 1);
+        const Index total_error_terms = global_jacobian.dimension(0);
 
         Index global_offset = start_column_index;
         Index local_offset = 0;
 
-        DenseBackPropagationLM* dense_lm =
-            static_cast<DenseBackPropagationLM*>(back_propagation.get());
+        DenseBackPropagationLM* dense_lm = static_cast<DenseBackPropagationLM*>(back_propagation.get());
 
         const Index biases_size = biases.size();
+        if(biases_size > 0)
+        {
+            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, biases_size})
+            .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
+                                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{total_error_terms, biases_size});
 
-        global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, biases_size})
-            .device(*device) =
-            tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, biases_size});
-
-        local_offset += biases_size;
-        global_offset += (biases_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
+            local_offset += biases_size;
+            global_offset += (biases_size + alignment_elements - 1) & mask_elements;
+        }
 
         const Index weights_size = weights.size();
+        if(weights_size > 0)
+        {
+            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, weights_size})
+                .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
+                      .slice(array<Index, 2>{0, biases_size}, array<Index, 2>{total_error_terms, weights_size});
 
-        global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, weights_size})
-            .device(*device) =
-            tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, weights_size});
-
-        local_offset += weights_size;
-        global_offset += (weights_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
+            global_offset += (weights_size + alignment_elements - 1) & mask_elements;
+        }
 
         if(!batch_normalization) return;
 
         const Index gammas_size = gammas.size();
-
-        global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, gammas_size})
+        if(gammas_size > 0)
+        {
+            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, gammas_size})
             .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                  .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, gammas_size});
+                                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{total_error_terms, gammas_size});
 
-        local_offset += gammas_size;
-        global_offset += (gammas_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
+            local_offset += gammas_size;
+            global_offset += (gammas_size + alignment_elements - 1) & mask_elements;
+        }
 
         const Index betas_size = betas.size();
-
-        global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{batch_size, betas_size})
+        if(betas_size > 0)
+        {
+            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, betas_size})
             .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                  .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{batch_size, betas_size});
+                                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{total_error_terms, betas_size});
 
-        local_offset += betas_size;
-        global_offset += (betas_size + EIGEN_MAX_ALIGN_BYTES - 1) & MASK;
+            local_offset += betas_size;
+            global_offset += (betas_size + alignment_elements - 1) & mask_elements;
+        }
     }
 
 

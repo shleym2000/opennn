@@ -221,7 +221,7 @@ vector<vector<Index>> NeuralNetwork::get_layer_output_indices() const
 }
 
 
-Index NeuralNetwork::find_input_index(const vector<Index>& layer_inputs_indices, const Index& layer_index) const
+Index NeuralNetwork::find_input_index(const vector<Index>& layer_inputs_indices, Index layer_index) const
 {
     for(Index i = 0; i < Index(layer_inputs_indices.size()); i++)
         if (layer_inputs_indices[i] == layer_index)
@@ -276,9 +276,9 @@ void NeuralNetwork::set_output_names(const vector<string>& new_output_namess)
 }
 
 
-void NeuralNetwork::set_input_shape(const shape& new_input_shape)
+void NeuralNetwork::set_input_shape(const Shape& new_input_shape)
 {
-    const Index total_inputs = count_elements(new_input_shape);
+    const Index total_inputs = new_input_shape.count();
     input_names.resize(total_inputs);
 
     if(has("Scaling2d"))
@@ -377,9 +377,9 @@ Index NeuralNetwork::get_inputs_number() const
     if(has("Embedding"))
         return get_layer(0)->get_inputs_number();
 
-    const shape input_shape = layers[0]->get_input_shape();
+    const Shape input_shape = layers[0]->get_input_shape();
 
-    return count_elements(input_shape);
+    return input_shape.count();
 }
 
 
@@ -390,13 +390,13 @@ Index NeuralNetwork::get_outputs_number() const
 
     const Layer* last_layer = layers[layers.size() - 1].get();
 
-    const shape output_dimensions = last_layer->get_output_shape();
+    const Shape output_shape = last_layer->get_output_shape();
 
-    return count_elements(output_dimensions);
+    return output_shape.count();
 }
 
 
-shape NeuralNetwork::get_input_shape() const
+Shape NeuralNetwork::get_input_shape() const
 {
     if(layers.empty())
         return {};
@@ -405,7 +405,7 @@ shape NeuralNetwork::get_input_shape() const
 }
 
 
-shape NeuralNetwork::get_output_shape() const
+Shape NeuralNetwork::get_output_shape() const
 {
     if(layers.empty()) 
         return {};
@@ -636,11 +636,11 @@ string NeuralNetwork::get_expression() const
 }
 
 
-Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor<Index, 1>& inputs_dimensions)
+Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor<Index, 1>& input_shape)
 {
-    const Index inputs_dimensions_number = inputs_dimensions.size();
+    const Index input_shape_number = input_shape.size();
 
-    if(inputs_dimensions_number == 2)
+    if(input_shape_number == 2)
     {
         Tensor2 scaled_outputs;
         Tensor2 last_layer_outputs;
@@ -652,23 +652,23 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         if(layers_number == 0)
         {
-            scaled_outputs = TensorMap2(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
+            scaled_outputs = TensorMap2(scaled_inputs_data, input_shape[0], input_shape[1]);
             return scaled_outputs;
         }
 
-        scaled_outputs.resize(inputs_dimensions[0], layers[0]->get_outputs_number());
+        scaled_outputs.resize(input_shape[0], layers[0]->get_outputs_number());
 
         outputs_dimensions = get_shape(scaled_outputs);
 
-        ForwardPropagation forward_propagation(inputs_dimensions[0], this);
+        ForwardPropagation forward_propagation(input_shape[0], this);
 
         bool is_training = false;
 
         if(layers[0]->get_name() == "Scaling2d")
         {
-            TensorView scaled_inputs_tensor(scaled_inputs_data, {inputs_dimensions[0], inputs_dimensions[1]});
+            TensorView scaled_inputs_tensor(scaled_inputs_data, {input_shape[0], input_shape[1]});
 
-            const Tensor<Index, 0> size = inputs_dimensions.prod();
+            const Tensor<Index, 0> size = input_shape.prod();
 
             memcpy(scaled_inputs_tensor.data, scaled_inputs_data, static_cast<size_t>(size(0)*sizeof(type)) );
 
@@ -679,7 +679,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
         }
         else
         {
-            scaled_outputs = TensorMap2(scaled_inputs_data, inputs_dimensions[0], inputs_dimensions[1]);
+            scaled_outputs = TensorMap2(scaled_inputs_data, input_shape[0], input_shape[1]);
         }
 
         last_layer_outputs = scaled_outputs;
@@ -690,7 +690,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
         {
             if(layers[i]->get_name() != "Unscaling" && layers[i]->get_name() != "Scaling2d")
             {
-                scaled_outputs.resize(inputs_dimensions[0], layers[0]->get_outputs_number());
+                scaled_outputs.resize(input_shape[0], layers[0]->get_outputs_number());
 
                 outputs_dimensions = get_shape(scaled_outputs);
 
@@ -711,7 +711,7 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
         return scaled_outputs;
     }
-    else if(inputs_dimensions_number == 4)
+    else if(input_shape_number == 4)
     {
         /// @todo
         return Tensor2();
@@ -725,9 +725,9 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
 
 Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
                                                     const Tensor1& point,
-                                                    const type& minimum,
-                                                    const type& maximum,
-                                                    const Index& points_number) const
+                                                    type minimum,
+                                                    type maximum,
+                                                    Index points_number) const
 {
     const Index inputs_number = get_inputs_number();
 
@@ -751,7 +751,7 @@ Tensor2 NeuralNetwork::calculate_directional_inputs(const Index direction,
 
 Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
 {
-    // Tensor3 image = read_bmp_image(image_path);
+    // Tensor3 image = load_image(image_path);
 
     // Scaling4d* scaling_layer = static_cast<Scaling4d*>(get_first("Scaling4d"));
 
@@ -865,7 +865,7 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
     Index dense2d_layers_number = 0;
 
     for(Index i = 0; i < layers_number; i++)
-        if (layers[i]->get_name() == "Dense" && layers[i]->get_label().find("classification") == string::npos)
+        if (layers[i]->get_name() == "Dense2d" && layers[i]->get_label().find("classification") == string::npos)
             dense2d_layers_number++;
 
     Tensor<string, 2> information(dense2d_layers_number, 4);
@@ -877,7 +877,7 @@ Tensor<string, 2> NeuralNetwork::get_dense2d_layers_information() const
         const string& name = layers[i]->get_name();
         const string label = layers[i]->get_label();
 
-        if (name != "Dense" || label.find("classification") != string::npos)
+        if (name != "Dense2d" || label.find("classification") != string::npos)
             continue;
 
         information(dense2d_layer_index, 0) = label;
@@ -1000,6 +1000,7 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
     const Index layers_number = read_xml_index(layers_element, "LayersNumber");
 
     layers.clear();
+    layer_input_indices.clear();
 
     const XMLElement* start_element = layers_element->FirstChildElement("LayersNumber");
 
@@ -1027,9 +1028,6 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
     if(!layer_input_indices_element)
         throw runtime_error("LayerInputIndices element is nullptr.\n");
 
-    layer_input_indices.resize(layers.size());
-    layer_input_indices.clear();
-
     for(const XMLElement* layer_inputs_indices_element = layer_input_indices_element->FirstChildElement("LayerInputsIndices");
          layer_inputs_indices_element;
          layer_inputs_indices_element = layer_inputs_indices_element->NextSiblingElement("LayerInputsIndices"))
@@ -1042,9 +1040,8 @@ void NeuralNetwork::layers_from_XML(const XMLElement* layers_element)
         if(!text)
             throw runtime_error("Text is nullptr for LayerInputsIndices element.");
 
-        const vector<Index> input_index = string_to_dimensions(string(text), " ");
-        if((size_t)layer_index >= layer_input_indices.size())
-            layer_input_indices.push_back(input_index);
+        Shape input_shape = string_to_shape(string(text), " ");
+        layer_input_indices[layer_index] = vector<Index>(input_shape.begin(), input_shape.end());
     }
 }
 
@@ -1082,19 +1079,13 @@ void NeuralNetwork::print() const
 
     cout << "Features number: " << get_inputs_number() << endl;
 
-    cout << get_feature_names() << endl;
-
     const Index layers_number = get_layers_number();
 
     cout << "Layers number: " << layers_number << endl;
 
     for(Index i = 0; i < layers_number; i++)
-    {
-        cout << "\nLayer " << i << ": " << endl;
-
-        layers[i]->print();
-    }
-
+        cout << "\nLayer " << i << ": " << layers[i]->get_name() << endl;
+    
     cout << "Outputs number: " << get_outputs_number() << endl;
 
     cout << "Outputs:" << endl
@@ -1154,7 +1145,7 @@ void NeuralNetwork::load_parameters_binary(const filesystem::path& file_name)
     if(!file.is_open())
         throw runtime_error("Cannot open binary file: " + file_name.string() + "\n");
 
-    const Index parameters_number = get_parameters_number();
+    const Index parameters_number = parameters.size();
 
 //    Tensor1 new_parameters(parameters_number);
 
@@ -1494,23 +1485,26 @@ void NeuralNetworkBackPropagationLM::set(const Index new_batch_size,
                                          NeuralNetwork* new_neural_network)
 {
     batch_size = new_batch_size;
-
     neural_network = new_neural_network;
 
-    const Index layers_number = neural_network->get_layers_number();
+    if(!neural_network) return;
 
+    const Index layers_number = neural_network->get_layers_number();
     const vector<unique_ptr<Layer>>& neural_network_layers = neural_network->get_layers();
 
+    const Index outputs_number = neural_network->get_outputs_number();
+    const Index total_error_terms = batch_size * outputs_number;
+
+    layers.clear();
     layers.resize(layers_number);
 
     const Index first_trainable = neural_network->get_first_trainable_layer_index();
     const Index last_trainable = neural_network->get_last_trainable_layer_index();
 
     for(Index i = first_trainable; i <= last_trainable; i++)
-        layers[i] = make_unique<DenseBackPropagationLM>(batch_size, neural_network_layers[i].get());
+        layers[i] = make_unique<DenseBackPropagationLM>(total_error_terms, neural_network_layers[i].get());
 
     const vector<vector<TensorView*>> layer_workspace_views = get_layer_workspace_views();
-
     const Index workspace_size = get_size(layer_workspace_views);
 
     if(workspace_size == 0) return;
@@ -1529,7 +1523,8 @@ vector<vector<TensorView *> > NeuralNetworkBackPropagationLM::get_layer_workspac
     vector<vector<TensorView*>> layer_workspace_views(layers_number);
 
     for(Index i = 0; i < layers_number; i++)
-        layer_workspace_views[i] = layers[i]->get_workspace_views();
+        if(layers[i])
+            layer_workspace_views[i] = layers[i]->get_workspace_views();
 
     return layer_workspace_views;
 }
@@ -1598,8 +1593,8 @@ vector<vector<TensorViewCuda*>> NeuralNetwork::get_layer_parameter_views_device(
 
 
 void NeuralNetwork::forward_propagate(const vector<TensorViewCuda>& input_views_device,
-                                           ForwardPropagationCuda& forward_propagation,
-                                           bool is_training) const
+                                      ForwardPropagationCuda& forward_propagation,
+                                      bool is_training) const
 {
     const Index layers_number = get_layers_number();
 
@@ -1616,12 +1611,12 @@ void NeuralNetwork::forward_propagate(const vector<TensorViewCuda>& input_views_
 
     for (Index i = first_layer_index; i <= last_layer_index; i++)
         layers[i]->forward_propagate(layer_input_views_device[i],
-                                          forward_propagation.layers[i],
-                                          is_training);
+                                     forward_propagation.layers[i],
+                                     is_training);
 }
 
 
-TensorViewCuda NeuralNetwork::calculate_outputs_cuda(TensorViewCuda input_device, const Index& batch_size)
+TensorViewCuda NeuralNetwork::calculate_outputs_cuda(TensorViewCuda input_device, Index batch_size)
 {
     if (layers.empty())
         return TensorViewCuda();

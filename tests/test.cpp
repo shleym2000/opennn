@@ -10,6 +10,8 @@ int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
+    //::testing::GTEST_FLAG(filter) = "NormalizedSquaredErrorTest.*";
+
     try {
         return RUN_ALL_TESTS();
     } catch (const exception& e) {

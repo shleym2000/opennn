@@ -63,9 +63,9 @@ TEST(Dense2dTest, ForwardPropagate)
 
     const TensorView output_view = forward_propagation->get_outputs();
 
-    ASSERT_EQ(output_view.dims.size(), 2) << "Output should be a 2D tensor.";
-    EXPECT_EQ(output_view.dims[0], batch_size);
-    EXPECT_EQ(output_view.dims[1], outputs_number);
+    ASSERT_EQ(output_view.shape.size(), 2) << "Output should be a 2D tensor.";
+    EXPECT_EQ(output_view.shape[0], batch_size);
+    EXPECT_EQ(output_view.shape[1], outputs_number);
 }
 
 
@@ -86,8 +86,8 @@ TEST(Dense3dTest, GeneralConstructor)
 
     opennn::Dense<3> dense_3d({sequence_length, input_embedding}, {output_embedding}, "HyperbolicTangent");
 
-    const shape input_dims = dense_3d.get_input_shape();
-    const shape output_dims = dense_3d.get_output_shape();
+    const Shape input_dims = dense_3d.get_input_shape();
+    const Shape output_dims = dense_3d.get_output_shape();
 
     EXPECT_EQ(input_dims[0], sequence_length);
     EXPECT_EQ(output_dims[0], output_embedding);
@@ -123,9 +123,9 @@ TEST(Dense3dTest, ForwardPropagate)
 
     const TensorView output_view = forward_propagation->get_outputs();
 
-    ASSERT_EQ(output_view.dims.size(), 3);
-    EXPECT_EQ(output_view.dims[0], batch_size);
+    ASSERT_EQ(output_view.shape.size(), 3);
+    EXPECT_EQ(output_view.shape[0], batch_size);
 
-    EXPECT_EQ(output_view.dims[1], sequence_length);
-    EXPECT_EQ(output_view.dims[2], output_embedding);
+    EXPECT_EQ(output_view.shape[1], sequence_length);
+    EXPECT_EQ(output_view.shape[2], output_embedding);
 }

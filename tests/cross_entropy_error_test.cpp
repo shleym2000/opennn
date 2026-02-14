@@ -34,7 +34,7 @@ TEST(CrossEntropyError2d, BackPropagate)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ inputs_number }, shape{ targets_number }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ inputs_number }, Shape{ targets_number }, "Logistic"));
 
     neural_network.set_parameters_random();
 
@@ -83,7 +83,7 @@ TEST(CrossEntropyError2d, calculate_binary_error)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 3 }, shape{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 3 }, Shape{ 1 }, "Logistic"));
   
 
     Batch batch(5, &dataset);
@@ -138,7 +138,7 @@ TEST(CrossEntropyError2d, calculate_multiple_error)
     multipledataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 2 }, Shape{ 2 }, "Logistic"));
 
     Batch batch(5, &multipledataset);
 
@@ -191,7 +191,7 @@ TEST(CrossEntropyError2d, calculate_binary_output_gradients)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 3 }, shape{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 3 }, Shape{ 1 }, "Logistic"));
 
     Batch batch(5, &dataset);
 
@@ -241,7 +241,7 @@ TEST(CrossEntropyError2d, calculate_multiple_output_gradients)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 2 }, Shape{ 2 }, "Logistic"));
 
     Batch batch(5, &dataset);
 
@@ -292,7 +292,7 @@ TEST(CrossEntropyError2d, get_name)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 2 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 2 }, Shape{ 2 }, "Logistic"));
 
     CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 
@@ -321,7 +321,7 @@ TEST(CrossEntropyError2d, to_XML)
     dataset.set_sample_roles("Training");
 
     NeuralNetwork neural_network;
-    neural_network.add_layer(make_unique<opennn::Dense<2>>(shape{ 2 }, shape{ 1 }, "Logistic"));
+    neural_network.add_layer(make_unique<opennn::Dense<2>>(Shape{ 2 }, Shape{ 1 }, "Logistic"));
 
     CrossEntropyError2d cross_entropy_error(&neural_network, &dataset);
 

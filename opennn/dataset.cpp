@@ -21,8 +21,8 @@ namespace opennn
 {
 
 Dataset::Dataset(const Index new_samples_number,
-                 const shape& new_input_shape,
-                 const shape& new_target_shape)
+                 const Shape& new_input_shape,
+                 const Shape& new_target_shape)
 {
     set(new_samples_number, new_input_shape, new_target_shape);
 }
@@ -49,13 +49,13 @@ bool Dataset::is_empty() const
     return data.size() == 0;
 }
 
-shape Dataset::get_input_shape() const
+Shape Dataset::get_input_shape() const
 {
     return input_shape;
 }
 
 
-shape Dataset::get_target_shape() const
+Shape Dataset::get_target_shape() const
 {
     return target_shape;
 }
@@ -304,7 +304,7 @@ vector<Index> Dataset::get_sample_roles_vector() const
 
 
 vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
-                                           const Index& batch_size,
+                                           Index batch_size,
                                            bool shuffle) const
 {
     const Index samples_number = sample_indices.size();
@@ -314,7 +314,10 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
     if(shuffle)
     {
         samples_copy = sample_indices;
-        shuffle_vector_blocks(samples_copy);
+        if (dynamic_cast<const ImageDataset*>(this) != nullptr)
+            shuffle_vector(samples_copy);
+        else
+            shuffle_vector_blocks(samples_copy);
     }
 
     const vector<Index>& samples = shuffle ? samples_copy : sample_indices;
@@ -404,8 +407,8 @@ void Dataset::set_sample_roles(const vector<Index>& indices, const string& sampl
 
 
 void Dataset::split_samples_random(const type training_samples_ratio,
-                                   const type& validation_samples_ratio,
-                                   const type& testing_samples_ratio)
+                                   type validation_samples_ratio,
+                                   type testing_samples_ratio)
 {
     const Index used_samples_number = get_used_samples_number();
 
@@ -455,8 +458,8 @@ void Dataset::split_samples_random(const type training_samples_ratio,
 
 
 void Dataset::split_samples_sequential(const type training_samples_ratio,
-                                       const type& validation_samples_ratio,
-                                       const type& testing_samples_ratio)
+                                       type validation_samples_ratio,
+                                       type testing_samples_ratio)
 {
     const Index used_samples_number = get_used_samples_number();
 
@@ -535,6 +538,7 @@ void Dataset::set_default_variables_roles()
     }
 }
 
+
 vector<Index> Dataset::get_feature_dimensions() const
 {
     vector<Index> number_categories;
@@ -545,11 +549,11 @@ vector<Index> Dataset::get_feature_dimensions() const
         if(variable.role == "None" || variable.role == "Time")
             continue;
 
-        if(variable.is_categorical())
-            number_categories.push_back(variable.get_categories_number());
-        else
-            number_categories.push_back(1);
+        variable.is_categorical()
+            ? number_categories.push_back(variable.get_categories_number())
+            : number_categories.push_back(1);
     }
+
     return number_categories;
 }
 
@@ -661,7 +665,7 @@ vector<string> Dataset::get_feature_names(const string& variable_role) const
 }
 
 
-shape Dataset::get_shape(const string& variable_role) const
+Shape Dataset::get_shape(const string& variable_role) const
 {
     if (variable_role == "Input")
         return input_shape;
@@ -674,7 +678,7 @@ shape Dataset::get_shape(const string& variable_role) const
 }
 
 
-void Dataset::set_shape(const string& variable_role, const shape& new_dimensions)
+void Dataset::set_shape(const string& variable_role, const Shape& new_dimensions)
 {
     if (variable_role == "Input")
         input_shape = new_dimensions;
@@ -959,7 +963,7 @@ void Dataset::set_variable_indices(const vector<Index>& input_variables,
     }
 
     const Index input_dimensions_num = get_features_number("Input");
-    const Index target_dimensions_num = get_features_number("Target");
+    const Index target_shape_num = get_features_number("Target");
 
     TimeSeriesDataset* ts_dataset = dynamic_cast<TimeSeriesDataset*>(this);
 
@@ -968,7 +972,7 @@ void Dataset::set_variable_indices(const vector<Index>& input_variables,
     else
         set_shape("Input", {input_dimensions_num});
 
-    set_shape("Target", {target_dimensions_num});
+    set_shape("Target", {target_shape_num});
 }
 
 
@@ -1485,7 +1489,7 @@ Tensor1 Dataset::get_sample(const Index sample_index) const
 }
 
 
-string Dataset::get_sample_category(const Index sample_index, const Index& column_index_start) const
+string Dataset::get_sample_category(const Index sample_index, Index column_index_start) const
 {
     if (variables[column_index_start].type != VariableType::Categorical)
         throw runtime_error("The specified variable is not of categorical type.");
@@ -1554,8 +1558,8 @@ void Dataset::set(const filesystem::path& new_data_path,
 
 
 void Dataset::set(const Index new_samples_number,
-                  const shape& new_input_shape,
-                  const shape& new_target_shape)
+                  const Shape& new_input_shape,
+                  const Shape& new_target_shape)
 {
     if (new_samples_number == 0
         || new_input_shape.empty()
@@ -1564,9 +1568,9 @@ void Dataset::set(const Index new_samples_number,
 
     input_shape = new_input_shape;
 
-    const Index new_inputs_number = count_elements(new_input_shape);
+    const Index new_inputs_number = new_input_shape.count();
 
-    Index new_targets_number = count_elements(new_target_shape);
+    Index new_targets_number = new_target_shape.count();
 
     new_targets_number = (new_targets_number == 2) ? 1 : new_targets_number;
 
@@ -1916,7 +1920,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
         {
             const Index categories_number = variable.get_categories_number();
 
-            Tensor<Index, 1> categories_frequencies(categories_number);
+            Tensor1 categories_frequencies(categories_number);
             categories_frequencies.setZero();
             Tensor1 centers(categories_number);
 
@@ -1940,7 +1944,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
 
         case VariableType::Binary:
         {
-            Tensor<Index, 1> binary_frequencies(2);
+            Tensor1 binary_frequencies(2);
             binary_frequencies.setZero();
 
             for(Index j = 0; j < used_samples_number; j++)
@@ -4111,15 +4115,15 @@ void Dataset::check_separators(const string& line) const
 }
 
 
-void Dataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_tensor_data) const
+void Dataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
-    fill_tensor_data(data, sample_indices, input_indices, input_tensor_data);
+    fill_tensor_data(data, sample_indices, input_indices, input_data);
 }
 
 
-void Dataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_tensor_data) const
+void Dataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
-    fill_tensor_data_row_major(data, sample_indices, input_indices, input_tensor_data);
+    fill_tensor_data_row_major(data, sample_indices, input_indices, input_data);
 }
 
 
@@ -4330,7 +4334,7 @@ void Dataset::fix_repeated_names()
 }
 
 
-vector<vector<Index>> Dataset::split_samples(const vector<Index>& sample_indices, const Index& new_batch_size) const
+vector<vector<Index>> Dataset::split_samples(const vector<Index>& sample_indices, Index new_batch_size) const
 {
     const Index samples_number = sample_indices.size();
     Index batch_size = new_batch_size;
@@ -4420,7 +4424,7 @@ void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 
     // Inputs
 
-    const shape& data_set_input_dimensions = dataset->get_shape("Input");
+    const Shape& data_set_input_dimensions = dataset->get_shape("Input");
 
     if(!data_set_input_dimensions.empty())
     {
@@ -4430,17 +4434,17 @@ void Batch::set(const Index new_samples_number, const Dataset* new_dataset)
 
     // Targets
 
-    const shape& data_set_target_dimensions = dataset->get_shape("Target");
+    const Shape& data_set_target_shape = dataset->get_shape("Target");
 
-    if(!data_set_target_dimensions.empty())
+    if(!data_set_target_shape.empty())
     {
-        target_shape = prepend(samples_number, data_set_target_dimensions);
+        target_shape = prepend(samples_number, data_set_target_shape);
         target_tensor.resize(get_size(target_shape));
     }
 
     // Decoder
 
-    // const shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
+    // const Shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
 
     // if(!data_set_decoder_dimensions.empty())
     // {
@@ -4482,10 +4486,10 @@ void Batch::print() const
 
     // cout << "Decoder:" << endl
     //      << "Decoder shape:" << decoder_shape << endl;
-
+/*
     cout << "Targets:" << endl
          << "Target shape:" << target_shape << endl;
-
+*/
     cout << TensorMap2((type*)target_tensor.data(),
                                        target_shape[0],
                                        target_shape[1]) << endl;
@@ -4518,32 +4522,64 @@ TensorView Batch::get_targets() const
 
 
 #ifdef OPENNN_CUDA
-
+    
 void BatchCuda::fill(const vector<Index>& sample_indices,
                      const vector<Index>& input_indices,
                      //const vector<Index>& decoder_indices,
                      const vector<Index>& target_indices)
 {
-    ImageDataset* image_dataset = dynamic_cast<ImageDataset*>(dataset);
+    fill_host(sample_indices, input_indices, target_indices);
 
-    if (image_dataset != nullptr)
-        image_dataset->fill_input_tensor_row_major(sample_indices, input_indices, inputs_host.data());
-    else
-        dataset->fill_input_tensor(sample_indices, input_indices, inputs_host.data());
-
-    //dataset->fill_decoder_tensor(sample_indices, decoder_indices, decoder_host);
-
-    dataset->fill_target_tensor(sample_indices, target_indices, targets_host.data());
-    
     const Index batch_size = sample_indices.size();
 
     copy_device(batch_size);
 }
 
 
+void BatchCuda::fill_host(const vector<Index>& sample_indices,
+                          const vector<Index>& input_indices,
+                          //const vector<Index>& decoder_indices,
+                          const vector<Index>& target_indices)
+{
+    ImageDataset* image_dataset = dynamic_cast<ImageDataset*>(dataset);
+
+    if (image_dataset != nullptr)
+        image_dataset->fill_input_tensor_row_major(sample_indices, input_indices, inputs_host);
+    else
+        dataset->fill_input_tensor(sample_indices, input_indices, inputs_host);
+
+    //dataset->fill_decoder_tensor(sample_indices, decoder_indices, decoder_host);
+
+    dataset->fill_target_tensor(sample_indices, target_indices, targets_host);
+}
+
+
+
 BatchCuda::BatchCuda(const Index new_samples_number, Dataset* new_dataset)
 {
     set(new_samples_number, new_dataset);
+}
+
+
+BatchCuda::~BatchCuda()
+{
+    if (inputs_host)
+    {
+        cudaFreeHost(inputs_host);
+        inputs_host = nullptr;
+    }
+
+    if (decoder_host)
+    {
+        cudaFreeHost(decoder_host);
+        decoder_host = nullptr;
+    }
+
+    if (targets_host)
+    {
+        cudaFreeHost(targets_host);
+        targets_host = nullptr;
+    }
 }
 
 
@@ -4554,9 +4590,9 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
     samples_number = new_samples_number;
     dataset = new_dataset;
 
-    const shape& data_set_input_dimensions = dataset->get_shape("Input");
-    //const shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
-    const shape& data_set_target_dimensions = dataset->get_shape("Target");
+    const Shape& data_set_input_dimensions = dataset->get_shape("Input");
+    //const Shape& data_set_decoder_dimensions = dataset->get_shape("Decoder");
+    const Shape& data_set_target_shape = dataset->get_shape("Target");
 
     if(!data_set_input_dimensions.empty())
     {
@@ -4566,7 +4602,13 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
         input_shape = { samples_number };
         input_shape.insert(input_shape.end(), data_set_input_dimensions.begin(), data_set_input_dimensions.end());
 
-        inputs_host.resize(input_size);
+        if (input_size > inputs_host_allocated_size)
+        {
+            if (inputs_host) cudaFreeHost(inputs_host);
+            CHECK_CUDA(cudaMallocHost(&inputs_host, input_size * sizeof(float)));
+            inputs_host_allocated_size = input_size;
+        }
+
         inputs_device.resize({samples_number, num_input_features});
     }
     /*
@@ -4575,21 +4617,33 @@ void BatchCuda::set(const Index new_samples_number, Dataset* new_dataset)
         decoder_shape = { samples_number };
         decoder_shape.insert(decoder_shape.end(), data_set_decoder_dimensions.begin(), data_set_decoder_dimensions.end());
 
-        const Index decoder_size = count_elements(decoder_shape);
+        const Index decoder_size = decoder_shape.count();
 
-        CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
+        if (decoder_size > decoder_host_allocated_size)
+        {
+            if (decoder_host) cudaFreeHost(decoder_host);
+            CHECK_CUDA(cudaMallocHost(&decoder_host, decoder_size * sizeof(float)));
+            decoder_host_allocated_size = decoder_size;
+        }
+
         CHECK_CUDA(cudaMalloc(&decoder_device, decoder_size * sizeof(float)));
     }
     */
-    if(!data_set_target_dimensions.empty())
+    if(!data_set_target_shape.empty())
     {
         num_target_features = dataset->get_features_number("Target");
         const Index target_size = samples_number * num_target_features;
 
         target_shape = { samples_number };
-        target_shape.insert(target_shape.end(), data_set_target_dimensions.begin(), data_set_target_dimensions.end());
+        target_shape.insert(target_shape.end(), data_set_target_shape.begin(), data_set_target_shape.end());
 
-        targets_host.resize(target_size);
+        if (target_size > targets_host_allocated_size)
+        {
+            if (targets_host) cudaFreeHost(targets_host);
+            CHECK_CUDA(cudaMallocHost(&targets_host, target_size * sizeof(float)));
+            targets_host_allocated_size = target_size;
+        }
+
         targets_device.resize({samples_number, num_target_features});
     }
 }
@@ -4600,8 +4654,18 @@ void BatchCuda::copy_device(const Index current_batch_size)
     const Index input_size = current_batch_size * num_input_features;
     const Index target_size = current_batch_size * num_target_features;
 
-    CHECK_CUDA(cudaMemcpy(inputs_device.data, inputs_host.data(), input_size * sizeof(float), cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemcpy(targets_device.data, targets_host.data(), target_size * sizeof(float), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(inputs_device.data, inputs_host, input_size * sizeof(float), cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(targets_device.data, targets_host, target_size * sizeof(float), cudaMemcpyHostToDevice));
+}
+
+
+void BatchCuda::copy_device_async(const Index current_batch_size, cudaStream_t stream)
+{
+    const Index input_size = current_batch_size * num_input_features;
+    const Index target_size = current_batch_size * num_target_features;
+
+    CHECK_CUDA(cudaMemcpyAsync(inputs_device.data, inputs_host, input_size * sizeof(float), cudaMemcpyHostToDevice, stream));
+    CHECK_CUDA(cudaMemcpyAsync(targets_device.data, targets_host, target_size * sizeof(float), cudaMemcpyHostToDevice, stream));
 }
 
 

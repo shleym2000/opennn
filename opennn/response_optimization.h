@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "pch.h"
 #include "tensors.h"
 #include "dataset.h"
 #include "statistics.h"
@@ -123,7 +122,7 @@ private:
 
     Index evaluations_number = 1000;
 
-    Index max_iterations = 12;
+    Index max_iterations = 5;
 
     type zoom_factor = type(0.45);
 };

@@ -18,12 +18,12 @@ class Bounding final : public Layer
 
 public:
 
-    Bounding(const shape& = {0}, const string& = "bounding_layer");
+    Bounding(const Shape& = {0}, const string& = "bounding_layer");
 
     enum class BoundingMethod{NoBounding, Bounding};
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     const BoundingMethod& get_bounding_method() const;
 
@@ -35,19 +35,19 @@ public:
     const Tensor1& get_upper_bounds() const;
     type get_upper_bound(const Index) const;
 
-    void set(const shape & = { 0 }, const string & = "bounding_layer");
+    void set(const Shape& = { 0 }, const string & = "bounding_layer");
 
-    void set_input_shape(const shape&) override;
-    void set_output_shape(const shape&) override;
+    void set_input_shape(const Shape&) override;
+    void set_output_shape(const Shape&) override;
 
     void set_bounding_method(const BoundingMethod&);
     void set_bounding_method(const string&);
 
     void set_lower_bounds(const Tensor1&);
-    void set_lower_bound(const Index, const type&);
+    void set_lower_bound(const Index, type);
 
     void set_upper_bounds(const Tensor1&);
-    void set_upper_bound(const Index, const type&);
+    void set_upper_bound(const Index, type);
 
     // Lower and upper bounds
 

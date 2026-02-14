@@ -339,8 +339,8 @@ TEST(Dataset, ReadCSV_Basic)
     EXPECT_NEAR(data(1, var2_index), 20.0, 1e-9);
     EXPECT_NEAR(data(1, target1_index), 1.0, 1e-9);
 
-    shape input_dims = dataset.get_shape("Input");
-    shape target_dims = dataset.get_shape("Target");
+    Shape input_dims = dataset.get_shape("Input");
+    Shape target_dims = dataset.get_shape("Target");
 
     ASSERT_EQ(input_dims.size(), 1);
     EXPECT_EQ(input_dims[0], 2);

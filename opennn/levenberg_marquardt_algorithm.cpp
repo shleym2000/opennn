@@ -22,43 +22,43 @@ LevenbergMarquardtAlgorithm::LevenbergMarquardtAlgorithm(const Loss* new_loss)
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_minimum_loss_decrease() const
+type LevenbergMarquardtAlgorithm::get_minimum_loss_decrease() const
 {
     return minimum_loss_decrease;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_loss_goal() const
+type LevenbergMarquardtAlgorithm::get_loss_goal() const
 {
     return training_loss_goal;
 }
 
 
-const Index& LevenbergMarquardtAlgorithm::get_maximum_validation_failures() const
+Index LevenbergMarquardtAlgorithm::get_maximum_validation_failures() const
 {
     return maximum_validation_failures;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_damping_parameter() const
+type LevenbergMarquardtAlgorithm::get_damping_parameter() const
 {
     return damping_parameter;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_damping_parameter_factor() const
+type LevenbergMarquardtAlgorithm::get_damping_parameter_factor() const
 {
     return damping_parameter_factor;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_minimum_damping_parameter() const
+type LevenbergMarquardtAlgorithm::get_minimum_damping_parameter() const
 {
     return minimum_damping_parameter;
 }
 
 
-const type& LevenbergMarquardtAlgorithm::get_maximum_damping_parameter() const
+type LevenbergMarquardtAlgorithm::get_maximum_damping_parameter() const
 {
     return maximum_damping_parameter;
 }
@@ -509,9 +509,9 @@ void LevenbergMarquardtAlgorithmData::set(LevenbergMarquardtAlgorithm* new_Leven
 
     const Loss* loss_index = Levenberg_Marquardt_algorithm->get_loss_index();
 
-    const NeuralNetwork* neural_network = loss_index->get_neural_network();
+    NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const Index parameters_number = neural_network->get_parameters().size();
 
     // Neural network data
 

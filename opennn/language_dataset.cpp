@@ -25,8 +25,8 @@ LanguageDataset::LanguageDataset(const filesystem::path& new_data_path) : Datase
 
 
 LanguageDataset::LanguageDataset(const Index samples_number,
-                                 const Index& input_sequence_length,
-                                 const Index& input_vocabulary_size) : Dataset()
+                                 Index input_sequence_length,
+                                 Index input_vocabulary_size) : Dataset()
 {
     // @todo check this code
 
@@ -268,15 +268,15 @@ void LanguageDataset::encode_target_data(const vector<vector<string>>& target_do
 }
 
 
-shape LanguageDataset::get_input_shape() const
+Shape LanguageDataset::get_input_shape() const
 {
-    return shape({get_input_vocabulary_size(), get_maximum_input_sequence_length()});
+    return Shape({get_input_vocabulary_size(), get_maximum_input_sequence_length()});
 }
 
 
-shape LanguageDataset::get_target_shape() const
+Shape LanguageDataset::get_target_shape() const
 {
-    return shape({get_features_number("Target")});
+    return Shape({get_features_number("Target")});
 }
 
 

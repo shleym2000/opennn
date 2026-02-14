@@ -20,22 +20,22 @@ class Pooling final : public Layer
 
 public:
 
-    Pooling(const shape& = {2, 2, 1}, // Input shape {height,width,channels}
-            const shape& = { 2, 2 },  // Pool shape {pool_height,pool_width}
-            const shape& = { 2, 2 },  // Stride shape {row_stride, column_stride}
-            const shape& = { 0, 0 },  // Padding shape {padding_height, padding_width}
+    Pooling(const Shape& = {2, 2, 1}, // Input shape {height,width,channels}
+            const Shape& = { 2, 2 },  // Pool shape {pool_height,pool_width}
+            const Shape& = { 2, 2 },  // Stride shape {row_stride, column_stride}
+            const Shape& = { 0, 0 },  // Padding shape {padding_height, padding_width}
             const string& = "MaxPooling",
             const string& = "pooling_layer");
 
-    void set(const shape & = { 0, 0, 0 },
-             const shape & = { 1, 1 },
-             const shape & = { 1, 1 },
-             const shape & = { 0, 0 },
+    void set(const Shape& = { 0, 0, 0 },
+             const Shape& = { 1, 1 },
+             const Shape& = { 1, 1 },
+             const Shape& = { 0, 0 },
              const string & = "MaxPooling",
              const string & = "pooling_layer");
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     Index get_input_height() const;
     Index get_input_width() const;
@@ -56,7 +56,7 @@ public:
 
     string get_pooling_method() const;
 
-    void set_input_shape(const shape&) override;
+    void set_input_shape(const Shape&) override;
 
     void set_padding_height(const Index);
     void set_padding_width(const Index);
@@ -64,7 +64,7 @@ public:
     void set_row_stride(const Index);
     void set_column_stride(const Index);
 
-    void set_pool_size(const Index, const Index&);
+    void set_pool_size(const Index, Index);
 
     void set_pooling_method(const string&);
 
@@ -116,7 +116,7 @@ public:
 
 private:
 
-    shape input_shape;
+    Shape input_shape;
 
     Index pool_height = 1;
 
@@ -149,9 +149,9 @@ struct PoolingForwardPropagation final : LayerForwardPropagation
 
     void initialize() override;
 
-    void print() const override;
+    vector<TensorView*> get_workspace_views() override;
 
-    Tensor5 image_patches;
+    void print() const override;
 
     Tensor<Index, 4> maximal_indices;
 };
@@ -164,8 +164,6 @@ struct PoolingBackPropagation final : LayerBackPropagation
     void initialize() override;
 
     void print() const override;
-
-    Tensor4 gradients_by_pool_size;
 };
 
 

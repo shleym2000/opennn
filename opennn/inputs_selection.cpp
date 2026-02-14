@@ -32,7 +32,7 @@ bool InputsSelection::has_training_strategy() const
 }
 
 
-const Index& InputsSelection::get_trials_number() const
+Index InputsSelection::get_trials_number() const
 {
     return trials_number;
 }
@@ -44,19 +44,19 @@ bool InputsSelection::get_display() const
 }
 
 
-const type& InputsSelection::get_validation_error_goal() const
+type InputsSelection::get_validation_error_goal() const
 {
     return validation_error_goal;
 }
 
 
-const Index& InputsSelection::get_maximum_iterations_number() const
+Index InputsSelection::get_maximum_iterations_number() const
 {
     return maximum_epochs;
 }
 
 
-const type& InputsSelection::get_maximum_time() const
+type InputsSelection::get_maximum_time() const
 {
     return maximum_time;
 }

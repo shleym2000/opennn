@@ -22,19 +22,19 @@ QuasiNewtonMethod::QuasiNewtonMethod(const Loss* new_loss)
 }
 
 
-const type& QuasiNewtonMethod::get_minimum_loss_decrease() const
+type QuasiNewtonMethod::get_minimum_loss_decrease() const
 {
     return minimum_loss_decrease;
 }
 
 
-const type& QuasiNewtonMethod::get_loss_goal() const
+type QuasiNewtonMethod::get_loss_goal() const
 {
     return training_loss_goal;
 }
 
 
-const Index& QuasiNewtonMethod::get_maximum_validation_failures() const
+Index QuasiNewtonMethod::get_maximum_validation_failures() const
 {
     return maximum_validation_failures;
 }
@@ -333,7 +333,7 @@ TrainingResults QuasiNewtonMethod::train()
 
     QuasiNewtonMethodData optimization_data(this);
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const Index parameters_number = neural_network->get_parameters().size();
 
     // Main loop
 
@@ -518,16 +518,14 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
 
     const Loss* loss_index = quasi_newton_method->get_loss_index();
 
-    const NeuralNetwork* neural_network = loss_index->get_neural_network();
+    NeuralNetwork* neural_network = const_cast<NeuralNetwork*>(loss_index->get_neural_network());
 
-    const Index parameters_number = neural_network->get_parameters_number();
+    const Index parameters_number = neural_network->get_parameters().size();
 
     // Neural network data
 
     old_parameters.resize(parameters_number);
-
     parameters_difference.resize(parameters_number);
-
     potential_parameters.resize(parameters_number);
     parameter_updates.resize(parameters_number);
 
@@ -547,9 +545,7 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
     // Optimization algorithm data
 
     BFGS.resize(parameters_number);
-
     training_direction.resize(parameters_number);
-
     old_inverse_hessian_dot_gradient_difference.resize(parameters_number);
 }
 
@@ -563,11 +559,10 @@ void QuasiNewtonMethodData::print() const
 }
 
 
-Triplet QuasiNewtonMethod::calculate_bracketing_triplet(
-    const Batch& batch,
-    ForwardPropagation& forward_propagation,
-    BackPropagation& back_propagation,
-    QuasiNewtonMethodData& optimization_data)
+Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
+                                                        ForwardPropagation& forward_propagation,
+                                                        BackPropagation& back_propagation,
+                                                        QuasiNewtonMethodData& optimization_data)
 {
     Triplet triplet;
 
@@ -710,7 +705,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
     ForwardPropagation& forward_propagation,
     BackPropagation& back_propagation,
     QuasiNewtonMethodData& optimization_data,
-    const type& current_loss)
+    type current_loss)
 {
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 

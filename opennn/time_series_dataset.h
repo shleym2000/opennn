@@ -19,8 +19,8 @@ class TimeSeriesDataset final : public Dataset
 public:
 
     TimeSeriesDataset(const Index = 0,
-                      const shape& = {},
-                      const shape& = {});
+                      const Shape& = {},
+                      const Shape& = {});
 
     TimeSeriesDataset(const filesystem::path&,
                       const string&,
@@ -35,10 +35,10 @@ public:
 
     void fill_gaps();
 
-    const Index& get_past_time_steps() const;
-    const Index& get_future_time_steps() const;
+    Index get_past_time_steps() const;
+    Index get_future_time_steps() const;
 
-    const Index& get_time_variable_index() const;
+    Index get_time_variable_index() const;
 
     TimeSeriesData get_data() const;
     Tensor3 get_data(const string& sample_role, const string& feature_use) const;
@@ -69,7 +69,7 @@ public:
                             const vector<Index>&,
                             type*) const override;
 
-    vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const override;
+    vector<vector<Index>> get_batches(const vector<Index>&, Index, bool) const override;
 
 
 private:

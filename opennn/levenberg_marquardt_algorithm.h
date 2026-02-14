@@ -25,17 +25,17 @@ public:
 
    LevenbergMarquardtAlgorithm(const Loss* = nullptr);
 
-   const type& get_minimum_loss_decrease() const;
-   const type& get_loss_goal() const;
+   type get_minimum_loss_decrease() const;
+   type get_loss_goal() const;
 
-   const Index& get_maximum_validation_failures() const;
+   Index get_maximum_validation_failures() const;
 
-   const type& get_damping_parameter() const;
+   type get_damping_parameter() const;
 
-   const type& get_damping_parameter_factor() const;
+   type get_damping_parameter_factor() const;
 
-   const type& get_minimum_damping_parameter() const;
-   const type& get_maximum_damping_parameter() const;
+   type get_minimum_damping_parameter() const;
+   type get_maximum_damping_parameter() const;
 
    // Set
 

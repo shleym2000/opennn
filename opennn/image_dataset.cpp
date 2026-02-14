@@ -16,8 +16,8 @@ namespace opennn
 {
 
 ImageDataset::ImageDataset(const Index new_samples_number,
-                           const shape& new_input_shape,
-                           const shape& new_target_shape)
+                           const Shape& new_input_shape,
+                           const Shape& new_target_shape)
 {
     if (new_input_shape.size() != 3)
         throw runtime_error("Input shape is not 3");
@@ -292,35 +292,26 @@ void ImageDataset::to_XML(XMLPrinter& printer) const
 }
 
 
-Tensor2 ImageDataset::perform_augmentation(const Tensor2& input_tensor)
+Tensor2 ImageDataset::perform_augmentation(const Tensor2& inputs) const
 {
     throw runtime_error("Image Augmentation is not yet implemented. Please check back in a future version.");
-/*
-    const shape input_shape = get_shape("Input");
+
+    const Shape input_shape = get_shape("Input");
 
     const Index samples_number = input_shape[0];
-//    const Index input_height = input_shape[0];
-//    const Index input_width = input_shape[1];
-//    const Index channels = input_shape[2];
+    const Index input_height = input_shape[0];
+    const Index input_width = input_shape[1];
+    const Index channels = input_shape[2];
 
-//    TensorMap4 inputs(input_tensor.data(),
-//                                      samples_number,
-//                                      input_height,
-//                                      input_width,
-//                                      channels);
-
-//    const bool random_reflection_axis_x = image_dataset->get_random_reflection_axis_x();
-//    const bool random_reflection_axis_y = image_dataset->get_random_reflection_axis_y();
-//    const type random_rotation_minimum = image_dataset->get_random_rotation_minimum();
-//    const type random_rotation_maximum = image_dataset->get_random_rotation_maximum();
-//    const type random_horizontal_translation_minimum = image_dataset->get_random_horizontal_translation_minimum();
-//    const type random_horizontal_translation_maximum = image_dataset->get_random_horizontal_translation_maximum();
-//    const type random_vertical_translation_minimum = image_dataset->get_random_vertical_translation_minimum();
-//    const type random_vertical_translation_maximum = image_dataset->get_random_vertical_translation_maximum();
+    ConstTensorMap4 inputs_map(inputs.data(),
+                               samples_number,
+                               input_height,
+                               input_width,
+                               channels);
 
     for(Index batch_index = 0; batch_index < samples_number; batch_index++)
     {
-        Tensor3 image = inputs.chip(batch_index, 0);
+        Tensor3 image = inputs_map.chip(batch_index, 0);
 
         if(random_reflection_axis_x)
             reflect_image_x(device.get(),
@@ -334,51 +325,49 @@ Tensor2 ImageDataset::perform_augmentation(const Tensor2& input_tensor)
             rotate_image(device.get(),
                          image,
                          image,
-                         get_random_type(random_rotation_minimum, random_rotation_maximum));
+                         random_uniform(random_rotation_minimum, random_rotation_maximum));
 
         if(random_horizontal_translation_minimum != 0 && random_horizontal_translation_maximum != 0)
             translate_image_x(device.get(),
                               image,
                               image,
-                              get_random_type(random_horizontal_translation_minimum, random_horizontal_translation_maximum));
+                              random_uniform(random_horizontal_translation_minimum, random_horizontal_translation_maximum));
 
         if(random_vertical_translation_minimum != 0 && random_vertical_translation_maximum != 0)
             translate_image_y(device.get(),
                               image,
                               image,
-                              get_random_type(random_vertical_translation_minimum, random_vertical_translation_maximum));
+                              random_uniform(random_vertical_translation_minimum, random_vertical_translation_maximum));
     }
-*/
+
     return Tensor2();
 }
 
 
-void ImageDataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_tensor_data) const
+void ImageDataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
-    if (get_augmentation())
+    if (augmentation)
     {
-        // Optional: apply augmentation here
-        // Tensor2 augmented_data = perform_augmentation(data);
-        // fill_tensor_data(augmented_data, sample_indices, input_indices, destination_data);
+        const Tensor2 augmented_data = perform_augmentation(data);
+        fill_tensor_data(augmented_data, sample_indices, input_indices, input_data);
     }
     else
     {
-        fill_tensor_data(data, sample_indices, input_indices, input_tensor_data);
+        fill_tensor_data(data, sample_indices, input_indices, input_data);
     }
 }
 
 
-void ImageDataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_tensor_data) const
+void ImageDataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
-    if (get_augmentation())
+    if (augmentation)
     {
-        // Optional: apply augmentation here
-        // Tensor2 augmented_data = perform_augmentation(data);
-        // fill_tensor_data_row_major(augmented_data, sample_indices, input_indices, destination_data);
+        Tensor2 augmented_data = perform_augmentation(data);
+        fill_tensor_data_row_major(augmented_data, sample_indices, input_indices, input_data);
     }
     else
     {
-        fill_tensor_data_row_major(data, sample_indices, input_indices, input_tensor_data);
+        fill_tensor_data_row_major(data, sample_indices, input_indices, input_data);
     } 
 }
 
@@ -401,8 +390,8 @@ void ImageDataset::from_XML(const XMLDocument& data_set_document)
     set_has_ids(read_xml_bool(data_source_element, "HasSamplesId"));
 
     set_shape("Input", { read_xml_index(data_source_element, "Height"),
-                              read_xml_index(data_source_element, "Width"),
-                              read_xml_index(data_source_element, "Channels") });
+                         read_xml_index(data_source_element, "Width"),
+                         read_xml_index(data_source_element, "Channels") });
 
     set_image_padding(read_xml_index(data_source_element, "Padding"));
 
@@ -448,27 +437,24 @@ vector<Descriptives> ImageDataset::scale_features(const string&)
 void ImageDataset::unscale_features(const string&)
 {
     TensorMap4 inputs_data(data.data(),
-                                           get_samples_number(),
-                                           input_shape[0],
-                                           input_shape[1],
-                                           input_shape[2]);
+                           get_samples_number(),
+                           input_shape[0],
+                           input_shape[1],
+                           input_shape[2]);
 
     inputs_data.device(*device) = inputs_data * type(255);
 }
 
 
-void ImageDataset::read_bmp(const shape& new_input_shape)
+void ImageDataset::read_bmp(const Shape& new_input_shape)
 {
     chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
     
     vector<filesystem::path> directory_path;
-    vector<string> image_path;
 
-    const filesystem::path path = data_path;
-
-    for(const filesystem::directory_entry& current_directory : filesystem::directory_iterator(path))
-        if(is_directory(current_directory))
-            directory_path.emplace_back(current_directory.path().string());
+    for(const filesystem::directory_entry& current_directory : filesystem::directory_iterator(data_path))
+        if(current_directory.is_directory())
+            directory_path.emplace_back(current_directory.path());
 
     const Index folders_number = directory_path.size();
 
@@ -476,6 +462,8 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
     images_number.setZero();
     
     Index samples_number = 0;
+
+    vector<string> image_path;
 
     for(Index i = 0; i < folders_number; i++)
     {
@@ -494,15 +482,13 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
     if (samples_number == 0)
         throw runtime_error("No images in folder \n");
 
-    Index height, width, image_channels;
+    const Tensor3 image = load_image(image_path[0]);
 
-    const Tensor3 image_data = read_bmp_image(image_path[0]);
+    Index height = image.dimension(0);
+    Index width = image.dimension(1);
+    const Index channels = image.dimension(2);
 
-    height = image_data.dimension(0);
-    width = image_data.dimension(1);
-    image_channels = image_data.dimension(2);
-
-    if (new_input_shape[2] != image_channels && new_input_shape[2] != 0)
+    if (new_input_shape[2] != channels && new_input_shape[2] != 0)
         throw runtime_error("Different number of channels in new_input_shape \n");
 
     if (new_input_shape[0] != 0 && new_input_shape[1] != 0)
@@ -511,16 +497,16 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
         width = new_input_shape[1];
     }
 
-    const Index inputs_number = height * width * image_channels;
+    const Index inputs_number = height * width * channels;
     const Index variables_number = inputs_number + 1;
 
-    const Index pixels_number = height * width * image_channels;
+    const Index pixels_number = height * width * channels;
 
     const Index targets_number = (folders_number == 2) 
         ? folders_number -1 
         : folders_number;
 
-    set(samples_number, { height, width, image_channels }, { targets_number });
+    set(samples_number, { height, width, channels }, { targets_number });
 
     vector<string> categories(targets_number);
 
@@ -534,13 +520,13 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
     #pragma omp parallel for
     for(Index i = 0; i < samples_number; i++)
     {
-        Tensor3 image = read_bmp_image(image_path[i]);
+        Tensor3 image = load_image(image_path[i]);
 
         const Index current_height = image.dimension(0);
         const Index current_width = image.dimension(1);
         const Index current_channels = image.dimension(2);
 
-        if (current_channels != image_channels)
+        if (current_channels != channels)
             throw runtime_error("Different number of channels in image: " + image_path[i] + "\n");
 
         if (current_height != height || current_width != width)
@@ -575,10 +561,10 @@ void ImageDataset::read_bmp(const shape& new_input_shape)
         chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
         chrono::milliseconds duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
 
-        long long total_milliseconds = duration.count();
-        long long minutes = total_milliseconds / 60000;
-        long long seconds = (total_milliseconds % 60000) / 1000;
-        long long milliseconds = total_milliseconds % 1000;
+        const long long total_milliseconds = duration.count();
+        const long long minutes = total_milliseconds / 60000;
+        const long long seconds = (total_milliseconds % 60000) / 1000;
+        const long long milliseconds = total_milliseconds % 1000;
 
         cout << "\nImage dataset loaded in: "
              << minutes << " minutes, "

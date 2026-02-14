@@ -20,10 +20,10 @@ public:
 
     GrowingInputs(const TrainingStrategy* = nullptr);
 
-    const Index& get_minimum_inputs_number() const override;
-    const Index& get_maximum_inputs_number() const override;
+    Index get_minimum_inputs_number() const override;
+    Index get_maximum_inputs_number() const override;
 
-    const Index& get_maximum_validation_failures() const;
+    Index get_maximum_validation_failures() const;
 
     void set_default();
 

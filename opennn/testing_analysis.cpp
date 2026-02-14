@@ -133,7 +133,7 @@ Tensor<TestingAnalysis::GoodnessOfFitAnalysis, 1> TestingAnalysis::perform_goodn
 
     const Index outputs_number = neural_network->get_outputs_number();
 
-    const pair<Tensor<type,2>, Tensor<type,2>> targets_outputs = get_targets_and_outputs("Testing");
+    const pair<Tensor<type,2, AlignedMax>, Tensor<type,2, AlignedMax>> targets_outputs = get_targets_and_outputs("Testing");
 
     // Testing analysis
 
@@ -762,7 +762,7 @@ type TestingAnalysis::calculate_determination(const Tensor1& outputs, const Tens
 
 Tensor<Index, 2> TestingAnalysis::calculate_confusion_binary_classification(const Tensor2& targets,
                                                                             const Tensor2& outputs,
-                                                                            const type& decision_threshold) const
+                                                                            type decision_threshold) const
 {
     const Index testing_samples_number = targets.dimension(0);
 
@@ -882,7 +882,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 
     const Index samples_number = targets.dimension(0);
 
-    const shape input_shape = dataset->get_shape("Input");
+    const Shape input_shape = dataset->get_shape("Input");
 
     if(input_shape.size() == 1)
     {
@@ -912,7 +912,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 
 Tensor<Index, 2> TestingAnalysis::calculate_confusion(const Tensor2& outputs,
                                                       const Tensor2& targets,
-                                                      const type& decision_threshold) const
+                                                      type decision_threshold) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -954,9 +954,7 @@ Tensor2 TestingAnalysis::calculate_roc_curve(const Tensor2& targets, const Tenso
 
     const Index maximum_points_number = 100;
 
-    Index points_number;
-
-    points_number = maximum_points_number;
+    Index points_number = maximum_points_number;
 
     if(targets.dimension(1) != 1)
         throw runtime_error("Number of of target variables (" +  to_string(targets.dimension(1)) + ") must be one.\n");
@@ -1289,7 +1287,7 @@ Tensor1 TestingAnalysis::calculate_maximum_gain(const Tensor2& positive_cumulati
 
 
 vector<Histogram> TestingAnalysis::calculate_output_histogram(const Tensor2& outputs,
-                                                              const Index& bins_number) const
+                                                              Index bins_number) const
 {
     const Tensor1 output_column = outputs.chip(0,1);
 
@@ -1320,7 +1318,7 @@ TestingAnalysis::BinaryClassificationRates TestingAnalysis::calculate_binary_cla
 vector<Index> TestingAnalysis::calculate_true_positive_samples(const Tensor2& targets,
                                                                const Tensor2& outputs,
                                                                const vector<Index>& testing_indices,
-                                                               const type& decision_threshold) const
+                                                               type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -1345,7 +1343,7 @@ vector<Index> TestingAnalysis::calculate_true_positive_samples(const Tensor2& ta
 vector<Index> TestingAnalysis::calculate_false_positive_samples(const Tensor2& targets,
                                                                 const Tensor2& outputs,
                                                                 const vector<Index>& testing_indices,
-                                                                const type& decision_threshold) const
+                                                                type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -1367,7 +1365,7 @@ vector<Index> TestingAnalysis::calculate_false_positive_samples(const Tensor2& t
 vector<Index> TestingAnalysis::calculate_false_negative_samples(const Tensor2& targets,
                                                                 const Tensor2& outputs,
                                                                 const vector<Index>& testing_indices,
-                                                                const type& decision_threshold) const
+                                                                type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -1389,7 +1387,7 @@ vector<Index> TestingAnalysis::calculate_false_negative_samples(const Tensor2& t
 vector<Index> TestingAnalysis::calculate_true_negative_samples(const Tensor2& targets,
                                                                const Tensor2& outputs,
                                                                const vector<Index>& testing_indices,
-                                                               const type& decision_threshold) const
+                                                               type decision_threshold) const
 {
     const Index rows_number = targets.dimension(0);
 
@@ -2144,7 +2142,7 @@ void TestingAnalysis::load(const filesystem::path& file_name)
 
 void TestingAnalysis::GoodnessOfFitAnalysis::set(const Tensor1& new_targets,
                                                  const Tensor1& new_outputs,
-                                                 const type& new_determination)
+                                                 type new_determination)
 {
     targets = new_targets;
     outputs = new_outputs;
@@ -2215,7 +2213,6 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
     const Index confusion_matrix_size = (outputs_number == 1) ? 3 : (outputs_number + 1);
 
     Tensor<Index, 2> total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
-
     total_confusion_matrix.setZero();
 
     BatchCuda testing_batch(batch_size, dataset);
@@ -2231,7 +2228,6 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
 
         if (current_batch_size != batch_size)
         {
-        //    testing_batch.free();
             testing_forward_propagation.free();
             testing_batch.set(current_batch_size, dataset);
             testing_forward_propagation.set(current_batch_size, neural_network);

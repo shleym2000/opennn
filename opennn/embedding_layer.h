@@ -18,22 +18,22 @@ class Embedding final : public Layer
 
 public:
 
-    Embedding(const shape& = {0, 0},
-              const Index& = 0,
+    Embedding(const Shape& = {0, 0},
+              Index = 0,
               const string& = "embedding_layer");
 
     Index get_vocabulary_size() const;
     Index get_sequence_length() const;
     Index get_embedding_dimension() const;
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     vector<TensorView*> get_parameter_views() override;
 
     void set(const Index = 0,
-             const Index& = 0,
-             const Index& = 0,
+             Index = 0,
+             Index = 0,
              const string & = "embedding_layer");
 
     void set_scale_embedding(bool);

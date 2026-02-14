@@ -11,6 +11,7 @@
 #include "layer.h"
 #include "statistics.h"
 #include "scaling.h"
+#include "strings_utilities.h"
 
 namespace opennn
 {
@@ -24,30 +25,35 @@ class Scaling final : public Layer
 
 public:
 
-    Scaling(const shape& new_input_shape = {})
+    Scaling(const Shape& new_input_shape = Shape(Rank - 1, 0))
     {
         set(new_input_shape);
     }
 
-    shape get_input_shape() const override
+
+    Shape get_input_shape() const override
     {
         return input_shape;
     }
 
-    shape get_output_shape() const override
+
+    Shape get_output_shape() const override
     {
         return input_shape;
     }
+
 
     vector<Descriptives> get_descriptives() const
     {
         return descriptives;
     }
 
+
     Descriptives get_descriptives(const Index index) const
     {
         return descriptives[index];
     }
+
 
     Tensor1 get_minimums() const
     {
@@ -62,6 +68,7 @@ public:
         return minimums;
     }
 
+
     Tensor1 get_maximums() const
     {
         const Index outputs_number = get_outputs_number();
@@ -74,6 +81,7 @@ public:
 
         return maximums;
     }
+
 
     Tensor1 get_means() const
     {
@@ -109,20 +117,20 @@ public:
     }
 
 
-    void set(const shape& new_input_shape = {})
+    void set(const Shape& new_input_shape = {})
     {
         if (new_input_shape.size() != Rank -1) 
         {
            ostringstream buffer;
            buffer << "OpenNN Exception: Scaling Layer.\n"
-                  << "void set(const shape& new_input_shape) method.\n"
+                  << "void set(const Shape& new_input_shape) method.\n"
                   << "Input shape size must be " << Rank - 1 << ", but is " << new_input_shape.size() << ".\n";
            throw logic_error(buffer.str());
         }
 
         input_shape = new_input_shape;
 
-        const Index new_inputs_number = count_elements(new_input_shape);
+        const Index new_inputs_number = new_input_shape.count();
 
         descriptives.resize(new_inputs_number);
 
@@ -142,12 +150,14 @@ public:
         is_trainable = false;
     }
 
-    void set_input_shape(const shape& new_input_shape) override
+
+    void set_input_shape(const Shape& new_input_shape) override
     {
         set(new_input_shape);
     }
 
-    void set_output_shape(const shape& new_output_shape) override
+
+    void set_output_shape(const Shape& new_output_shape) override
     {
         set_input_shape(new_output_shape);
     }
@@ -158,7 +168,7 @@ public:
         descriptives = new_descriptives;
     }
 
-    void set_min_max_range(const type min, const type& max)
+    void set_min_max_range(const type min, type max)
     {
         min_range = min;
         max_range = max;
@@ -169,6 +179,7 @@ public:
     {
         scalers = new_scalers;
     }
+
 
     void set_scalers(const string& new_scaler)
     {
@@ -181,38 +192,85 @@ public:
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            bool) override
     {
-        const Index outputs_number = get_outputs_number();
-
-        const TensorMap2 inputs = tensor_map<2>(input_views[0]);
-
-        TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
-
-        outputs.device(*device) = inputs;
-
-        for(Index i = 0; i < outputs_number; i++)
+        if constexpr (Rank == 3)
         {
-            const string& scaler = scalers[i];
+            const Index time_steps = input_shape[0];
+            const Index features = input_shape[1];
 
-            if(scaler == "None")
-                continue;
-            else if(scaler == "MinimumMaximum")
-                scale_minimum_maximum(outputs, i, descriptives[i], min_range, max_range);
-            else if(scaler == "MeanStandardDeviation")
-                scale_mean_standard_deviation(outputs, i, descriptives[i]);
-            else if(scaler == "StandardDeviation")
-                scale_standard_deviation(outputs, i, descriptives[i]);
-            else if(scaler == "Logarithm")
-                scale_logarithmic(outputs, i);
-            else if(scaler == "ImageMinMax")
-                outputs.chip(i,1).device(*device) =  outputs.chip(i,1) / type(255);
-            else
-                throw runtime_error("Unknown scaling method.\n");
+            TensorMap3 inputs = tensor_map<3>(input_views[0]);
+            TensorMap3 outputs = tensor_map<3>(layer_forward_propagation->outputs);
+
+            for(Index j = 0; j < features; j++)
+            {
+                const string& scaler = scalers[j];
+                const Descriptives& descriptive = descriptives[j];
+
+                if(scaler == "None")
+                {
+                    outputs.chip(j, 2).device(*device) = inputs.chip(j, 2);
+                    continue;
+                }
+
+                for(Index t = 0; t < time_steps; t++)
+                {
+                    auto input_slice = inputs.chip(j, 2).chip(t, 1);
+                    auto output_slice = outputs.chip(j, 2).chip(t, 1);
+
+                    if(scaler == "MeanStandardDeviation")
+                        output_slice.device(*device) = (input_slice - descriptive.mean) / (descriptive.standard_deviation + NUMERIC_LIMITS_MIN);
+                    else if(scaler == "MinimumMaximum")
+                    {
+                        const type range = descriptive.maximum - descriptive.minimum;
+                        output_slice.device(*device) = (input_slice - descriptive.minimum) / (range + NUMERIC_LIMITS_MIN) * (max_range - min_range) + min_range;
+                    }
+                    else if(scaler == "StandardDeviation")
+                        output_slice.device(*device) = input_slice / (descriptive.standard_deviation + NUMERIC_LIMITS_MIN);
+                    else if(scaler == "Logarithm")
+                        output_slice.device(*device) = input_slice.log();
+                    else if(scaler == "ImageMinMax")
+                        output_slice.device(*device) = input_slice / type(255.0);
+                    else
+                        throw runtime_error("Unknown scaling method in Scaling Layer: " + scaler);
+                }
+            }
+        }
+        else
+        {
+            const Index total_features = get_outputs_number();
+            const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+            TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
+
+            outputs.device(*device) = inputs;
+
+            for(Index i = 0; i < total_features; i++)
+            {
+                const string& scaler = scalers[i];
+
+                if(scaler == "None")
+                    continue;
+                else if(scaler == "MeanStandardDeviation")
+                    scale_mean_standard_deviation(outputs, i, descriptives[i]);
+                else if(scaler == "MinimumMaximum")
+                    scale_minimum_maximum(outputs, i, descriptives[i], min_range, max_range);
+                else if(scaler == "StandardDeviation")
+                    scale_standard_deviation(outputs, i, descriptives[i]);
+                else if(scaler == "Logarithm")
+                    scale_logarithmic(outputs, i);
+                else if(scaler == "ImageMinMax")
+                {
+                    auto column = outputs.chip(i, 1);
+                    column.device(*device) = column / type(255.0);
+                }
+                else
+                    throw runtime_error("Unknown scaling method in Scaling Layer: " + scaler);
+            }
         }
     }
 
+
     string write_no_scaling_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : get_output_shape().count();
 
         ostringstream buffer;
 
@@ -224,9 +282,10 @@ public:
         return buffer.str();
     }
 
+
     string write_minimum_maximum_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : get_output_shape().count();
 
         ostringstream buffer;
 
@@ -237,6 +296,7 @@ public:
 
         return buffer.str();
     }
+
 
     string write_mean_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
@@ -252,9 +312,10 @@ public:
         return buffer.str();
     }
 
+
     string write_standard_deviation_expression(const vector<string>& input_names, const vector<string>& output_names) const
     {
-        const Index inputs_number = get_output_shape().size() == 0 ? 0 : count_elements(get_output_shape());
+        const Index inputs_number = get_output_shape().size() == 0 ? 0 : get_output_shape().count();
 
         ostringstream buffer;
 
@@ -265,6 +326,7 @@ public:
 
         return buffer.str();
     }
+
 
     string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& = vector<string>()) const override
     {
@@ -308,6 +370,7 @@ public:
         return expression;
     }
 
+
     void print() const override
     {
         cout << "Scaling layer" << endl;
@@ -323,6 +386,7 @@ public:
         }
     }
 
+
     void from_XML(const XMLDocument& document) override
     {
         const XMLElement* scaling_layer_element = document.FirstChildElement(name.c_str());
@@ -332,69 +396,43 @@ public:
 
         const Index neurons_number = read_xml_index(scaling_layer_element, "NeuronsNumber");
         
-        // @todo
-        
         if constexpr (Rank == 2)
-        {
             set({ neurons_number });
-        }
         else
-        {
-            // Try to read generic InputDimensions if we were to add them.
-            // But following 2D code strictly, it only reads NeuronsNumber.
-            // I will leave it as is for Rank 2, and for Rank > 2 acts as 2D did (which might be why 3D/4D were commented out / not used).
-            // However, to make it compile for Rank > 2, I need to pass correct size.
-            // If XML doesn't validation dims, we can't fully restore dims.
-            // I will implement a dummy reshape for now to satisfy Rank:
-            // [neurons_number, 1, 1...]
-
-            shape dims(Rank-1, 1);
-            dims[0] = neurons_number;
-            set(dims);
-        }
+            set(Shape(Rank - 1, neurons_number));
 
         const XMLElement* start_element = scaling_layer_element->FirstChildElement("NeuronsNumber");
 
-        for(Index i = 0; i < neurons_number; i++) {
+        for(Index i = 0; i < neurons_number; i++)
+        {
             const XMLElement* scaling_neuron_element = start_element->NextSiblingElement("ScalingNeuron");
-            if(!scaling_neuron_element) {
+            if(!scaling_neuron_element)
                 throw runtime_error("Scaling neuron " + to_string(i + 1) + " is nullptr.\n");
-            }
-
-            unsigned index = 0;
-            scaling_neuron_element->QueryUnsignedAttribute("Index", &index);
-            if (index != i + 1) {
-                throw runtime_error("Index " + to_string(index) + " is not correct.\n");
-            }
 
             const XMLElement* descriptives_element = scaling_neuron_element->FirstChildElement("Descriptives");
-
-            if(!descriptives_element)
-                throw runtime_error("Descriptives element " + to_string(i + 1) + " is nullptr.\n");
-/*
-            if (descriptives_element->GetText()) {
-                const vector<string> descriptives_string = get_tokens(descriptives_element->GetText(), " ");
+            if (descriptives_element && descriptives_element->GetText()) {
+                const vector<string> tokens = get_tokens(descriptives_element->GetText(), " ");
                 descriptives[i].set(
-                    type(stof(descriptives_string[0])),
-                    type(stof(descriptives_string[1])),
-                    type(stof(descriptives_string[2])),
-                    type(stof(descriptives_string[3]))
+                    type(stof(tokens[0])),
+                    type(stof(tokens[1])),
+                    type(stof(tokens[2])),
+                    type(stof(tokens[3]))
                     );
             }
-*/
-            scalers[i] = read_xml_string(scaling_neuron_element, "Scaler");
 
+            scalers[i] = read_xml_string(scaling_neuron_element, "Scaler");
             start_element = scaling_neuron_element;
         }
     }
+
 
     void to_XML(XMLPrinter& printer) const override
     {
         printer.OpenElement(name.c_str());
 
-        add_xml_element(printer, "NeuronsNumber", to_string(get_output_shape().size() == 0 ? 0 : accumulate(get_output_shape().begin(), get_output_shape().end(), 1, multiplies<Index>())));
-
         const Index outputs_number = get_outputs_number();
+
+        add_xml_element(printer, "NeuronsNumber", to_string(outputs_number));
 
         for(Index i = 0; i < outputs_number; i++)
         {
@@ -439,7 +477,7 @@ public:
 
 private:
 
-    shape input_shape;
+    Shape input_shape;
 
     type* minimums = nullptr;
     type* maximums = nullptr;
@@ -467,15 +505,14 @@ struct ScalingForwardPropagation final : LayerForwardPropagation
 
     void initialize() override
     {
-        const Index outputs_number = layer->get_outputs_number();
-
-        outputs.dims = {batch_size, outputs_number};
+        const Shape layer_output_shape = layer->get_output_shape();
+        outputs.shape = prepend(batch_size, layer_output_shape);
     }
 
     void print() const override
     {
         cout << "Outputs:" << endl
-             << outputs.dims << endl;
+             << outputs.shape << endl;
     }
 };
 

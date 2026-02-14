@@ -68,25 +68,25 @@ Index GeneticAlgorithm::get_genes_number() const
 }
 
 
-const Index& GeneticAlgorithm::get_minimum_inputs_number() const 
+Index GeneticAlgorithm::get_minimum_inputs_number() const 
 { 
     return minimum_inputs_number; 
 }
 
 
-const Index& GeneticAlgorithm::get_maximum_inputs_number() const
+Index GeneticAlgorithm::get_maximum_inputs_number() const
 { 
     return maximum_inputs_number; 
 }
 
 
-const type& GeneticAlgorithm::get_mutation_rate() const
+type GeneticAlgorithm::get_mutation_rate() const
 {
     return mutation_rate;
 }
 
 
-const Index& GeneticAlgorithm::get_elitism_size() const
+Index GeneticAlgorithm::get_elitism_size() const
 {
     return elitism_size;
 }
@@ -265,7 +265,7 @@ void GeneticAlgorithm::initialize_population_correlations()
     const Index individuals_number = get_individuals_number();
     const Index genes_number = get_genes_number();
 
-    Tensor<bool, 1> individual_genes(genes_number);
+    Tensor<bool, 1, AlignedMax> individual_genes(genes_number);
 
     population.resize(individuals_number, genes_number);
     population.setConstant(false);

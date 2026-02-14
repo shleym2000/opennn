@@ -59,13 +59,13 @@ bool Optimizer::get_display() const
 }
 
 
-const Index& Optimizer::get_display_period() const
+Index Optimizer::get_display_period() const
 {
     return display_period;
 }
 
 
-const Index& Optimizer::get_save_period() const
+Index Optimizer::get_save_period() const
 {
     return save_period;
 }
@@ -313,10 +313,17 @@ void Optimizer::set_scaling()
         scaling_layer->set_descriptives(input_variable_descriptives);
         scaling_layer->set_scalers(input_variable_scalers);
     }
-    else if(neural_network->has("Scaling4d"))
+    else if (neural_network->has("Scaling4d"))
     {
         ImageDataset* image_dataset = static_cast<ImageDataset*>(dataset);
+
         image_dataset->scale_features("Input");
+
+        if (neural_network->get_first("Scaling4d"))
+        {
+            Scaling<4>* scaling_layer = static_cast<Scaling<4>*>(neural_network->get_first("Scaling4d"));
+            scaling_layer->set_scalers("ImageMinMax");
+        }
     }
 
     if(!neural_network->has("Unscaling"))
@@ -360,7 +367,7 @@ void Optimizer::set_scaling()
 
     for(size_t i = 0; i < target_feature_indices.size(); ++i)
     {
-        const Index& target_index = target_feature_indices[i];
+        Index target_index = target_feature_indices[i];
 
         auto it = find(input_feature_indices.begin(), input_feature_indices.end(), target_index);
 

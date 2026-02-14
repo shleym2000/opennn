@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "pch.h"
 #include "correlations.h"
 #include "statistics.h"
 #include "tensors.h"
@@ -25,8 +24,8 @@ public:
     enum class Codification { UTF8, SHIFT_JIS };
 
     Dataset(const Index = 0,
-            const shape& = {0},
-            const shape& = {0});
+            const Shape& = {0},
+            const Shape& = {0});
 
     Dataset(const filesystem::path&,
             const string&,
@@ -163,11 +162,11 @@ public:
 
     vector<Index> get_feature_dimensions() const;
 
-    shape get_shape(const string&) const;
+    Shape get_shape(const string&) const;
 
     vector<string> get_feature_scalers(const string&) const;
 
-    virtual vector<vector<Index>> get_batches(const vector<Index>&, const Index&, bool) const;
+    virtual vector<vector<Index>> get_batches(const vector<Index>&, Index, bool) const;
 
     const Tensor2& get_data() const;
     Tensor2* get_data_p();
@@ -186,7 +185,7 @@ public:
     //Tensor2 get_variable_data(const Tensor<Index, 1>&) const;
     Tensor2 get_variable_data(const string&) const;
 
-    string get_sample_category(const Index, const Index&) const;
+    string get_sample_category(const Index, Index) const;
     Tensor1 get_sample(const Index) const;
 
     const vector<vector<string>>& get_data_file_preview() const;
@@ -221,14 +220,14 @@ public:
 
     bool is_empty() const;
 
-    shape get_input_shape() const;
-    shape get_target_shape() const;
+    Shape get_input_shape() const;
+    Shape get_target_shape() const;
 
     void get_categorical_info(const string&, vector<Index>&, vector<Index>&) const;
 
     // Set
 
-    void set(const Index = 0, const shape& = {}, const shape& = {});
+    void set(const Index = 0, const Shape& = {}, const Shape& = {});
 
     void set(const filesystem::path&,
              const string&,
@@ -290,7 +289,7 @@ public:
 
     void set_feature_roles(const string&);
 
-    void set_shape(const string&, const shape&);
+    void set_shape(const string&, const Shape&);
 
     // Dataset
 
@@ -332,12 +331,12 @@ public:
     // Splitting
 
     void split_samples_sequential(const type training_ratio = type(0.6),
-                                  const type& selection_ratio = type(0.2),
-                                  const type& testing_ratio = type(0.2));
+                                  type selection_ratio = type(0.2),
+                                  type testing_ratio = type(0.2));
 
     void split_samples_random(const type training_ratio = type(0.6),
-                              const type& selection_ratio = type(0.2),
-                              const type& testing_ratio = type(0.2));
+                              type selection_ratio = type(0.2),
+                              type testing_ratio = type(0.2));
 
     // Unusing
 
@@ -489,7 +488,7 @@ public:
 
     // Eigen
 
-    vector<vector<Index>> split_samples(const vector<Index>&, const Index&) const;
+    vector<vector<Index>> split_samples(const vector<Index>&, Index) const;
 
     bool get_has_rows_labels() const;
     //bool get_has_text_data() const;
@@ -536,9 +535,9 @@ protected:
 
     // Dimensions
 
-    shape input_shape;
-    shape target_shape;
-    shape decoder_shape;
+    Shape input_shape;
+    Shape target_shape;
+    Shape decoder_shape;
 
     // Samples
 
@@ -626,13 +625,13 @@ struct Batch
 
     Dataset* dataset = nullptr;
 
-    shape input_shape;
+    Shape input_shape;
     Tensor1 input_tensor;
 
-    shape decoder_shape;
+    Shape decoder_shape;
     Tensor1 decoder_tensor;
 
-    shape target_shape;
+    Shape target_shape;
     Tensor1 target_tensor;
 
     unique_ptr<ThreadPool> thread_pool = nullptr;
@@ -642,11 +641,11 @@ struct Batch
 
 #ifdef OPENNN_CUDA
 
+
 struct BatchCuda
 {
     BatchCuda(const Index = 0, Dataset* = nullptr);
-
-    //~BatchCuda() { free(); }
+    ~BatchCuda();
 
     void set(const Index, Dataset*);
 
@@ -655,8 +654,10 @@ struct BatchCuda
               //const vector<Index>&,
               const vector<Index> & = vector<Index>());
 
-    //BatchCuda(const BatchCuda&) = delete;
-    //BatchCuda& operator=(const BatchCuda&) = delete;
+    void fill_host(const vector<Index>&,
+                   const vector<Index>&,
+                   //const vector<Index>&,
+                   const vector<Index> & = vector<Index>());
 
     vector<TensorViewCuda> get_inputs_device() const;
     TensorViewCuda get_targets_device() const;
@@ -668,8 +669,7 @@ struct BatchCuda
     Tensor2 get_targets_from_device() const;
 
     void copy_device(const Index);
-
-//    void free();
+    void copy_device_async(const Index, cudaStream_t);
 
     void print() const;
 
@@ -681,18 +681,23 @@ struct BatchCuda
 
     Dataset* dataset = nullptr;
 
-    shape input_shape;
-    shape decoder_shape;
-    shape target_shape;
+    Shape input_shape;
+    Shape decoder_shape;
+    Shape target_shape;
 
-    vector<float> inputs_host;
-    vector<float> decoder_host;
-    vector<float> targets_host;
+    float* inputs_host = nullptr;
+    float* decoder_host = nullptr;
+    float* targets_host = nullptr;
+
+    Index inputs_host_allocated_size = 0;
+    Index decoder_host_allocated_size = 0;
+    Index targets_host_allocated_size = 0;
 
     TensorCuda inputs_device;
     TensorCuda decoder_device;
     TensorCuda targets_device;
 };
+
 
 #endif
 

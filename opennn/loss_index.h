@@ -46,7 +46,7 @@ public:
         return dataset;
     }
 
-    const type& get_regularization_weight() const;
+    type get_regularization_weight() const;
 
     bool get_display() const;
 
@@ -113,8 +113,8 @@ public:
                                     BackPropagationLM&) const {}
 
     virtual void calculate_output_gradients_lm(const Batch&,
-                                           ForwardPropagation&,
-                                           BackPropagationLM&) const {}
+                                               ForwardPropagation&,
+                                               BackPropagationLM&) const {}
 
     void calculate_layers_squared_errors_jacobian_lm(const Batch&,
                                                      ForwardPropagation&,
@@ -220,6 +220,8 @@ protected:
 
 struct BackPropagationLM
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     BackPropagationLM(const Index = 0, Loss* = nullptr);
     virtual ~BackPropagationLM() = default;
 
@@ -234,7 +236,7 @@ struct BackPropagationLM
     Index samples_number = 0;
 
     Tensor1 output_gradients;
-    shape output_gradient_dimensions;
+    Shape output_gradient_dimensions;
 
     Loss* loss_index = nullptr;
 
@@ -258,6 +260,8 @@ struct BackPropagationLM
 
 struct BackPropagation
 {
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     BackPropagation(const Index = 0, const Loss* = nullptr);
     virtual ~BackPropagation() = default;
 
@@ -279,7 +283,7 @@ struct BackPropagation
     Tensor2 errors;
     Tensor2 errors_weights;
     Tensor1 output_gradients;
-    shape output_gradient_dimensions;
+    Shape output_gradient_dimensions;
 
     Tensor<type, 0> accuracy;
     Tensor2 predictions;

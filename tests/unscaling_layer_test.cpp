@@ -13,16 +13,16 @@ TEST(UnscalingTest, DefaultConstructor)
 
     EXPECT_EQ(unscaling_layer.get_name(), "Unscaling");
     EXPECT_EQ(unscaling_layer.get_descriptives().size(), 0);
-    EXPECT_EQ(unscaling_layer.get_input_shape(), shape{ 0 });
-    EXPECT_EQ(unscaling_layer.get_output_shape(), shape{ 0 });
+    EXPECT_EQ(unscaling_layer.get_input_shape(), Shape{ 0 });
+    EXPECT_EQ(unscaling_layer.get_output_shape(), Shape{ 0 });
 }
 
 TEST(UnscalingTest, GeneralConstructor)
 {
     Unscaling unscaling_layer({ 3 });
 
-    EXPECT_EQ(unscaling_layer.get_input_shape(), shape{ 3 });
-    EXPECT_EQ(unscaling_layer.get_output_shape(), shape{ 3 });
+    EXPECT_EQ(unscaling_layer.get_input_shape(), Shape{ 3 });
+    EXPECT_EQ(unscaling_layer.get_output_shape(), Shape{ 3 });
     EXPECT_EQ(unscaling_layer.get_name(), "Unscaling");
     EXPECT_EQ(unscaling_layer.get_descriptives().size(), 3);
 }

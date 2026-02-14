@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "pch.h"    
+#include "pch.h"
 #include "tinyxml2.h"
 
 using namespace tinyxml2;
@@ -37,7 +37,7 @@ public:
         Tensor1 targets;
         Tensor1 outputs;
 
-        void set(const Tensor1&, const Tensor1&, const type&);
+        void set(const Tensor1&, const Tensor1&, type);
 
         void save(const filesystem::path&) const;
 
@@ -160,10 +160,10 @@ public:
 
     // Confusion
 
-    Tensor<Index, 2> calculate_confusion_binary_classification(const Tensor2&, const Tensor2&, const type&) const;
+    Tensor<Index, 2> calculate_confusion_binary_classification(const Tensor2&, const Tensor2&, type) const;
     Tensor<Index, 2> calculate_confusion_multiple_classification(const Tensor2&, const Tensor2&) const;
     vector<Tensor<Index, 2>> calculate_multilabel_confusion(const type) const;
-    Tensor<Index, 2> calculate_confusion(const Tensor2&, const Tensor2&, const type& = 0.50) const;
+    Tensor<Index, 2> calculate_confusion(const Tensor2&, const Tensor2&, type = 0.50) const;
     Tensor<Index, 2> calculate_confusion(const type = 0.50) const;
 
     Tensor<Index, 1> calculate_positives_negatives_rate(const Tensor2&, const Tensor2&) const;
@@ -192,16 +192,16 @@ public:
 
     // Output histogram
 
-    vector<Histogram> calculate_output_histogram(const Tensor2&, const Index& = 10) const;
+    vector<Histogram> calculate_output_histogram(const Tensor2&, Index = 10) const;
 
     // Binary classification rates
 
     BinaryClassificationRates calculate_binary_classification_rates(const type = 0.50) const;
 
-    vector<Index> calculate_true_positive_samples(const Tensor2&, const Tensor2&, const vector<Index>&, const type&) const;
-    vector<Index> calculate_false_positive_samples(const Tensor2&, const Tensor2&, const vector<Index>&, const type&) const;
-    vector<Index> calculate_false_negative_samples(const Tensor2&, const Tensor2&, const vector<Index>&, const type&) const;
-    vector<Index> calculate_true_negative_samples(const Tensor2&, const Tensor2&, const vector<Index>&, const type&) const;
+    vector<Index> calculate_true_positive_samples(const Tensor2&, const Tensor2&, const vector<Index>&, type) const;
+    vector<Index> calculate_false_positive_samples(const Tensor2&, const Tensor2&, const vector<Index>&, type) const;
+    vector<Index> calculate_false_negative_samples(const Tensor2&, const Tensor2&, const vector<Index>&, type) const;
+    vector<Index> calculate_true_negative_samples(const Tensor2&, const Tensor2&, const vector<Index>&, type) const;
 
     // Multiple classification tests
 

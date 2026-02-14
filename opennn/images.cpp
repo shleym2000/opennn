@@ -33,18 +33,18 @@ uint8_t read_u8(ifstream& f, const string& file_path_str_for_error)
 
 uint16_t read_u16_le(ifstream& f, const string& file_path_str_for_error)
 {
-    uint8_t b0 = read_u8(f, file_path_str_for_error);
-    uint8_t b1 = read_u8(f, file_path_str_for_error);
+    const uint8_t b0 = read_u8(f, file_path_str_for_error);
+    const uint8_t b1 = read_u8(f, file_path_str_for_error);
     return static_cast<uint16_t>(static_cast<uint16_t>(b0) | (static_cast<uint16_t>(b1) << 8));
 }
 
 
 uint32_t read_u32_le(ifstream& f, const string& file_path_str_for_error)
 {
-    uint8_t b0 = read_u8(f, file_path_str_for_error);
-    uint8_t b1 = read_u8(f, file_path_str_for_error);
-    uint8_t b2 = read_u8(f, file_path_str_for_error);
-    uint8_t b3 = read_u8(f, file_path_str_for_error);
+    const uint8_t b0 = read_u8(f, file_path_str_for_error);
+    const uint8_t b1 = read_u8(f, file_path_str_for_error);
+    const uint8_t b2 = read_u8(f, file_path_str_for_error);
+    const uint8_t b3 = read_u8(f, file_path_str_for_error);
     return static_cast<uint32_t>(static_cast<uint32_t>(b0) |
                                  (static_cast<uint32_t>(b1) << 8) |
                                  (static_cast<uint32_t>(b2) << 16) |
@@ -54,11 +54,11 @@ uint32_t read_u32_le(ifstream& f, const string& file_path_str_for_error)
 
 int32_t read_s32_le(ifstream& f, const string& file_path_str_for_error)
 {
-    uint8_t b0 = read_u8(f, file_path_str_for_error);
-    uint8_t b1 = read_u8(f, file_path_str_for_error);
-    uint8_t b2 = read_u8(f, file_path_str_for_error);
-    uint8_t b3 = read_u8(f, file_path_str_for_error);
-    uint32_t u_val = static_cast<uint32_t>(b0) |
+    const uint8_t b0 = read_u8(f, file_path_str_for_error);
+    const uint8_t b1 = read_u8(f, file_path_str_for_error);
+    const uint8_t b2 = read_u8(f, file_path_str_for_error);
+    const uint8_t b3 = read_u8(f, file_path_str_for_error);
+    const uint32_t u_val = static_cast<uint32_t>(b0) |
                      (static_cast<uint32_t>(b1) << 8) |
                      (static_cast<uint32_t>(b2) << 16) |
                      (static_cast<uint32_t>(b3) << 24);
@@ -66,11 +66,11 @@ int32_t read_s32_le(ifstream& f, const string& file_path_str_for_error)
 }
 
 
-Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
+Tensor3 load_image(const filesystem::path& path)
 {
-    const string image_path_str = image_path_fs.string();
+    const string image_path_str = path.string();
 
-    ifstream file(image_path_fs, ios::binary);
+    ifstream file(path, ios::binary);
 
     if(!file)
         throw runtime_error("Cannot open BMP file: " + image_path_str);
@@ -117,10 +117,7 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
 
     if (biBitCount <= 8)
     {
-        uint32_t num_palette_colors = biClrUsed;
-
-        if (num_palette_colors == 0)
-            num_palette_colors = 1 << biBitCount;
+        const uint32_t num_palette_colors = biClrUsed ? biClrUsed : (1u << biBitCount);
 
         if (num_palette_colors > 256 && biBitCount == 8)
             throw runtime_error("Invalid palette size for 8-bit BMP: " + to_string(num_palette_colors) + " in file: " + image_path_str);
@@ -140,34 +137,31 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
         }
     }
 
-    const Index tensor_height = (biHeight_signed < 0) ? -biHeight_signed : biHeight_signed;
-    const Index tensor_width = biWidth;
+    const Index height = (biHeight_signed < 0) ? -biHeight_signed : biHeight_signed;
+    const Index width = biWidth;
+    const Index channels = (biBitCount == 8 && is_grayscale) ? 1 : 3;
+
+    Tensor<float, 3> image(height, width, channels);
+
     const bool top_down = (biHeight_signed < 0);
-
-    const Index tensor_channels = (biBitCount == 8 && is_grayscale) ? 1 : 3;
-
-    Tensor<float, 3> image_tensor(tensor_height, tensor_width, tensor_channels);
 
     file.seekg(bfOffBits, ios::beg);
 
     if(!file)
         throw runtime_error("Failed to seek to pixel data offset (" + to_string(bfOffBits) + ") in BMP: " + image_path_str);
 
-    const int bytes_per_pixel_in_file =
-        (biBitCount == 32) ? 4 :
-            (biBitCount == 24) ? 3 :
-            (biBitCount ==  8) ? 1 :
-            throw logic_error("Internal error: Unhandled biBitCount in pixel reading stage.");
 
-    const long long row_data_bytes = tensor_width * bytes_per_pixel_in_file;
+    const int bytes_per_pixel_in_file = (biBitCount == 32) ? 4 : (biBitCount == 24) ? 3 : 1;
+    const long long row_data_bytes = width * bytes_per_pixel_in_file;
     const long long row_stride_in_file = ((row_data_bytes + 3) / 4) * 4;
-    vector<unsigned char> row_buffer(row_stride_in_file);
 
-    for(Index y_row = 0; y_row < tensor_height; ++y_row)
+    vector<unsigned char> row(row_stride_in_file);
+
+    for(Index y_row = 0; y_row < height; ++y_row)
     {
-        const Index tensor_y_coord = top_down ? y_row : (tensor_height - 1 - y_row);
+        const Index tensor_y_coord = top_down ? y_row : (height - 1 - y_row);
 
-        file.read(reinterpret_cast<char*>(row_buffer.data()), row_stride_in_file);
+        file.read(reinterpret_cast<char*>(row.data()), row_stride_in_file);
 
         if (file.bad())
             throw runtime_error("Irrecoverable stream error while reading pixel row " + to_string(y_row) + " in BMP: " + image_path_str);
@@ -179,70 +173,62 @@ Tensor<float, 3> read_bmp_image(const filesystem::path& image_path_fs)
                                 " (got " + to_string(bytes_read) + " bytes, expected at least " +
                                 to_string(row_data_bytes) + " for pixel data) in BMP: " + image_path_str);
 
-        if (file.eof() && y_row < tensor_height - 1)
+        if (file.eof() && y_row < height - 1)
             throw runtime_error("Unexpected EOF while reading pixel rows. Reached row " + to_string(y_row + 1) +
-                                " of " + to_string(tensor_height) + " in BMP: " + image_path_str);
+                                " of " + to_string(height) + " in BMP: " + image_path_str);
 
-        for(Index x_col = 0; x_col < tensor_width; ++x_col)
+        for(Index x_col = 0; x_col < width; ++x_col)
         {
-            float r_val = 0.0f, g_val = 0.0f, b_val = 0.0f;
+            float r = 0.0f, g = 0.0f, b = 0.0f;
 
             if (biBitCount == 32)
             {
-                const unsigned char b = row_buffer[x_col * 4 + 0];
-                const unsigned char g = row_buffer[x_col * 4 + 1];
-                const unsigned char r = row_buffer[x_col * 4 + 2];
-
-                r_val = static_cast<float>(r);
-                g_val = static_cast<float>(g);
-                b_val = static_cast<float>(b);
+                r = static_cast<float>(row[x_col * 4 + 2]);
+                g = static_cast<float>(row[x_col * 4 + 1]);
+                b = static_cast<float>(row[x_col * 4 + 0]);
             }
             else if (biBitCount == 24)
             {
-                const unsigned char b = row_buffer[x_col * 3 + 0];
-                const unsigned char g = row_buffer[x_col * 3 + 1];
-                const unsigned char r = row_buffer[x_col * 3 + 2];
-
-                r_val = static_cast<float>(r);
-                g_val = static_cast<float>(g);
-                b_val = static_cast<float>(b);
+                r = static_cast<float>(row[x_col * 3 + 2]);
+                g = static_cast<float>(row[x_col * 3 + 1]);
+                b = static_cast<float>(row[x_col * 3 + 0]);
             }
             else if (biBitCount == 8)
             {
-                const unsigned char index = row_buffer[x_col];
+                const unsigned char index = row[x_col];
 
                 if (index >= palette.size())
                     throw runtime_error("Palette index " + to_string(index) + " out of bounds (palette size " + to_string(palette.size()) + ") in BMP: " + image_path_str);
 
                 const RGBQuad& color = palette[index];
 
-                r_val = static_cast<float>(color.red);
-                g_val = static_cast<float>(color.green);
-                b_val = static_cast<float>(color.blue);
+                r = static_cast<float>(color.red);
+                g = static_cast<float>(color.green);
+                b = static_cast<float>(color.blue);
             }
 
-            if (tensor_channels == 1)
+            if (channels == 1)
             {
-                image_tensor(tensor_y_coord, x_col, 0) = r_val;
+                image(tensor_y_coord, x_col, 0) = r;
             }
             else
             {
-                image_tensor(tensor_y_coord, x_col, 0) = r_val;
-                image_tensor(tensor_y_coord, x_col, 1) = g_val;
-                image_tensor(tensor_y_coord, x_col, 2) = b_val;
+                image(tensor_y_coord, x_col, 0) = r;
+                image(tensor_y_coord, x_col, 1) = g;
+                image(tensor_y_coord, x_col, 2) = b;
             }
         }
     }
 
     file.close();
 
-    return image_tensor;
+    return image;
 }
 
 
-Tensor3 resize_image(const Tensor<float, 3>& input_image,
-                             const Index& output_height,
-                             const Index& output_width)
+Tensor3 resize_image(const Tensor3& input_image,
+                     Index output_height,
+                     Index output_width)
 {
     const Index input_height = input_image.dimension(0);
     const Index input_width = input_image.dimension(1);
@@ -253,31 +239,44 @@ Tensor3 resize_image(const Tensor<float, 3>& input_image,
     const float scale_y = static_cast<float>(input_height) / output_height;
     const float scale_x = static_cast<float>(input_width) / output_width;
 
-#pragma omp parallel for
-    for(Index y = 0; y < output_height; ++y) {
-        const float in_y = y * scale_y;
-        const Index y0 = static_cast<Index>(std::floor(in_y));
-        const float y_weight = in_y - y0;
-        const Index y1 = std::min<Index>(y0 + 1, input_height - 1);
+    vector<Index> x0(output_width), x1(output_width);
+    vector<float> x_weight(output_width);
 
-#pragma omp parallel for
-        for(Index x = 0; x < output_width; ++x) {
-            const float in_x = x * scale_x;
-            const Index x0 = static_cast<Index>(std::floor(in_x));
-            const float x_weight = in_x - x0;
-            const Index x1 = std::min<Index>(x0 + 1, input_width - 1);
+    for(Index x = 0; x < output_width; ++x)
+    {
+        const float in_x = x * scale_x;
+        x0[x] = min<Index>(static_cast<Index>(in_x), input_width - 1); // in_x >= 0 => floor(in_x)
+        x1[x] = min<Index>(x0[x] + 1, input_width - 1);
+        x_weight[x] = in_x - static_cast<float>(x0[x]);
+    }
 
-            for(Index c = 0; c < channels; ++c) {
-                const float top = (1 - x_weight) * input_image(y0, x0, c)
-                + x_weight * input_image(y0, x1, c);
+    #pragma omp parallel for collapse(2)
+    for(Index y = 0; y < output_height; ++y)
+        for(Index x = 0; x < output_width; ++x)
+        {
+            const float in_y = y * scale_y;
+            const Index y0 = min<Index>(static_cast<Index>(in_y), input_height - 1); // in_y >= 0 => floor(in_y)
+            const Index y1 = min<Index>(y0 + 1, input_height - 1);
+            const float y_weight = in_y - static_cast<float>(y0);
 
-                const float bottom = (1 - x_weight) * input_image(y1, x0, c)
-                                     + x_weight * input_image(y1, x1, c);
+            const Index x0_value = x0[x];
+            const Index x1_value = x1[x];
+            const float x_weight_value = x_weight[x];
 
-                output_image(y, x, c) = (1 - y_weight) * top + y_weight * bottom;
+            for(Index c = 0; c < channels; ++c)
+            {
+                const float top =
+                    (1.0f - x_weight_value) * input_image(y0, x0_value, c) +
+                    x_weight_value        * input_image(y0, x1_value, c);
+
+                const float bottom =
+                    (1.0f - x_weight_value) * input_image(y1, x0_value, c) +
+                    x_weight_value        * input_image(y1, x1_value, c);
+
+                output_image(y, x, c) =
+                    (1.0f - y_weight) * top + y_weight * bottom;
             }
         }
-    }
 
     return output_image;
 }
@@ -286,21 +285,21 @@ Tensor3 resize_image(const Tensor<float, 3>& input_image,
 void reflect_image_x(const ThreadPoolDevice* device,
                      Tensor3& image)
 {
-    image/*.device(device)*/ = image.reverse(array<bool, 3>({false, true, false}));
+    image.device(*device) = image.reverse(array<bool, 3>({false, true, false}));
 }
 
 
 void reflect_image_y(const ThreadPoolDevice* device,
                      Tensor3& image)
 {
-    image/*.device(device)*/ = image.reverse(array<bool, 3>({true, false, false}));
+    image.device(*device) = image.reverse(array<bool, 3>({true, false, false}));
 }
 
 
 void rotate_image(const ThreadPoolDevice* device,
                   const Tensor3& input,
                   Tensor3& output,
-                  const type& angle_degree)
+                  type angle_degree)
 {
     const Index width = input.dimension(0);
     const Index height = input.dimension(1);
@@ -352,7 +351,7 @@ void rotate_image(const ThreadPoolDevice* device,
 void translate_image_x(const ThreadPoolDevice* device,
                        const Tensor3& input,
                        Tensor3& output,
-                       const Index& shift)
+                       Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));
@@ -388,7 +387,7 @@ void translate_image_x(const ThreadPoolDevice* device,
 void translate_image_y(const ThreadPoolDevice* device,
                        const Tensor3& input,
                        Tensor3& output,
-                       const Index& shift)
+                       Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));

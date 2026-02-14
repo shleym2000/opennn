@@ -140,7 +140,7 @@ public:
     const vector<vector<Index>>& get_layer_input_indices() const;
     vector<vector<Index>> get_layer_output_indices() const;
 
-    Index find_input_index(const vector<Index>&, const Index&) const;
+    Index find_input_index(const vector<Index>&, Index) const;
 
     Layer* get_first(const string&) const;
 
@@ -166,7 +166,7 @@ public:
     void set_feature_names(const vector<string>&);
     void set_output_names(const vector<string>&);
 
-    void set_input_shape(const shape&);
+    void set_input_shape(const Shape&);
 
     void set_default();
 
@@ -190,8 +190,8 @@ public:
     Index get_inputs_number() const;
     Index get_outputs_number() const;
 
-    shape get_input_shape() const;
-    shape get_output_shape() const;
+    Shape get_input_shape() const;
+    Shape get_output_shape() const;
 
     // Parameters
 
@@ -220,8 +220,7 @@ public:
 
         ForwardPropagation forward_propagation(batch_size, this);
 
-        shape input_shape;
-        input_shape.reserve(input_rank);
+        Shape input_shape;
 
         for(Index i = 0; i < input_rank; ++i)
            input_shape.push_back(inputs.dimension(i));
@@ -236,7 +235,7 @@ public:
         {
             if (output_view.rank() == 4)
             {
-                const Index batch_size = output_view.dims[0];
+                const Index batch_size = output_view.shape[0];
                 const Index features = output_view.size() / batch_size;
 
                 if (reinterpret_cast<uintptr_t>(output_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)
@@ -261,7 +260,7 @@ public:
 
     Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
 
-    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, const type&, const type&, const Index& = 101) const;
+    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
@@ -323,7 +322,7 @@ public:
                                 ForwardPropagationCuda&,
                                 bool = false) const;
 
-    TensorViewCuda calculate_outputs_cuda(TensorViewCuda, const Index&);
+    TensorViewCuda calculate_outputs_cuda(TensorViewCuda, Index);
 
 protected:
 

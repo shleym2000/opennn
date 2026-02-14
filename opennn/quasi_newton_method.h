@@ -26,10 +26,10 @@ public:
 
     // Stopping criteria
 
-    const type& get_minimum_loss_decrease() const;
-    const type& get_loss_goal() const;
+    type get_minimum_loss_decrease() const;
+    type get_loss_goal() const;
 
-    const Index& get_maximum_validation_failures() const;
+    Index get_maximum_validation_failures() const;
 
     // Set
 
@@ -76,7 +76,7 @@ public:
                                                  ForwardPropagation&,
                                                  BackPropagation&,
                                                  QuasiNewtonMethodData&,
-                                                 const type&);
+                                                 type);
 
 #ifdef OPENNN_CUDA
 

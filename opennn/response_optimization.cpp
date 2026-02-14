@@ -469,16 +469,26 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(const FeatureS
     auto [first_feasible_inputs, first_feasible_outputs] = filter_feasible_points(first_random_inputs, neural_network->calculate_outputs<2,2>(first_random_inputs), feature_space);
 
     if (first_feasible_inputs.dimension(0) == 0)
+    {
+        cout << "!!! [Critical] Zero feasible points found. "
+             << "Check if your constraints are too strict." << endl;
         return Tensor2();
+    }
 
     auto [global_pareto_inputs, global_pareto_outputs] = calculate_pareto(first_feasible_inputs, first_feasible_outputs, extract_objectives(first_feasible_inputs, first_feasible_outputs, feature_space));
+
+    cout << "> [Diagnostic] Initial Pareto front size: " << global_pareto_inputs.dimension(0) << " points." << endl;
 
     vector<Domain> local_input_domains(static_cast<size_t>(global_pareto_inputs.dimension(0)), feature_space.input_domain);
 
     type current_zoom = zoom_factor;
 
+    cout << "> [Diagnostic] Optimization loop starting with zoom factor: " << current_zoom << endl;
+
     for (Index i = 0; i < max_iterations; i++)
     {
+        cout << "\n> [Iteration " << i + 1 << " / " << max_iterations << "]" << endl;
+
         Tensor2 union_inputs;
         Tensor2 union_outputs;
 
@@ -493,6 +503,8 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(const FeatureS
             union_outputs = append_rows(union_outputs, local_pareto_output);
         }
 
+        cout << "  - Aggregated local Pareto candidates: " << union_inputs.dimension(0) << endl;
+
         Tensor2 candidate_inputs = append_rows(global_pareto_inputs, union_inputs);
         Tensor2 candidate_outputs = append_rows(global_pareto_outputs, union_outputs);
 
@@ -503,7 +515,10 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(const FeatureS
 
         auto pareto_pair = calculate_pareto(candidate_inputs, candidate_outputs, extract_objectives(candidate_inputs, candidate_outputs, feature_space));
 
-        global_pareto_inputs = pareto_pair.first; global_pareto_outputs = pareto_pair.second;
+        global_pareto_inputs = pareto_pair.first;
+        global_pareto_outputs = pareto_pair.second;
+
+        cout << "  - New Pareto front size: " << global_pareto_inputs.dimension(0)  << endl;
 
         local_input_domains.assign(static_cast<size_t>(global_pareto_inputs.dimension(0)), feature_space.input_domain);
 
@@ -511,6 +526,8 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(const FeatureS
             local_input_domains[j].reshape(current_zoom, global_pareto_inputs.chip(j, 0), optimal_set.first, feature_space.input_feature_dimensions, feature_space.input_variable_types);
         current_zoom *= 0.5;
     }
+    cout << "\n> [Optimization Complete] Assembling final results..." << endl;
+
     return assemble_results(global_pareto_inputs, global_pareto_outputs, feature_space);
 }
 

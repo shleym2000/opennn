@@ -19,10 +19,10 @@ class Convolutional final : public Layer
 
 public:
 
-    Convolutional(const shape& = {3, 3, 1},                    // Input shape {height,width,channels}
-                  const shape& = {3, 3, 1, 1},                 // Kernel shape {kernel_height,kernel_width,channels,kernels_number}
+    Convolutional(const Shape& = {3, 3, 1},                    // Input shape {height,width,channels}
+                  const Shape& = {3, 3, 1, 1},                 // Kernel shape {kernel_height,kernel_width,channels,kernels_number}
                   const string& = "Linear",
-                  const shape& = { 1, 1 },                     // Stride shape {row_stride,column_stride}
+                  const Shape& = { 1, 1 },                     // Stride shape {row_stride,column_stride}
                   const string& = "Valid",                          // Convolution type (Valid || Same)
                   bool = false,                              // Batch Normalization)
                   const string& = "convolutional_layer");
@@ -33,8 +33,8 @@ public:
 
     const string& get_activation_function() const;
 
-    shape get_input_shape() const override;
-    shape get_output_shape() const override;
+    Shape get_input_shape() const override;
+    Shape get_output_shape() const override;
 
     pair<Index, Index> get_padding() const;
 
@@ -72,10 +72,10 @@ public:
 
     // Set
 
-    void set(const shape& = {0, 0, 0},
-             const shape& = {3, 3, 1, 1},
+    void set(const Shape& = {0, 0, 0},
+             const Shape& = {3, 3, 1, 1},
              const string& = "Linear",
-             const shape& = {1, 1},
+             const Shape& = {1, 1},
              const string& = "Valid",
              bool = false,
              const string& = "convolutional_layer");
@@ -90,7 +90,7 @@ public:
 
     void set_column_stride(const Index);
 
-    void set_input_shape(const shape&) override;
+    void set_input_shape(const Shape&) override;
 
     void set_parameters_glorot() override;
     void set_parameters_random() override;
@@ -161,7 +161,7 @@ private:
     Index row_stride = 1;
     Index column_stride = 1;
 
-    shape input_shape;
+    Shape input_shape;
 
     string convolution_type = "Valid";
 

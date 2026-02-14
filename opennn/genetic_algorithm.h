@@ -36,12 +36,12 @@ public:
 
     Index get_genes_number() const;
 
-    const Index& get_minimum_inputs_number() const override;
-    const Index& get_maximum_inputs_number() const override;
+    Index get_minimum_inputs_number() const override;
+    Index get_maximum_inputs_number() const override;
 
-    const type& get_mutation_rate() const;
+    type get_mutation_rate() const;
 
-    const Index& get_elitism_size() const;
+    Index get_elitism_size() const;
 
     const string& get_initialization_method() const;
 
