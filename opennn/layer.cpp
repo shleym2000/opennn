@@ -37,7 +37,7 @@ void LayerBackPropagation::set(const Index new_batch_size, Layer* new_layer)
 }
 
 
-vector<TensorView *> LayerBackPropagation::get_workspace_views()
+vector<TensorView *> LayerBackPropagation::get_gradient_views()
 {
     return vector<TensorView*>();
 }

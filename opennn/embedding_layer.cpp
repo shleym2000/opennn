@@ -318,7 +318,7 @@ void EmbeddingBackPropagation::initialize()
 }
 
 
-vector<TensorView*> EmbeddingBackPropagation::get_workspace_views()
+vector<TensorView*> EmbeddingBackPropagation::get_gradient_views()
 {
     return {&weight_gradients};
 }

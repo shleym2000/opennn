@@ -356,7 +356,7 @@ struct NeuralNetworkBackPropagation
 
     const vector<unique_ptr<LayerBackPropagation>>& get_layers() const;
 
-    vector<vector<TensorView*>> get_layer_workspace_views();
+    vector<vector<TensorView*>> get_layer_gradient_views();
 
     void print() const;
 
@@ -368,7 +368,7 @@ struct NeuralNetworkBackPropagation
 
     vector<unique_ptr<LayerBackPropagation>> layers;
 
-    Tensor1 workspace;
+    Tensor1 gradient;
 };
 
 

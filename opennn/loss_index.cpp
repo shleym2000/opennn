@@ -381,7 +381,7 @@ void Loss::add_regularization_to_gradients(BackPropagation& back_propagation) co
 
     const Tensor1& parameters = neural_network->get_parameters();
 
-    Tensor1& gradient = back_propagation.neural_network.workspace;
+    Tensor1& gradient = back_propagation.neural_network.gradient;
 
     if(regularization_method == "L1")
         gradient.device(*device) += regularization_weight * parameters.sign();
@@ -627,7 +627,7 @@ Tensor1 Loss::calculate_gradient()
 
     back_propagate(batch, forward_propagation, back_propagation);
 
-    return back_propagation.neural_network.workspace;
+    return back_propagation.neural_network.gradient;
 }
 
 

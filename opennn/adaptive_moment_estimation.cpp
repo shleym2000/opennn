@@ -410,7 +410,7 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
     const type bias_correction_2 = type(1) - pow(beta_2, type(iteration));
 
     Tensor1& parameters = neural_network->get_parameters();
-    const Tensor1& gradient = back_propagation.neural_network.workspace;
+    const Tensor1& gradient = back_propagation.neural_network.gradient;
 
     Tensor1& gradient_exponential_decay = optimization_data.gradient_exponential_decay;
     Tensor1& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay;

@@ -509,7 +509,7 @@ struct LayerBackPropagation
     void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_workspace_views();;
+    virtual vector<TensorView*> get_gradient_views();
 
     vector<TensorView> get_input_gradients() const;
 
