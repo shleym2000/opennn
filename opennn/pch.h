@@ -127,10 +127,6 @@ using namespace Eigen;
 
 using type = float;
 
-// @todo change this, since it is used a lot and introduces overhead
-// using shape = Eigen::Array<Index, Eigen::Dynamic, 1, 0, 8, 1>;
-//using shape = vector<Index>;
-
 using Tensor1 = Tensor<type, 1, AlignedMax>;
 using Tensor2 = Tensor<type, 2, AlignedMax>;
 using Tensor3 = Tensor<type, 3, AlignedMax>;

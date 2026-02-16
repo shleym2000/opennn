@@ -1382,7 +1382,7 @@ void ConvolutionalBackPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views_device()
+vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views()
 {
     vector<TensorViewCuda*> views = { &bias_gradients, &weight_gradients };
 

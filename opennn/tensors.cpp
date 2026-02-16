@@ -722,7 +722,7 @@ type* link(type *pointer, vector<TensorView*> views)
 }
 
 
-void link(type *pointer, vector<vector<TensorView*> > views)
+void link(type *pointer, vector<vector<TensorView*>> views)
 {
     for(size_t i = 0; i < views.size(); i++)
         pointer = link(pointer, views[i]);
@@ -748,7 +748,7 @@ Index get_size(const vector<TensorView*> views)
 }
 
 
-Index get_size(vector<vector<TensorView*> > views)
+Index get_size(vector<vector<TensorView*>> views)
 {
     Index total_size = 0;
 
@@ -780,7 +780,7 @@ type* link(type* pointer, vector<TensorViewCuda*> views)
 }
 
 
-void link(type* pointer, vector<vector<TensorViewCuda*> > views)
+void link(type* pointer, vector<vector<TensorViewCuda*>> views)
 {
     for (size_t i = 0; i < views.size(); i++)
         pointer = link(pointer, views[i]);
@@ -806,7 +806,7 @@ Index get_size(const vector<TensorViewCuda*> views)
 }
 
 
-Index get_size(vector<vector<TensorViewCuda*> > views)
+Index get_size(vector<vector<TensorViewCuda*>> views)
 {
     Index total_size = 0;
 

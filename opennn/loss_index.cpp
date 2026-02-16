@@ -521,7 +521,7 @@ vector<vector<TensorView>> BackPropagation::get_layer_gradients() const
     const vector<vector<Index>> layer_output_indices = neural_network_ptr->get_layer_output_indices();
     const vector<unique_ptr<LayerBackPropagation>>& layer_back_propagations = neural_network.get_layers();
 
-    vector<TensorView> input_derivative_views;
+    vector<TensorView> input_gradient_views;
 
     vector<vector<TensorView>> layer_delta_views(layers_number);
 
@@ -542,9 +542,9 @@ vector<vector<TensorView>> BackPropagation::get_layer_gradients() const
             const Index output_index = layer_output_indices[i][j];
             const Index input_index = neural_network_ptr->find_input_index(layer_input_indices[output_index], i);
 
-            input_derivative_views = layer_back_propagations[output_index]->get_input_gradients();
+            input_gradient_views = layer_back_propagations[output_index]->get_input_gradients();
 
-            layer_delta_views[i].push_back(input_derivative_views[input_index]);
+            layer_delta_views[i].push_back(input_gradient_views[input_index]);
         }
     }
 
@@ -1177,7 +1177,7 @@ vector<vector<TensorView>> BackPropagationLM::get_layer_gradients() const
 
     const vector<unique_ptr<LayerBackPropagationLM>>& layer_back_propagations = neural_network.get_layers();
 
-    vector<TensorView> input_derivative_views;
+    vector<TensorView> input_gradient_views;
 
     vector<vector<TensorView>> layer_delta_views(layers_number);
 
@@ -1561,7 +1561,7 @@ vector<vector<TensorViewCuda>> BackPropagationCuda::get_layer_delta_views_device
     const vector<vector<Index>> layer_output_indices = neural_network_ptr->get_layer_output_indices();
     const vector<unique_ptr<LayerBackPropagationCuda>>& layer_back_propagations = neural_network.get_layers();
 
-    vector<TensorViewCuda> input_derivative_views;
+    vector<TensorViewCuda> input_gradient_views;
 
     vector<vector<TensorViewCuda>> layer_delta_views(layers_number);
 
@@ -1572,7 +1572,7 @@ vector<vector<TensorViewCuda>> BackPropagationCuda::get_layer_delta_views_device
     {
         if (i == last_trainable_layer_index)
         {
-            layer_delta_views[i].push_back(get_output_gradients_tensor_view_device());
+            layer_delta_views[i].push_back(get_output_gradient_views_device());
 
             continue;
         }
@@ -1582,9 +1582,9 @@ vector<vector<TensorViewCuda>> BackPropagationCuda::get_layer_delta_views_device
             const Index output_index = layer_output_indices[i][j];
             const Index input_index = neural_network_ptr->find_input_index(layer_input_indices[output_index], i);
 
-            input_derivative_views = layer_back_propagations[output_index]->get_input_gradients_views_device();
+            input_gradient_views = layer_back_propagations[output_index]->get_input_gradient_views();
 
-            layer_delta_views[i].push_back(input_derivative_views[input_index]);
+            layer_delta_views[i].push_back(input_gradient_views[input_index]);
         }
     }
 
@@ -1592,7 +1592,7 @@ vector<vector<TensorViewCuda>> BackPropagationCuda::get_layer_delta_views_device
 }
 
 
-TensorViewCuda BackPropagationCuda::get_output_gradients_tensor_view_device() const
+TensorViewCuda BackPropagationCuda::get_output_gradient_views_device() const
 {
     return output_gradients.view();
 }

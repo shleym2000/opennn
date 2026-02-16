@@ -309,7 +309,7 @@ struct DenseBackPropagationCuda : public LayerBackPropagationCuda
         }
     }
 
-    vector<TensorViewCuda*> get_workspace_views_device() override
+    vector<TensorViewCuda*> get_workspace_views() override
     {
         vector<TensorViewCuda*> views = { &bias_gradients, &weight_gradients};
 

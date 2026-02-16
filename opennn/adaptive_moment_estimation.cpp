@@ -638,11 +638,9 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
         }
 
         if (training_batches_number > 1)
-        {
             next_training_batch->fill_host(training_batches[1],
                                            input_feature_indices,
                                            target_feature_indices);
-        }
 
         for(Index iteration = 0; iteration < training_batches_number; iteration++)
         {

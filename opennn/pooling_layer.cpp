@@ -659,7 +659,7 @@ void PoolingForwardPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> PoolingForwardPropagationCuda::get_workspace_views_device()
+vector<TensorViewCuda*> PoolingForwardPropagationCuda::get_workspace_views()
 {
     return { &outputs };
 }

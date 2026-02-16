@@ -34,7 +34,7 @@ class Layer
 
 public:
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     Layer();
     virtual ~Layer();
@@ -291,10 +291,6 @@ protected:
         }
     }
 
-//    void softmax(TensorMap2) const;
-//    void softmax(TensorMap3) const;
-//    void softmax(TensorMap4) const;
-
     void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 
     void add_gradients(const vector<TensorView>& output_gradient_views) const;
@@ -481,7 +477,7 @@ protected:
 
 struct LayerForwardPropagation
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     LayerForwardPropagation() {}
     virtual ~LayerForwardPropagation() = default;
@@ -505,7 +501,7 @@ struct LayerForwardPropagation
 
 struct LayerBackPropagation
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     LayerBackPropagation() {}
     virtual ~LayerBackPropagation() = default;
@@ -513,10 +509,7 @@ struct LayerBackPropagation
     void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_workspace_views() 
-    {
-        return vector<TensorView*>();
-    };
+    virtual vector<TensorView*> get_workspace_views();;
 
     vector<TensorView> get_input_gradients() const;
 
@@ -537,18 +530,15 @@ struct LayerBackPropagation
 
 struct LayerBackPropagationLM
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     LayerBackPropagationLM() {}
+
     virtual ~LayerBackPropagationLM() = default;
 
     virtual void set(const Index = 0, Layer* = nullptr) = 0;
-    //virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_workspace_views()
-    {
-        return vector<TensorView*>();
-    };
+    virtual vector<TensorView*> get_workspace_views();
 
     vector<TensorView> get_input_gradients() const;
 
@@ -574,9 +564,10 @@ struct LayerForwardPropagationCuda
     virtual ~LayerForwardPropagationCuda() {}
 
     void set(const Index = 0, Layer* = nullptr);
+
     virtual void initialize() = 0;
 
-    virtual vector<TensorViewCuda*> get_workspace_views_device();
+    virtual vector<TensorViewCuda*> get_workspace_views();
 
     TensorViewCuda get_outputs() const;
 
@@ -595,17 +586,18 @@ struct LayerForwardPropagationCuda
 struct LayerBackPropagationCuda
 {
     LayerBackPropagationCuda() {}
+
     virtual ~LayerBackPropagationCuda() {}
 
     void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorViewCuda*> get_workspace_views_device() 
+    virtual vector<TensorViewCuda*> get_workspace_views()
     {
 		return vector<TensorViewCuda*>();
     };
 
-    vector<TensorViewCuda> get_input_gradients_views_device() const;
+    vector<TensorViewCuda> get_input_gradient_views() const;
 
     virtual void print() const {}
 

@@ -26,7 +26,7 @@ struct NeuralNetworkBackPropagationCuda;
 
 struct ForwardPropagation
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     ForwardPropagation(const Index = 0, NeuralNetwork* = nullptr);
 
@@ -38,10 +38,7 @@ struct ForwardPropagation
 
     vector<vector<TensorView>> get_layer_input_views(const vector<TensorView>&, bool) const;
 
-    TensorView get_outputs()
-    {
-        return layers.back()->get_outputs();
-    }
+    TensorView get_outputs();
 
     void print() const;
 
@@ -97,7 +94,7 @@ class NeuralNetwork
 
 public:
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     NeuralNetwork();
 
@@ -307,10 +304,7 @@ public:
     void create_cuda() const;
     void destroy_cuda() const;
 
-    TensorCuda& get_parameters_device() 
-    {
-        return parameters_device;
-    }
+    TensorCuda& get_parameters_device();
 
     vector<vector<TensorViewCuda*>> get_layer_parameter_views_device();
 
@@ -319,10 +313,10 @@ public:
     void copy_parameters_host();
 
     void forward_propagate(const vector<TensorViewCuda>&,
-                                ForwardPropagationCuda&,
-                                bool = false) const;
+                           ForwardPropagationCuda&,
+                           bool = false) const;
 
-    TensorViewCuda calculate_outputs_cuda(TensorViewCuda, Index);
+    TensorViewCuda calculate_outputs(TensorViewCuda, Index);
 
 protected:
 
@@ -408,22 +402,13 @@ struct NeuralNetworkBackPropagationCuda
 
 struct NeuralNetworkBackPropagationLM
 {
-    NeuralNetworkBackPropagationLM(NeuralNetwork* new_neural_network = nullptr)
-    {
-        neural_network = new_neural_network;
-    }
+    NeuralNetworkBackPropagationLM(NeuralNetwork* new_neural_network = nullptr);
 
     void set(const Index = 0, NeuralNetwork* = nullptr);
 
-    const vector<unique_ptr<LayerBackPropagationLM>>& get_layers() const
-    {
-        return layers;
-    }
+    const vector<unique_ptr<LayerBackPropagationLM>>& get_layers() const;
 
-    NeuralNetwork* get_neural_network() const
-    {
-        return neural_network;
-    }
+    NeuralNetwork* get_neural_network() const;
 
     vector<vector<TensorView*>> get_layer_workspace_views();
 

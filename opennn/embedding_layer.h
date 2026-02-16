@@ -137,7 +137,7 @@ struct EmbeddingBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override;
 
-    vector<TensorViewCuda*> get_workspace_views_device() override;
+    vector<TensorViewCuda*> get_workspace_views() override;
 
     void print() const override;
 
