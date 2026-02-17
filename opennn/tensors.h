@@ -223,6 +223,8 @@ struct TensorView
 };
 
 
+void shuffle_rows(Tensor2& matrix);
+
 type* link(type*, vector<TensorView*>);
 void link(type*, vector<vector<TensorView*>>);
 
@@ -363,7 +365,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
 Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, Index, type, type);
 
-//type l2_distance(const type, const TensorMap<Tensor<type, 0> > &);
+//type l2_distance(const type, const TensorMap<Tensor<type, 0> >&);
 type l2_distance(const Tensor1&, const Tensor1&);
 
 Tensor<Index, 1> get_n_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
@@ -372,7 +374,7 @@ void fill_tensor_data_row_major(const Tensor2&, const vector<Index>&, const vect
 
 void fill_tensor_data(const Tensor2&, const vector<Index>&, const vector<Index>&, type*);
 
-void fill_tensor_sequence(const Tensor2&, const vector<Index>&, const vector<Index>&, Index, type*);
+//void fill_tensor_sequence(const Tensor2&, const vector<Index>&, const vector<Index>&, Index, type*);
 
 template <typename Type, int Rank>
 bool contains(const TensorR<Rank>& vector, const Type& value)

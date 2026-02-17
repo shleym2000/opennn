@@ -571,6 +571,8 @@ void ImageDataset::read_bmp(const Shape& new_input_shape)
              << seconds << " seconds, "
              << milliseconds << " milliseconds." << endl;
     }
+
+    shuffle_rows(data);
 }
 
 } // opennn namespace

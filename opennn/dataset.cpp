@@ -310,35 +310,20 @@ vector<vector<Index>> Dataset::get_batches(const vector<Index>& sample_indices,
     const Index samples_number = sample_indices.size();
     const Index batches_number = (samples_number + batch_size - 1) / batch_size;
 
-    vector<Index> samples_copy;
-    if(shuffle)
-    {
-        samples_copy = sample_indices;
-        if (dynamic_cast<const ImageDataset*>(this) != nullptr)
-            shuffle_vector(samples_copy);
-        else
-            shuffle_vector_blocks(samples_copy);
-    }
+    vector<Index> indices = sample_indices;
 
-    const vector<Index>& samples = shuffle ? samples_copy : sample_indices;
+    if (shuffle)
+        shuffle_vector_blocks(indices);
 
     vector<vector<Index>> batches(batches_number);
-    for(Index i = 0; i < batches_number; i++)
-    {
-        const Index start_index = i * batch_size;
-        const Index end_index = min(start_index + batch_size, samples_number);
-        batches[i].resize(end_index - start_index);
-    }
 
     #pragma omp parallel for if(batches_number > 64)
-    for(Index i = 0; i < batches_number; i++)
+    for (Index i = 0; i < batches_number; i++)
     {
-        const Index start_index = i * batch_size;
-        const Index end_index = min(start_index + batch_size, samples_number);
+        const auto start_it = indices.begin() + (i * batch_size);
+        const auto end_it = indices.begin() + min((i + 1) * batch_size, samples_number);
 
-        vector<Index>& batch = batches[i];
-        for(Index j = 0; j < end_index - start_index; j++)
-            batch[j] = samples[start_index + j];
+        batches[i].assign(start_it, end_it);
     }
 
     return batches;
@@ -4541,9 +4526,7 @@ void BatchCuda::fill_host(const vector<Index>& sample_indices,
                           //const vector<Index>& decoder_indices,
                           const vector<Index>& target_indices)
 {
-    ImageDataset* image_dataset = dynamic_cast<ImageDataset*>(dataset);
-
-    if (image_dataset != nullptr)
+    if (const ImageDataset* image_dataset = dynamic_cast<ImageDataset*>(dataset))
         image_dataset->fill_input_tensor_row_major(sample_indices, input_indices, inputs_host);
     else
         dataset->fill_input_tensor(sample_indices, input_indices, inputs_host);

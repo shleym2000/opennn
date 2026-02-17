@@ -7,6 +7,9 @@
 //   artelnics@artelnics.com
 
 #include "tensors.h"
+
+#include "random_utilities.h"
+
 #include "../eigen/Eigen/Dense"
 
 namespace opennn
@@ -432,9 +435,34 @@ void fill_tensor_data(const Tensor2& matrix,
 
     if(rows_number == 0 || columns_number == 0) return;
 
+    const type* matrix_data = matrix.data();
+    const Index matrix_rows_count = matrix.dimension(0);
+
+    vector<const type*> col_ptrs(columns_number);
+
+    for(Index j = 0; j < columns_number; ++j)
+        col_ptrs[j] = matrix_data + matrix_rows_count * column_indices[j];
+
+    #pragma omp parallel for schedule(static)
+    for(Index j = 0; j < columns_number; ++j)
+    {
+        const type* src_column = col_ptrs[j];
+        type* dest_column = tensor_data + rows_number*j;
+
+        //#pragma omp simd
+        for(Index i = 0; i < rows_number; ++i)
+            dest_column[i] = src_column[row_indices[i]];
+    }
+
+/*
+    const Index rows_number = row_indices.size();
+    const Index columns_number = column_indices.size();
+
+    if(rows_number == 0 || columns_number == 0) return;
+
     const type* __restrict matrix_data = matrix.data();
     const Index matrix_rows_count = matrix.dimension(0);
-    const Index* __restrict row_indices_data = row_indices.data();
+    const Index* __restrict row_indices_data = row_indices.data();   
 
     #pragma omp parallel for if(columns_number >= 32) schedule(static)
     for(Index j = 0; j < columns_number; ++j)
@@ -445,6 +473,7 @@ void fill_tensor_data(const Tensor2& matrix,
         for(Index i = 0; i < rows_number; ++i)
             tensor_value[i] = matrix_column[row_indices_data[i]];
     }
+*/
 }
 
 
@@ -475,7 +504,7 @@ void fill_tensor_data_row_major(const Tensor2& matrix,
     }
 }
 
-
+/*
 void fill_tensor_sequence(const Tensor2& matrix,
                           const vector<Index>& rows_indices,
                           const vector<Index>& columns_indices,
@@ -506,7 +535,7 @@ void fill_tensor_sequence(const Tensor2& matrix,
         }
     }
 }
-
+*/
 
 vector<Index> join_vector_vector(const vector<Index>& x, const vector<Index>& y)
 {
@@ -814,6 +843,33 @@ Index get_size(vector<vector<TensorViewCuda*>> views)
         total_size += get_size(views[i]);
 
     return total_size;
+}
+
+void shuffle_rows(Tensor2& matrix)
+{
+    const Index rows_number = matrix.dimension(0);
+    const Index columns_number = matrix.dimension(1);
+
+    if (rows_number <= 1) return;
+
+    type* data = matrix.data();
+
+    for (Index i = rows_number - 1; i > 0; --i)
+    {
+        const Index j = random_integer(0, i);
+
+        if (i == j) continue;
+
+        #pragma omp parallel for schedule(static)
+        for (Index c = 0; c < columns_number; ++c)
+        {
+            const Index offset = c * rows_number;
+
+            const type temp = data[i + offset];
+            data[i + offset] = data[j + offset];
+            data[j + offset] = temp;
+        }
+    }
 }
 
 #endif

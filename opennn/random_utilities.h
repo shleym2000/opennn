@@ -12,30 +12,30 @@
 
 namespace opennn
 {
-    void set_seed(Index seed);
+    void set_seed(Index);
 
-    type random_uniform(type min = -1, type max = 1);
-    type random_normal(type mean = 0, type std_dev = 1);
-    Index random_integer(Index min, Index max);
-    bool random_bool(type probability = 0.5);
+    type random_uniform(type = -1, type = 1);
+    type random_normal(type = 0, type = 1);
+    Index random_integer(Index, Index);
+    bool random_bool(type = 0.5);
 
-    void set_random_uniform(Tensor1& tensor, type min = -0.1, type max = 0.1);
-    void set_random_uniform(Tensor2& tensor, type min = -0.1, type max = 0.1);
+    void set_random_uniform(Tensor1&, type = -0.1, type = 0.1);
+    void set_random_uniform(Tensor2&, type = -0.1, type = 0.1);
 
-    void set_random_uniform(TensorMap1 tensor, type min = -0.1, type max = 0.1);
-    void set_random_uniform(TensorMap2 tensor, type min = -0.1, type max = 0.1);
+    void set_random_uniform(TensorMap1, type = -0.1, type = 0.1);
+    void set_random_uniform(TensorMap2, type = -0.1, type = 0.1);
 
-    void set_random_integer(Tensor2& tensor, Index min, Index max);
-
-    template<typename T>
-    void shuffle_vector(vector<T>& vec);
-
-    void shuffle_vector_blocks(vector<Index>& vec, size_t num_parts = 20);
+    void set_random_integer(Tensor2&, Index, Index);
 
     template<typename T>
-    void shuffle_tensor(Tensor<T, 1>& vec);
+    void shuffle_vector(vector<T>&);
 
-    Index get_random_element(const vector<Index> &values);
+    void shuffle_vector_blocks(vector<Index>&, size_t = 20);
+
+    template<typename T>
+    void shuffle_tensor(Tensor<T, 1>&);
+
+    Index get_random_element(const vector<Index>&);
 }
 
 // OpenNN: Open Neural Networks Library.

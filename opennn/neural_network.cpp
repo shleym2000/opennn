@@ -246,13 +246,13 @@ bool NeuralNetwork::get_display() const
     return display;
 }
 
-const vector<string> &NeuralNetwork::get_input_vocabulary() const
+const vector<string>&NeuralNetwork::get_input_vocabulary() const
 {
     return input_vocabulary;
 }
 
 
-const vector<string> &NeuralNetwork::get_output_vocabulary() const
+const vector<string>&NeuralNetwork::get_output_vocabulary() const
 {
     return output_vocabulary;
 }
@@ -801,7 +801,7 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
     return 0;
 }
 
-Tensor2 NeuralNetwork::calculate_text_outputs(const Tensor<string, 1> &input_documents) const
+Tensor2 NeuralNetwork::calculate_text_outputs(const Tensor<string, 1>&input_documents) const
 {
     const Index batch_size = input_documents.dimension(0);
 
@@ -1523,7 +1523,7 @@ void NeuralNetworkBackPropagationLM::set(const Index new_batch_size,
     link(workspace.data(), layer_workspace_views);
 }
 
-const vector<unique_ptr<LayerBackPropagationLM> > &NeuralNetworkBackPropagationLM::get_layers() const
+const vector<unique_ptr<LayerBackPropagationLM> >&NeuralNetworkBackPropagationLM::get_layers() const
 {
     return layers;
 }

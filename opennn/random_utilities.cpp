@@ -129,12 +129,12 @@ template void shuffle_vector<Index>(vector<Index>&);
 template void shuffle_vector<size_t>(vector<size_t>&);
 
 
-void shuffle_vector_blocks(vector<Index>& vec, size_t num_blocks)
+void shuffle_vector_blocks(vector<Index>& vec, size_t blocks_number)
 {
     const size_t n = vec.size();
     if (n < 2) return;
 
-    const size_t block_size = n / max(size_t(1), num_blocks);
+    const size_t block_size = n / max(size_t(1), blocks_number);
 
     if (block_size < 10)
     {
@@ -161,7 +161,7 @@ void shuffle_tensor(Tensor<T, 1>& vec)
 template void shuffle_tensor<bool>(Tensor<bool, 1>&);
 
 
-Index get_random_element(const vector<Index> &values)
+Index get_random_element(const vector<Index>&values)
 {
     if (values.empty())
         throw runtime_error("get_random_element: Input vector is empty.");

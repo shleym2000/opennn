@@ -370,7 +370,7 @@ void LanguageDataset::read_csv()
 }
 
 
-unordered_map<string, Index> LanguageDataset::create_vocabulary_map(const vector<string> &vocabulary)
+unordered_map<string, Index> LanguageDataset::create_vocabulary_map(const vector<string>&vocabulary)
 {
     unordered_map<string, Index> vocabulary_map;
 

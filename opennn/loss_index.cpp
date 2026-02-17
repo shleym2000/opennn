@@ -66,9 +66,10 @@ void Loss::set(const NeuralNetwork* new_neural_network, const Dataset* new_datas
 
 void Loss::set_threads_number(const int& new_threads_number)
 {
-    if(thread_pool != nullptr)
+    if(thread_pool)
         thread_pool.reset();
-    if(device != nullptr)
+
+    if(device)
         device.reset();
 
     thread_pool = make_unique<ThreadPool>(new_threads_number);

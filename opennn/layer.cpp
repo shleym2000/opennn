@@ -229,7 +229,7 @@ void Layer::set_threads_number(const int& new_threads_number)
 }
 
 
-string Layer::get_expression(const vector<string> &, const vector<string> &) const
+string Layer::get_expression(const vector<string>&, const vector<string>&) const
 {
     return string();
 }
@@ -267,7 +267,7 @@ bool Layer::get_is_trainable() const
 }
 
 
-void Layer::add_gradients(const vector<TensorView> &output_gradient_views) const
+void Layer::add_gradients(const vector<TensorView>&output_gradient_views) const
 {
     TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
