@@ -207,7 +207,7 @@ struct ConvolutionalBackPropagation final : LayerBackPropagation
 
     void initialize() override;
 
-    vector<TensorView*> get_workspace_views() override;
+    vector<TensorView*> get_gradient_views() override;
 
     void print() const override;
 
@@ -262,7 +262,7 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 
     void initialize() override;
 
-    vector<TensorViewCuda*> get_workspace_views_device() override;
+    vector<TensorViewCuda*> get_workspace_views() override;
 
     void print() const override;
 

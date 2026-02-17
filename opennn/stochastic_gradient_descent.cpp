@@ -138,7 +138,7 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 
     Tensor1& parameters = neural_network->get_parameters();
 
-    Tensor1& gradient = back_propagation.neural_network.workspace;
+    Tensor1& gradient = back_propagation.neural_network.gradient;
 
     Tensor1& parameter_updates = optimization_data.parameter_updates;
     Tensor1& last_parameter_updates = optimization_data.last_parameter_updates;
@@ -704,6 +704,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
             validation_batches = dataset->get_batches(validation_sample_indices, validation_batch_size, shuffle);
 
             validation_error = type(0);
+
             if (is_classification_model) validation_accuracy = type(0);
 
             if (validation_batches_number > 0)
@@ -717,11 +718,9 @@ TrainingResults StochasticGradientDescent::train_cuda()
             }
 
             if (validation_batches_number > 1)
-            {
                 next_validation_batch->fill_host(validation_batches[1],
                                                  input_feature_indices,
                                                  target_feature_indices);
-            }
 
             for(Index iteration = 0; iteration < validation_batches_number; iteration++)
             {
@@ -751,11 +750,9 @@ TrainingResults StochasticGradientDescent::train_cuda()
                     validation_accuracy += validation_back_propagation->accuracy();
 
                 if(iteration + 2 < validation_batches_number)
-                {
                     next_validation_batch->fill_host(validation_batches[iteration + 2],
                                                      input_feature_indices,
                                                      target_feature_indices);
-                }
 
                 swap(current_validation_batch, next_validation_batch);
             }

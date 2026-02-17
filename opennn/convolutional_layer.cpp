@@ -821,7 +821,7 @@ void ConvolutionalBackPropagation::initialize()
 }
 
 
-vector<TensorView*> ConvolutionalBackPropagation::get_workspace_views()
+vector<TensorView*> ConvolutionalBackPropagation::get_gradient_views()
 {
     const auto* convolutional_layer = static_cast<const Convolutional*>(layer);
 
@@ -1382,7 +1382,7 @@ void ConvolutionalBackPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views_device()
+vector<TensorViewCuda*> ConvolutionalBackPropagationCuda::get_workspace_views()
 {
     vector<TensorViewCuda*> views = { &bias_gradients, &weight_gradients };
 

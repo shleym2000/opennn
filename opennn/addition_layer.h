@@ -153,9 +153,9 @@ public:
 
 
     void back_propagate(const vector<TensorViewCuda>&,
-                             const vector<TensorViewCuda>& output_gradients,
-                             unique_ptr<LayerForwardPropagationCuda>&,
-                             unique_ptr<LayerBackPropagationCuda>& back_propagation) const override
+                        const vector<TensorViewCuda>& output_gradients,
+                        unique_ptr<LayerForwardPropagationCuda>&,
+                        unique_ptr<LayerBackPropagationCuda>& back_propagation) const override
     {
         if (output_gradients.size() != 1)
             throw runtime_error(name + " backpropagation requires exactly one delta input for CUDA.");
@@ -191,6 +191,7 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
     void initialize() override
     {
         const Shape output_shape = layer->get_output_shape();
+
         Shape full_dims = { batch_size };
         full_dims.insert(full_dims.end(), output_shape.begin(), output_shape.end());
 
@@ -200,9 +201,9 @@ struct AdditionForwardPropagation final : LayerForwardPropagation
 
     void print() const override
     {
-        cout << "Addition Forward Propagation:" << endl;
-        cout << "Outputs shape: " << outputs.shape << endl;
-        cout << "Outputs data:" << endl << outputs.data << endl;
+        cout << "Addition Forward Propagation:" << endl
+             << "Outputs shape: " << outputs.shape << endl
+             << "Outputs data:" << endl << outputs.data << endl;
     }
 };
 
@@ -237,7 +238,7 @@ struct AdditionBackPropagation final : LayerBackPropagation
     void print() const override
     {
         cout << "Addition Back Propagation:" << endl;
-/*
+
         if(input_gradients.size() >= 1)
         {
             cout << "Input 1 Deltas shape: " << input_gradients[0].shape << endl;
@@ -249,7 +250,6 @@ struct AdditionBackPropagation final : LayerBackPropagation
             cout << "Input 2 Deltas shape: " << input_gradients[1].shape << endl;
             cout << input_gradients[1].data << endl;
         }
-*/
     }
 };
 

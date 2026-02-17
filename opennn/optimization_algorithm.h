@@ -155,13 +155,12 @@ struct OptimizerData
     Tensor1 potential_parameters;
     Tensor1 training_direction;
     type initial_learning_rate = type(0);
-
 };
 
 
 struct TrainingResults
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     TrainingResults(const Index = 0);
     virtual ~TrainingResults() = default;

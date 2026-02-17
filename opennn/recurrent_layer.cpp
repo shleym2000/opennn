@@ -408,7 +408,7 @@ RecurrentBackPropagation::RecurrentBackPropagation(const Index new_batch_size, L
 }
 
 
-vector<TensorView*> RecurrentBackPropagation::get_workspace_views()
+vector<TensorView*> RecurrentBackPropagation::get_gradient_views()
 {
     return {&bias_gradients, &input_weight_gradients, &recurrent_weight_gradients};
 }
