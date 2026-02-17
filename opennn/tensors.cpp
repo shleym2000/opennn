@@ -344,17 +344,17 @@ type l2_distance(const Tensor1&x, const Tensor1&y)
     return distance(0);
 }
 
-Tensor<Index, 1> get_n_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, int n = 1)
+Tensor<Index, 1> get_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, int n = 1)
 {
     const Index number_points_to_compare = matrix.dimension(0);
 
     const Index coordinates_number = matrix.dimension(1);
 
     if(point.size() != coordinates_number)
-        throw runtime_error("get_n_nearest_points : Matrix row dimension and point size must match.\n");
+        throw runtime_error("get_nearest_points : Matrix row dimension and point size must match.\n");
 
     if(n <= 0)
-        throw runtime_error("get_n_nearest_points : n must be positive.\n");
+        throw runtime_error("get_nearest_points : n must be positive.\n");
 
     if(n > number_points_to_compare)
         n = number_points_to_compare;

@@ -74,7 +74,9 @@ int main()
 
         single_conds[dataset.get_variable_index("Compressive Strength (28-day)(Mpa)")] = {ResponseOptimization::ConditionType::Maximize};
 
-        auto [single_results, feature_space_single] = optimizer.perform_response_optimization(single_conds);
+        optimizer.set_condition("Compressive Strength (28-day)(Mpa)", ResponseOptimization::ConditionType::Maximize);
+
+        Tensor2 single_results = optimizer.perform_response_optimization();
 
             cout << "Optimal Recipe for Max Strength:" << endl;
 
@@ -98,7 +100,10 @@ int main()
         multi_conds[dataset.get_variable_index("Compressive Strength (28-day)(Mpa)")] = {ResponseOptimization::ConditionType::Maximize};
         multi_conds[dataset.get_variable_index("Cement")] = {ResponseOptimization::ConditionType::Minimize};
 
-        auto [pareto_results, feature_space_multi] = optimizer.perform_response_optimization(multi_conds);
+        optimizer.set_condition("Compressive Strength (28-day)(Mpa)", ResponseOptimization::ConditionType::Maximize);
+        optimizer.set_condition("Cement", ResponseOptimization::ConditionType::Minimize);
+
+        Tensor2 pareto_results = optimizer.perform_response_optimization();
 
         cout << "Pareto Front (Found " << pareto_results.dimension(0) << " optimal trade-offs):" << endl;
 
