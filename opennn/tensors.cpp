@@ -85,7 +85,6 @@ void divide_columns(const ThreadPoolDevice* device, TensorMap2 matrix, const Ten
 }
 
 
-
 Tensor2 append_rows(const Tensor2& starting_matrix, const Tensor2& block)
 {
     if (starting_matrix.size() == 0)
