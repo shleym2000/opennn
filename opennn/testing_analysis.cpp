@@ -46,6 +46,13 @@ bool TestingAnalysis::get_display() const
     return display;
 }
 
+
+Index TestingAnalysis::get_batch_size()
+{
+    return batch_size;
+}
+
+
 void TestingAnalysis::set_threads_number(const int& new_threads_number)
 {
     thread_pool.reset();
@@ -71,6 +78,12 @@ void TestingAnalysis::set_dataset(Dataset* new_dataset)
 void TestingAnalysis::set_display(bool new_display)
 {
     display = new_display;
+}
+
+
+void TestingAnalysis::set_batch_size(const Index new_batch_size)
+{
+    batch_size = new_batch_size;
 }
 
 
@@ -876,37 +889,54 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 {
     check();
 
-    Tensor2 inputs = dataset->get_data("Testing", "Input");
+    const vector<Index> testing_indices = dataset->get_sample_indices("Testing");
+    const vector<vector<Index>> testing_batches = dataset->get_batches(testing_indices, batch_size, false);
 
-    const Tensor2 targets = dataset->get_data("Testing", "Target");
-
-    const Index samples_number = targets.dimension(0);
+    const vector<Index> input_feature_indices = dataset->get_feature_indices("Input");
+    const vector<Index> target_feature_indices = dataset->get_feature_indices("Target");
 
     const Shape input_shape = dataset->get_shape("Input");
 
-    if(input_shape.size() == 1)
+    const Index outputs_number = neural_network->get_outputs_number();
+    const Index confusion_matrix_size = (outputs_number == 1) ? 3 : (outputs_number + 1);
+
+    Tensor<Index, 2> total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
+    total_confusion_matrix.setZero();
+
+    for(const vector<Index>& current_batch_indices : testing_batches)
     {
-        const Tensor2 outputs = neural_network->calculate_outputs<2,2>(inputs);
+        const Index current_batch_size = current_batch_indices.size();
+        if (current_batch_size == 0) continue;
 
-        return calculate_confusion(outputs, targets, decision_threshold);
+        Tensor2 batch_inputs_flat = dataset->get_data_from_indices(current_batch_indices, input_feature_indices);
+        const Tensor2 batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
+
+        Tensor2 batch_outputs;
+
+        if(input_shape.size() == 1)
+            batch_outputs = neural_network->calculate_outputs<2,2>(batch_inputs_flat);
+        else if(input_shape.size() == 3)
+        {
+            Tensor4 inputs_4d(current_batch_size,
+                              input_shape[0],
+                              input_shape[1],
+                              input_shape[2]);
+
+            memcpy(inputs_4d.data(), batch_inputs_flat.data(), 
+                   current_batch_size * batch_inputs_flat.dimension(1) * sizeof(type));
+
+            batch_outputs = neural_network->calculate_outputs<4,2>(inputs_4d);
+        }
+        else
+            return Tensor<Index, 2>();
+
+        Tensor<Index, 2> batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
+        total_confusion_matrix += batch_confusion;
     }
-    else if(input_shape.size() == 3)
-    {
-        type* input_data = inputs.data();
 
-        Tensor4 inputs_4d(samples_number,
-                          input_shape[0],
-                          input_shape[1],
-                          input_shape[2]);
+    total_confusion_matrix(confusion_matrix_size - 1, confusion_matrix_size - 1) = testing_indices.size();
 
-        memcpy(inputs_4d.data(), input_data, samples_number * inputs.dimension(1)*sizeof(type));
-
-        const Tensor2 outputs = neural_network->calculate_outputs<4,2>(inputs_4d);
-
-        return calculate_confusion(outputs, targets, decision_threshold);
-    }
-
-    return Tensor<Index, 2>();
+    return total_confusion_matrix;
 }
 
 
@@ -2185,17 +2215,6 @@ void TestingAnalysis::RocAnalysis::print() const
 
 
 #ifdef OPENNN_CUDA
-
-void TestingAnalysis::set_batch_size(const Index new_batch_size)
-{
-    batch_size = new_batch_size;
-}
-
-Index TestingAnalysis::get_batch_size()
-{
-    return batch_size;
-}
-
 
 Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_threshold) const
 {

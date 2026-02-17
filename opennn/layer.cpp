@@ -37,7 +37,47 @@ void LayerBackPropagation::set(const Index new_batch_size, Layer* new_layer)
 }
 
 
+void LayerBackPropagationLM::set(const Index new_batch_size, Layer* new_layer)
+{
+    if(!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+TensorView LayerForwardPropagation::get_outputs() const
+{
+    return outputs;
+}
+
+vector<TensorView*> LayerForwardPropagation::get_workspace_views()
+{
+    return {&outputs};
+}
+
+
+vector<TensorView *> LayerBackPropagation::get_gradient_views()
+{
+    return vector<TensorView*>();
+}
+
+
 vector<TensorView> LayerBackPropagation::get_input_gradients() const
+{
+    return input_gradients;
+}
+
+
+vector<TensorView *> LayerBackPropagationLM::get_gradient_views()
+{
+    return vector<TensorView*>();
+}
+
+
+vector<TensorView> LayerBackPropagationLM::get_input_gradients() const
 {
     return input_gradients;
 }
@@ -56,18 +96,6 @@ void LayerForwardPropagationCuda::set(const Index new_batch_size, Layer* new_lay
 }
 
 
-TensorViewCuda LayerForwardPropagationCuda::get_outputs() const
-{
-    return outputs;
-}
-
-
-vector<TensorViewCuda*> LayerForwardPropagationCuda::get_workspace_views_device()
-{
-    return { &outputs };
-}
-
-
 void LayerBackPropagationCuda::set(const Index new_batch_size, Layer* new_layer)
 {
     if(!new_layer) return;
@@ -79,7 +107,19 @@ void LayerBackPropagationCuda::set(const Index new_batch_size, Layer* new_layer)
 }
 
 
-vector<TensorViewCuda> LayerBackPropagationCuda::get_input_gradients_views_device() const
+TensorViewCuda LayerForwardPropagationCuda::get_outputs() const
+{
+    return outputs;
+}
+
+
+vector<TensorViewCuda*> LayerForwardPropagationCuda::get_workspace_views()
+{
+    return { &outputs };
+}
+
+
+vector<TensorViewCuda> LayerBackPropagationCuda::get_input_gradient_views() const
 {
     vector<TensorViewCuda> views;
     views.reserve(input_gradients.size());
@@ -189,7 +229,7 @@ void Layer::set_threads_number(const int& new_threads_number)
 }
 
 
-string Layer::get_expression(const vector<string> &, const vector<string> &) const
+string Layer::get_expression(const vector<string>&, const vector<string>&) const
 {
     return string();
 }
@@ -227,7 +267,7 @@ bool Layer::get_is_trainable() const
 }
 
 
-void Layer::add_gradients(const vector<TensorView> &output_gradient_views) const
+void Layer::add_gradients(const vector<TensorView>&output_gradient_views) const
 {
     TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
@@ -271,7 +311,7 @@ void Layer::set_output_shape(const Shape&)
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }
 
-/*
+
 void Layer::softmax(TensorMap2 y) const
 {
     const Index rows_number = y.dimension(0);
@@ -377,7 +417,7 @@ void Layer::softmax(TensorMap4 y) const
         }
     }
 }
-*/
+
 
 void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
                                              TensorMap3 result,
@@ -461,21 +501,6 @@ cudnnHandle_t Layer::get_cudnn_handle()
 }
 
 #endif
-
-TensorView LayerForwardPropagation::get_outputs() const
-{
-    return outputs;
-}
-
-vector<TensorView*> LayerForwardPropagation::get_workspace_views()
-{
-    return {&outputs};
-}
-
-vector<TensorView> LayerBackPropagationLM::get_input_gradients() const
-{
-    return input_gradients;
-}
 
 } 
 

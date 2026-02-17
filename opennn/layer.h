@@ -34,7 +34,7 @@ class Layer
 
 public:
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     Layer();
     virtual ~Layer();
@@ -242,58 +242,9 @@ protected:
         dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
-    template <int Rank>
-    FORCE_INLINE void softmax(TensorMapR<Rank> y) const
-    {
-        // The size of the last dimension (channels/classes)
-        const Index last_dim_size = y.dimension(Rank - 1);
-
-        // Total size of the tensor
-        const Index total_size = y.size();
-
-        // Number of vectors to normalize (flattening all previous dimensions)
-        const Index rows_number = total_size / last_dim_size;
-
-        // Direct pointer access is efficient and rank-agnostic
-        type* data_ptr = y.data();
-
-#pragma omp parallel for
-        for(Index i = 0; i < rows_number; i++)
-        {
-            // Get pointer to the start of the current vector
-            type* vec = data_ptr + (i * last_dim_size);
-
-            // 1. Find Max (for numerical stability)
-            type max_value = -numeric_limits<type>::infinity();
-            for(Index j = 0; j < last_dim_size; j++)
-            {
-                if(vec[j] > max_value)
-                    max_value = vec[j];
-            }
-
-            // 2. Calculate Exponentials and Sum
-            type sum = 0.0;
-            for(Index j = 0; j < last_dim_size; j++)
-            {
-                vec[j] = exp(vec[j] - max_value);
-                sum += vec[j];
-            }
-
-            // 3. Normalize
-            if(sum > 0.0)
-            {
-                const type inv_sum = type(1.0) / sum;
-                for(Index j = 0; j < last_dim_size; j++)
-                {
-                    vec[j] *= inv_sum;
-                }
-            }
-        }
-    }
-
-//    void softmax(TensorMap2) const;
-//    void softmax(TensorMap3) const;
-//    void softmax(TensorMap4) const;
+    void softmax(TensorMap2) const;
+    void softmax(TensorMap3) const;
+    void softmax(TensorMap4) const;
 
     void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 
@@ -481,8 +432,6 @@ protected:
 
 struct LayerForwardPropagation
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     LayerForwardPropagation() {}
     virtual ~LayerForwardPropagation() = default;
 
@@ -505,18 +454,13 @@ struct LayerForwardPropagation
 
 struct LayerBackPropagation
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     LayerBackPropagation() {}
     virtual ~LayerBackPropagation() = default;
 
     void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_workspace_views() 
-    {
-        return vector<TensorView*>();
-    };
+    virtual vector<TensorView*> get_gradient_views();
 
     vector<TensorView> get_input_gradients() const;
 
@@ -529,26 +473,19 @@ struct LayerBackPropagation
     bool is_first_layer = false;
 
     vector<TensorView> input_gradients;
-
-    // @todo what is this?
     vector<Tensor1> input_gradients_memory;
 };
 
 
 struct LayerBackPropagationLM
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     LayerBackPropagationLM() {}
     virtual ~LayerBackPropagationLM() = default;
 
-    virtual void set(const Index = 0, Layer* = nullptr) = 0;
-    //virtual void initialize() = 0;
+    void set(const Index = 0, Layer* = nullptr);
+    virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_workspace_views()
-    {
-        return vector<TensorView*>();
-    };
+    virtual vector<TensorView*> get_gradient_views();
 
     vector<TensorView> get_input_gradients() const;
 
@@ -561,7 +498,6 @@ struct LayerBackPropagationLM
     bool is_first_layer = false;
 
     vector<TensorView> input_gradients;
-
     vector<Tensor1> input_gradients_memory;
 };
 
@@ -574,9 +510,10 @@ struct LayerForwardPropagationCuda
     virtual ~LayerForwardPropagationCuda() {}
 
     void set(const Index = 0, Layer* = nullptr);
+
     virtual void initialize() = 0;
 
-    virtual vector<TensorViewCuda*> get_workspace_views_device();
+    virtual vector<TensorViewCuda*> get_workspace_views();
 
     TensorViewCuda get_outputs() const;
 
@@ -595,17 +532,18 @@ struct LayerForwardPropagationCuda
 struct LayerBackPropagationCuda
 {
     LayerBackPropagationCuda() {}
+
     virtual ~LayerBackPropagationCuda() {}
 
     void set(const Index = 0, Layer* = nullptr);
     virtual void initialize() = 0;
 
-    virtual vector<TensorViewCuda*> get_workspace_views_device() 
+    virtual vector<TensorViewCuda*> get_workspace_views()
     {
 		return vector<TensorViewCuda*>();
     };
 
-    vector<TensorViewCuda> get_input_gradients_views_device() const;
+    vector<TensorViewCuda> get_input_gradient_views() const;
 
     virtual void print() const {}
 

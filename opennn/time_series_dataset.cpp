@@ -390,6 +390,42 @@ void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
                                           const vector<Index>& input_indices,
                                           type* input_data) const
 {
+    if(sample_indices.empty() || input_indices.empty()) return;
+
+    const Index batch_size = sample_indices.size();
+    const Index input_size = input_indices.size();
+    const Index total_rows_in_data = data.dimension(0);
+
+    TensorMap3 batch(input_data, batch_size, past_time_steps, input_size);
+    const type* const matrix_data = data.data();
+
+#pragma omp parallel for
+    for(Index i = 0; i < batch_size; ++i)
+    {
+        const Index start_row = sample_indices[i];
+
+        for(Index j = 0; j < past_time_steps; ++j)
+        {
+            const Index actual_row = start_row + j;
+
+            if(actual_row < total_rows_in_data)
+            {
+                const Index row_offset = actual_row;
+                for(Index k = 0; k < input_size; ++k)
+                {
+                    const Index column_index = input_indices[k];
+                    batch(i, j, k) = matrix_data[row_offset + total_rows_in_data * column_index];
+                }
+            }
+            else
+            {
+                for(Index k = 0; k < input_size; ++k)
+                    batch(i, j, k) = static_cast<type>(0);
+            }
+        }
+    }
+
+/*
     if (sample_indices.empty() || input_indices.empty())
         return;
 
@@ -409,15 +445,16 @@ void TimeSeriesDataset::fill_input_tensor(const vector<Index>& sample_indices,
             const Index actual_row = start_row + j;
             for(Index k = 0; k < input_size; ++k)
             {
-                const Index col_index = input_indices[k];
+                const Index column_index = input_indices[k];
 
                 if (actual_row < total_rows_in_data)
-                    batch(i, j, k) = matrix_data[actual_row + total_rows_in_data * col_index];
+                    batch(i, j, k) = matrix_data[actual_row + total_rows_in_data * column_index];
                 else
                     batch(i, j, k) = static_cast<type>(0);
             }
         }
     }
+*/
 }
 
 
@@ -425,6 +462,37 @@ void TimeSeriesDataset::fill_target_tensor(const vector<Index>& sample_indices,
                                            const vector<Index>& target_indices,
                                            type* target_tensor_data) const
 {
+    if(sample_indices.empty() || target_indices.empty()) return;
+
+    const Index batch_size = sample_indices.size();
+    const Index target_size = target_indices.size();
+    const Index total_rows_in_data = data.dimension(0);
+
+    TensorMap2 targets(target_tensor_data, batch_size, target_size);
+    const type* const matrix_data = data.data();
+
+#pragma omp parallel for
+    for(Index i = 0; i < batch_size; ++i)
+    {
+        const Index target_row = sample_indices[i] + past_time_steps;
+
+        if(target_row < total_rows_in_data)
+        {
+            const Index row_offset = target_row;
+            for(Index j = 0; j < target_size; ++j)
+            {
+                const Index column_index = target_indices[j];
+                targets(i, j) = matrix_data[row_offset + total_rows_in_data * column_index];
+            }
+        }
+        else
+        {
+            for(Index j = 0; j < target_size; ++j)
+                targets(i, j) = static_cast<type>(0);
+        }
+    }
+
+/*
     if (sample_indices.empty() || target_indices.empty())
         return;
 
@@ -441,14 +509,15 @@ void TimeSeriesDataset::fill_target_tensor(const vector<Index>& sample_indices,
         const Index target_row = sample_indices[i] + past_time_steps;
         for(Index j = 0; j < target_size; ++j)
         {
-            const Index col_index = target_indices[j];
+            const Index column_index = target_indices[j];
 
             if (target_row < total_rows_in_data)
-                targets(i, j) = matrix_data[target_row + total_rows_in_data * col_index];
+                targets(i, j) = matrix_data[target_row + total_rows_in_data * column_index];
             else
                 targets(i, j) = static_cast<type>(0);
         }
     }
+*/
 }
 
 

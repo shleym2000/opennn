@@ -563,7 +563,7 @@ MultiHeadAttentionBackPropagation::MultiHeadAttentionBackPropagation(const Index
 }
 
 
-vector<TensorView*> MultiHeadAttentionBackPropagation::get_workspace_views()
+vector<TensorView*> MultiHeadAttentionBackPropagation::get_gradient_views()
 {
     return {&query_weight_gradients, &query_bias_gradients,
             &key_weight_gradients, &key_bias_gradients,

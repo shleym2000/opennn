@@ -652,12 +652,12 @@ struct BatchCuda
     void fill(const vector<Index>&,
               const vector<Index>&,
               //const vector<Index>&,
-              const vector<Index> & = vector<Index>());
+              const vector<Index>& = vector<Index>());
 
     void fill_host(const vector<Index>&,
                    const vector<Index>&,
                    //const vector<Index>&,
-                   const vector<Index> & = vector<Index>());
+                   const vector<Index>& = vector<Index>());
 
     vector<TensorViewCuda> get_inputs_device() const;
     TensorViewCuda get_targets_device() const;

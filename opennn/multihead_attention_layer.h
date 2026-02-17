@@ -183,7 +183,7 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
 {
     MultiHeadAttentionBackPropagation(const Index = 0, Layer* = nullptr);
 
-    vector<TensorView*> get_workspace_views() override;
+    vector<TensorView*> get_gradient_views() override;
 
     void initialize() override;
 

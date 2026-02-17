@@ -220,7 +220,7 @@ protected:
 
 struct BackPropagationLM
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     BackPropagationLM(const Index = 0, Loss* = nullptr);
     virtual ~BackPropagationLM() = default;
@@ -260,7 +260,7 @@ struct BackPropagationLM
 
 struct BackPropagation
 {
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     BackPropagation(const Index = 0, const Loss* = nullptr);
     virtual ~BackPropagation() = default;
@@ -308,7 +308,7 @@ struct BackPropagationCuda
 
     vector<vector<TensorViewCuda>> get_layer_delta_views_device() const;
 
-    TensorViewCuda get_output_gradients_tensor_view_device() const;
+    TensorViewCuda get_output_gradient_views_device() const;
 
     void print() const;
 
@@ -329,8 +329,10 @@ struct BackPropagationCuda
     type loss = type(0);
 
     cudnnReduceTensorDescriptor_t reduce_tensor_descriptor;
+
     void* workspace = nullptr;
     size_t workspace_size = 0;
+
     cudnnTensorDescriptor_t output_reduce_tensor_descriptor = nullptr;
 
     TensorCuda output_gradients;

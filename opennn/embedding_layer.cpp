@@ -318,7 +318,7 @@ void EmbeddingBackPropagation::initialize()
 }
 
 
-vector<TensorView*> EmbeddingBackPropagation::get_workspace_views()
+vector<TensorView*> EmbeddingBackPropagation::get_gradient_views()
 {
     return {&weight_gradients};
 }
@@ -386,7 +386,7 @@ void EmbeddingBackPropagationCuda::initialize()
 }
 
 
-vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_workspace_views_device()
+vector<TensorViewCuda*> EmbeddingBackPropagationCuda::get_workspace_views()
 {
     return {&weight_gradients};
 }
