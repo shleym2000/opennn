@@ -23,7 +23,7 @@ int main()
 
         // Data set
 
-        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/melanoma_dataset_bmp");
+        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/melanoma_dataset_bmp_small");
 
         image_dataset.split_samples_random(0.6, 0.2, 0.2);
 
@@ -54,8 +54,8 @@ int main()
         TestingAnalysis testing_analysis(&image_classification_network, &image_dataset);
 
         testing_analysis.set_batch_size(64);
-        cout << "Calculating confusion CUDA...." << endl;
-        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_cuda();
+        cout << "Calculating confusion...." << endl;
+        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
         cout << "\nConfusion matrix:\n" << confusion << endl;
 
 #endif

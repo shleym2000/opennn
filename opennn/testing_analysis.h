@@ -87,6 +87,8 @@ public:
 
     bool get_display() const;
 
+    Index get_batch_size();
+
     // Set
 
     void set_neural_network(NeuralNetwork*);
@@ -95,6 +97,8 @@ public:
     void set_display(bool);
 
     void set_threads_number(const int&);
+
+    void set_batch_size(const Index);
 
     // Checking
 
@@ -263,14 +267,7 @@ public:
 
 #ifdef OPENNN_CUDA
 
-    void set_batch_size(const Index);
-    Index get_batch_size();
-
     Tensor<Index, 2> calculate_confusion_cuda(const type = 0.50) const;
-
-private:
-
-    Index batch_size = 1000;
 
 #endif
 
@@ -284,6 +281,8 @@ private:
     Dataset* dataset = nullptr;
 
     bool display = true;
+
+    Index batch_size = 0;
 };
 
 }
