@@ -12,8 +12,8 @@
 #include "dataset.h"
 #include "neural_network.h"
 #include "response_optimization.h"
-#include <algorithm>
-#include <numeric>
+//#include <algorithm>
+//#include <numeric>
 
 namespace opennn
 {
@@ -58,18 +58,25 @@ void ResponseOptimization::set_evaluations_number(const int new_evaluations_numb
 {
     evaluations_number = new_evaluations_number;
 }
+
+
 void ResponseOptimization::set_iterations(const int new_max_iterations)
 {
     max_iterations = new_max_iterations;
 }
+
+
 void ResponseOptimization::set_zoom_factor(type new_zoom_factor)
 {
     zoom_factor = new_zoom_factor;
 }
+
+
 void ResponseOptimization::set_relative_tolerance(type new_relative_tolerance)
 {
     relative_tolerance = new_relative_tolerance;
 }
+
 
 void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
 {
@@ -81,9 +88,11 @@ void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, 
     superior_frontier.resize(total_feature_dimensions);
 
     Index feature_index = 0;
+
     for(Index raw_variable = 0; raw_variable < variables_number; ++raw_variable)
     {
         const Index feature_dimension = feature_dimensions[raw_variable];
+
         if (feature_dimension > 1)
         {
             inferior_frontier.slice(array_1(feature_index), array_1(feature_dimension)).setConstant(0.0);
@@ -94,9 +103,11 @@ void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, 
             inferior_frontier(feature_index) = static_cast<type>(descriptives[raw_variable].minimum);
             superior_frontier(feature_index) = static_cast<type>(descriptives[raw_variable].maximum);
         }
+
         feature_index += feature_dimension;
     }
 }
+
 
 ResponseOptimization::Domain ResponseOptimization::get_original_domain(const string role) const
 {
@@ -144,7 +155,7 @@ ResponseOptimization::Objectives::Objectives(const ResponseOptimization& respons
         const vector<Index> feature_dimensions_by_role = gather_by_index(feature_dimensions, variable_indices);
         const Domain domain = response_optimization.get_original_domain(role);
 
-        const bool is_input = (role == "Input") ? true: false;
+        const bool is_input = (role == "Input");
 
         Index feature_pointer = 0;
 
@@ -198,37 +209,38 @@ void ResponseOptimization::Domain::bound(const vector<Index>& feature_dimensions
     for(size_t raw_variable_index = 0; raw_variable_index < feature_dimensions.size(); ++raw_variable_index)
     {
         const Index feature_dimension = feature_dimensions[raw_variable_index];
-        const Condition& condition_on_raw_variable = conditions[raw_variable_index];
+
+        const Condition& condition = conditions[raw_variable_index];
 
         if(feature_dimension == 1)
         {
             type& inferior = inferior_frontier(feature_index);
             type& superior = superior_frontier(feature_index);
 
-            switch(condition_on_raw_variable.condition)
+            switch(condition.condition)
             {
             case ConditionType::EqualTo:
-                inferior = max(inferior, condition_on_raw_variable.low_bound);
-                superior = min(superior, condition_on_raw_variable.low_bound);
+                inferior = max(inferior, condition.low_bound);
+                superior = min(superior, condition.low_bound);
                 break;
             case ConditionType::Between:
-                inferior = max(inferior, condition_on_raw_variable.low_bound);
-                superior = min(superior, condition_on_raw_variable.up_bound);
+                inferior = max(inferior, condition.low_bound);
+                superior = min(superior, condition.up_bound);
                 break;
             case ConditionType::GreaterEqualTo:
-                inferior = max(inferior, condition_on_raw_variable.low_bound);
+                inferior = max(inferior, condition.low_bound);
                 break;
             case ConditionType::LessEqualTo:
-                superior = min(superior, condition_on_raw_variable.up_bound);
+                superior = min(superior, condition.up_bound);
                 break;
 
             default:
                 break;
             }
         }
-        else if(condition_on_raw_variable.condition == ConditionType::EqualTo)
+        else if(condition.condition == ConditionType::EqualTo)
         {
-            const Index category_index = static_cast<Index>(llround(condition_on_raw_variable.low_bound));
+            const Index category_index = static_cast<Index>(llround(condition.low_bound));
 
             for(Index j = 0; j < feature_dimension; ++j)
             {
@@ -236,6 +248,7 @@ void ResponseOptimization::Domain::bound(const vector<Index>& feature_dimensions
                 superior_frontier(feature_index + j) = (j == category_index) ? 1.0 : 0.0;
             }
         }
+
         feature_index += feature_dimension;
     }
 }
@@ -265,6 +278,7 @@ Tensor2 ResponseOptimization::calculate_random_inputs(const Domain& input_domain
                 random_inputs.chip(current_feature_index, 1) = random_inputs.chip(current_feature_index, 1).round();
             else
                 random_inputs.chip(current_feature_index, 1) = random_inputs.chip(current_feature_index, 1) * (input_domain.superior_frontier(current_feature_index) - input_domain.inferior_frontier(current_feature_index)) + input_domain.inferior_frontier(current_feature_index);
+
             current_feature_index++;
         }
         else
@@ -278,21 +292,22 @@ Tensor2 ResponseOptimization::calculate_random_inputs(const Domain& input_domain
                     allowed_categories.push_back(i);
 
             for(Index row = 0; row < evaluations_number; ++row)
-                random_inputs(row, current_feature_index + allowed_categories[rand() % allowed_categories.size()]) = 1.0;
+                random_inputs(row, current_feature_index + allowed_categories[random_integer(0, allowed_categories.size()-1)]) = 1.0;
 
             current_feature_index += categories_number;
         }
     }
+
     return random_inputs;
 }
 
 void ResponseOptimization::Domain::reshape(const type zoom_factor,
                                            const Tensor1& center,
-                                           const Tensor2& subset_optimal_points_inputs,
+                                           const Tensor2& optimal_points_inputs,
                                            const vector<Index>& input_feature_dimensions,
                                            const vector<Dataset::VariableType>& input_variable_types)
 {
-    Tensor1 categories_to_save = subset_optimal_points_inputs.maximum(array_1(0));
+    Tensor1 categories_to_save = optimal_points_inputs.maximum(array_1(0));
 
     for(Index i = 0; i < categories_to_save.size(); ++i)
         if(center(i) > categories_to_save(i))
@@ -300,23 +315,16 @@ void ResponseOptimization::Domain::reshape(const type zoom_factor,
 
     Index current_feature_index = 0;
 
-    for(size_t raw_input_variable = 0; raw_input_variable < input_feature_dimensions.size(); ++raw_input_variable)
+    for(size_t input_variable = 0; input_variable < input_feature_dimensions.size(); ++input_variable)
     {
-        const Index categories_number = input_feature_dimensions[raw_input_variable];
+        const Index categories_number = input_feature_dimensions[input_variable];
 
-        if(categories_number == 1)
+        if(categories_number == 1 && input_variable_types[input_variable] != Dataset::VariableType::Binary)
         {
-            if(input_variable_types[raw_input_variable] == Dataset::VariableType::Binary)
-            {
-                inferior_frontier(current_feature_index) = max(categories_to_save(current_feature_index), inferior_frontier(current_feature_index));
-                superior_frontier(current_feature_index) = min(categories_to_save(current_feature_index), superior_frontier(current_feature_index));
-            }
-            else
-            {
-                const type half_span = (superior_frontier(current_feature_index) - inferior_frontier(current_feature_index)) * zoom_factor / 2;
-                inferior_frontier(current_feature_index) = max(center(current_feature_index) - half_span, inferior_frontier(current_feature_index));
-                superior_frontier(current_feature_index) = min(center(current_feature_index) + half_span, superior_frontier(current_feature_index));
-            }
+            const type half_span = (superior_frontier(current_feature_index) - inferior_frontier(current_feature_index)) * zoom_factor / 2;
+            inferior_frontier(current_feature_index) = max(center(current_feature_index) - half_span, inferior_frontier(current_feature_index));
+            superior_frontier(current_feature_index) = min(center(current_feature_index) + half_span, superior_frontier(current_feature_index));
+
         }
         else
         {
@@ -327,6 +335,7 @@ void ResponseOptimization::Domain::reshape(const type zoom_factor,
                 superior_frontier(current_category) = min(categories_to_save(current_category), superior_frontier(current_category));
             }
         }
+
         current_feature_index += categories_number;
     }
 }
@@ -336,7 +345,7 @@ pair<Tensor2, Tensor2> ResponseOptimization::filter_feasible_points(const Tensor
     const vector<Index> feasible_rows = build_feasible_rows_mask(outputs, output_domain.inferior_frontier, output_domain.superior_frontier);
 
     if(feasible_rows.empty())
-        return {Tensor2(0, inputs.dimension(1)), Tensor2(0, outputs.dimension(1))};
+        return {};
 
     Tensor2 feasible_inputs((Index)feasible_rows.size(), inputs.dimension(1));
     Tensor2 feasible_outputs((Index)feasible_rows.size(), outputs.dimension(1));
@@ -350,29 +359,34 @@ pair<Tensor2, Tensor2> ResponseOptimization::filter_feasible_points(const Tensor
     return {feasible_inputs, feasible_outputs};
 }
 
-Tensor2 ResponseOptimization::Objectives::extract(const Tensor2& inputs, const Tensor2& outputs)
+
+Tensor2 ResponseOptimization::Objectives::extract(const Tensor2& inputs, const Tensor2& outputs) const
 {
     const Index objectives_number = objective_sources.dimension(1);
 
     Tensor2 objective_matrix(inputs.dimension(0), objectives_number);
 
     for (Index j = 0; j < objectives_number; ++j)
-        objective_matrix.chip(j, 1) = (objective_sources(0, j)>0.5) ? inputs.chip(static_cast<Index>(objective_sources(1, j)), 1) : outputs.chip(static_cast<Index>(objective_sources(1, j)), 1);
+        objective_matrix.chip(j, 1) = (objective_sources(0, j) > 0.5)
+              ? inputs.chip(static_cast<Index>(objective_sources(1, j)), 1)
+              : outputs.chip(static_cast<Index>(objective_sources(1, j)), 1);
 
     return objective_matrix;
 }
 
-void ResponseOptimization::Objectives::normalize(Tensor2& objective_matrix)
+
+void ResponseOptimization::Objectives::normalize(Tensor2& objective_matrix) const
 {
     const Index objectives_number = objective_sources.dimension(1);
 
     for (Index j = 0; j < objectives_number; ++j)
-        objective_matrix.chip(j, 1) = ((objective_matrix.chip(j, 1) * objective_normalizer(0, j)) + objective_normalizer(1, j)) * utopian_and_senses(1, j);;
+        objective_matrix.chip(j, 1) = (objective_matrix.chip(j, 1)*objective_normalizer(0, j) + objective_normalizer(1, j)) * utopian_and_senses(1, j);
 }
 
-pair<Tensor2, Tensor2> ResponseOptimization::calculate_optimal_points(const Tensor2& feasible_inputs, const Tensor2& feasible_outputs, Objectives& objectives) const
+
+pair<Tensor2, Tensor2> ResponseOptimization::calculate_optimal_points(const Tensor2& feasible_inputs, const Tensor2& feasible_outputs, const Objectives& objectives) const
 {
-    Index subset_dimension = clamp<Index>(llround(zoom_factor * evaluations_number), 1, feasible_outputs.dimension(0));
+    const Index subset_dimension = clamp<Index>(llround(zoom_factor * evaluations_number), 1, feasible_outputs.dimension(0));
 
     Tensor2 objective_matrix = objectives.extract(feasible_inputs, feasible_outputs);
 
@@ -393,6 +407,7 @@ pair<Tensor2, Tensor2> ResponseOptimization::calculate_optimal_points(const Tens
 
     return {nearest_inputs, nearest_outputs};
 }
+
 
 Tensor2 ResponseOptimization::assemble_results(const Tensor2& inputs, const Tensor2& outputs) const
 {
@@ -424,13 +439,13 @@ Tensor2 ResponseOptimization::assemble_results(const Tensor2& inputs, const Tens
     const vector<Index> input_indices = dataset->get_variable_indices("Input");
     const vector<Index> input_feature_dimensions = gather_by_index(feature_dimensions, input_indices);
 
-    copy_blocks(dataset->get_variable_indices("Input"), input_feature_dimensions, inputs);
-    copy_blocks(dataset->get_variable_indices("Target"), output_feature_dimensions, outputs);
+    copy_blocks(input_indices, input_feature_dimensions, inputs);
+    copy_blocks(output_indices, output_feature_dimensions, outputs);
 
     return result;
 }
 
-Tensor2 ResponseOptimization::perform_single_objective_optimization(Objectives& objectives) const
+Tensor2 ResponseOptimization::perform_single_objective_optimization(const Objectives& objectives) const
 {
     const vector<Index> input_indices = dataset->get_variable_indices("Input");
 
@@ -456,7 +471,7 @@ Tensor2 ResponseOptimization::perform_single_objective_optimization(Objectives& 
 
     for (Index i = 0; i < max_iterations; i++)
     {
-        Tensor2 random_inputs = calculate_random_inputs(input_domain_to_iterate);
+        const Tensor2 random_inputs = calculate_random_inputs(input_domain_to_iterate);
 
         auto [feasible_inputs, feasible_outputs] = filter_feasible_points(random_inputs, neural_network->calculate_outputs<2,2>(random_inputs), original_output_domain);
 
@@ -465,10 +480,9 @@ Tensor2 ResponseOptimization::perform_single_objective_optimization(Objectives& 
 
         optimal_set = calculate_optimal_points(feasible_inputs, feasible_outputs, objectives);
 
-        if (objectives.objective_sources(0,0))
-            optimal_point = optimal_set.first(0,objectives.objective_sources(1,0));
-        else
-            optimal_point = optimal_set.second(0,objectives.objective_sources(1,0));
+        optimal_point = (objectives.objective_sources(0,0)
+            ? optimal_set.first
+            : optimal_set.second)(0, objectives.objective_sources(1,0));
 
         const type relative_error = abs((optimal_point - previous_optimal_point) / (objectives.utopian_and_senses(0,0) + 1e-6f));
 
@@ -482,28 +496,36 @@ Tensor2 ResponseOptimization::perform_single_objective_optimization(Objectives& 
 
         input_domain_to_iterate.reshape(zoom_factor, optimal_set.first.chip(0,0), optimal_set.first, input_feature_dimensions, input_variable_types);
     }
-    return optimal_set.first.dimension(0) == 0 ? Tensor2() : assemble_results(optimal_set.first, optimal_set.second);
+
+    return optimal_set.first.dimension(0) == 0
+        ? Tensor2()
+        : assemble_results(optimal_set.first, optimal_set.second);
 }
+
 
 pair<Tensor2, Tensor2> calculate_pareto(const Tensor2& inputs, const Tensor2& outputs, const Tensor2& objective_matrix)
 {
     const Index rows_number = objective_matrix.dimension(0);
 
     if (rows_number == 0)
-        return {Tensor2(), Tensor2()};
+        return {};
 
     vector<bool> non_dominated(static_cast<size_t>(rows_number), true);
 
     for (Index i = 0; i < rows_number; ++i)
     {
+        const auto chip_i = objective_matrix.chip(i, 0);
+
         for (Index j = 0; j < rows_number; ++j)
         {
             if (i == j)
                 continue;
 
-            const Tensor<bool, 0> better_equal = (objective_matrix.chip(j, 0) >= objective_matrix.chip(i, 0)).all();
+            const auto chip_j = objective_matrix.chip(j, 0);
 
-            const Tensor<bool, 0> strictly_better = (objective_matrix.chip(j, 0) > objective_matrix.chip(i, 0)).any();
+            const Tensor<bool, 0> better_equal = (chip_j >= chip_i).all();
+
+            const Tensor<bool, 0> strictly_better = (chip_j > chip_i).any();
 
             if (better_equal() && strictly_better())
             {
@@ -512,7 +534,9 @@ pair<Tensor2, Tensor2> calculate_pareto(const Tensor2& inputs, const Tensor2& ou
             }
         }
     }
+
     vector<Index> non_dominated_indices;
+    non_dominated_indices.reserve(rows_number);
 
     for (Index i = 0; i < rows_number; ++i)
         if (non_dominated[i])
@@ -522,7 +546,7 @@ pair<Tensor2, Tensor2> calculate_pareto(const Tensor2& inputs, const Tensor2& ou
     Tensor2 pareto_outputs((Index)non_dominated_indices.size(), outputs.dimension(1));
 
     for (Index i = 0; i < (Index)non_dominated_indices.size(); ++i)
-    {
+    {       
         pareto_inputs.chip(i, 0) = inputs.chip(non_dominated_indices[i], 0);
         pareto_outputs.chip(i, 0) = outputs.chip(non_dominated_indices[i], 0);
     }
@@ -530,7 +554,8 @@ pair<Tensor2, Tensor2> calculate_pareto(const Tensor2& inputs, const Tensor2& ou
     return {pareto_inputs, pareto_outputs};
 }
 
-pair<type, type> ResponseOptimization::calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs, Objectives& objectives) const
+
+pair<type, type> ResponseOptimization::calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs, const Objectives& objectives) const
 {
     const Index points_number = inputs.dimension(0);
 
@@ -560,12 +585,10 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const Tensor2& 
 
             const type current_distance = l2_distance(current_point, objective_matrix.chip(j, 0));
 
-            if (current_distance < minimum_neighbor_distance)
-                    minimum_neighbor_distance = current_distance;
+            minimum_neighbor_distance = min(minimum_neighbor_distance, current_distance);
         }
 
-        if (minimum_neighbor_distance > maximum_internal_gap)
-            maximum_internal_gap = minimum_neighbor_distance;
+        maximum_internal_gap = max(maximum_internal_gap, minimum_neighbor_distance);
     }
 
     if (points_number == 1)
@@ -575,10 +598,14 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const Tensor2& 
 
     type sum_boundary_gaps = 0.0;
 
+    // @todo add device to parallelize as class member
+    // unique_ptr<ThreadPool> thread_pool = nullptr;
+    // unique_ptr<ThreadPoolDevice> device = nullptr;
+
     for (Index i = 0; i < objectives_number; ++i)
     {
         Tensor<type, 0> maximum_objective_tensor;
-        maximum_objective_tensor = objective_matrix.chip(i, 1).maximum();
+        maximum_objective_tensor/*.device(*device)*/ = objective_matrix.chip(i, 1).maximum();
 
         const type best_objective_value = maximum_objective_tensor(0);
 
@@ -591,7 +618,8 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const Tensor2& 
     return {maximum_internal_gap, normalized_boundary_gap};
 }
 
-Tensor2 ResponseOptimization::perform_multiobjective_optimization(Objectives& objectives) const
+
+Tensor2 ResponseOptimization::perform_multiobjective_optimization(const Objectives& objectives) const
 {
     const vector<Index> input_indices = dataset->get_variable_indices("Input");
 
@@ -604,7 +632,7 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(Objectives& ob
 
     const Domain original_output_domain = get_original_domain("Target");
 
-    Tensor2 first_random_inputs = calculate_random_inputs(original_input_domain);
+    const Tensor2 first_random_inputs = calculate_random_inputs(original_input_domain);
 
     auto [first_feasible_inputs, first_feasible_outputs] = filter_feasible_points(first_random_inputs, neural_network->calculate_outputs<2,2>(first_random_inputs), original_output_domain);
 
@@ -637,10 +665,12 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(Objectives& ob
 
         for (Index j = 0; j < global_pareto_inputs.dimension(0); j++)
         {
-            Tensor2 local_random_inputs = calculate_random_inputs(local_input_domains[j]);
+            const Tensor2 local_random_inputs = calculate_random_inputs(local_input_domains[j]);
 
             auto [local_feasible_inputs, local_feasible_outputs] = filter_feasible_points(local_random_inputs, neural_network->calculate_outputs<2,2>(local_random_inputs), original_output_domain);
             auto [local_pareto_input, local_pareto_output] = calculate_pareto(local_feasible_inputs, local_feasible_outputs, objectives.extract(local_feasible_inputs, local_feasible_outputs));
+
+            // @todo check append_rows
 
             union_inputs = append_rows(union_inputs, local_pareto_input);
             union_outputs = append_rows(union_outputs, local_pareto_output);
@@ -648,8 +678,8 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(Objectives& ob
 
         cout << "  - Aggregated local Pareto candidates: " << union_inputs.dimension(0) << endl;
 
-        Tensor2 candidate_inputs = append_rows(global_pareto_inputs, union_inputs);
-        Tensor2 candidate_outputs = append_rows(global_pareto_outputs, union_outputs);
+        const Tensor2 candidate_inputs = append_rows(global_pareto_inputs, union_inputs);
+        const Tensor2 candidate_outputs = append_rows(global_pareto_outputs, union_outputs);
 
         if (candidate_inputs.dimension(0) == 0)
             break;
@@ -663,15 +693,15 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(Objectives& ob
 
         cout << "  - New Pareto front size: " << global_pareto_inputs.dimension(0)  << endl;
 
-        pair<type, type> quality = calculate_quality_metrics(global_pareto_inputs, global_pareto_outputs, objectives);
+        const pair<type, type> quality = calculate_quality_metrics(global_pareto_inputs, global_pareto_outputs, objectives);
 
-        type current_hole = quality.first;
-        type current_boundary = quality.second;
+        const type current_hole = quality.first;
+        const type current_boundary = quality.second;
 
         cout << "  - Internal Hole: " << current_hole << " | Boundary Gap: " << current_boundary << endl;
 
-        type delta_hole = abs(current_hole - previous_holes_magnitude);
-        type delta_boundary = abs(current_boundary - previous_area_covered);
+        const type delta_hole = abs(current_hole - previous_holes_magnitude);
+        const type delta_boundary = abs(current_boundary - previous_area_covered);
 
         if (i > min_iterations && delta_hole < relative_tolerance && delta_boundary < relative_tolerance)
         {
@@ -686,6 +716,7 @@ Tensor2 ResponseOptimization::perform_multiobjective_optimization(Objectives& ob
 
         for (Index j = 0; j < global_pareto_inputs.dimension(0); j++)
             local_input_domains[j].reshape(current_zoom, global_pareto_inputs.chip(j, 0), optimal_set.first, input_feature_dimensions, input_variable_types);
+
         current_zoom *= zoom_factor;
     }
     cout << "\n> [Optimization Complete] Assembling final results..." << endl;
@@ -698,7 +729,7 @@ Tensor2 ResponseOptimization::perform_response_optimization() const
     if(!dataset)
         throw runtime_error("Dataset not set\n");
 
-    Objectives objectives = build_objectives();
+    const Objectives objectives = build_objectives();
 
     if (objectives.objective_sources.dimension(1) == 0)
         throw runtime_error("No objectives found\n");

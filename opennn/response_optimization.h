@@ -11,11 +11,10 @@
 #pragma once
 
 #include "pch.h"
-#include "tensors.h"
+//#include "tensors.h"
 #include "dataset.h"
 #include "statistics.h"
-#include "tinyxml2.h"
-
+//#include "tinyxml2.h"
 
 namespace opennn
 {
@@ -72,9 +71,9 @@ public:
 
         Tensor2 objective_normalizer; // Row 0: Multipliers (1/range), Row 1: Offsets (-inferior/range)
 
-        Tensor2 extract(const Tensor2& inputs, const Tensor2& output);
+        Tensor2 extract(const Tensor2& inputs, const Tensor2& output) const;
 
-        void normalize(Tensor2& objective_matrix);
+        void normalize(Tensor2& objective_matrix) const;
     };
 
     Objectives build_objectives() const;
@@ -103,15 +102,15 @@ public:
 
     pair<Tensor2, Tensor2> calculate_optimal_points(const Tensor2& feasible_inputs,
                                                     const Tensor2& feasible_outputs,
-                                                    Objectives& objectives) const;
+                                                    const Objectives& objectives) const;
 
     Tensor2 assemble_results(const Tensor2& inputs, const Tensor2& outputs) const;
 
-    Tensor2 perform_single_objective_optimization(Objectives& objectives) const;
+    Tensor2 perform_single_objective_optimization(const Objectives& objectives) const;
 
     pair<type, type> calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs, Objectives& objectives) const;
 
-    Tensor2 perform_multiobjective_optimization(Objectives& objectives) const;
+    Tensor2 perform_multiobjective_optimization(const Objectives& objectives) const;
 
     Tensor2 perform_response_optimization() const;
 

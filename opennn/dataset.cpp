@@ -526,20 +526,23 @@ void Dataset::set_default_variables_roles()
 
 vector<Index> Dataset::get_feature_dimensions() const
 {
-    vector<Index> number_categories;
-    number_categories.reserve(get_used_variables_number());
+    const Index used_variables_number = get_used_variables_number();
+
+    vector<Index> feature_dimensions(used_variables_number);
 
     for(const Dataset::Variable& variable : variables)
-    {
-        if(variable.role == "None" || variable.role == "Time")
+    {       
+        if(!variable.is_used())
             continue;
 
+        // @todo try to delete push_back
+
         variable.is_categorical()
-            ? number_categories.push_back(variable.get_categories_number())
-            : number_categories.push_back(1);
+            ? feature_dimensions.push_back(variable.get_categories_number())
+            : feature_dimensions.push_back(1);
     }
 
-    return number_categories;
+    return feature_dimensions;
 }
 
 void Dataset::set_default_variables_roles_forecasting()
@@ -829,7 +832,7 @@ Index Dataset::get_used_variables_number() const
 {
     return count_if(variables.begin(), variables.end(),
                     [](const Variable& var) {
-                          return var.role != "None";
+                          return var.is_used();
                     });
 }
 

@@ -94,6 +94,15 @@ public:
                 return false;
         }
 
+        bool is_used() const
+        {
+            if(role == "None" || role == "Time")
+                return false;
+
+            return true;
+        }
+
+
         bool is_categorical() const
         {
             if(type == Dataset::VariableType::Categorical)
@@ -641,7 +650,6 @@ struct Batch
 
 
 #ifdef OPENNN_CUDA
-
 
 struct BatchCuda
 {
