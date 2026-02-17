@@ -477,8 +477,6 @@ protected:
 
 struct LayerForwardPropagation
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     LayerForwardPropagation() {}
     virtual ~LayerForwardPropagation() = default;
 
@@ -501,8 +499,6 @@ struct LayerForwardPropagation
 
 struct LayerBackPropagation
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     LayerBackPropagation() {}
     virtual ~LayerBackPropagation() = default;
 
@@ -522,23 +518,19 @@ struct LayerBackPropagation
     bool is_first_layer = false;
 
     vector<TensorView> input_gradients;
-
-    // @todo what is this?
     vector<Tensor1> input_gradients_memory;
 };
 
 
 struct LayerBackPropagationLM
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     LayerBackPropagationLM() {}
-
     virtual ~LayerBackPropagationLM() = default;
 
-    virtual void set(const Index = 0, Layer* = nullptr) = 0;
+    void set(const Index = 0, Layer* = nullptr);
+    virtual void initialize() = 0;
 
-    virtual vector<TensorView*> get_workspace_views();
+    virtual vector<TensorView*> get_gradient_views();
 
     vector<TensorView> get_input_gradients() const;
 
@@ -551,7 +543,6 @@ struct LayerBackPropagationLM
     bool is_first_layer = false;
 
     vector<TensorView> input_gradients;
-
     vector<Tensor1> input_gradients_memory;
 };
 

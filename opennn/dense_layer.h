@@ -146,11 +146,10 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         set(new_batch_size, new_layer);
     }
 
-    void set(const Index new_samples_number = 0, Layer* new_layer = nullptr) override
-    {
-        layer = new_layer;
-        batch_size = new_samples_number;
+    ~DenseBackPropagationLM() override = default;
 
+    void initialize() override
+    {
         const Index parameters_number = layer->get_parameters_number();
         const Shape layer_input_shape = layer->get_input_shape();
 
@@ -167,7 +166,7 @@ struct DenseBackPropagationLM final : LayerBackPropagationLM
         squared_errors_Jacobian.shape = {batch_size, parameters_number};
     }
 
-    vector<TensorView*> get_workspace_views() override
+    vector<TensorView*> get_gradient_views() override
     {
         return {&squared_errors_Jacobian};
     }

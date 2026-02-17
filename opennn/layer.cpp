@@ -37,6 +37,28 @@ void LayerBackPropagation::set(const Index new_batch_size, Layer* new_layer)
 }
 
 
+void LayerBackPropagationLM::set(const Index new_batch_size, Layer* new_layer)
+{
+    if(!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+TensorView LayerForwardPropagation::get_outputs() const
+{
+    return outputs;
+}
+
+vector<TensorView*> LayerForwardPropagation::get_workspace_views()
+{
+    return {&outputs};
+}
+
+
 vector<TensorView *> LayerBackPropagation::get_gradient_views()
 {
     return vector<TensorView*>();
@@ -49,9 +71,32 @@ vector<TensorView> LayerBackPropagation::get_input_gradients() const
 }
 
 
+vector<TensorView *> LayerBackPropagationLM::get_gradient_views()
+{
+    return vector<TensorView*>();
+}
+
+
+vector<TensorView> LayerBackPropagationLM::get_input_gradients() const
+{
+    return input_gradients;
+}
+
+
 #ifdef OPENNN_CUDA
 
 void LayerForwardPropagationCuda::set(const Index new_batch_size, Layer* new_layer)
+{
+    if(!new_layer) return;
+
+    batch_size = new_batch_size;
+    layer = new_layer;
+
+    initialize();
+}
+
+
+void LayerBackPropagationCuda::set(const Index new_batch_size, Layer* new_layer)
 {
     if(!new_layer) return;
 
@@ -71,17 +116,6 @@ TensorViewCuda LayerForwardPropagationCuda::get_outputs() const
 vector<TensorViewCuda*> LayerForwardPropagationCuda::get_workspace_views()
 {
     return { &outputs };
-}
-
-
-void LayerBackPropagationCuda::set(const Index new_batch_size, Layer* new_layer)
-{
-    if(!new_layer) return;
-
-    batch_size = new_batch_size;
-    layer = new_layer;
-
-    initialize();
 }
 
 
@@ -467,21 +501,6 @@ cudnnHandle_t Layer::get_cudnn_handle()
 }
 
 #endif
-
-TensorView LayerForwardPropagation::get_outputs() const
-{
-    return outputs;
-}
-
-vector<TensorView*> LayerForwardPropagation::get_workspace_views()
-{
-    return {&outputs};
-}
-
-vector<TensorView> LayerBackPropagationLM::get_input_gradients() const
-{
-    return input_gradients;
-}
 
 } 
 

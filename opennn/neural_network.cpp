@@ -1542,7 +1542,7 @@ vector<vector<TensorView *>> NeuralNetworkBackPropagationLM::get_layer_workspace
 
     for(Index i = 0; i < layers_number; i++)
         if(layers[i])
-            layer_workspace_views[i] = layers[i]->get_workspace_views();
+            layer_workspace_views[i] = layers[i]->get_gradient_views();
 
     return layer_workspace_views;
 }
