@@ -311,7 +311,7 @@ void Layer::set_output_shape(const Shape&)
     throw runtime_error("This method is not implemented in the layer type (" + name + ").\n");
 }
 
-/*
+
 void Layer::softmax(TensorMap2 y) const
 {
     const Index rows_number = y.dimension(0);
@@ -417,7 +417,7 @@ void Layer::softmax(TensorMap4 y) const
         }
     }
 }
-*/
+
 
 void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
                                              TensorMap3 result,

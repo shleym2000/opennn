@@ -668,11 +668,9 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
             update_parameters(training_back_propagation, optimization_data);
             
             if(iteration + 2 < training_batches_number)
-            {
                 next_training_batch->fill_host(training_batches[iteration+2],
                                                input_feature_indices,
                                                target_feature_indices);
-            }
             
             swap(current_training_batch, next_training_batch);
         }

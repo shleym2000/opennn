@@ -242,54 +242,9 @@ protected:
         dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
-    template <int Rank>
-    FORCE_INLINE void softmax(TensorMapR<Rank> y) const
-    {
-        // The size of the last dimension (channels/classes)
-        const Index last_dim_size = y.dimension(Rank - 1);
-
-        // Total size of the tensor
-        const Index total_size = y.size();
-
-        // Number of vectors to normalize (flattening all previous dimensions)
-        const Index rows_number = total_size / last_dim_size;
-
-        // Direct pointer access is efficient and rank-agnostic
-        type* data_ptr = y.data();
-
-#pragma omp parallel for
-        for(Index i = 0; i < rows_number; i++)
-        {
-            // Get pointer to the start of the current vector
-            type* vec = data_ptr + (i * last_dim_size);
-
-            // 1. Find Max (for numerical stability)
-            type max_value = -numeric_limits<type>::infinity();
-            for(Index j = 0; j < last_dim_size; j++)
-            {
-                if(vec[j] > max_value)
-                    max_value = vec[j];
-            }
-
-            // 2. Calculate Exponentials and Sum
-            type sum = 0.0;
-            for(Index j = 0; j < last_dim_size; j++)
-            {
-                vec[j] = exp(vec[j] - max_value);
-                sum += vec[j];
-            }
-
-            // 3. Normalize
-            if(sum > 0.0)
-            {
-                const type inv_sum = type(1.0) / sum;
-                for(Index j = 0; j < last_dim_size; j++)
-                {
-                    vec[j] *= inv_sum;
-                }
-            }
-        }
-    }
+    void softmax(TensorMap2) const;
+    void softmax(TensorMap3) const;
+    void softmax(TensorMap4) const;
 
     void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 

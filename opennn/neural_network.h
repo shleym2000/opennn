@@ -369,6 +369,9 @@ struct NeuralNetworkBackPropagation
     vector<unique_ptr<LayerBackPropagation>> layers;
 
     Tensor1 gradient;
+
+    // @todo
+    //Tensor1 input_gradients;
 };
 
 
