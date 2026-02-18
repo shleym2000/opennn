@@ -107,46 +107,34 @@ void QuasiNewtonMethod::set_maximum_time(const type new_maximum_time)
 
 void QuasiNewtonMethod::calculate_inverse_hessian(QuasiNewtonMethodData& optimization_data) const
 {
-    const VectorR& parameters_difference = optimization_data.parameters_difference;
+    const VectorR& parameter_differences = optimization_data.parameter_differences;
     const VectorR& gradient_difference = optimization_data.gradient_difference;
 
-    Tensor1& old_inverse_hessian_dot_gradient_difference = optimization_data.old_inverse_hessian_dot_gradient_difference;
+    VectorR& old_inverse_hessian_dot_gradient_difference = optimization_data.old_inverse_hessian_dot_gradient_difference;
 
-    const Tensor2& old_inverse_hessian = optimization_data.old_inverse_hessian;
-    Tensor2& inverse_hessian = optimization_data.inverse_hessian;
+    const MatrixR& old_inverse_hessian = optimization_data.old_inverse_hessian;
+    MatrixR& inverse_hessian = optimization_data.inverse_hessian;
 
-    Tensor1& BFGS = optimization_data.BFGS;
+    VectorR& BFGS = optimization_data.BFGS;
 
-    Tensor<type, 0> parameters_difference_dot_gradient_difference;
-    Tensor<type, 0> gradient_dot_hessian_dot_gradient;
+    const type parameters_difference_dot_gradient_difference = parameter_differences.dot(gradient_difference);
 
-    parameters_difference_dot_gradient_difference.device(*device)
-        = parameters_difference.contract(gradient_difference, axes(0,0));
+    old_inverse_hessian_dot_gradient_difference.noalias() = old_inverse_hessian * gradient_difference;
 
-    old_inverse_hessian_dot_gradient_difference.device(*device)
-        = old_inverse_hessian.contract(gradient_difference, axes(0,0));
+    const type gradient_dot_hessian_dot_gradient = gradient_difference.dot(old_inverse_hessian_dot_gradient_difference);
 
-    gradient_dot_hessian_dot_gradient.device(*device)
-        = gradient_difference.contract(old_inverse_hessian_dot_gradient_difference, axes(0,0));
+    BFGS = (parameter_differences / parameters_difference_dot_gradient_difference)
+           - (old_inverse_hessian_dot_gradient_difference / gradient_dot_hessian_dot_gradient);
 
-    BFGS.device(*device)
-        = parameters_difference/parameters_difference_dot_gradient_difference(0)
-          - old_inverse_hessian_dot_gradient_difference/gradient_dot_hessian_dot_gradient(0);
+    inverse_hessian = old_inverse_hessian;
 
-    // Calculate approximation
+    inverse_hessian.noalias() += (parameter_differences * parameter_differences.transpose())
+                                 / parameters_difference_dot_gradient_difference;
 
-    inverse_hessian.device(*device) = old_inverse_hessian;
+    inverse_hessian.noalias() -= (old_inverse_hessian_dot_gradient_difference * old_inverse_hessian_dot_gradient_difference.transpose())
+                                 / gradient_dot_hessian_dot_gradient;
 
-    inverse_hessian.device(*device)
-        += self_kronecker_product(device.get(), parameters_difference)
-           / parameters_difference_dot_gradient_difference(0);
-
-    inverse_hessian.device(*device)
-        -= self_kronecker_product(device.get(), old_inverse_hessian_dot_gradient_difference)
-           / gradient_dot_hessian_dot_gradient(0);
-
-    inverse_hessian.device(*device)
-        += self_kronecker_product(device.get(), BFGS)*(gradient_dot_hessian_dot_gradient(0));
+    inverse_hessian.noalias() += (BFGS * BFGS.transpose()) * gradient_dot_hessian_dot_gradient;
 }
 
 
@@ -158,46 +146,41 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
     NeuralNetwork* neural_network = forward_propagation.neural_network;
 
     VectorR& parameters = neural_network->get_parameters();
-
     const VectorR& gradient = back_propagation.neural_network.gradient;
 
     VectorR& old_parameters = optimization_data.old_parameters;
-    VectorR& parameters_difference = optimization_data.parameters_difference;
+    VectorR& parameter_differences = optimization_data.parameter_differences;
     VectorR& parameter_updates = optimization_data.parameter_updates;
 
     VectorR& old_gradient = optimization_data.old_gradient;
     VectorR& gradient_difference = optimization_data.gradient_difference;
 
     VectorR& training_direction = optimization_data.training_direction;
+    MatrixR& inverse_hessian = optimization_data.inverse_hessian;
 
-    Tensor2& inverse_hessian = optimization_data.inverse_hessian;
+    parameter_differences = parameters - old_parameters;
+    gradient_difference = gradient - old_gradient;
 
-    Tensor<type, 0>& training_slope = optimization_data.training_slope;
+    old_parameters = parameters;
 
-    parameters_difference.device(*device) = parameters - old_parameters;
+    if(optimization_data.epoch == 0 || parameter_differences.isZero() || gradient_difference.isZero())
+        inverse_hessian.setIdentity();
+    else
+        calculate_inverse_hessian(optimization_data);
 
-    gradient_difference.device(*device) = gradient - old_gradient;
+    training_direction.noalias() = -inverse_hessian * gradient;
 
-    old_parameters.device(*device) = parameters; // do not move above
+    const type slope_value = gradient.dot(training_direction);
+    optimization_data.training_slope() = slope_value;
 
-    // Get training direction
+    if(slope_value >= 0.0f)
+    {
+        training_direction = -gradient;
+    }
 
-    optimization_data.epoch == 0 || is_equal(parameters_difference, type(0)) || is_equal(gradient_difference, type(0))
-        ? set_identity(inverse_hessian)
-        : calculate_inverse_hessian(optimization_data);
-
-    training_direction.device(*device) = -inverse_hessian.contract(gradient, axes(1,0));
-
-    training_slope.device(*device) = gradient.contract(training_direction, axes(0,0));
-
-    if(training_slope(0) >= type(0))
-        training_direction.device(*device) = -gradient;
-
-    // Get learning rate
-
-    optimization_data.epoch == 0
-        ? optimization_data.initial_learning_rate = first_learning_rate
-        : optimization_data.initial_learning_rate = optimization_data.old_learning_rate;
+    optimization_data.initial_learning_rate = (optimization_data.epoch == 0)
+        ? first_learning_rate
+        : optimization_data.old_learning_rate;
 
     const type current_loss = back_propagation.loss;
 
@@ -211,47 +194,35 @@ void QuasiNewtonMethod::update_parameters(const Batch& batch,
     optimization_data.learning_rate = directional_point.first;
     back_propagation.loss = directional_point.second;
 
-    VectorR& final_parameters = neural_network->get_parameters();
-
-    if(abs(optimization_data.learning_rate) > type(0))
+    if(abs(optimization_data.learning_rate) > 0.0f)
     {
-        optimization_data.parameter_updates.device(*device)
-            = optimization_data.training_direction*optimization_data.learning_rate;
-
-        final_parameters.device(*device) += optimization_data.parameter_updates;
+        parameter_updates = training_direction * optimization_data.learning_rate;
+        parameters += parameter_updates;
     }
     else
     {
-        const Index parameters_number = final_parameters.size();
-
+        const Index parameters_number = parameters.size();
         constexpr type epsilon = numeric_limits<type>::epsilon();
 
-        #pragma omp parallel for
+#pragma omp parallel for
         for(Index i = 0; i < parameters_number; i++)
         {
             if (abs(gradient(i)) < NUMERIC_LIMITS_MIN)
-                parameter_updates(i) = type(0);
+                parameter_updates(i) = 0.0f;
             else
             {
-                parameter_updates(i) = (gradient(i) > type(0)) ? -epsilon : epsilon;
-                final_parameters(i) += parameter_updates(i);
+                parameter_updates(i) = (gradient(i) > 0.0f) ? -epsilon : epsilon;
+                parameters(i) += parameter_updates(i);
             }
         }
-
         optimization_data.learning_rate = optimization_data.initial_learning_rate;
     }
 
-    // Update stuff
-
     old_gradient = gradient;
-
     optimization_data.old_inverse_hessian = inverse_hessian;
-
     optimization_data.old_learning_rate = optimization_data.learning_rate;
 
-    // Set parameters
-
-    neural_network->set_parameters(final_parameters);
+    neural_network->set_parameters(parameters);
 }
 
 
@@ -357,7 +328,7 @@ TrainingResults QuasiNewtonMethod::train()
 
         loss_index->add_regularization_gradient(training_back_propagation.neural_network.gradient);
 
-        results.training_error_history(epoch) = training_back_propagation.error();
+        results.training_error_history(epoch) = training_back_propagation.error;
 
         // Update parameters
 
@@ -380,7 +351,7 @@ TrainingResults QuasiNewtonMethod::train()
                                         validation_forward_propagation,
                                         validation_back_propagation);
 
-            results.validation_error_history(epoch) = validation_back_propagation.error();
+            results.validation_error_history(epoch) = validation_back_propagation.error;
 
             if(epoch != 0
                 && results.validation_error_history(epoch) > results.validation_error_history(epoch-1))
@@ -525,7 +496,7 @@ void QuasiNewtonMethodData::set(QuasiNewtonMethod* new_quasi_newton_method)
     // Neural network data
 
     old_parameters.resize(parameters_number);
-    parameters_difference.resize(parameters_number);
+    parameter_differences.resize(parameters_number);
     potential_parameters.resize(parameters_number);
     parameter_updates.resize(parameters_number);
 
@@ -596,7 +567,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
-        triplet.B.second = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
+        triplet.B.second = back_propagation.error + loss_index->calculate_regularization(potential_parameters);
 
     } while(abs(triplet.A.second - triplet.B.second) < loss_tolerance && triplet.A.second != triplet.B.second);
 
@@ -615,7 +586,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
-        triplet.B.second = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
+        triplet.B.second = back_propagation.error + loss_index->calculate_regularization(potential_parameters);
 
         while(triplet.U.second > triplet.B.second)
         {
@@ -633,7 +604,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
             loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
-            triplet.B.second = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
+            triplet.B.second = back_propagation.error + loss_index->calculate_regularization(potential_parameters);
         }
     }
     else if(triplet.A.second < triplet.B.second)
@@ -649,7 +620,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
-        triplet.U.second = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
+        triplet.U.second = back_propagation.error + loss_index->calculate_regularization(potential_parameters);
 
         while(triplet.A.second < triplet.U.second)
         {
@@ -664,7 +635,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
             loss_index->calculate_error(batch, forward_propagation, back_propagation);
 
-            triplet.U.second = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
+            triplet.U.second = back_propagation.error + loss_index->calculate_regularization(potential_parameters);
 
             if(triplet.U.first - triplet.A.first <= learning_rate_tolerance)
             {
@@ -725,7 +696,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
 
         neural_network->forward_propagate(batch.get_inputs(), potential_parameters, forward_propagation);
         loss_index->calculate_error(batch, forward_propagation, back_propagation);
-        const type new_loss = back_propagation.error() + loss_index->calculate_regularization(potential_parameters);
+        const type new_loss = back_propagation.error + loss_index->calculate_regularization(potential_parameters);
 
         if (new_loss <= current_loss + c * alpha * slope)
             return {alpha, new_loss};
@@ -759,9 +730,9 @@ type Triplet::get_length() const
 
 pair<type, type> Triplet::minimum() const
 {
-    Tensor1 losses(3);
+    VectorR losses(3);
 
-    losses.setValues({ A.second, U.second, B.second });
+    losses << A.second, U.second, B.second;
 
     const Index minimal_index = opennn::minimal_index(losses);
 

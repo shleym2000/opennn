@@ -691,10 +691,10 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
                                        input_target_numeric_variables_number,
                                        new_past_time_steps);
 
-    Tensor1 cross_correlations_vector(new_past_time_steps);
+    VectorR cross_correlations_vector(new_past_time_steps);
 
-    Tensor2 input_i;
-    Tensor2 input_j;
+    MatrixR input_i;
+    MatrixR input_j;
 
     Index counter_i = 0;
     Index counter_j = 0;
@@ -720,8 +720,8 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
 
             if(display) cout << "  vs. " << variables[j].name << endl;
  
-            const VectorMap current_input_i(input_i.data(), input_i.dimension(0));
-            const VectorMap current_input_j(input_j.data(), input_j.dimension(0));
+            const VectorMap current_input_i(input_i.data(), input_i.rows());
+            const VectorMap current_input_j(input_j.data(), input_j.rows());
 
             cross_correlations_vector = opennn::cross_correlations(device.get(), current_input_i, current_input_j, new_past_time_steps);
 
@@ -752,13 +752,15 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
             numeric_vars_indices.push_back(i);
 
     const Index numeric_vars_count = numeric_vars_indices.size();
-    if (numeric_vars_count == 0) return Tensor3(0,0,0);
 
-    map<Index, Tensor1> ranked_series;
+    if (numeric_vars_count == 0)
+        return Tensor3();
+
+    map<Index, VectorR> ranked_series;
 
     for(Index global_idx : numeric_vars_indices)
     {
-        MatrixR var_data = get_variable_data(global_idx);
+        const MatrixR var_data = get_variable_data(global_idx);
         ranked_series[global_idx] = calculate_spearman_ranks(var_data.col(0));
     }
 
@@ -773,7 +775,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
         {
             const VectorR& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
 
-            VectorR ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
+            const VectorR ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
 
             for(Index k = 0; k < past_time_steps; ++k)
                 cross_correlations(i, j, k) = ccf_vector(k);

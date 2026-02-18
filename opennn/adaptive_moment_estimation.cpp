@@ -250,7 +250,7 @@ TrainingResults AdaptiveMomentEstimation::train()
                                        training_forward_propagation,
                                        training_back_propagation);
 
-            training_error += training_back_propagation.error();
+            training_error += training_back_propagation.error;
 
             if(is_classification_model) training_accuracy += training_back_propagation.accuracy(0);
 
@@ -295,7 +295,7 @@ TrainingResults AdaptiveMomentEstimation::train()
                                             *validation_forward_propagation,
                                             *validation_back_propagation);
 
-                validation_error += validation_back_propagation->error();
+                validation_error += validation_back_propagation->error;
 
                 if(is_classification_model)
                     validation_accuracy += validation_back_propagation->accuracy(0);
@@ -660,7 +660,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
                                        training_forward_propagation,
                                        training_back_propagation);
             
-            training_error += training_back_propagation.error();
+            training_error += training_back_propagation.error;
 
             if (is_classification_model)
                 training_accuracy += training_back_propagation.accuracy();

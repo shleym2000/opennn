@@ -140,7 +140,7 @@ struct InputsSelectionResults
 
     vector<Index> optimal_input_variables_indices;
 
-    Tensor<bool, 1> optimal_inputs;
+    VectorB optimal_inputs;
 
     // Model selection
 

@@ -87,7 +87,7 @@ void Pooling3d::forward_propagate(const vector<TensorView>& input_views,
 
     if (pooling_method == PoolingMethod::MaxPooling)
     {
-        Tensor<Index, 2>& maximal_indices = pooling_forward_propagation->maximal_indices;
+        MatrixI& maximal_indices = pooling_forward_propagation->maximal_indices;
 
 #pragma omp parallel for
         for(Index batch_index = 0; batch_index < batch_size; ++batch_index)

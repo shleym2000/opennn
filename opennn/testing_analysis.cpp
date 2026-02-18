@@ -105,14 +105,14 @@ Tensor<Correlation, 1> TestingAnalysis::linear_correlation() const
 }
 
 
-Tensor<Correlation, 1> TestingAnalysis::linear_correlation(const Tensor2& target, const Tensor2& output) const
+Tensor<Correlation, 1> TestingAnalysis::linear_correlation(const MatrixR& target, const MatrixR& output) const
 {
     const Index outputs_number = dataset->get_features_number("Target");
 
     Tensor<Correlation, 1> linear_correlation(outputs_number);
 
     for(Index i = 0; i < outputs_number; i++)
-        linear_correlation(i) = opennn::linear_correlation(device.get(), output.chip(i,1), target.chip(i,1));
+        linear_correlation(i) = opennn::linear_correlation(device.get(), output.col(i), target.col(i));
 
     return linear_correlation;
 }
@@ -146,7 +146,7 @@ Tensor<TestingAnalysis::GoodnessOfFitAnalysis, 1> TestingAnalysis::perform_goodn
 
     const Index outputs_number = neural_network->get_outputs_number();
 
-    const pair<Tensor<type,2, AlignedMax>, Tensor<type,2, AlignedMax>> targets_outputs = get_targets_and_outputs("Testing");
+    const pair<MatrixR, MatrixR> targets_outputs = get_targets_and_outputs("Testing");
 
     // Testing analysis
 
@@ -154,8 +154,8 @@ Tensor<TestingAnalysis::GoodnessOfFitAnalysis, 1> TestingAnalysis::perform_goodn
 
     for(Index i = 0;  i < outputs_number; i++)
     {
-        const TensorMap1 targets = tensor_map(targets_outputs.first, i);
-        const TensorMap1 outputs = tensor_map(targets_outputs.second, i);
+        const VectorMap targets = vector_map(targets_outputs.first, i);
+        const VectorMap outputs = vector_map(targets_outputs.second, i);
 
         const type determination = calculate_determination(outputs, targets);
 
@@ -186,8 +186,8 @@ pair<MatrixR, MatrixR> TestingAnalysis::get_targets_and_outputs(const string& sa
     if(samples_number == Index(0))
         throw runtime_error("Number of samples is zero.\n");
 
-    Tensor2 output_data;
-    Tensor2 target_data;
+    MatrixR output_data;
+    MatrixR target_data;
 
     if (TimeSeriesDataset* time_series_dataset = dynamic_cast<TimeSeriesDataset*>(dataset))
     {
@@ -202,7 +202,7 @@ pair<MatrixR, MatrixR> TestingAnalysis::get_targets_and_outputs(const string& sa
     else
     {
         target_data = dataset->get_data(sample_role, "Target");
-        const Tensor2 input_data = dataset->get_data(sample_role, "Input");
+        const MatrixR input_data = dataset->get_data(sample_role, "Input");
         output_data = neural_network->calculate_outputs<2, 2>(input_data);
     }
 
@@ -241,7 +241,7 @@ Tensor3 TestingAnalysis::calculate_error_data() const
 
     Tensor3 error_data(testing_samples_number, 3, outputs_number);
 
-    const Tensor2 absolute_errors = (targets - outputs).abs();
+    const MatrixR absolute_errors = (targets - outputs).array().abs();
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -258,7 +258,7 @@ Tensor3 TestingAnalysis::calculate_error_data() const
 }
 
 
-Tensor2 TestingAnalysis::calculate_percentage_error_data() const
+MatrixR TestingAnalysis::calculate_percentage_error_data() const
 {
     check();
 
@@ -283,11 +283,11 @@ Tensor2 TestingAnalysis::calculate_percentage_error_data() const
     const Tensor1& output_minimums = unscaling_layer->get_minimums();
     const Tensor1& output_maximums = unscaling_layer->get_maximums();
 
-    const Tensor2 errors = (targets - outputs);
+    const MatrixR errors = (targets - outputs);
 
     // Error data
 
-    Tensor2 error_data(testing_samples_number, outputs_number);
+    MatrixR error_data(testing_samples_number, outputs_number);
 
 #pragma omp parallel for
 
@@ -307,10 +307,10 @@ vector<Descriptives> TestingAnalysis::calculate_absolute_errors_descriptives() c
 }
 
 
-vector<Descriptives> TestingAnalysis::calculate_absolute_errors_descriptives(const Tensor2& targets,
-                                                                             const Tensor2& outputs) const
+vector<Descriptives> TestingAnalysis::calculate_absolute_errors_descriptives(const MatrixR& targets,
+                                                                             const MatrixR& outputs) const
 {
-    const Tensor2 difference = (targets-outputs).abs();
+    const MatrixR difference = (targets-outputs).array().abs();
 
     return descriptives(difference);
 }
@@ -324,10 +324,10 @@ vector<Descriptives> TestingAnalysis::calculate_percentage_errors_descriptives()
 }
 
 
-vector<Descriptives> TestingAnalysis::calculate_percentage_errors_descriptives(const Tensor2& targets,
-                                                                               const Tensor2& outputs) const
+vector<Descriptives> TestingAnalysis::calculate_percentage_errors_descriptives(const MatrixR& targets,
+                                                                               const MatrixR& outputs) const
 {
-    const Tensor2 difference = type(100)*(targets-outputs).abs()/targets;
+    const MatrixR difference = type(100)*(targets-outputs).array().abs()/targets.array();
 
     return descriptives(difference);
 }
@@ -351,9 +351,9 @@ vector<vector<Descriptives>> TestingAnalysis::calculate_error_data_descriptives(
 
     for(Index i = 0; i < outputs_number; i++)
     {
-        const TensorMap2 matrix_error(error_data.data() + index, testing_samples_number, 3);
+        const MatrixMap matrix_error(error_data.data() + index, testing_samples_number, 3);
 
-        const Tensor2 matrix(matrix_error);
+        const MatrixR matrix(matrix_error);
 
         descriptives[i] = opennn::descriptives(matrix);
 
@@ -388,14 +388,14 @@ void TestingAnalysis::print_error_data_descriptives() const
 
 vector<Histogram> TestingAnalysis::calculate_error_data_histograms(const Index bins_number) const
 {
-    const Tensor2 error_data = calculate_percentage_error_data();
+    const MatrixR error_data = calculate_percentage_error_data();
 
-    const Index outputs_number = error_data.dimension(1);
+    const Index outputs_number = error_data.cols();
 
     vector<Histogram> histograms(outputs_number);
 
     for(Index i = 0; i < outputs_number; i++)
-        histograms[i] = histogram_centered(error_data.chip(i,1), type(0), bins_number);
+        histograms[i] = histogram_centered(error_data.col(i), type(0), bins_number);
 
     return histograms;
 }
@@ -414,9 +414,9 @@ Tensor<Tensor<Index, 1>, 1> TestingAnalysis::calculate_maximal_errors(const Inde
 
     for(Index i = 0; i < outputs_number; i++)
     {
-        const TensorMap2 matrix_error(error_data.data()+index, testing_samples_number, 3);
+        const MatrixMap matrix_error(error_data.data()+index, testing_samples_number, 3);
 
-        maximal_errors[i] = maximal_indices(matrix_error.chip(0,1), samples_number);
+        maximal_errors[i] = maximal_indices(matrix_error.col(0), samples_number);
 
         index += testing_samples_number*3;
     }
@@ -425,78 +425,75 @@ Tensor<Tensor<Index, 1>, 1> TestingAnalysis::calculate_maximal_errors(const Inde
 }
 
 
-Tensor2 TestingAnalysis::calculate_errors() const
+MatrixR TestingAnalysis::calculate_errors() const
 {
-    const Tensor1 training_errors = calculate_errors("Training");
-    const Tensor1 validation_errors = calculate_errors("Validation");
-    const Tensor1 testing_errors = calculate_errors("Testing");
+    const VectorR training_errors = calculate_errors("Training");
+    const VectorR validation_errors = calculate_errors("Validation");
+    const VectorR testing_errors = calculate_errors("Testing");
 
-    Tensor2 errors(5, 3);
+    MatrixR errors(5, 3);
 
-    errors.setValues({
-        {training_errors(0), validation_errors(0), testing_errors(0)},
-        {training_errors(1), validation_errors(1), testing_errors(1)},
-        {training_errors(2), validation_errors(2), testing_errors(2)},
-        {training_errors(3), validation_errors(3), testing_errors(3)},
-        {training_errors(4), validation_errors(4), testing_errors(4)}
-    });
+    errors <<
+        training_errors(0), validation_errors(0), testing_errors(0),
+        training_errors(1), validation_errors(1), testing_errors(1),
+        training_errors(2), validation_errors(2), testing_errors(2),
+        training_errors(3), validation_errors(3), testing_errors(3),
+        training_errors(4), validation_errors(4), testing_errors(4);
 
     return errors;
 }
 
 
-Tensor2 TestingAnalysis::calculate_binary_classification_errors() const
+MatrixR TestingAnalysis::calculate_binary_classification_errors() const
 {
-    const Tensor1 training_errors = calculate_binary_classification_errors("Training");
-    const Tensor1 validation_errors = calculate_binary_classification_errors("Validation");
-    const Tensor1 testing_errors = calculate_binary_classification_errors("Testing");
+    const VectorR training_errors = calculate_binary_classification_errors("Training");
+    const VectorR validation_errors = calculate_binary_classification_errors("Validation");
+    const VectorR testing_errors = calculate_binary_classification_errors("Testing");
 
-    Tensor2 errors(7, 3);
+    MatrixR errors(7, 3);
 
-    errors.setValues({
-        {training_errors(0), validation_errors(0), testing_errors(0)},
-        {training_errors(1), validation_errors(1), testing_errors(1)},
-        {training_errors(2), validation_errors(2), testing_errors(2)},
-        {training_errors(3), validation_errors(3), testing_errors(3)},
-        {training_errors(4), validation_errors(4), testing_errors(4)},
-        {training_errors(5), validation_errors(5), testing_errors(5)},
-        {training_errors(6), validation_errors(6), testing_errors(6)}
-    });
+    errors <<
+        training_errors(0), validation_errors(0), testing_errors(0),
+        training_errors(1), validation_errors(1), testing_errors(1),
+        training_errors(2), validation_errors(2), testing_errors(2),
+        training_errors(3), validation_errors(3), testing_errors(3),
+        training_errors(4), validation_errors(4), testing_errors(4),
+        training_errors(5), validation_errors(5), testing_errors(5),
+        training_errors(6), validation_errors(6), testing_errors(6);
 
     return errors;
 }
 
 
-Tensor2 TestingAnalysis::calculate_multiple_classification_errors() const
+MatrixR TestingAnalysis::calculate_multiple_classification_errors() const
 {
-    const Tensor1 training_errors = calculate_multiple_classification_errors("Training");
-    const Tensor1 validation_errors = calculate_multiple_classification_errors("Validation");
-    const Tensor1 testing_errors = calculate_multiple_classification_errors("Testing");
+    const VectorR training_errors = calculate_multiple_classification_errors("Training");
+    const VectorR validation_errors = calculate_multiple_classification_errors("Validation");
+    const VectorR testing_errors = calculate_multiple_classification_errors("Testing");
 
-    Tensor2 errors(6, 3);
+    MatrixR errors(6, 3);
 
-    errors.setValues({
-        {training_errors(0), validation_errors(0), testing_errors(0)},
-        {training_errors(1), validation_errors(1), testing_errors(1)},
-        {training_errors(2), validation_errors(2), testing_errors(2)},
-        {training_errors(3), validation_errors(3), testing_errors(3)},
-        {training_errors(4), validation_errors(4), testing_errors(4)},
-        {training_errors(5), validation_errors(5), testing_errors(5)}
-    });
+    errors <<
+        training_errors(0), validation_errors(0), testing_errors(0),
+        training_errors(1), validation_errors(1), testing_errors(1),
+        training_errors(2), validation_errors(2), testing_errors(2),
+        training_errors(3), validation_errors(3), testing_errors(3),
+        training_errors(4), validation_errors(4), testing_errors(4),
+        training_errors(5), validation_errors(5), testing_errors(5);
+
     return errors;
 }
 
 
-Tensor1 TestingAnalysis::calculate_errors(const Tensor2& targets,
-                                                  const Tensor2& outputs) const
+VectorR TestingAnalysis::calculate_errors(const MatrixR& targets,
+                                          const MatrixR& outputs) const
 {
     const type predictions_number = static_cast<type>(targets.size());
 
-    Tensor<type, 0> mean_squared_error;
-    mean_squared_error.device(*device) = (outputs - targets).square().sum();
+    const type mean_squared_error = (outputs - targets).squaredNorm();
 
-    Tensor1 errors(5);
-    errors(0) = mean_squared_error(0);
+    VectorR errors(5);
+    errors(0) = mean_squared_error;
     errors(1) = errors(0)/type(predictions_number);
     errors(2) = sqrt(errors(1));
     errors(3) = calculate_normalized_squared_error(targets, outputs);
@@ -506,7 +503,7 @@ Tensor1 TestingAnalysis::calculate_errors(const Tensor2& targets,
 }
 
 
-Tensor1 TestingAnalysis::calculate_errors(const string& sample_role) const
+VectorR TestingAnalysis::calculate_errors(const string& sample_role) const
 {
     const auto [targets, outputs] = get_targets_and_outputs(sample_role);
 
@@ -514,7 +511,7 @@ Tensor1 TestingAnalysis::calculate_errors(const string& sample_role) const
 }
 
 
-Tensor1 TestingAnalysis::calculate_binary_classification_errors(const string& sample_role) const
+VectorR TestingAnalysis::calculate_binary_classification_errors(const string& sample_role) const
 {
     // Dataset
 
@@ -522,14 +519,11 @@ Tensor1 TestingAnalysis::calculate_binary_classification_errors(const string& sa
 
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
-    Tensor1 errors(6);
+    const type mean_squared_error = (outputs - targets).squaredNorm();
 
-    // Results
+    VectorR errors(6);
 
-    Tensor<type, 0> mean_squared_error;
-    mean_squared_error.device(*device) = (outputs-targets).square().sum();
-
-    errors(0) = mean_squared_error(0);
+    errors(0) = mean_squared_error;
     errors(1) = errors(0)/type(training_samples_number);
     errors(2) = sqrt(errors(1));
     errors(3) = calculate_normalized_squared_error(targets, outputs);
@@ -540,21 +534,16 @@ Tensor1 TestingAnalysis::calculate_binary_classification_errors(const string& sa
 }
 
 
-Tensor1 TestingAnalysis::calculate_multiple_classification_errors(const string& sample_role) const
+VectorR TestingAnalysis::calculate_multiple_classification_errors(const string& sample_role) const
 {
-
     const Index training_samples_number = dataset->get_samples_number(sample_role);
 
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
-    Tensor1 errors(5);
+    const type mean_squared_error = (outputs - targets).squaredNorm();
 
-    // Results
-
-    Tensor<type, 0> mean_squared_error;
-    mean_squared_error.device(*device) = (outputs-targets).square().sum().sqrt();
-
-    errors(0) = mean_squared_error(0);
+    VectorR errors(5);
+    errors(0) = mean_squared_error;
     errors(1) = errors(0)/type(training_samples_number);
     errors(2) = sqrt(errors(1));
     errors(3) = calculate_normalized_squared_error(targets, outputs);
@@ -564,14 +553,13 @@ Tensor1 TestingAnalysis::calculate_multiple_classification_errors(const string& 
 }
 
 
-type TestingAnalysis::calculate_normalized_squared_error(const Tensor2& targets, const Tensor2& outputs) const
+type TestingAnalysis::calculate_normalized_squared_error(const MatrixR& targets, const MatrixR& outputs) const
 {
-    const Index samples_number = targets.dimension(0);
+    const Index samples_number = targets.rows();
 
-    const Tensor1 targets_mean = mean(targets);
+    const VectorR targets_mean = mean(targets);
 
-    Tensor<type, 0> mean_squared_error;
-    mean_squared_error.device(*device) = (outputs - targets).square().sum();
+    const type mean_squared_error = (outputs - targets).squaredNorm();
 
     type normalization_coefficient = type(0);
 
@@ -579,20 +567,20 @@ type TestingAnalysis::calculate_normalized_squared_error(const Tensor2& targets,
 
     for(Index i = 0; i < samples_number; i++)
     {
-        norm.device(*device) = (targets.chip(i, 0) - targets_mean).square().sum();
+        norm.device(*device) = (targets.row(i) - targets_mean).square().sum();
 
         normalization_coefficient += norm(0);
     }
 
-    return mean_squared_error()/normalization_coefficient;
+    return mean_squared_error/normalization_coefficient;
 }
 
 
-type TestingAnalysis::calculate_cross_entropy_error(const Tensor2& targets,
-                                                    const Tensor2& outputs) const
+type TestingAnalysis::calculate_cross_entropy_error(const MatrixR& targets,
+                                                    const MatrixR& outputs) const
 {
-    const Index testing_samples_number = targets.dimension(0);
-    const Index outputs_number = targets.dimension(1);
+    const Index testing_samples_number = targets.rows();
+    const Index outputs_number = targets.cols();
 
     Tensor1 targets_row(outputs_number);
     Tensor1 outputs_row(outputs_number);
@@ -603,8 +591,8 @@ type TestingAnalysis::calculate_cross_entropy_error(const Tensor2& targets,
 
     for(Index i = 0; i < testing_samples_number; i++)
     {
-        outputs_row = outputs.chip(i, 0);
-        targets_row = targets.chip(i, 0);
+        outputs_row = outputs.row(i);
+        targets_row = targets.row(i);
 
         for(Index j = 0; j < outputs_number; j++)
         {
@@ -626,8 +614,8 @@ type TestingAnalysis::calculate_cross_entropy_error_3d(const Tensor3& outputs, c
 
     Tensor2 errors(batch_size, outputs_number);
     Tensor2 predictions(batch_size, outputs_number);
-    Tensor<bool, 2> matches(batch_size, outputs_number);
-    Tensor<bool, 2> mask(batch_size, outputs_number);
+    MatrixB matches(batch_size, outputs_number);
+    MatrixB mask(batch_size, outputs_number);
 
     Tensor<type, 0> cross_entropy_error_2d;
     mask = targets != targets.constant(0);
@@ -647,9 +635,9 @@ type TestingAnalysis::calculate_cross_entropy_error_3d(const Tensor3& outputs, c
 }
 
 
-type TestingAnalysis::calculate_weighted_squared_error(const Tensor2& targets,
-                                                       const Tensor2& outputs,
-                                                       const Tensor1& weights) const
+type TestingAnalysis::calculate_weighted_squared_error(const MatrixR& targets,
+                                                       const MatrixR& outputs,
+                                                       const VectorR& weights) const
 {
     type negatives_weight;
     type positives_weight;
@@ -663,11 +651,9 @@ type TestingAnalysis::calculate_weighted_squared_error(const Tensor2& targets,
 
         negatives_weight = type(1);
 
-        if(negatives_number == 0 || positives_number == 0)
-            positives_weight = type(0);
-        else
-            positives_weight = type(negatives_number/positives_number);
-
+        positives_weight = (negatives_number == 0 || positives_number == 0)
+           ? type(0)
+           : type(negatives_number / positives_number);
     }
     else
     {
@@ -675,12 +661,12 @@ type TestingAnalysis::calculate_weighted_squared_error(const Tensor2& targets,
         negatives_weight = weights[1];
     }
 
-    const Tensor<bool, 2> if_sentence = (targets == targets.constant(type(1))).cast<bool>();
-    const Tensor<bool, 2> else_sentence = (targets == targets.constant(type(0))).cast<bool>();
+    const MatrixB if_sentence = (targets == targets.constant(type(1))).cast<bool>();
+    const MatrixB else_sentence = (targets == targets.constant(type(0))).cast<bool>();
 
-    Tensor2 f_1(targets.dimension(0), targets.dimension(1));
-    Tensor2 f_2(targets.dimension(0), targets.dimension(1));
-    Tensor2 f_3(targets.dimension(0), targets.dimension(1));
+    MatrixR f_1(targets.rows(), targets.cols());
+    MatrixR f_2(targets.rows(), targets.cols());
+    MatrixR f_3(targets.rows(), targets.cols());
 
     f_1.device(*device) = (targets - outputs).square() * positives_weight;
 
@@ -693,7 +679,7 @@ type TestingAnalysis::calculate_weighted_squared_error(const Tensor2& targets,
 
     Index negatives = 0;
 
-    Tensor1 target_column = targets.chip(0,1);
+    VectorR target_column = targets.col(0);
 
     for(Index i = 0; i < target_column.size(); i++)
         if(double(target_column(i)) == 0.0)
@@ -705,8 +691,8 @@ type TestingAnalysis::calculate_weighted_squared_error(const Tensor2& targets,
 }
 
 
-type TestingAnalysis::calculate_Minkowski_error(const Tensor2& targets,
-                                                const Tensor2& outputs,
+type TestingAnalysis::calculate_Minkowski_error(const MatrixR& targets,
+                                                const MatrixR& outputs,
                                                 const type minkowski_parameter) const
 {
     const type predictions_number = static_cast<type>(targets.size());
@@ -717,7 +703,7 @@ type TestingAnalysis::calculate_Minkowski_error(const Tensor2& targets,
     Tensor<type, 0> minkowski_error;
 
     minkowski_error.device(*device) =
-        (((outputs - targets).abs().pow(minkowski_parameter).sum()) / predictions_number).pow(type(1.0) / minkowski_parameter);
+        (((outputs - targets).array().abs().pow(minkowski_parameter).sum()) / predictions_number).pow(type(1.0) / minkowski_parameter);
 
     return minkowski_error();
 }
@@ -729,8 +715,8 @@ type TestingAnalysis::calculate_masked_accuracy(const Tensor3& outputs, const Te
     const Index outputs_number = outputs.dimension(1);
 
     Tensor2 predictions(batch_size, outputs_number);
-    Tensor<bool, 2> matches(batch_size, outputs_number);
-    Tensor<bool, 2> mask(batch_size, outputs_number);
+    MatrixB matches(batch_size, outputs_number);
+    MatrixB mask(batch_size, outputs_number);
 
     Tensor<type, 0> accuracy;
 
@@ -750,7 +736,7 @@ type TestingAnalysis::calculate_masked_accuracy(const Tensor3& outputs, const Te
 }
 
 
-type TestingAnalysis::calculate_determination(const Tensor1& outputs, const Tensor1& targets) const
+type TestingAnalysis::calculate_determination(const VectorR& outputs, const VectorR& targets) const
 {
     Tensor<type, 0> targets_mean;
     targets_mean.device(*device) = targets.mean();
@@ -771,13 +757,13 @@ type TestingAnalysis::calculate_determination(const Tensor1& outputs, const Tens
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion_binary_classification(const Tensor2& targets,
-                                                                            const Tensor2& outputs,
+MatrixI TestingAnalysis::calculate_confusion_binary_classification(const MatrixR& targets,
+                                                                            const MatrixR& outputs,
                                                                             type decision_threshold) const
 {
-    const Index testing_samples_number = targets.dimension(0);
+    const Index testing_samples_number = targets.rows();
 
-    Tensor<Index, 2> confusion(3, 3);
+    MatrixI confusion(3, 3);
 
     Index true_positive = 0;
     Index false_negative = 0;
@@ -820,17 +806,17 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_binary_classification(cons
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion_multiple_classification(const Tensor2& targets,
-                                                                              const Tensor2& outputs) const
+MatrixI TestingAnalysis::calculate_confusion_multiple_classification(const MatrixR& targets,
+                                                                              const MatrixR& outputs) const
 {
-    const Index samples_number = targets.dimension(0);
-    const Index targets_number = targets.dimension(1);
+    const Index samples_number = targets.rows();
+    const Index targets_number = targets.cols();
 
-    if(targets_number != outputs.dimension(1))
+    if(targets_number != outputs.cols())
         throw runtime_error("Number of targets (" + to_string(targets_number) + ") "
-                            "must be equal to number of outputs (" + to_string(outputs.dimension(1)) + ").\n");
+                            "must be equal to number of outputs (" + to_string(outputs.cols()) + ").\n");
 
-    Tensor<Index, 2> confusion(targets_number + 1, targets_number + 1);
+    MatrixI confusion(targets_number + 1, targets_number + 1);
     confusion.setZero();
     confusion(targets_number, targets_number) = samples_number;
 
@@ -839,8 +825,8 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_multiple_classification(co
 
     for(Index i = 0; i < samples_number; i++)
     {
-        target_index = maximal_index(targets.chip(i, 0));
-        output_index = maximal_index(outputs.chip(i, 0));
+        target_index = maximal_index(targets.row(i));
+        output_index = maximal_index(outputs.row(i));
 
         confusion(target_index, output_index)++;
         confusion(target_index, targets_number)++;
@@ -851,19 +837,19 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_multiple_classification(co
 }
 
 
-vector<Tensor<Index, 2>> TestingAnalysis::calculate_multilabel_confusion(const type decision_threshold) const
+vector<MatrixI> TestingAnalysis::calculate_multilabel_confusion(const type decision_threshold) const
 {
     check();
 
     auto [targets, outputs] = get_targets_and_outputs("Testing");
     const Index outputs_number = neural_network->get_outputs_number();
 
-    vector<Tensor<Index, 2>> confusion_matrices(outputs_number);
+    vector<MatrixI> confusion_matrices(outputs_number);
 
     for(Index j = 0; j < outputs_number; j++)
     {
-        Tensor2 target_col = targets.chip(j, 1).reshape(array<Index, 2>{targets.dimension(0), 1});
-        Tensor2 output_col = outputs.chip(j, 1).reshape(array<Index, 2>{outputs.dimension(0), 1});
+        const VectorR target_col = targets.col(j).reshape(array<Index, 2>{targets.rows(), 1});
+        const VectorR output_col = outputs.col(j).reshape(array<Index, 2>{outputs.rows(0), 1});
 
         confusion_matrices[j] = calculate_confusion_binary_classification(target_col, output_col, decision_threshold);
     }
@@ -872,9 +858,9 @@ vector<Tensor<Index, 2>> TestingAnalysis::calculate_multilabel_confusion(const t
 }
 
 
-Tensor<Index, 1> TestingAnalysis::calculate_positives_negatives_rate(const Tensor2& targets, const Tensor2& outputs) const
+Tensor<Index, 1> TestingAnalysis::calculate_positives_negatives_rate(const MatrixR& targets, const MatrixR& outputs) const
 {
-    const Tensor<Index, 2> confusion = calculate_confusion_binary_classification(targets, outputs, type(0.5));
+    const MatrixI confusion = calculate_confusion_binary_classification(targets, outputs, type(0.5));
 
     Tensor<Index, 1> positives_negatives_rate(2);
     positives_negatives_rate.setValues({confusion(0,0) + confusion(0,1), confusion(1,0) + confusion(1,1)});
@@ -883,7 +869,7 @@ Tensor<Index, 1> TestingAnalysis::calculate_positives_negatives_rate(const Tenso
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_threshold) const
+MatrixI TestingAnalysis::calculate_confusion(const type decision_threshold) const
 {
     check();
 
@@ -898,7 +884,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
     const Index outputs_number = neural_network->get_outputs_number();
     const Index confusion_matrix_size = (outputs_number == 1) ? 3 : (outputs_number + 1);
 
-    Tensor<Index, 2> total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
+    MatrixI total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
     total_confusion_matrix.setZero();
 
     for(const vector<Index>& current_batch_indices : testing_batches)
@@ -906,8 +892,8 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
         const Index current_batch_size = current_batch_indices.size();
         if (current_batch_size == 0) continue;
 
-        Tensor2 batch_inputs_flat = dataset->get_data_from_indices(current_batch_indices, input_feature_indices);
-        const Tensor2 batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
+        MatrixR batch_inputs_flat = dataset->get_data_from_indices(current_batch_indices, input_feature_indices);
+        const MatrixR batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
 
         Tensor2 batch_outputs;
 
@@ -921,14 +907,14 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
                               input_shape[2]);
 
             memcpy(inputs_4d.data(), batch_inputs_flat.data(), 
-                   current_batch_size * batch_inputs_flat.dimension(1) * sizeof(type));
+                   current_batch_size * batch_inputs_flat.cols() * sizeof(type));
 
             batch_outputs = neural_network->calculate_outputs<4,2>(inputs_4d);
         }
         else
-            return Tensor<Index, 2>();
+            return MatrixI();
 
-        Tensor<Index, 2> batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
+        MatrixI batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
         total_confusion_matrix += batch_confusion;
     }
 
@@ -938,9 +924,9 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion(const MatrixR& outputs,
-                                                      const MatrixR& targets,
-                                                      type decision_threshold) const
+MatrixI TestingAnalysis::calculate_confusion(const MatrixR& outputs,
+                                             const MatrixR& targets,
+                                             type decision_threshold) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
 
@@ -949,7 +935,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const MatrixR& outputs,
     else
         return calculate_confusion_multiple_classification(targets, outputs);
 
-    return Tensor<Index, 2>();
+    return MatrixI();
 }
 
 
@@ -984,11 +970,11 @@ Tensor2 TestingAnalysis::calculate_roc_curve(const Tensor2& targets, const Tenso
 
     Index points_number = maximum_points_number;
 
-    if(targets.dimension(1) != 1)
-        throw runtime_error("Number of of target variables (" +  to_string(targets.dimension(1)) + ") must be one.\n");
+    if(targets.cols() != 1)
+        throw runtime_error("Number of of target variables (" +  to_string(targets.cols()) + ") must be one.\n");
 
     if(outputs.dimension(1) != 1)
-        throw runtime_error("Number of of output variables (" + to_string(targets.dimension(1)) + ") must be one.\n");
+        throw runtime_error("Number of of output variables (" + to_string(targets.cols()) + ") must be one.\n");
 
     // Sort by ascending values of outputs vector
 
@@ -1135,7 +1121,7 @@ Tensor2 TestingAnalysis::calculate_cumulative_gain(const Tensor2& targets, const
     if(total_positives == 0)
         throw runtime_error("Number of positive samples(" + to_string(total_positives) + ") must be greater than zero.\n");
 
-    const Index testing_samples_number = targets.dimension(0);
+    const Index testing_samples_number = targets.rows();
 
     // Sort by ascending values of outputs vector
 
@@ -1192,7 +1178,7 @@ Tensor2 TestingAnalysis::calculate_negative_cumulative_gain(const Tensor2& targe
     if(total_negatives == 0)
         throw runtime_error("Number of negative samples(" + to_string(total_negatives) + ") must be greater than zero.\n");
 
-    const Index testing_samples_number = targets.dimension(0);
+    const Index testing_samples_number = targets.rows();
 
     // Sort by ascending values of outputs vector
 
@@ -1348,7 +1334,7 @@ vector<Index> TestingAnalysis::calculate_true_positive_samples(const Tensor2& ta
                                                                const vector<Index>& testing_indices,
                                                                type decision_threshold) const
 {
-    const Index rows_number = targets.dimension(0);
+    const Index rows_number = targets.rows();
 
     Tensor<Index, 1> true_positives_indices_copy(rows_number);
 
@@ -1373,7 +1359,7 @@ vector<Index> TestingAnalysis::calculate_false_positive_samples(const Tensor2& t
                                                                 const vector<Index>& testing_indices,
                                                                 type decision_threshold) const
 {
-    const Index rows_number = targets.dimension(0);
+    const Index rows_number = targets.rows();
 
     vector<Index> false_positives_indices_copy(rows_number);
 
@@ -1395,7 +1381,7 @@ vector<Index> TestingAnalysis::calculate_false_negative_samples(const Tensor2& t
                                                                 const vector<Index>& testing_indices,
                                                                 type decision_threshold) const
 {
-    const Index rows_number = targets.dimension(0);
+    const Index rows_number = targets.rows();
 
     vector<Index> false_negatives_indices_copy(rows_number);
 
@@ -1417,7 +1403,7 @@ vector<Index> TestingAnalysis::calculate_true_negative_samples(const Tensor2& ta
                                                                const vector<Index>& testing_indices,
                                                                type decision_threshold) const
 {
-    const Index rows_number = targets.dimension(0);
+    const Index rows_number = targets.rows();
 
     vector<Index> true_negatives_indices_copy(rows_number);
 
@@ -1440,7 +1426,7 @@ Tensor1 TestingAnalysis::calculate_multiple_classification_precision() const
 
     Tensor1 multiple_classification_tests(2);
 
-    const Tensor<Index, 2> confusion_matrix = calculate_confusion_multiple_classification(targets, outputs);
+    const MatrixI confusion_matrix = calculate_confusion_multiple_classification(targets, outputs);
 
     type diagonal_sum = type(0);
     type off_diagonal_sum = type(0);
@@ -1463,7 +1449,7 @@ Tensor1 TestingAnalysis::calculate_multiple_classification_precision() const
 
 void TestingAnalysis::save_confusion(const filesystem::path& file_name) const
 {
-    const Tensor<Index, 2> confusion = calculate_confusion();
+    const MatrixI confusion = calculate_confusion();
 
     const Index variables_number = confusion.dimension(0);
 
@@ -1520,18 +1506,18 @@ Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_ra
 }
 
 
-Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_rates(const Tensor2& targets,
-                                                                                     const Tensor2& outputs,
-                                                                                     const vector<Index>& testing_indices) const
+Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_rates(const MatrixR& targets,
+                                                                                    const MatrixR& outputs,
+                                                                                    const vector<Index>& testing_indices) const
 {
-    const Index samples_number = targets.dimension(0);
-    const Index targets_number = targets.dimension(1);
+    const Index samples_number = targets.rows();
+    const Index targets_number = targets.cols();
 
     Tensor< Tensor<Index, 1>, 2> multiple_classification_rates(targets_number, targets_number);
 
     // Count instances per class
 
-    const Tensor<Index, 2> confusion = calculate_confusion_multiple_classification(targets, outputs);
+    const MatrixI confusion = calculate_confusion_multiple_classification(targets, outputs);
 
     for(Index i = 0; i < targets_number; i++)
         for(Index j = 0; j < targets_number; j++)
@@ -1542,13 +1528,13 @@ Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_ra
     Index target_index;
     Index output_index;
 
-    Tensor<Index, 2> indices(targets_number, targets_number);
+    MatrixI indices(targets_number, targets_number);
     indices.setZero();
 
     for(Index i = 0; i < samples_number; i++)
     {
-        target_index = maximal_index(targets.chip(i, 0));
-        output_index = maximal_index(outputs.chip(i, 0));
+        target_index = maximal_index(targets.row(i));
+        output_index = maximal_index(outputs.row(i));
 
         multiple_classification_rates(target_index, output_index)(indices(target_index, output_index))
             = testing_indices[i];
@@ -1560,11 +1546,11 @@ Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_ra
 }
 
 
-Tensor<string, 2> TestingAnalysis::calculate_well_classified_samples(const Tensor2& targets,
-                                                                     const Tensor2& outputs,
+Tensor<string, 2> TestingAnalysis::calculate_well_classified_samples(const MatrixR& targets,
+                                                                     const MatrixR& outputs,
                                                                      const vector<string>& labels) const
 {
-    const Index samples_number = targets.dimension(0);
+    const Index samples_number = targets.rows();
 
     Tensor<string, 2> well_lassified_samples(samples_number, 4);
 
@@ -1577,8 +1563,8 @@ Tensor<string, 2> TestingAnalysis::calculate_well_classified_samples(const Tenso
 
     for(Index i = 0; i < samples_number; i++)
     {
-        predicted_class = maximal_index(outputs.chip(i, 0));
-        actual_class = maximal_index(targets.chip(i, 0));
+        predicted_class = maximal_index(outputs.row(i));
+        actual_class = maximal_index(targets.row(i));
 
         if(actual_class != predicted_class) continue;
 
@@ -1601,7 +1587,7 @@ Tensor<string, 2> TestingAnalysis::calculate_misclassified_samples(const Tensor2
                                                                    const Tensor2& outputs,
                                                                    const vector<string>& labels) const
 {
-    const Index samples_number = targets.dimension(0);
+    const Index samples_number = targets.rows();
 
     Index predicted_class;
     Index actual_class;
@@ -1644,8 +1630,8 @@ Tensor<string, 2> TestingAnalysis::calculate_misclassified_samples(const Tensor2
 }
 
 
-void TestingAnalysis::save_well_classified_samples(const Tensor2& targets,
-                                                   const Tensor2& outputs,
+void TestingAnalysis::save_well_classified_samples(const MatrixR& targets,
+                                                   const MatrixR& outputs,
                                                    const vector<string>& labels,
                                                    const filesystem::path& file_name) const
 {
@@ -1690,8 +1676,8 @@ void TestingAnalysis::save_misclassified_samples(const Tensor2& targets,
 }
 
 
-void TestingAnalysis::save_well_classified_samples_statistics(const Tensor2& targets,
-                                                              const Tensor2& outputs,
+void TestingAnalysis::save_well_classified_samples_statistics(const MatrixR& targets,
+                                                              const MatrixR& outputs,
                                                               const vector<string>& labels,
                                                               const filesystem::path& file_name) const
 {
@@ -1714,8 +1700,8 @@ void TestingAnalysis::save_well_classified_samples_statistics(const Tensor2& tar
 }
 
 
-void TestingAnalysis::save_misclassified_samples_statistics(const Tensor2& targets,
-                                                            const Tensor2& outputs,
+void TestingAnalysis::save_misclassified_samples_statistics(const MatrixR& targets,
+                                                            const MatrixR& outputs,
                                                             const vector<string>& labels,
                                                             const filesystem::path& statistics_file_name) const
 {
@@ -1723,7 +1709,7 @@ void TestingAnalysis::save_misclassified_samples_statistics(const Tensor2& targe
                                                                                     outputs,
                                                                                     labels);
 
-    Tensor1 misclassified_numerical_probabilities(misclassified_samples.dimension(0));
+    VectorR misclassified_numerical_probabilities(misclassified_samples.dimension(0));
 
     for(Index i = 0; i < misclassified_numerical_probabilities.size(); i++)
         misclassified_numerical_probabilities(i) = type(::atof(misclassified_samples(i, 3).c_str()));
@@ -1738,8 +1724,8 @@ void TestingAnalysis::save_misclassified_samples_statistics(const Tensor2& targe
 }
 
 
-void TestingAnalysis::save_well_classified_samples_probability_histogram(const Tensor2& targets,
-                                                                         const Tensor2& outputs,
+void TestingAnalysis::save_well_classified_samples_probability_histogram(const MatrixR& targets,
+                                                                         const MatrixR& outputs,
                                                                          const vector<string>& labels,
                                                                          const filesystem::path& histogram_file_name) const
 {
@@ -1747,7 +1733,7 @@ void TestingAnalysis::save_well_classified_samples_probability_histogram(const T
                                                                                         outputs,
                                                                                         labels);
 
-    Tensor1 well_classified_numerical_probabilities(well_classified_samples.dimension(0));
+    VectorR well_classified_numerical_probabilities(well_classified_samples.dimension(0));
 
     for(Index i = 0; i < well_classified_numerical_probabilities.size(); i++)
         well_classified_numerical_probabilities(i) = type(::atof(well_classified_samples(i, 3).c_str()));
@@ -1772,8 +1758,8 @@ void TestingAnalysis::save_well_classified_samples_probability_histogram(const T
 }
 
 
-void TestingAnalysis::save_misclassified_samples_probability_histogram(const Tensor2& targets,
-                                                                       const Tensor2& outputs,
+void TestingAnalysis::save_misclassified_samples_probability_histogram(const MatrixR& targets,
+                                                                       const MatrixR& outputs,
                                                                        const vector<string>& labels,
                                                                        const filesystem::path& histogram_file_name) const
 {
@@ -1781,7 +1767,7 @@ void TestingAnalysis::save_misclassified_samples_probability_histogram(const Ten
                                                                                     outputs,
                                                                                     labels);
 
-    Tensor1 misclassified_numerical_probabilities(misclassified_samples.dimension(0));
+    VectorR misclassified_numerical_probabilities(misclassified_samples.dimension(0));
 
     for(Index i = 0; i < misclassified_numerical_probabilities.size(); i++)
         misclassified_numerical_probabilities(i) = type(::atof(misclassified_samples(i, 3).c_str()));
@@ -1795,7 +1781,7 @@ void TestingAnalysis::save_misclassified_samples_probability_histogram(const Ten
 void TestingAnalysis::save_misclassified_samples_probability_histogram(const Tensor<string, 2>& misclassified_samples,
                                                                        const filesystem::path& histogram_file_name) const
 {
-    Tensor1 misclassified_numerical_probabilities(misclassified_samples.dimension(0));
+    VectorR misclassified_numerical_probabilities(misclassified_samples.dimension(0));
 
     for(Index i = 0; i < misclassified_numerical_probabilities.size(); i++)
         misclassified_numerical_probabilities(i) = type(::atof(misclassified_samples(i, 3).c_str()));
@@ -1936,7 +1922,7 @@ string TestingAnalysis::test_transformer(const vector<string>& context_string, b
 
 Tensor1 TestingAnalysis::calculate_binary_classification_tests(const type decision_threshold) const
 {
-    const Tensor<Index, 2> confusion = calculate_confusion(decision_threshold);
+    const MatrixI confusion = calculate_confusion(decision_threshold);
 
     const Index true_positive = confusion(0,0);
     const Index false_positive = confusion(1,0);
@@ -2052,7 +2038,7 @@ Tensor2 TestingAnalysis::calculate_multiple_classification_tests() const
 
     Tensor2 multiple_classification_tests(targets_number + 2, 3);
 
-    const Tensor<Index, 2> confusion = calculate_confusion();
+    const MatrixI confusion = calculate_confusion();
 
     type total_precision = type(0);
     type total_recall = type(0);
@@ -2168,8 +2154,8 @@ void TestingAnalysis::load(const filesystem::path& file_name)
 }
 
 
-void TestingAnalysis::GoodnessOfFitAnalysis::set(const Tensor1& new_targets,
-                                                 const Tensor1& new_outputs,
+void TestingAnalysis::GoodnessOfFitAnalysis::set(const VectorR& new_targets,
+                                                 const VectorR& new_outputs,
                                                  type new_determination)
 {
     targets = new_targets;
@@ -2214,7 +2200,7 @@ void TestingAnalysis::RocAnalysis::print() const
 
 #ifdef OPENNN_CUDA
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_threshold) const
+MatrixI TestingAnalysis::calculate_confusion_cuda(const type decision_threshold) const
 {
     check();
 
@@ -2229,7 +2215,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
 
     const Index confusion_matrix_size = (outputs_number == 1) ? 3 : (outputs_number + 1);
 
-    Tensor<Index, 2> total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
+    MatrixI total_confusion_matrix(confusion_matrix_size, confusion_matrix_size);
     total_confusion_matrix.setZero();
 
     BatchCuda testing_batch(batch_size, dataset);
@@ -2265,7 +2251,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
         cudaMemcpy(batch_outputs.data(), outputs_device, current_batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToHost);
 
         const MatrixR batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
-        Tensor<Index, 2> batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
+        MatrixI batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
         total_confusion_matrix += batch_confusion;
     }
 

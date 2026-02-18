@@ -27,7 +27,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
 {
     /*
     const TensorView targets_view = batch.get_targets();
-    const TensorMap2 targets = tensor_map<2>(targets_view);
+    const MatrixMap targets = matrix_map(targets_view);
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
     const TensorMap3 outputs = tensor_map<3>(outputs_view);
@@ -42,7 +42,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     // If you want to include all tokens, you can skip the mask multiplication.
 
     back_propagation.mask.device(*device) = (targets != targets.constant(0.0f));
-    const Tensor<bool, 2>& mask = back_propagation.mask;
+    const MatrixB& mask = back_propagation.mask;
 
     // 4. Reshape outputs to [Batch, Sequence] to match targets
     auto outputs_2d = outputs.reshape(array_2(batch_size, sequence_length));
@@ -80,7 +80,7 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
 {
     /*
     const TensorView targets_view = batch.get_targets();
-    const TensorMap2 targets = tensor_map<2>(targets_view);
+    const MatrixMap targets = matrix_map(targets_view);
 
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
     const TensorMap3 outputs = tensor_map<3>(outputs_view);
@@ -93,7 +93,7 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     // We assume index 0 is the [PAD] token.
     // The mask is true for actual words and false for padding.
     back_propagation.mask.device(*device) = (targets != targets.constant(0.0f));
-    const Tensor<bool, 2>& mask = back_propagation.mask;
+    const MatrixB& mask = back_propagation.mask;
 
     type total_log_loss = 0.0f;
     Index active_tokens_count = 0;
@@ -148,7 +148,7 @@ void CrossEntropyError3d::calculate_error(const Batch& batch,
         ? calculate_binary_error(batch, forward_propagation, back_propagation)
         : calculate_multiple_error(batch, forward_propagation, back_propagation);
 
-    if (isnan(back_propagation.error()))
+    if (isnan(back_propagation.error))
         throw runtime_error("Error is NAN.");
     */
 }

@@ -119,7 +119,7 @@ struct LevenbergMarquardtAlgorithmData final : public OptimizerData
     // Neural network data
 
     VectorR old_parameters;
-    VectorR parameters_difference;
+    VectorR parameter_differences;
 
     VectorR parameter_updates;
 

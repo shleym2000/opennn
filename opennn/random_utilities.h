@@ -19,8 +19,8 @@ namespace opennn
     Index random_integer(Index, Index);
     bool random_bool(type = 0.5);
 
-    void set_random_uniform(Tensor1&, type = -0.1, type = 0.1);
-    void set_random_uniform(Tensor2&, type = -0.1, type = 0.1);
+    void set_random_uniform(VectorR&, type = -0.1, type = 0.1);
+    void set_random_uniform(MatrixR&, type = -0.1, type = 0.1);
 
     void set_random_uniform(TensorMap1, type = -0.1, type = 0.1);
     void set_random_uniform(TensorMap2, type = -0.1, type = 0.1);

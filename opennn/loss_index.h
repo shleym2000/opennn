@@ -90,7 +90,7 @@ public:
                                          ForwardPropagation&,
                                          BackPropagation&) const;
 
-    void add_regularization_gradient(Tensor1&) const;
+    void add_regularization_gradient(VectorR&) const;
 
     void add_regularization_to_gradients(BackPropagation&) const;
 
@@ -153,12 +153,12 @@ public:
 
     VectorR calculate_gradient();
 
-    Tensor1 calculate_numerical_gradient();
-    Tensor1 calculate_numerical_gradient_lm();
-    Tensor2 calculate_numerical_jacobian();
-    Tensor1 calculate_numerical_input_gradients();
-    Tensor2 calculate_numerical_hessian();
-    Tensor2 calculate_inverse_hessian();
+    VectorR calculate_numerical_gradient();
+    VectorR calculate_numerical_gradient_lm();
+    MatrixR calculate_numerical_jacobian();
+    VectorR calculate_numerical_input_gradients();
+    MatrixR calculate_numerical_hessian();
+    MatrixR calculate_inverse_hessian();
 
 #ifdef OPENNN_CUDA
 
@@ -240,7 +240,7 @@ struct BackPropagationLM
 
     Loss* loss_index = nullptr;
 
-    Tensor<type, 0> error;
+    type error;
     type regularization = type(0);
     type loss = type(0);
 
@@ -279,17 +279,17 @@ struct BackPropagation
 
     NeuralNetworkBackPropagation neural_network;
 
-    Tensor<type,0> error;
-    Tensor2 errors;
-    Tensor2 errors_weights;
-    Tensor1 output_gradients;
+    type error;
+    MatrixR errors;
+    MatrixR errors_weights;
+    VectorR output_gradients;
     Shape output_gradient_dimensions;
 
     Tensor<type, 0> accuracy;
-    Tensor2 predictions;
+    MatrixR predictions;
 
-    Tensor<bool, 2> matches;
-    Tensor<bool, 2> mask;
+    MatrixB matches;
+    MatrixB mask;
 
     bool built_mask = false;
     type loss = type(0);

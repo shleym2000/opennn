@@ -15,12 +15,6 @@
 namespace opennn
 {
 
-type bound(const type value, type minimum, type maximum)
-{
-    return clamp(value, minimum, maximum);
-}
-
-
 void multiply_matrices(const ThreadPoolDevice* device,
                        Tensor3& tensor,
                        const Tensor1& vector)
@@ -48,7 +42,7 @@ void multiply_matrices(const ThreadPoolDevice* device, Tensor3& tensor, const Te
     }
 }
 
-
+/*
 Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& vector)
 {
     const Index columns_number = vector.size();
@@ -64,7 +58,7 @@ Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& ve
 
     return matrix;
 }
-
+*/
 
 void divide_columns(const ThreadPoolDevice* device, MatrixMap matrix, const VectorR& vector)
 {
@@ -190,11 +184,11 @@ void save_csv(const Tensor2& data, const filesystem::path& path)
 }
 
 
-Tensor<Index, 1> calculate_rank_greater(const VectorR& vector)
+VectorI calculate_rank_greater(const VectorR& vector)
 {
     const Index size = vector.size();
 
-    Tensor<Index, 1> rank(size);
+    VectorI rank(size);
     iota(rank.data(), rank.data() + rank.size(), 0);
 
     sort(rank.data(),
@@ -205,11 +199,11 @@ Tensor<Index, 1> calculate_rank_greater(const VectorR& vector)
 }
 
 
-Tensor<Index, 1> calculate_rank_less(const VectorR& vector)
+VectorI calculate_rank_less(const VectorR& vector)
 {
     const Index size = vector.size();
 
-    Tensor<Index, 1> rank(size);
+    VectorI rank(size);
     iota(rank.data(), rank.data() + rank.size(), 0);
 
     sort(rank.data(),

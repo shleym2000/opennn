@@ -401,7 +401,7 @@ public:
     Tensor<Correlation, 2> calculate_input_target_variable_pearson_correlations() const;
     Tensor<Correlation, 2> calculate_input_target_variable_spearman_correlations() const;
 
-    Tensor<Index, 1> calculate_correlations_rank() const;
+    VectorI calculate_correlations_rank() const;
 
     void print_input_target_variables_correlations() const;
 
@@ -565,7 +565,7 @@ protected:
 
     string missing_values_label = "NA";
 
-    Tensor<bool, 1> nans_variables;
+    VectorB nans_variables;
 
     bool has_header = false;
 

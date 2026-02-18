@@ -1074,7 +1074,7 @@ Histogram histogram_centered(const VectorR& vector, type center, Index bins_numb
 }
 
 
-Histogram histogram(const Tensor<bool, 1>& v)
+Histogram histogram(const VectorB& v)
 {
     VectorR minimums(2);
     minimums.setZero();
@@ -1090,7 +1090,7 @@ Histogram histogram(const Tensor<bool, 1>& v)
 
     // Calculate bins frequency
 
-    const Index size = v.dimension(0);
+    const Index size = v.size();
 
     for(Index i = 0; i < size; i++)
         for(Index j = 0; j < 2; j++)
@@ -1128,7 +1128,7 @@ vector<Histogram> histograms(const MatrixR& matrix, Index bins_number)
 
     for(Index i = 0; i < columns_number; i++)
     {
-        VectorR column = VectorR(vector_map(matrix, i));
+        const VectorR column = VectorR(vector_map(matrix, i));
         histograms[i] = histogram(column, bins_number);
     }
 
@@ -1191,7 +1191,7 @@ vector<Descriptives> descriptives(const MatrixR& matrix)
     const Index columns_number = matrix.cols();
 
     vector<Descriptives> descriptives(columns_number);
-    Tensor1 column(rows_number);
+    VectorR column(rows_number);
 
     for(Index i = 0; i < columns_number; i++)
     {
