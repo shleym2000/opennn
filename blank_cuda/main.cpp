@@ -16,14 +16,14 @@ int main()
     try
     {
         cout << "OpenNN. Blank Cuda." << endl;
-        /*
+        
         cout << "OpenNN. Melanoma Cancer CUDA Example." << endl;
 
 #ifdef OPENNN_CUDA
 
         // Data set
 
-        ImageDataset image_dataset("/mnt/c/Users/davidgonzalez/Documents/melanoma_dataset_bmp_small");
+        ImageDataset image_dataset("/home/davidgonzalez/opennn/melanoma_dataset_bmp");
 
         image_dataset.split_samples_random(0.6, 0.2, 0.2);
 
@@ -55,11 +55,11 @@ int main()
 
         testing_analysis.set_batch_size(64);
         cout << "Calculating confusion...." << endl;
-        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
+        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_cuda();
         cout << "\nConfusion matrix:\n" << confusion << endl;
 
 #endif
-*/
+/*
 cout << "OpenNN. National Institute of Standards and Techonology (MNIST) Example." << endl;
 
         // Dataset
@@ -85,8 +85,7 @@ cout << "OpenNN. National Institute of Standards and Techonology (MNIST) Example
         adam->set_display_period(10);
 
 #ifdef OPENNN_CUDA
-    //training_strategy.train_cuda();
-    training_strategy.train();
+    training_strategy.train_cuda();
 #else
     training_strategy.train();
 #endif
@@ -97,9 +96,9 @@ cout << "OpenNN. National Institute of Standards and Techonology (MNIST) Example
 
         testing_analysis.set_batch_size(64);
         cout << "Calculating confusion...." << endl;
-        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion();
+        const Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_cuda();
         cout << "\nConfusion matrix:\n" << confusion << endl;
-
+*/
         cout << "Bye!" << endl;
         
 

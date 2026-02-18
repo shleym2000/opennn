@@ -108,7 +108,7 @@ public:
 
     Tensor2 perform_single_objective_optimization(const Objectives& objectives) const;
 
-    pair<type, type> calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs, Objectives& objectives) const;
+    pair<type, type> calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs, const Objectives& objectives) const;
 
     Tensor2 perform_multiobjective_optimization(const Objectives& objectives) const;
 
