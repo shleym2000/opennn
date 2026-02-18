@@ -11,10 +11,9 @@
 #pragma once
 
 #include "pch.h"
-//#include "tensors.h"
 #include "dataset.h"
 #include "statistics.h"
-//#include "tinyxml2.h"
+
 
 namespace opennn
 {
@@ -24,6 +23,8 @@ class NeuralNetwork;
 class ResponseOptimization
 {
 public:
+
+    void set_threads_number(const int& new_threads_number);
 
     enum class ConditionType {None, Between, EqualTo, LessEqualTo, GreaterEqualTo, LessThan, GreaterThan, Minimize, Maximize};
 
@@ -42,10 +43,14 @@ public:
         Domain() = default;
         virtual ~Domain() = default;
 
-        Domain(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
+        Domain(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
         {
+            this->thread_pool_device = response_optimization.device.get();
+
             set(feature_dimensions, descriptives);
         }
+
+        ThreadPoolDevice* thread_pool_device = nullptr;
 
         void set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
 
@@ -65,9 +70,11 @@ public:
     {
         Objectives(const ResponseOptimization& response_optimization);
 
+        ThreadPoolDevice* thread_pool_device = nullptr;
+
         Tensor2 objective_sources; //Row 0: if is input or not, Row 1 : feature index in input or target subsets
 
-        Tensor2 utopian_and_senses; // Row 0: Raw Utopian points, Row 1: Senses of optimization (1 for max, -1 for min)
+        Tensor2 utopian_and_senses; // Row 0: Utopian point, Row 1: Senses of optimization (1 for max, -1 for min)
 
         Tensor2 objective_normalizer; // Row 0: Multipliers (1/range), Row 1: Offsets (-inferior/range)
 
@@ -108,7 +115,10 @@ public:
 
     Tensor2 perform_single_objective_optimization(const Objectives& objectives) const;
 
-    pair<type, type> calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs, const Objectives& objectives) const;
+
+    pair<Tensor2, Tensor2> calculate_pareto(const Tensor2& inputs, const Tensor2& outputs, const Tensor2& objective_matrix) const;
+
+    pair<type, type> calculate_quality_metrics(const Tensor2& inputs, const Tensor2& outputs,const Objectives& objectives) const;
 
     Tensor2 perform_multiobjective_optimization(const Objectives& objectives) const;
 
@@ -134,6 +144,11 @@ private:
 
     //minimum number of points?
     //stopping criteria for pareto points, average distance from utopian
+
+    Index threads_number = nbThreads();
+
+    unique_ptr<ThreadPool> thread_pool = nullptr;
+    unique_ptr<ThreadPoolDevice> device = nullptr;
 };
 
 }
