@@ -116,7 +116,7 @@ public:
 
     // Samples get
 
-    inline Index get_samples_number() const {return data.dimension(0);}
+    inline Index get_samples_number() const {return data.rows();}
 
     Index get_samples_number(const string&) const;
 
@@ -178,25 +178,24 @@ public:
 
     virtual vector<vector<Index>> get_batches(const vector<Index>&, Index, bool) const;
 
-    const Tensor2& get_data() const;
-    Tensor2* get_data_p();
-    Tensor2 get_data_samples(const string&) const;
-    Tensor2 get_feature_data(const string&) const;
-    Tensor2 get_data(const string&, const string&) const;
-    Tensor2 get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
+    const MatrixR& get_data() const;
+    MatrixR get_data_samples(const string&) const;
+    MatrixR get_feature_data(const string&) const;
+    MatrixR get_data(const string&, const string&) const;
+    MatrixR get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
 
-    Tensor1 get_sample_data(const Index) const;
+    VectorR get_sample_data(const Index) const;
     Tensor1 get_sample_data(const Index, const vector<Index>&) const;
-    Tensor2 get_sample_input_data(const Index) const;
-    Tensor2 get_sample_target_data(const Index) const;
+    MatrixR get_sample_input_data(const Index) const;
+    MatrixR get_sample_target_data(const Index) const;
 
-    Tensor2 get_variable_data(const Index) const;
-    Tensor2 get_variable_data(const Index, const vector<Index>&) const;
+    MatrixR get_variable_data(const Index) const;
+    MatrixR get_variable_data(const Index, const vector<Index>&) const;
     //Tensor2 get_variable_data(const Tensor<Index, 1>&) const;
-    Tensor2 get_variable_data(const string&) const;
+    MatrixR get_variable_data(const string&) const;
 
     string get_sample_category(const Index, Index) const;
-    Tensor1 get_sample(const Index) const;
+    VectorR get_sample(const Index) const;
 
     const vector<vector<string>>& get_data_file_preview() const;
 
@@ -303,7 +302,7 @@ public:
 
     // Dataset
 
-    void set_data(const Tensor2&);
+    void set_data(const MatrixR&);
 
     // Members set
 
@@ -374,7 +373,7 @@ public:
 
     //Tensor1 calculate_used_variables_minimums() const;
 
-    Tensor1 calculate_means(const string& , const string&) const;
+    VectorR calculate_means(const string& , const string&) const;
 
     Index calculate_used_negatives(const Index) const;
     Index calculate_negatives(const Index, const string&) const;
@@ -535,13 +534,12 @@ public:
 
 protected:
 
-
     unique_ptr<ThreadPool> thread_pool = nullptr;
     unique_ptr<ThreadPoolDevice> device = nullptr;
 
     // DATA
 
-    Tensor2 data;
+    MatrixR data;
 
     // Dimensions
 

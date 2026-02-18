@@ -106,9 +106,9 @@ public:
 
     // Error data
 
-    pair<Tensor<type,2>, Tensor<type,2>> get_targets_and_outputs(const string&) const;
+    pair<MatrixR, MatrixR> get_targets_and_outputs(const string&) const;
 
-    Tensor2 calculate_error() const;
+    MatrixR calculate_error() const;
 
     Tensor3 calculate_error_data() const;
     Tensor2 calculate_percentage_error_data() const;
@@ -164,13 +164,13 @@ public:
 
     // Confusion
 
-    Tensor<Index, 2> calculate_confusion_binary_classification(const Tensor2&, const Tensor2&, type) const;
-    Tensor<Index, 2> calculate_confusion_multiple_classification(const Tensor2&, const Tensor2&) const;
+    Tensor<Index, 2> calculate_confusion_binary_classification(const MatrixR&, const MatrixR&, type) const;
+    Tensor<Index, 2> calculate_confusion_multiple_classification(const MatrixR&, const MatrixR&) const;
     vector<Tensor<Index, 2>> calculate_multilabel_confusion(const type) const;
-    Tensor<Index, 2> calculate_confusion(const Tensor2&, const Tensor2&, type = 0.50) const;
+    Tensor<Index, 2> calculate_confusion(const MatrixR&, const MatrixR&, type = 0.50) const;
     Tensor<Index, 2> calculate_confusion(const type = 0.50) const;
 
-    Tensor<Index, 1> calculate_positives_negatives_rate(const Tensor2&, const Tensor2&) const;
+    Tensor<Index, 1> calculate_positives_negatives_rate(const MatrixR&, const MatrixR&) const;
 
     // ROC curve
 

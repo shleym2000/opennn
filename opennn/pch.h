@@ -53,7 +53,7 @@
 #include "../eigen/unsupported/Eigen/CXX11/Tensor"
 #include "../eigen/Eigen/src/Core/util/DisableStupidWarnings.h"
 
-//#define OPENNN_CUDA // Comment this line to disable cuda files
+#define OPENNN_CUDA // Comment this line to disable cuda files
 
 #ifdef OPENNN_CUDA
 
@@ -126,6 +126,12 @@ using namespace std;
 using namespace Eigen;
 
 using type = float;
+
+using MatrixR = Matrix<type, Dynamic, Dynamic, ColMajor>;
+using VectorR = Matrix<type, Dynamic, 1, ColMajor>;
+
+using VectorMap = Map<VectorR, AlignedMax>;
+using MatrixMap = Map<MatrixR, AlignedMax>;
 
 using Tensor1 = Tensor<type, 1, AlignedMax>;
 using Tensor2 = Tensor<type, 2, AlignedMax>;

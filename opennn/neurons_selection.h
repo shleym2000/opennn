@@ -121,7 +121,7 @@ struct NeuronsSelectionResults
 
    Index optimal_neurons_number = 1;
 
-   Tensor1 optimal_parameters;
+   VectorR optimal_parameters;
 
    // Loss index
 

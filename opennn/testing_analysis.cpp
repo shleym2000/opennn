@@ -175,7 +175,7 @@ void TestingAnalysis::print_goodness_of_fit_analysis() const
 }
 
 
-pair<Tensor<type,2>, Tensor<type,2>> TestingAnalysis::get_targets_and_outputs(const string& sample_role) const
+pair<MatrixR, MatrixR> TestingAnalysis::get_targets_and_outputs(const string& sample_role) const
 {
     check();
 
@@ -210,13 +210,11 @@ pair<Tensor<type,2>, Tensor<type,2>> TestingAnalysis::get_targets_and_outputs(co
 }
 
 
-Tensor2 TestingAnalysis::calculate_error() const
+MatrixR TestingAnalysis::calculate_error() const
 {
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
-    const Tensor2 error = (targets - outputs);
-
-    return error;
+    return targets - outputs;
 }
 
 
@@ -940,8 +938,8 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion(const type decision_thresh
 }
 
 
-Tensor<Index, 2> TestingAnalysis::calculate_confusion(const Tensor2& outputs,
-                                                      const Tensor2& targets,
+Tensor<Index, 2> TestingAnalysis::calculate_confusion(const MatrixR& outputs,
+                                                      const MatrixR& targets,
                                                       type decision_threshold) const
 {
     const Index outputs_number = neural_network->get_outputs_number();
@@ -1701,7 +1699,7 @@ void TestingAnalysis::save_well_classified_samples_statistics(const Tensor2& tar
                                                                                         outputs,
                                                                                         labels);
 
-    Tensor1 well_classified_numerical_probabilities(well_classified_samples.dimension(0));
+    VectorR well_classified_numerical_probabilities(well_classified_samples.dimension(0));
 
     for(Index i = 0; i < well_classified_numerical_probabilities.size(); i++)
         well_classified_numerical_probabilities(i) = type(::atof(well_classified_samples(i, 3).c_str()));
@@ -1763,7 +1761,7 @@ void TestingAnalysis::save_well_classified_samples_probability_histogram(const T
 void TestingAnalysis::save_well_classified_samples_probability_histogram(const Tensor<string, 2>& well_classified_samples,
                                                                          const filesystem::path& histogram_file_name) const
 {
-    Tensor1 well_classified_numerical_probabilities(well_classified_samples.dimension(0));
+    VectorR well_classified_numerical_probabilities(well_classified_samples.dimension(0));
 
     for(Index i = 0; i < well_classified_numerical_probabilities.size(); i++)
         well_classified_numerical_probabilities(i) = type(::atof(well_classified_samples(i, 3).c_str()));
@@ -1814,12 +1812,12 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index 
 
     const Index targets_number = dataset->get_features_number("Target");
 
-    const Tensor2 error = outputs - targets;
+    const MatrixR error = outputs - targets;
 
     Tensor<Tensor1, 1> error_autocorrelations(targets_number);
 
     for(Index i = 0; i < targets_number; i++)
-        error_autocorrelations[i] = autocorrelations(device.get(), error.chip(i,1), maximum_past_time_steps);
+        error_autocorrelations[i] = autocorrelations(device.get(), error.col(i), maximum_past_time_steps);
 
     return error_autocorrelations;
 }
@@ -1829,9 +1827,9 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_inputs_errors_cross_correlation(co
 {
     const Index targets_number = dataset->get_features_number("Target");
 
-    const Tensor2 inputs = dataset->get_data("Testing", "Input");
+    const MatrixR inputs = dataset->get_data("Testing", "Input");
 
-    const Tensor2 targets = dataset->get_data("Testing", "Target");
+    const MatrixR targets = dataset->get_data("Testing", "Target");
 
     const Tensor2 outputs = neural_network->calculate_outputs<2,2>(inputs);
 
@@ -1854,24 +1852,24 @@ pair<type, type> TestingAnalysis::test_transformer() const
     Transformer* transformer = static_cast<Transformer*>(neural_network);
     LanguageDataset* language_dataset = static_cast<LanguageDataset*>(dataset);
 
-    const Tensor2 context = language_dataset->get_data("Testing", "Input");
-    const Tensor2 input = language_dataset->get_data("Testing", "Decoder");
-    const Tensor2 target = language_dataset->get_data("Testing", "Target");
+    const MatrixR context = language_dataset->get_data("Testing", "Input");
+    const MatrixR input = language_dataset->get_data("Testing", "Decoder");
+    const MatrixR target = language_dataset->get_data("Testing", "Target");
 
-    const Index testing_batch_size = input.dimension(0) > 2000 ? 2000 : input.dimension(0);
+    const Index testing_batch_size = input.rows() > 2000 ? 2000 : input.rows();
 
-    Tensor2 testing_input(testing_batch_size, input.dimension(1));
+    MatrixR testing_input(testing_batch_size, input.cols());
 
     for(Index i = 0; i < testing_batch_size; i++)
-        testing_input.chip(i, 0) = input.chip(i, 0);
+        testing_input.row(i) = input.row(i);
 
-    Tensor2 testing_context(testing_batch_size, context.dimension(1));    
-    Tensor2 testing_target(testing_batch_size, target.dimension(1));
+    MatrixR testing_context(testing_batch_size, context.cols());
+    MatrixR testing_target(testing_batch_size, target.cols());
 
     for(Index i = 0; i < testing_batch_size; i++)
     {
-        testing_context.chip(i, 0) = context.chip(i, 0);
-        testing_target.chip(i, 0) = target.chip(i, 0);
+        testing_context.row(i) = context.row(i);
+        testing_target.row(i) = target.row(i);
     }
 
     //const Tensor3 outputs = transformer->calculate_outputs(testing_input, testing_context);
@@ -2052,7 +2050,7 @@ Tensor2 TestingAnalysis::calculate_multiple_classification_tests() const
 {
     const Index targets_number = dataset->get_features_number("Target");
 
-    Tensor<type,2> multiple_classification_tests(targets_number + 2, 3);
+    Tensor2 multiple_classification_tests(targets_number + 2, 3);
 
     const Tensor<Index, 2> confusion = calculate_confusion();
 
@@ -2266,7 +2264,7 @@ Tensor<Index, 2> TestingAnalysis::calculate_confusion_cuda(const type decision_t
         Tensor2 batch_outputs(current_batch_size, outputs_number);
         cudaMemcpy(batch_outputs.data(), outputs_device, current_batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToHost);
 
-        const Tensor2 batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
+        const MatrixR batch_targets = dataset->get_data_from_indices(current_batch_indices, target_feature_indices);
         Tensor<Index, 2> batch_confusion = calculate_confusion(batch_outputs, batch_targets, decision_threshold);
         total_confusion_matrix += batch_confusion;
     }

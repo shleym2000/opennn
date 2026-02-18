@@ -27,6 +27,9 @@ namespace opennn
 
     void set_random_integer(Tensor2&, Index, Index);
 
+    void set_random_integer(MatrixR& tensor, Index min, Index max);
+
+
     template<typename T>
     void shuffle_vector(vector<T>&);
 

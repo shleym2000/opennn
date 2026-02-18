@@ -116,7 +116,7 @@ struct InputsSelectionResults
 
     // Neural network
 
-    Tensor1 optimal_parameters;
+    VectorR optimal_parameters;
 
     // Loss index
 

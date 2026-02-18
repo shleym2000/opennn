@@ -65,11 +65,11 @@ void MeanSquaredError::calculate_error_lm(const Batch&,
                                           const ForwardPropagation&,
                                           BackPropagationLM& back_propagation) const
 {
-    Tensor1& squared_errors = back_propagation.squared_errors;
+    VectorR& squared_errors = back_propagation.squared_errors;
 
     Tensor<type, 0>& error = back_propagation.error;
 
-    error.device(*device) = squared_errors.square().sum() * type(0.5);
+    error.device(*device) = squared_errors.array().square().sum() * type(0.5);
 
     if(isnan(error())) throw runtime_error("\nError is NAN.");
 }
@@ -89,9 +89,9 @@ void MeanSquaredError::calculate_output_gradients(const Batch& batch,
 
     const Tensor2& errors = back_propagation.errors;
 
-    const TensorView output_gradients_pair = back_propagation.get_output_gradients();
+    const TensorView output_gradients_view = back_propagation.get_output_gradients();
 
-    TensorMap2 output_gradients = tensor_map<2>(output_gradients_pair);
+    TensorMap2 output_gradients = tensor_map<2>(output_gradients_view);
 
     output_gradients.device(*device) = errors / type(0.5 * outputs_number * samples_number);
 }
@@ -101,16 +101,16 @@ void MeanSquaredError::calculate_output_gradients_lm(const Batch&,
                                                  ForwardPropagation&,
                                                  BackPropagationLM& back_propagation) const
 {
-    const Tensor2& errors = back_propagation.errors;
-    Tensor1& squared_errors = back_propagation.squared_errors;
+    const VectorR& errors = back_propagation.errors;
+    VectorR& squared_errors = back_propagation.squared_errors;
 
-    const TensorView output_gradients_pair = back_propagation.get_output_gradients();
-    TensorMap2 output_gradients = tensor_map<2>(output_gradients_pair);
+    const TensorView output_gradients_view = back_propagation.get_output_gradients();
+    MatrixMap output_gradients = matrix_map(output_gradients_view);
 
     output_gradients.device(*device) = errors;
 
     const type epsilon = 1.0e-12;
-    squared_errors.device(*device) = squared_errors + epsilon;
+    squared_errors.device(*device) = squared_errors.array() + epsilon;
 
     divide_columns(device.get(), output_gradients, squared_errors);
 }
@@ -119,11 +119,11 @@ void MeanSquaredError::calculate_output_gradients_lm(const Batch&,
 void MeanSquaredError::calculate_error_gradient_lm(const Batch&,
                                                    BackPropagationLM& back_propagation_lm) const
 {
-    const Tensor1& squared_errors = back_propagation_lm.squared_errors;
+    const VectorR& squared_errors = back_propagation_lm.squared_errors;
 
-    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    const MatrixR& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
-    Tensor1& gradient = back_propagation_lm.gradient;
+    VectorR& gradient = back_propagation_lm.gradient;
 
     gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(0,0));
 }

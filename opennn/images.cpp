@@ -312,7 +312,7 @@ void rotate_image(const ThreadPoolDevice* device,
     const type cos_angle = cos(angle_rad);
     const type sin_angle = sin(angle_rad);
 
-    Tensor<type,2> rotation_matrix(3, 3);
+    Tensor2 rotation_matrix(3, 3);
 
     rotation_matrix.setValues({
                                {cos_angle, -sin_angle, rotation_center_x - cos_angle * rotation_center_x + sin_angle * rotation_center_y},

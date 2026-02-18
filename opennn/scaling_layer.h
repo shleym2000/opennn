@@ -237,8 +237,9 @@ public:
         else
         {
             const Index total_features = get_outputs_number();
-            const TensorMap2 inputs = tensor_map<2>(input_views[0]);
-            TensorMap2 outputs = tensor_map<2>(layer_forward_propagation->outputs);
+            const MatrixMap inputs = matrix_map(input_views[0]);
+
+            MatrixMap outputs = matrix_map(layer_forward_propagation->outputs);
 
             outputs.device(*device) = inputs;
 
@@ -258,7 +259,7 @@ public:
                     scale_logarithmic(outputs, i);
                 else if(scaler == "ImageMinMax")
                 {
-                    auto column = outputs.chip(i, 1);
+                    auto column = outputs.col(i);
                     column.device(*device) = column / type(255.0);
                 }
                 else

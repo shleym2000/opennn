@@ -52,15 +52,15 @@ Tensor1 autocorrelations(const ThreadPoolDevice* device,
 
 
 Correlation correlation(const ThreadPoolDevice* device,
-                        const Tensor2& x,
-                        const Tensor2& y)
+                        const MatrixR& x,
+                        const MatrixR& y)
 {
     if(is_constant(x) || is_constant(y))
         return Correlation();
 
-    const Index x_rows = x.dimension(0);
-    const Index x_columns = x.dimension(1);
-    const Index y_columns = y.dimension(1);
+    const Index x_rows = x.rows();
+    const Index x_columns = x.cols();
+    const Index y_columns = y.cols();
 
     const bool x_binary = is_binary(x);
     const bool y_binary = is_binary(y);
@@ -118,8 +118,8 @@ Correlation correlation(const ThreadPoolDevice* device,
 
 
 Correlation correlation_spearman(const ThreadPoolDevice* device,
-                                 const Tensor2& x,
-                                 const Tensor2& y)
+                                 const MatrixR& x,
+                                 const MatrixR& y)
 {
     const Index x_rows = x.dimension(0);
     const Index x_columns = x.dimension(1);
@@ -287,8 +287,7 @@ pair<Tensor1, Tensor2> filter_missing_values_vector_matrix(const Tensor1& x,
 }
 
 
-pair<Tensor2, Tensor2> filter_missing_values_matrix_matrix(const Tensor2& x,
-                                                                           const Tensor2& y)
+pair<Tensor2, Tensor2> filter_missing_values_matrix_matrix(const Tensor2& x, const Tensor2& y)
 {
     const Index rows_number = x.dimension(0);
     const Index x_columns_number = x.dimension(1);
@@ -346,12 +345,12 @@ pair<Tensor2, Tensor2> filter_missing_values_matrix_matrix(const Tensor2& x,
 }
 
 
-Tensor2 get_correlation_values(const Tensor<Correlation, 2>& correlations)
+MatrixR get_correlation_values(const Tensor<Correlation, 2>& correlations)
 {
     const Index rows_number = correlations.dimension(0);
     const Index columns_number = correlations.dimension(1);
 
-    Tensor2 values(rows_number, columns_number);
+    MatrixR values(rows_number, columns_number);
 
     for(Index i = 0; i < rows_number; i++)
         for(Index j = 0; j < columns_number; j++)
@@ -444,7 +443,7 @@ Tensor1 confidence_interval_z_correlation(const type z_correlation, Index n)
 }
 
 
-Tensor1 calculate_spearman_ranks(const Tensor1 & x)
+Tensor1 calculate_spearman_ranks(const VectorR& x)
 {
     const Index n = x.size();
 
@@ -483,7 +482,6 @@ Tensor1 calculate_spearman_ranks(const Tensor1 & x)
 
 Correlation linear_correlation_spearman(const ThreadPoolDevice* device, const Tensor1& x, const Tensor1& y)
 {
-
     const pair<Tensor1, Tensor1> filter_vectors = filter_missing_values_vector_vector(x, y);
 
     const Tensor1 x_filter = filter_vectors.first.cast<type>();
@@ -661,7 +659,7 @@ Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice* 
 
     correlation.form = Correlation::Form::Sigmoid;
 
-    const Tensor1& coefficients = neural_network.get_parameters();
+    const VectorR& coefficients = neural_network.get_parameters();
 
     correlation.a = coefficients(0);
     correlation.b = coefficients(1);
@@ -685,10 +683,10 @@ Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice* device,
     Correlation correlation;
     correlation.form = Correlation::Form::Sigmoid;
 
-    const pair<Tensor1, Tensor<type,2>> filtered_elements = opennn::filter_missing_values_vector_matrix(x, y);
+    const pair<Tensor1, Tensor2> filtered_elements = opennn::filter_missing_values_vector_matrix(x, y);
 
     const Tensor1 x_filtered = filtered_elements.first;
-    const Tensor<type,2> y_filtered = filtered_elements.second;
+    const Tensor2 y_filtered = filtered_elements.second;
 
     if(y_filtered.dimension(1) > 50)
     {
@@ -779,20 +777,20 @@ Correlation logistic_correlation_matrix_vector(const ThreadPoolDevice* device,
 
 
 Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
-                                               const Tensor2& x,
-                                               const Tensor2& y)
+                                               const MatrixR& x,
+                                               const MatrixR& y)
 {
     Correlation correlation;
     correlation.form = Correlation::Form::Sigmoid;
 
     // Scrub missing values
 
-    const pair<Tensor<type,2>, Tensor<type,2>> filtered_matrixes = filter_missing_values_matrix_matrix(x,y);
+    const pair<MatrixR, MatrixR> filtered_matrixes = filter_missing_values_matrix_matrix(x,y);
 
-    const Tensor<type,2> x_filtered = filtered_matrixes.first;
-    const Tensor<type,2> y_filtered = filtered_matrixes.second;
+    const MatrixR x_filtered = filtered_matrixes.first;
+    const MatrixR y_filtered = filtered_matrixes.second;
 
-    if(x.dimension(0)  == y.dimension(0) && x.dimension(1)  == y.dimension(1))
+    if(x.rows()  == y.rows() && x.cols()  == y.cols())
     {
         const Tensor<bool, 0> are_equal = (x_filtered == y_filtered).all();
 
@@ -804,7 +802,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
         }
     }
 
-    if(x.dimension(1) > 50 || y.dimension(1) > 50)
+    if(x.cols() > 50 || y.cols() > 50)
     {
         cout << "Warning: One variable has too many categories." << endl;
 
@@ -822,14 +820,14 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     const Tensor2 data = opennn::assemble_matrix_matrix(x_filtered, y_filtered);
 
-    vector<Index> input_columns_indices(x_filtered.dimension(1));
+    vector<Index> input_columns_indices(x_filtered.cols());
 
     iota(input_columns_indices.begin(), input_columns_indices.end(), 0);
 
-    vector<Index> target_columns_indices(y_filtered.dimension(1));
-    iota(target_columns_indices.begin(), target_columns_indices.end(), x_filtered.dimension(1));
+    vector<Index> target_columns_indices(y_filtered.cols());
+    iota(target_columns_indices.begin(), target_columns_indices.end(), x_filtered.cols());
 
-    Dataset Dataset(x_filtered.dimension(0), { x_filtered.dimension(1) }, { y_filtered.dimension(1) });
+    Dataset Dataset(x_filtered.rows(), { x_filtered.cols() }, { y_filtered.cols() });
 
     Dataset.set_data(data);
 

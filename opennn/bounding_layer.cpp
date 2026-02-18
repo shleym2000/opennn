@@ -153,9 +153,9 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
                                  unique_ptr<LayerForwardPropagation>& forward_propagation,
                                  bool)
 {
-    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+    const MatrixMap inputs = matrix_map(input_views[0]);
 
-    TensorMap2 outputs = tensor_map<2>(forward_propagation->outputs);
+    MatrixMap outputs = matrix_map(forward_propagation->outputs);
 
     if(bounding_method == BoundingMethod::NoBounding)
     {
@@ -163,8 +163,8 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
         return;
     }
 
-    const Index rows_number = inputs.dimension(0);
-    const Index columns_number = inputs.dimension(1);
+    const Index rows_number = inputs.rows();
+    const Index columns_number = inputs.cols();
 
 #pragma omp parallel for
     for(Index j = 0; j < columns_number; j++)
