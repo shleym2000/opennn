@@ -771,7 +771,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
 
         for(Index j = 0; j < numeric_vars_count; ++j)
         {
-            const Tensor1& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
+            const VectorR& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
 
             VectorR ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
 

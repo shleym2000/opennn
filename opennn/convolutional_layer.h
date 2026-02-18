@@ -283,6 +283,9 @@ struct ConvolutionalBackPropagationCuda : public LayerBackPropagationCuda
 
     cudnnConvolutionDescriptor_t convolution_descriptor = nullptr;
 
+    cudnnConvolutionBwdDataAlgo_t algo_data;
+    cudnnConvolutionBwdFilterAlgo_t algo_filter;
+
     TensorViewCuda gamma_gradients;
     TensorViewCuda beta_gradients;
 };

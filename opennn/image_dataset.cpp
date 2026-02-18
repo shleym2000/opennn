@@ -506,6 +506,8 @@ void ImageDataset::read_bmp(const Shape& new_input_shape)
 
     data.setZero();
 
+    Index progress_counter = 0;
+
     #pragma omp parallel for
     for(Index i = 0; i < samples_number; i++)
     {
@@ -541,8 +543,11 @@ void ImageDataset::read_bmp(const Shape& new_input_shape)
             }
         }
 
-        if (display && i % 1000 == 0)
-            display_progress_bar(i, samples_number - 1000);
+        #pragma omp atomic
+        progress_counter++;
+
+        if (omp_get_thread_num() == 0)
+            display_progress_bar(progress_counter, samples_number);
     }
 
     if (display)

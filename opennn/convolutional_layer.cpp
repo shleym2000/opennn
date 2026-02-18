@@ -1066,7 +1066,7 @@ void Convolutional::back_propagate(const vector<TensorViewCuda>& inputs,
                                    gradients_tensor_descriptor,
                                    output_gradients[0].data,
                                    convolution_descriptor,
-                                   CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0,
+                                   convolutional_back_propagation->algo_filter,
                                    backward_filter_workspace,
                                    backward_filter_workspace_bytes,
                                    &beta,
@@ -1091,7 +1091,7 @@ void Convolutional::back_propagate(const vector<TensorViewCuda>& inputs,
                                  gradients_tensor_descriptor,
                                  output_gradients[0].data,
                                  convolution_descriptor,
-                                 CUDNN_CONVOLUTION_BWD_DATA_ALGO_0,
+                                 convolutional_back_propagation->algo_data,
                                  backward_data_workspace, backward_data_workspace_bytes,
                                  &beta,
                                  input_tensor_descriptor, input_gradients.data);
@@ -1350,12 +1350,36 @@ void ConvolutionalBackPropagationCuda::initialize()
 
     // Workspace
 
+    int returned_algo_count;
+    cudnnConvolutionBwdDataAlgoPerf_t data_perf;
+    cudnnConvolutionBwdFilterAlgoPerf_t filter_perf;
+
+    CHECK_CUDNN(cudnnFindConvolutionBackwardDataAlgorithm(
+        layer->get_cudnn_handle(),
+        kernel_descriptor,
+        gradients_tensor_descriptor,
+        convolution_descriptor,
+        input_gradients[0].get_descriptor(),
+        1, &returned_algo_count, &data_perf));
+    
+    algo_data = data_perf.algo;
+
+    CHECK_CUDNN(cudnnFindConvolutionBackwardFilterAlgorithm(
+        layer->get_cudnn_handle(),
+        input_gradients[0].get_descriptor(),
+        gradients_tensor_descriptor,
+        convolution_descriptor,
+        weight_gradients_filter_descriptor,
+        1, &returned_algo_count, &filter_perf));
+    
+    algo_filter = filter_perf.algo;
+
     cudnnGetConvolutionBackwardDataWorkspaceSize(layer->get_cudnn_handle(),
                                                  kernel_descriptor,
                                                  gradients_tensor_descriptor,
                                                  convolution_descriptor,
                                                  input_gradients[0].get_descriptor(),
-                                                 CUDNN_CONVOLUTION_BWD_DATA_ALGO_0,
+                                                 algo_data,
                                                  &backward_data_workspace_bytes);
 
     cudnnGetConvolutionBackwardFilterWorkspaceSize(layer->get_cudnn_handle(),
@@ -1363,7 +1387,7 @@ void ConvolutionalBackPropagationCuda::initialize()
                                                    gradients_tensor_descriptor,
                                                    convolution_descriptor,
                                                    weight_gradients_filter_descriptor,
-                                                   CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0,
+                                                   algo_filter,
                                                    &backward_filter_workspace_bytes);
 
     // Workspace memory
