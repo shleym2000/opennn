@@ -614,7 +614,7 @@ string round_to_precision_string(type x, const int& precision)
 }
 
 
-Tensor<string,2> round_to_precision_string_matrix(Tensor<type,2> matrix, const int& precision)
+Tensor<string,2> round_to_precision_string_matrix(Tensor2 matrix, const int& precision)
 {
     Tensor<string,2> matrix_rounded(matrix.dimension(0), matrix.dimension(1));
 

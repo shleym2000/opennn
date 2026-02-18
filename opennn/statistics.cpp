@@ -106,18 +106,18 @@ Histogram::Histogram(const Index bins_number)
 }
 
 
-Histogram::Histogram(const Tensor1&new_centers,
-                     const Tensor1&new_frequencies)
+Histogram::Histogram(const VectorR&new_centers,
+                     const VectorR&new_frequencies)
 {
     centers = new_centers;
     frequencies = new_frequencies;
 }
 
 
-Histogram::Histogram(const Tensor1& new_frequencies,
-                     const Tensor1& new_centers,
-                     const Tensor1& new_minimums,
-                     const Tensor1& new_maximums)
+Histogram::Histogram(const VectorR& new_frequencies,
+                     const VectorR& new_centers,
+                     const VectorR& new_minimums,
+                     const VectorR& new_maximums)
 {
     centers = new_centers;
     frequencies = new_frequencies;
@@ -126,25 +126,25 @@ Histogram::Histogram(const Tensor1& new_frequencies,
 }
 
 
-Histogram::Histogram(const Tensor1& data,
+Histogram::Histogram(const VectorR& data,
                      Index bins_number)
 {
     const type data_maximum = maximum(data);
     const type data_minimum = minimum(data);
     const type step = (data_maximum - data_minimum) / type(bins_number);
 
-    Tensor1 new_centers(bins_number);
+    VectorR new_centers(bins_number);
 
     for(Index i = 0; i < bins_number; i++)
         new_centers(i) = data_minimum + (type(0.5) * step) + (step * type(i));
 
-    Tensor1 new_frequencies(bins_number);
+    VectorR new_frequencies(bins_number);
     new_frequencies.setZero();
 
     type value;
     Index corresponding_bin;
 
-    for(Index i = 0; i < data.dimension(0); i++)
+    for(Index i = 0; i < data.size(); i++)
     {
         value = data(i);
         if(isnan(value)) continue;
@@ -162,7 +162,7 @@ Histogram::Histogram(const Tensor1& data,
 }
 
 
-Histogram::Histogram(const Tensor1& probability_data)
+Histogram::Histogram(const VectorR& probability_data)
 {
     const size_t bins_number = 10;
     type data_maximum = maximum(probability_data);
@@ -172,18 +172,18 @@ Histogram::Histogram(const Tensor1& probability_data)
 
     const type step = (data_maximum - data_minimum) / type(bins_number);
 
-    Tensor1 new_centers(bins_number);
+    VectorR new_centers(bins_number);
 
     for(size_t i = 0; i < bins_number; i++)
         new_centers(i) = data_minimum + (type(0.5) * step) + (step * type(i));
 
-    Tensor1 new_frequencies(bins_number);
+    VectorR new_frequencies(bins_number);
     new_frequencies.setZero();
 
     type value;
     Index corresponding_bin;
 
-    for(Index i = 0; i < probability_data.dimension(0); i++)
+    for(Index i = 0; i < probability_data.size(); i++)
     {
         value = probability_data(i);
         corresponding_bin = int((value - data_minimum) / step);
@@ -204,7 +204,7 @@ Index Histogram::get_bins_number() const
 
 Index Histogram::count_empty_bins() const
 {
-    const auto size = frequencies.dimension(0);
+    const auto size = frequencies.size();
 
     Index count = 0;
 
@@ -340,7 +340,7 @@ Index Histogram::calculate_frequency(const type value) const
 
 void Histogram::save(const filesystem::path& histogram_file_name) const
 {
-    const Index bins_number = centers.dimension(0);
+    const Index bins_number = centers.size();
     ofstream histogram_file(histogram_file_name);
 
     histogram_file << "centers,frequencies" << endl;
@@ -353,27 +353,23 @@ void Histogram::save(const filesystem::path& histogram_file_name) const
 }
 
 
-type minimum(const Tensor1& vector)
+type minimum(const VectorR& vector)
 {
     if(vector.size() == 0) return type(NAN);
 
-    const Tensor<type, 0> m = vector.minimum();
-
-    return m(0);
+    return vector.minCoeff();
 }
 
 
-type minimum(const Tensor2& matrix)
+type minimum(const MatrixR& matrix)
 {
     if(matrix.size() == 0) return type(NAN);
 
-    const Tensor<type, 0> m = matrix.minimum();
-
-    return m(0);
+    return matrix.minCoeff();
 }
 
 
-type minimum(const Tensor1& data, const vector<Index>& indices)
+type minimum(const VectorR& data, const vector<Index>& indices)
 {
     const Index size = indices.size();
 
@@ -405,27 +401,23 @@ type minimum(const Tensor1& data, const vector<Index>& indices)
 // }
 
 
-type maximum(const Tensor1& vector)
+type maximum(const VectorR& vector)
 {
     if(vector.size() == 0) return type(NAN);
 
-    const Tensor<type, 0> m = vector.maximum();
-
-    return m(0);
+    return vector.maxCoeff();
 }
 
 
-type maximum(const Tensor2& matrix)
+type maximum(const MatrixR& matrix)
 {
     if(matrix.size() == 0) return type(NAN);
 
-    const Tensor<type, 0> m = matrix.maximum();
-
-    return m(0);
+    return matrix.maxCoeff();
 }
 
 
-type maximum(const Tensor1& data, const vector<Index>& indices)
+type maximum(const VectorR& data, const vector<Index>& indices)
 {
     const Index size = indices.size();
 
@@ -457,12 +449,12 @@ type maximum(const Tensor1& data, const vector<Index>& indices)
 // }
 
 
-Tensor1 column_maximums(const Tensor2& matrix,
-                                const vector<Index>& row_indices,
-                                const vector<Index>& column_indices)
+VectorR column_maximums(const MatrixR& matrix,
+                        const vector<Index>& row_indices,
+                        const vector<Index>& column_indices)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     vector<Index> used_column_indices;
 
@@ -493,12 +485,12 @@ Tensor1 column_maximums(const Tensor2& matrix,
     const Index row_indices_size = used_row_indices.size();
     const Index column_indices_size = used_column_indices.size();
 
-    Tensor1 maximums(column_indices_size);
+    VectorR maximums(column_indices_size);
 
     Index row_index;
     Index column_index;
 
-    Tensor1 column(row_indices_size);
+    VectorR column(row_indices_size);
 
     for(Index j = 0; j < column_indices_size; j++)
     {
@@ -518,7 +510,7 @@ Tensor1 column_maximums(const Tensor2& matrix,
 }
 
 
-type mean(const Tensor1& vector, Index begin, Index end)
+type mean(const VectorR& vector, Index begin, Index end)
 {
     if(end == begin) return vector[begin];
 
@@ -531,9 +523,9 @@ type mean(const Tensor1& vector, Index begin, Index end)
 }
 
 
-type mean(const Tensor1& vector)
+type mean(const VectorR& vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = vector.size();
 
     if(size == 0) return type(0);
 
@@ -549,15 +541,13 @@ type mean(const Tensor1& vector)
         count++;
     }
 
-    const type mean = type(sum/count);
-
-    return mean;
+    return type(sum/count);
 }
 
 
-type variance(const Tensor1& vector)
+type variance(const VectorR& vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = vector.size();
 
     long double sum = 0.0;
     long double squared_sum = 0.0;
@@ -583,7 +573,7 @@ type variance(const Tensor1& vector)
 }
 
 
-type variance(const Tensor1& vector, const Tensor<Index, 1>& indices)
+type variance(const VectorR& vector, const Tensor<Index, 1>& indices)
 {
     const Index size = indices.dimension(0);
 
@@ -616,7 +606,7 @@ type variance(const Tensor1& vector, const Tensor<Index, 1>& indices)
 }
 
 
-type standard_deviation(const Tensor1& vector)
+type standard_deviation(const VectorR& vector)
 {
     if(vector.size() == 0) return type(0);
 
@@ -624,9 +614,9 @@ type standard_deviation(const Tensor1& vector)
 }
 
 
-type median(const Tensor1& input_vector)
+type median(const VectorR& input_vector)
 {
-    const Index size = input_vector.dimension(0);
+    const Index size = input_vector.size();
 
     // Fix missing values
 
@@ -664,9 +654,9 @@ type median(const Tensor1& input_vector)
 }
 
 
-Tensor1 quartiles(const Tensor1& input_vector)
+VectorR quartiles(const VectorR& input_vector)
 {
-    const Index size = input_vector.dimension(0);
+    const Index size = input_vector.size();
 
     // Fix missing values
 
@@ -679,9 +669,9 @@ Tensor1 quartiles(const Tensor1& input_vector)
     vector<type> sorted_vector;
 
     for(Index i = 0; i < size; i++)
-        if(!isnan(input_vector(i))) {
-            sorted_vector.push_back(input_vector(i));
-        }
+        if(!isnan(input_vector(i)))
+            sorted_vector.push_back(input_vector(i));        
+
     std::sort(sorted_vector.begin(), sorted_vector.end());
     
     // Calculate quartiles
@@ -706,7 +696,7 @@ Tensor1 quartiles(const Tensor1& input_vector)
         }
     }
 
-    Tensor1 quartiles(3);
+    VectorR quartiles(3);
 
     if (new_size == 1)
     {
@@ -744,8 +734,9 @@ Tensor1 quartiles(const Tensor1& input_vector)
             quartiles(1) = sorted_vector[median_index];
         }
 
-        Index first_vector_size = first_sorted_vector.size();
-        Index last_vector_size = first_sorted_vector.size();
+        const Index first_vector_size = first_sorted_vector.size();
+        const Index last_vector_size = first_sorted_vector.size();
+
         if (first_vector_size % 2 == 0 && last_vector_size % 2 == 0)
         {
             median_index = Index(first_vector_size / 2);
@@ -756,32 +747,34 @@ Tensor1 quartiles(const Tensor1& input_vector)
         }
         else if (first_vector_size % 2 == 0 && last_vector_size % 2 != 0)
         {
-            Index median_index_first = Index(first_vector_size / 2);
+            const Index median_index_first = Index(first_vector_size / 2);
 
             quartiles(0) = (first_sorted_vector[median_index_first - 1] + first_sorted_vector[median_index_first]) / type(2.0);
 
-            Index median_index_last = Index(last_vector_size / 2);
+            const Index median_index_last = Index(last_vector_size / 2);
 
             quartiles(2) = last_sorted_vector[median_index_last];
         }
         else if (first_vector_size % 2 != 0 && last_vector_size % 2 == 0)
         {
-            Index median_index_first = Index(first_vector_size / 2);
+            const Index median_index_first = Index(first_vector_size / 2);
 
             quartiles(0) = first_sorted_vector[median_index_first];
 
-            Index median_index_last = Index(last_vector_size / 2);
+            const Index median_index_last = Index(last_vector_size / 2);
 
             quartiles(2) = (last_sorted_vector[median_index_last - 1] + last_sorted_vector[median_index_last]) / type(2.0);
 
         }
-        else {
+        else
+        {
             median_index = Index(first_vector_size / 2);
 
             quartiles(0) = first_sorted_vector[median_index];
             quartiles(2) = last_sorted_vector[median_index];
         }
     }
+
     return quartiles;
 }
 
@@ -866,14 +859,14 @@ Tensor1 quartiles(const Tensor1& data, const vector<Index>& indices)
 }
 
 
-BoxPlot box_plot(const Tensor1& vector)
+BoxPlot box_plot(const VectorR& vector)
 {
     BoxPlot box_plot;
 
-    if(vector.dimension(0) == 0) 
+    if(vector.size() == 0)
         return box_plot;
  
-    const Tensor1 quartiles = opennn::quartiles(vector);
+    const VectorR quartiles = opennn::quartiles(vector);
 
     box_plot.minimum = minimum(vector);
     box_plot.first_quartile = quartiles(0);
@@ -885,14 +878,14 @@ BoxPlot box_plot(const Tensor1& vector)
 }
 
 
-BoxPlot box_plot(const Tensor1& data, const vector<Index>& indices)
+BoxPlot box_plot(const VectorR& data, const vector<Index>& indices)
 {
     BoxPlot box_plot;
 
-    if(data.dimension(0) == 0 || indices.size() == 0) 
+    if(data.size() == 0 || indices.size() == 0)
         return box_plot;
 
-    const Tensor1 quartiles = opennn::quartiles(data, indices);
+    const VectorR quartiles = opennn::quartiles(data, indices);
 
     box_plot.minimum = minimum(data, indices);
     box_plot.first_quartile = quartiles(0);
@@ -904,14 +897,14 @@ BoxPlot box_plot(const Tensor1& data, const vector<Index>& indices)
 }
 
 
-Histogram histogram(const Tensor1& new_vector, Index bins_number)
+Histogram histogram(const VectorR& new_vector, Index bins_number)
 {
-    const Index size = new_vector.dimension(0);
-    Tensor1 minimums(bins_number);
-    Tensor1 maximums(bins_number);
+    const Index size = new_vector.size();
+    VectorR minimums(bins_number);
+    VectorR maximums(bins_number);
 
-    Tensor1 centers(bins_number);
-    Tensor1 frequencies(bins_number);
+    VectorR centers(bins_number);
+    VectorR frequencies(bins_number);
     frequencies.setZero();
 
     vector<type> unique_values;
@@ -938,7 +931,8 @@ Histogram histogram(const Tensor1& new_vector, Index bins_number)
     {
         sort(unique_values.data(), unique_values.data() + unique_values.size(), less<type>());
 
-        Tensor1 tensor_unique(unique_values.size());
+        VectorR tensor_unique(unique_values.size());
+
         for(Index i = 0; i < Index(unique_values.size()); ++i)
             tensor_unique(i) = unique_values[i];
 
@@ -986,7 +980,7 @@ Histogram histogram(const Tensor1& new_vector, Index bins_number)
 
         // Calculate bins frequency
 
-        const Index size = new_vector.dimension(0);
+        const Index size = new_vector.size();
 
         for(Index i = 0; i < size; i++)
         {
@@ -1016,17 +1010,17 @@ Histogram histogram(const Tensor1& new_vector, Index bins_number)
 }
 
 
-Histogram histogram_centered(const Tensor1& vector, type center, Index bins_number)
+Histogram histogram_centered(const VectorR& vector, type center, Index bins_number)
 {
     const Index bin_center = (bins_number % 2 == 0) 
         ? Index(type(bins_number) / type(2.0)) 
         : Index(type(bins_number) / type(2.0) + type(0.5));
 
-    Tensor1 minimums(bins_number);
-    Tensor1 maximums(bins_number);
+    VectorR minimums(bins_number);
+    VectorR maximums(bins_number);
 
-    Tensor1 centers(bins_number);
-    Tensor1 frequencies(bins_number);
+    VectorR centers(bins_number);
+    VectorR frequencies(bins_number);
     frequencies.setZero();
 
     const type min = minimum(vector);
@@ -1058,7 +1052,7 @@ Histogram histogram_centered(const Tensor1& vector, type center, Index bins_numb
 
     // Calculate bins frequency
 
-    const Index size = vector.dimension(0);
+    const Index size = vector.size();
 
     for(Index i = 0; i < size; i++)
     {
@@ -1082,16 +1076,16 @@ Histogram histogram_centered(const Tensor1& vector, type center, Index bins_numb
 
 Histogram histogram(const Tensor<bool, 1>& v)
 {
-    Tensor1 minimums(2);
+    VectorR minimums(2);
     minimums.setZero();
 
-    Tensor1 maximums(2);
+    VectorR maximums(2);
     maximums.setConstant(type(1));
 
-    Tensor1 centers(2);
-    centers.setValues({type(0), type(1)});
+    VectorR centers(2);
+    centers << type(0), type(1);
 
-    Tensor1 frequencies(2);
+    VectorR frequencies(2);
     frequencies.setZero();
 
     // Calculate bins frequency
@@ -1126,15 +1120,15 @@ Tensor<Index, 1> total_frequencies(const Tensor<Histogram, 1>& histograms)
 }
 
 
-vector<Histogram> histograms(const Tensor2& matrix, Index bins_number)
+vector<Histogram> histograms(const MatrixR& matrix, Index bins_number)
 {
-    const Index columns_number = matrix.dimension(1);
+    const Index columns_number = matrix.cols();
 
     vector<Histogram> histograms(columns_number);
 
     for(Index i = 0; i < columns_number; i++)
     {
-        Tensor1 column = Tensor1(tensor_map(matrix, i));
+        VectorR column = VectorR(vector_map(matrix, i));
         histograms[i] = histogram(column, bins_number);
     }
 
@@ -1191,17 +1185,17 @@ Descriptives vector_descriptives(const Tensor1& x)
 }
 
 
-vector<Descriptives> descriptives(const Tensor2& matrix)
+vector<Descriptives> descriptives(const MatrixR& matrix)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     vector<Descriptives> descriptives(columns_number);
     Tensor1 column(rows_number);
 
     for(Index i = 0; i < columns_number; i++)
     {
-        column = matrix.chip(i, 1);
+        column = matrix.col(i);
 
         if (i >= 0 && i < Index(descriptives.size()))
             descriptives[i] = vector_descriptives(column);   
@@ -1301,12 +1295,12 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
 }
 
 
-Tensor1 column_minimums(const Tensor2& matrix,
-                                const vector<Index>& row_indices,
-                                const vector<Index>& column_indices)
+VectorR column_minimums(const MatrixR& matrix,
+                        const vector<Index>& row_indices,
+                        const vector<Index>& column_indices)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     vector<Index> used_column_indices;
 
@@ -1337,7 +1331,7 @@ Tensor1 column_minimums(const Tensor2& matrix,
     const Index row_indices_size = used_row_indices.size();
     const Index column_indices_size = used_column_indices.size();
 
-    Tensor1 minimums(column_indices_size);
+    VectorR minimums(column_indices_size);
 
     Index row_index;
     Index column_index;
@@ -1346,7 +1340,7 @@ Tensor1 column_minimums(const Tensor2& matrix,
     {
         column_index = used_column_indices[j];
 
-        Tensor1 column(row_indices_size);
+        VectorR column(row_indices_size);
 
         for(Index i = 0; i < row_indices_size; i++)
         {
@@ -1362,10 +1356,10 @@ Tensor1 column_minimums(const Tensor2& matrix,
 }
 
 
-Tensor1 column_maximums(const Tensor2& matrix, const vector<Index>& column_indices)
+VectorR column_maximums(const MatrixR& matrix, const vector<Index>& column_indices)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     vector<Index> used_column_indices;
 
@@ -1376,16 +1370,16 @@ Tensor1 column_maximums(const Tensor2& matrix, const vector<Index>& column_indic
 
     const Index column_indices_size = used_column_indices.size();
 
-    Tensor1 maximums(column_indices_size);
+    VectorR maximums(column_indices_size);
 
     Index column_index;
-    Tensor1 column(rows_number);
+    VectorR column(rows_number);
 
     for(Index i = 0; i < column_indices_size; i++)
     {
         column_index = used_column_indices[i];
 
-        column = matrix.chip(column_index,1);
+        column = matrix.col(column_index);
 
         maximums(i) = maximum(column);
     }
@@ -1394,7 +1388,7 @@ Tensor1 column_maximums(const Tensor2& matrix, const vector<Index>& column_indic
 }
 
 
-type range(const Tensor1& vector)
+type range(const VectorR& vector)
 {
     const type min = minimum(vector);
     const type max = maximum(vector);
@@ -1403,14 +1397,14 @@ type range(const Tensor1& vector)
 }
 
 
-Tensor1 mean(const Tensor2& matrix)
+VectorR mean(const MatrixR& matrix)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     // Mean
 
-    Tensor1 mean(columns_number);
+    VectorR mean(columns_number);
     mean.setZero();
 
     for(Index j = 0; j < columns_number; j++)
@@ -1426,9 +1420,9 @@ Tensor1 mean(const Tensor2& matrix)
 }
 
 
-Tensor1 mean(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
+VectorR mean(const MatrixR& matrix, const Tensor<Index, 1>& column_indices)
 {
-    const Index rows_number = matrix.dimension(0);
+    const Index rows_number = matrix.rows();
 
     const Index column_indices_size = column_indices.size();
 
@@ -1436,7 +1430,7 @@ Tensor1 mean(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
 
     // Mean
 
-    Tensor1 mean(column_indices_size);
+    VectorR mean(column_indices_size);
     mean.setZero();
 
     for(Index j = 0; j < column_indices_size; j++)
@@ -1453,13 +1447,13 @@ Tensor1 mean(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
 }
 
 
-Tensor1 mean(const Tensor2& matrix, const vector<Index>& row_indices, const vector<Index>& column_indices)
+VectorR mean(const MatrixR& matrix, const vector<Index>& row_indices, const vector<Index>& column_indices)
 {
     const Index row_indices_size = row_indices.size();
     const Index column_indices_size = column_indices.size();
 
     if(row_indices_size == 0 || column_indices_size == 0) 
-        return Tensor1();
+        return VectorR();
 
     Index row_index;
     Index column_index;
@@ -1468,7 +1462,7 @@ Tensor1 mean(const Tensor2& matrix, const vector<Index>& row_indices, const vect
 
     // Mean
 
-    Tensor1 mean(column_indices_size);
+    VectorR mean(column_indices_size);
     mean.setZero();
     
     for(Index j = 0; j < column_indices_size; j++)
@@ -1494,10 +1488,10 @@ Tensor1 mean(const Tensor2& matrix, const vector<Index>& row_indices, const vect
 }
 
 
-type mean(const Tensor2& matrix, Index column_index)
+type mean(const MatrixR& matrix, Index column_index)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     if(rows_number == 0 && columns_number == 0) return type(NAN);
 
@@ -1524,17 +1518,15 @@ type mean(const Tensor2& matrix, Index column_index)
 }
 
 
-Tensor1 median(const Tensor2& matrix)
+VectorR median(const MatrixR& matrix)
 {
-    const Index columns_number = matrix.dimension(1);
+    const Index columns_number = matrix.cols();
 
-    // median
-
-    Tensor1 median(columns_number);
+    VectorR median(columns_number);
 
     for(Index j = 0; j < columns_number; j++)
     {
-        Tensor1 column(matrix.chip(j,1));
+        VectorR column(matrix.col(j));
         Tensor1 sorted_column;
         Index median_index;
         Index rows_number = 0;
@@ -1561,7 +1553,7 @@ Tensor1 median(const Tensor2& matrix)
 }
 
 
-type median(const Tensor2& matrix, Index column_index)
+type median(const MatrixR& matrix, Index column_index)
 {
     // median
 
@@ -1571,7 +1563,7 @@ type median(const Tensor2& matrix, Index column_index)
 
     Index rows_number = 0;
 
-    for(Index i = 0; i < matrix.dimension(0); i++) {
+    for(Index i = 0; i < matrix.rows(); i++) {
         if(!isnan(matrix(i,column_index)))
         {
             sorted_column.push_back(matrix(i, column_index));
@@ -1600,9 +1592,9 @@ type median(const Tensor2& matrix, Index column_index)
 }
 
 
-Tensor1 median(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
+VectorR median(const MatrixR& matrix, const Tensor<Index, 1>& column_indices)
 {
-    const Index rows_number = matrix.dimension(0);
+    const Index rows_number = matrix.rows();
 
     const Index column_indices_size = column_indices.size();
 
@@ -1610,7 +1602,7 @@ Tensor1 median(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
 
     // median
 
-    Tensor1 median(column_indices_size);
+    VectorR median(column_indices_size);
 
     for(Index j = 0; j < column_indices_size; j++)
     {
@@ -1618,7 +1610,7 @@ Tensor1 median(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
 
         Tensor1 sorted_column(0);
 
-        const Tensor1 column = matrix.chip(column_index, 1);
+        const VectorR column = matrix.col(column_index);
 
         for(Index i = 0; i < column.size(); i++)
             if(!isnan(column(i)))
@@ -1635,9 +1627,9 @@ Tensor1 median(const Tensor2& matrix, const Tensor<Index, 1>& column_indices)
 }
 
 
-Tensor1 median(const Tensor2& matrix, 
-                       const vector<Index>& row_indices,  
-                       const vector<Index>& column_indices)
+VectorR median(const MatrixR& matrix,
+               const vector<Index>& row_indices,
+               const vector<Index>& column_indices)
 {
     const Index row_indices_size = row_indices.size();
     const Index column_indices_size = column_indices.size();
@@ -1646,7 +1638,7 @@ Tensor1 median(const Tensor2& matrix,
 
     // median
 
-    Tensor1 median(column_indices_size);
+    VectorR median(column_indices_size);
 
     for(Index j = 0; j < column_indices_size; j++)
     {
@@ -1677,7 +1669,7 @@ Tensor1 median(const Tensor2& matrix,
 
 Index minimal_index(const Tensor1& vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = vector.size();
 
     if(size == 0) return Index();
 
@@ -1699,7 +1691,7 @@ Index minimal_index(const Tensor1& vector)
 
 Index maximal_index(const Tensor1& vector)
 {
-    const Index size = vector.dimension(0);
+    const Index size = vector.size();
 
     if(size == 0) return Index();
 
@@ -1798,10 +1790,10 @@ Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, Index number)
 }
 
 
-Tensor<Index, 1> minimal_indices(const Tensor2& matrix)
+Tensor<Index, 1> minimal_indices(const MatrixR& matrix)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     type minimum = matrix(0,0);
 
@@ -1825,10 +1817,10 @@ Tensor<Index, 1> minimal_indices(const Tensor2& matrix)
 }
 
 
-Tensor<Index, 1> maximal_indices(const Tensor2& matrix)
+Tensor<Index, 1> maximal_indices(const MatrixR& matrix)
 {
-    const Index rows_number = matrix.dimension(0);
-    const Index columns_number = matrix.dimension(1);
+    const Index rows_number = matrix.rows();
+    const Index columns_number = matrix.cols();
 
     type maximum = matrix(0,0);
 

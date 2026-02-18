@@ -41,8 +41,8 @@ void NormalizedSquaredError::set_normalization_coefficient()
         return;
     }
 
-    const Tensor1 training_target_means = dataset->calculate_means("Training", "Target");
-    const Tensor2 training_target_data = dataset->get_data("Training", "Target");
+    const VectorR training_target_means = dataset->calculate_means("Training", "Target");
+    const VectorR training_target_data = dataset->get_data("Training", "Target");
 
     normalization_coefficient = calculate_normalization_coefficient(training_target_data, training_target_means);
 }
@@ -158,11 +158,11 @@ void NormalizedSquaredError::calculate_error_lm(const Batch&,
                                                 const ForwardPropagation&,
                                                 BackPropagationLM& back_propagation) const
 {
-    Tensor1& squared_errors = back_propagation.squared_errors;
+    VectorR& squared_errors = back_propagation.squared_errors;
 
     Tensor<type, 0>& error = back_propagation.error;
 
-    error.device(*device) = squared_errors.square().sum() * type(0.5);
+    error.device(*device) = squared_errors.array().square().sum() * type(0.5);
 
     if(isnan(error())) throw runtime_error("\nError is NAN.");
 }
@@ -193,8 +193,8 @@ void NormalizedSquaredError::calculate_squared_errors_lm(const Batch& batch,
     const Index total_samples_number = dataset->get_used_samples_number();
     const Index batch_samples_number = batch.get_samples_number();
 
-    const Tensor2& errors = back_propagation_lm.errors;
-    Tensor1& squared_errors = back_propagation_lm.squared_errors;
+    const MatrixR& errors = back_propagation_lm.errors;
+    VectorR& squared_errors = back_propagation_lm.squared_errors;
 
     const type coefficient = sqrt(type(2.0 * total_samples_number) / (type(batch_samples_number) * normalization_coefficient));
 
@@ -221,9 +221,9 @@ void NormalizedSquaredError::calculate_output_gradients_lm(const Batch& batch,
 void NormalizedSquaredError::calculate_error_gradient_lm(const Batch&,
                                                          BackPropagationLM& back_propagation_lm) const
 {
-    Tensor1& gradient = back_propagation_lm.gradient;
+    VectorR& gradient = back_propagation_lm.gradient;
 
-    const Tensor1& squared_errors = back_propagation_lm.squared_errors;
+    const VectorR& squared_errors = back_propagation_lm.squared_errors;
 
     const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 

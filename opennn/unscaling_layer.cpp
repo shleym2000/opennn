@@ -188,11 +188,11 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& forward_propagation,
                                   bool)
 {
-    TensorMap2 outputs = tensor_map<2>(forward_propagation->outputs);
+    MatrixMap outputs = matrix_map(forward_propagation->outputs);
 
     const Index outputs_number = get_outputs_number();
 
-    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+    const MatrixMap inputs = matrix_map(input_views[0]);
 
     outputs.device(*device) = inputs;
 

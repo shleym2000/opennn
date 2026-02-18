@@ -223,7 +223,7 @@ struct TensorView
 };
 
 
-void shuffle_rows(Tensor2& matrix);
+void shuffle_rows(MatrixR& matrix);
 
 type* link(type*, vector<TensorView*>);
 void link(type*, vector<vector<TensorView*>>);
@@ -287,13 +287,26 @@ void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
 void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor1&);
 void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
 
-void set_identity(Tensor2&);
+void set_identity(MatrixR&);
 
-void sum_diagonal(Tensor2&, type);
+void sum_diagonal(MatrixR&, type);
 
-Tensor2 self_kronecker_product(const ThreadPoolDevice*, const Tensor1&);
+Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
 
-void divide_columns(const ThreadPoolDevice*, TensorMap2, const Tensor1&);
+void divide_columns(const ThreadPoolDevice*, MatrixMap, const VectorR&);
+
+bool is_binary(const VectorR& tensor)
+{
+    const Index size = tensor.size();
+
+    for(Index i = 0; i < size; i++)
+        if (tensor(i) != type(0) && tensor(i) != type(1) && !isnan(tensor(i)))
+            return false;
+
+    return true;
+}
+
+
 
 template <int Rank>
 bool is_binary(const TensorR<Rank>& tensor)
@@ -323,6 +336,29 @@ vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
 
 vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums);
 
+
+bool is_constant(const VectorR& tensor)
+{
+    const Index size = tensor.size();
+
+    Index first_non_nan_index = 0;
+
+    while (first_non_nan_index < size && isnan(tensor(first_non_nan_index)))
+        first_non_nan_index++;
+
+    if (first_non_nan_index == size)
+        return true;
+
+    const type first_not_nan_element = tensor(first_non_nan_index);
+
+    for(Index i = first_non_nan_index + 1; i < size; ++i)
+        if(!isnan(tensor(i)) && abs(first_not_nan_element - tensor(i)) > numeric_limits<float>::min())
+            return false;
+
+    return true;
+}
+
+
 template <int Rank>
 bool is_constant(const TensorR<Rank>& tensor)
 {
@@ -345,7 +381,14 @@ bool is_constant(const TensorR<Rank>& tensor)
     return true;
 }
 
-void save_csv(const Tensor<type,2>&, const filesystem::path&);
+void save_csv(const Tensor2&, const filesystem::path&);
+
+
+Index count_NAN(const MatrixR& x)
+{
+    return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
+}
+
 
 template<int rank>
 Index count_NAN(const TensorR<rank>& x)
@@ -353,26 +396,26 @@ Index count_NAN(const TensorR<rank>& x)
     return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
 }
 
-Index count_between(const Tensor1&, type, type);
+Index count_between(const VectorR&, type, type);
 
 Index count_greater_than(const vector<Index>&, Index);
 
-Tensor<Index, 1> calculate_rank_greater(const Tensor1&);
-Tensor<Index, 1> calculate_rank_less(const Tensor1&);
+Tensor<Index, 1> calculate_rank_greater(const VectorR&);
+Tensor<Index, 1> calculate_rank_less(const VectorR&);
 
 vector<Index> get_elements_greater_than(const vector<Index>&, Index);
 vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
-Tensor<type,2> filter_column_minimum_maximum(const Tensor<type,2>&, Index, type, type);
+MatrixR filter_column_minimum_maximum(const MatrixR&, Index, type, type);
 
 //type l2_distance(const type, const TensorMap<Tensor<type, 0> >&);
 type l2_distance(const Tensor1&, const Tensor1&);
 
-Tensor<Index, 1> get_n_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
+Tensor<Index, 1> get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
 
-void fill_tensor_data_row_major(const Tensor2&, const vector<Index>&, const vector<Index>&, type*);
+void fill_tensor_data_row_major(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
 
-void fill_tensor_data(const Tensor2&, const vector<Index>&, const vector<Index>&, type*);
+void fill_tensor_data(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
 
 //void fill_tensor_sequence(const Tensor2&, const vector<Index>&, const vector<Index>&, Index, type*);
 
@@ -389,7 +432,7 @@ bool contains(const TensorR<Rank>& vector, const Type& value)
 
 bool contains(const vector<string>&, const string&);
 
-Tensor1 perform_Householder_QR_decomposition(const Tensor2&, const Tensor1&);
+VectorR perform_Householder_QR_decomposition(const MatrixR&, const VectorR&);
 
 vector<Index> join_vector_vector(const vector<Index>&, const vector<Index>&);
 
@@ -458,8 +501,9 @@ void string_to_tensor(const string& input, Tensor<T, Rank, AlignedMax>& x)
         x(i++) = value;
 }
 
-
 type round_to_precision(type, const int&);
+
+VectorMap vector_map(const MatrixR&, Index);
 
 TensorMap1 tensor_map(const Tensor2&, Index);
 
@@ -469,6 +513,20 @@ TensorMap2 tensor_map(const Tensor4&, Index, Index);
 
 TensorMap3 tensor_map_(const TensorMap4, Index);
 //TensorMap1 tensor_map_(const TensorMap2&, Index);
+
+MatrixMap matrix_map(const TensorView& tensor_view)
+{
+    if(!tensor_view.data)
+        throw runtime_error("tensor_map: Null pointer in pair.");
+
+    if (reinterpret_cast<uintptr_t>(tensor_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)
+        throw runtime_error("tensor_map alignment error: Pointer is not aligned. "
+                            "This will cause a crash with AlignedMax TensorMaps.");
+
+    return MatrixMap(tensor_view.data, tensor_view.shape[0], tensor_view.size() / tensor_view.shape[0]);
+}
+
+
 
 template <Index rank>
 TensorMapR<rank> tensor_map(const TensorView& tensor_view)

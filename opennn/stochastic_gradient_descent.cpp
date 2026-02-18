@@ -136,12 +136,12 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 {
     NeuralNetwork* neural_network = loss_index->get_neural_network();
 
-    Tensor1& parameters = neural_network->get_parameters();
+    VectorR& parameters = neural_network->get_parameters();
 
-    Tensor1& gradient = back_propagation.neural_network.gradient;
+    VectorR& gradient = back_propagation.neural_network.gradient;
 
-    Tensor1& parameter_updates = optimization_data.parameter_updates;
-    Tensor1& last_parameter_updates = optimization_data.last_parameter_updates;
+    VectorR& parameter_updates = optimization_data.parameter_updates;
+    VectorR& last_parameter_updates = optimization_data.last_parameter_updates;
 
     if (momentum <= type(0))
     {

@@ -127,6 +127,12 @@ using namespace Eigen;
 
 using type = float;
 
+using MatrixR = Matrix<type, Dynamic, Dynamic, ColMajor>;
+using VectorR = Matrix<type, Dynamic, 1, ColMajor>;
+
+using VectorMap = Map<VectorR, AlignedMax>;
+using MatrixMap = Map<MatrixR, AlignedMax>;
+
 using Tensor1 = Tensor<type, 1, AlignedMax>;
 using Tensor2 = Tensor<type, 2, AlignedMax>;
 using Tensor3 = Tensor<type, 3, AlignedMax>;

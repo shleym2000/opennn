@@ -184,6 +184,16 @@ void set_random_integer(Tensor2& tensor, Index min, Index max)
         tensor(i) = distribution(get_generator());
 }
 
+
+void set_random_integer(MatrixR &tensor, Index min, Index max)
+{
+    uniform_int_distribution<Index> distribution(min, max);
+
+#pragma omp parallel for
+    for(Index i = 0; i < tensor.size(); ++i)
+        tensor(i) = distribution(get_generator());
+}
+
 }
 
 // OpenNN: Open Neural Networks Library.

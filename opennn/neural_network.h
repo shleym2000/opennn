@@ -117,7 +117,7 @@ public:
 
     bool is_empty() const;
 
-    Tensor1& get_parameters()
+    VectorR& get_parameters()
     {
         return parameters;
     }
@@ -196,7 +196,7 @@ public:
 
     vector<Index> get_layer_parameter_numbers() const;
 
-    void set_parameters(const Tensor1&);
+    void set_parameters(const VectorR&);
 
     // Parameters initialization
 
@@ -292,7 +292,7 @@ public:
                           bool = false) const;
 
     void forward_propagate(const vector<TensorView>&,
-                          const Tensor1&,
+                          const VectorR&,
                           ForwardPropagation&);
 
     string get_expression() const;
@@ -344,7 +344,7 @@ protected:
 
     bool display = true;
 
-    Tensor1 parameters;
+    VectorR parameters;
 };
 
 
@@ -368,7 +368,7 @@ struct NeuralNetworkBackPropagation
 
     vector<unique_ptr<LayerBackPropagation>> layers;
 
-    Tensor1 gradient;
+    VectorR gradient;
 
     // @todo
     //Tensor1 input_gradients;

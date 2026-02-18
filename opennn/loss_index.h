@@ -132,7 +132,7 @@ public:
 
     // Regularization
 
-    type calculate_regularization(const Tensor1&) const;
+    type calculate_regularization(const VectorR&) const;
 
     // Serialization
 
@@ -151,7 +151,7 @@ public:
 
     type calculate_numerical_error() const;
 
-    Tensor1 calculate_gradient();
+    VectorR calculate_gradient();
 
     Tensor1 calculate_numerical_gradient();
     Tensor1 calculate_numerical_gradient_lm();
@@ -246,15 +246,15 @@ struct BackPropagationLM
 
     NeuralNetworkBackPropagationLM neural_network;
 
-    Tensor2 errors;
-    Tensor1 squared_errors;
-    Tensor2 squared_errors_jacobian;
+    VectorR errors;
+    VectorR squared_errors;
+    MatrixR squared_errors_jacobian;
 
-    Tensor1 gradient;
-    Tensor2 hessian;
+    VectorR gradient;
+    MatrixR hessian;
 
-    Tensor1 regularization_gradient;
-    Tensor2 regularization_hessian;
+    VectorR regularization_gradient;
+    MatrixR regularization_hessian;
 };
 
 

@@ -409,21 +409,21 @@ void AdaptiveMomentEstimation::update_parameters(BackPropagation& back_propagati
     const type bias_correction_1 = type(1) - pow(beta_1, type(iteration));
     const type bias_correction_2 = type(1) - pow(beta_2, type(iteration));
 
-    Tensor1& parameters = neural_network->get_parameters();
-    const Tensor1& gradient = back_propagation.neural_network.gradient;
+    VectorR& parameters = neural_network->get_parameters();
+    const VectorR& gradient = back_propagation.neural_network.gradient;
 
-    Tensor1& gradient_exponential_decay = optimization_data.gradient_exponential_decay;
-    Tensor1& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay;
+    VectorR& gradient_exponential_decay = optimization_data.gradient_exponential_decay;
+    VectorR& square_gradient_exponential_decay = optimization_data.square_gradient_exponential_decay;
 
     gradient_exponential_decay.device(*device)
         = gradient_exponential_decay * beta_1 + gradient * (type(1) - beta_1);
 
     square_gradient_exponential_decay.device(*device)
-        = square_gradient_exponential_decay * beta_2 + gradient.square() * (type(1) - beta_2);
+        = square_gradient_exponential_decay.array() * beta_2 + gradient.array().square() * (type(1) - beta_2);
 
     parameters.device(*device)
-        -= learning_rate * (gradient_exponential_decay / bias_correction_1) /
-           ((square_gradient_exponential_decay / bias_correction_2).sqrt() + numeric_limits<type>::epsilon());
+        -= learning_rate * (gradient_exponential_decay.array() / bias_correction_1) /
+           ((square_gradient_exponential_decay.array() / bias_correction_2).array().sqrt() + numeric_limits<type>::epsilon());
 }
 
 

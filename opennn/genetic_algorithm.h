@@ -104,7 +104,7 @@ public:
 
 private:
 
-    Tensor<Tensor1, 1> parameters;
+    Tensor<VectorR, 1> parameters;
 
     vector<Index> original_input_variable_indices;
     vector<Index> original_target_variable_indices;

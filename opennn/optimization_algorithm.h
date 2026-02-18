@@ -152,8 +152,8 @@ struct OptimizerData
 
     virtual void print() const;
 
-    Tensor1 potential_parameters;
-    Tensor1 training_direction;
+    VectorR potential_parameters;
+    VectorR training_direction;
     type initial_learning_rate = type(0);
 };
 

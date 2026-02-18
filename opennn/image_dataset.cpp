@@ -129,7 +129,7 @@ void ImageDataset::set_data_random()
 
     const Index targets_number = target_shape[0];
     const Index inputs_number = height * width * channels;
-    const Index samples_number = data.dimension(0);
+    const Index samples_number = data.rows();
 
     data.setZero();
 
@@ -292,7 +292,7 @@ void ImageDataset::to_XML(XMLPrinter& printer) const
 }
 
 
-Tensor2 ImageDataset::perform_augmentation(const Tensor2& inputs) const
+void ImageDataset::perform_augmentation(type* input_data) const
 {
     throw runtime_error("Image Augmentation is not yet implemented. Please check back in a future version.");
 
@@ -303,15 +303,15 @@ Tensor2 ImageDataset::perform_augmentation(const Tensor2& inputs) const
     const Index input_width = input_shape[1];
     const Index channels = input_shape[2];
 
-    ConstTensorMap4 inputs_map(inputs.data(),
-                               samples_number,
-                               input_height,
-                               input_width,
-                               channels);
+    TensorMap4 inputs(input_data,
+                      samples_number,
+                      input_height,
+                      input_width,
+                      channels);
 
     for(Index batch_index = 0; batch_index < samples_number; batch_index++)
     {
-        Tensor3 image = inputs_map.chip(batch_index, 0);
+        Tensor3 image = inputs.chip(batch_index, 0);
 
         if(random_reflection_axis_x)
             reflect_image_x(device.get(),
@@ -339,36 +339,25 @@ Tensor2 ImageDataset::perform_augmentation(const Tensor2& inputs) const
                               image,
                               random_uniform(random_vertical_translation_minimum, random_vertical_translation_maximum));
     }
-
-    return Tensor2();
 }
 
 
 void ImageDataset::fill_input_tensor(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
+    fill_tensor_data(data, sample_indices, input_indices, input_data);
+
     if (augmentation)
-    {
-        const Tensor2 augmented_data = perform_augmentation(data);
-        fill_tensor_data(augmented_data, sample_indices, input_indices, input_data);
-    }
-    else
-    {
-        fill_tensor_data(data, sample_indices, input_indices, input_data);
-    }
+        perform_augmentation(input_data);
+
 }
 
 
 void ImageDataset::fill_input_tensor_row_major(const vector<Index>& sample_indices, const vector<Index>& input_indices, type* input_data) const
 {
+    fill_tensor_data_row_major(data, sample_indices, input_indices, input_data);
+
     if (augmentation)
-    {
-        Tensor2 augmented_data = perform_augmentation(data);
-        fill_tensor_data_row_major(augmented_data, sample_indices, input_indices, input_data);
-    }
-    else
-    {
-        fill_tensor_data_row_major(data, sample_indices, input_indices, input_data);
-    } 
+        perform_augmentation(input_data);
 }
 
 
@@ -517,6 +506,8 @@ void ImageDataset::read_bmp(const Shape& new_input_shape)
 
     data.setZero();
 
+    Index progress_counter = 0;
+
     #pragma omp parallel for
     for(Index i = 0; i < samples_number; i++)
     {
@@ -552,8 +543,11 @@ void ImageDataset::read_bmp(const Shape& new_input_shape)
             }
         }
 
-        if (display && i % 1000 == 0)
-            display_progress_bar(i, samples_number - 1000);
+        #pragma omp atomic
+        progress_counter++;
+
+        if (omp_get_thread_num() == 0)
+            display_progress_bar(progress_counter, samples_number);
     }
 
     if (display)

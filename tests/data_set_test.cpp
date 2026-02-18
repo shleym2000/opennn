@@ -314,7 +314,7 @@ TEST(Dataset, ReadCSV_Basic)
     EXPECT_EQ(raw_vars[2].role, "Target");
 
     // Data Tensor Content
-    const Tensor2& data = dataset.get_data();
+    const MatrixR& data = dataset.get_data();
     ASSERT_EQ(data.dimension(0), 2);
     ASSERT_EQ(data.dimension(1), 3);
 

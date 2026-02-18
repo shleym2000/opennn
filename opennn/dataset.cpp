@@ -526,20 +526,26 @@ void Dataset::set_default_variables_roles()
 
 vector<Index> Dataset::get_feature_dimensions() const
 {
-    vector<Index> number_categories;
-    number_categories.reserve(get_used_variables_number());
+    const Index used_variables_number = get_used_variables_number();
+
+    vector<Index> feature_dimensions(used_variables_number);
+
+    Index i = 0;
 
     for(const Dataset::Variable& variable : variables)
     {
-        if(variable.role == "None" || variable.role == "Time")
+
+        if(!variable.is_used())
             continue;
 
         variable.is_categorical()
-            ? number_categories.push_back(variable.get_categories_number())
-            : number_categories.push_back(1);
+            ? feature_dimensions[i] = variable.get_categories_number()
+            : feature_dimensions[i] = 1;
+
+        i++;
     }
 
-    return number_categories;
+    return feature_dimensions;
 }
 
 void Dataset::set_default_variables_roles_forecasting()
@@ -829,7 +835,7 @@ Index Dataset::get_used_variables_number() const
 {
     return count_if(variables.begin(), variables.end(),
                     [](const Variable& var) {
-                          return var.role != "None";
+                          return var.is_used();
                     });
 }
 
@@ -1091,7 +1097,7 @@ void Dataset::set_binary_variables()
 
         if (variable.type == VariableType::Numeric)
         {
-            const Tensor1 data_column = data.chip(feature_index, 1);
+            const VectorR data_column = data.col(feature_index);
 
             if (is_binary(data_column))
             {
@@ -1123,7 +1129,7 @@ void Dataset::unuse_constant_variables()
 
         if (variable.type == VariableType::Numeric)
         {
-            const Tensor1 data_column = data.chip(feature_index, 1);
+            const VectorR data_column = data.col(feature_index);
 
             if (is_constant(data_column))
                 variable.set(variable.name, "None", VariableType::Constant);
@@ -1152,15 +1158,9 @@ void Dataset::unuse_constant_variables()
 }
 
 
-const Tensor2& Dataset::get_data() const
+const MatrixR& Dataset::get_data() const
 {
     return data;
-}
-
-
-Tensor2* Dataset::get_data_p()
-{
-    return &data;
 }
 
 
@@ -1280,13 +1280,13 @@ const string& Dataset::get_missing_values_label() const
 }
 
 
-Tensor2 Dataset::get_data_samples(const string& sample_role) const
+MatrixR Dataset::get_data_samples(const string& sample_role) const
 {
     const vector<Index> feature_indices = get_used_feature_indices();
 
     const vector<Index> sample_indices = get_sample_indices(sample_role);
 
-    Tensor2 this_data(sample_indices.size(), feature_indices.size());
+    MatrixR this_data(sample_indices.size(), feature_indices.size());
 
     fill_tensor_data(data, sample_indices, feature_indices, this_data.data());
 
@@ -1294,7 +1294,7 @@ Tensor2 Dataset::get_data_samples(const string& sample_role) const
 }
 
 
-Tensor2 Dataset::get_feature_data(const string& variable_role) const
+MatrixR Dataset::get_feature_data(const string& variable_role) const
 {
     const Index samples_number = get_samples_number();
 
@@ -1303,7 +1303,7 @@ Tensor2 Dataset::get_feature_data(const string& variable_role) const
 
     const vector<Index> feature_indices = get_feature_indices(variable_role);
 
-    Tensor2 this_data(indices.size(), feature_indices.size());
+    MatrixR this_data(indices.size(), feature_indices.size());
 
     fill_tensor_data(data, indices, feature_indices, this_data.data());
 
@@ -1311,13 +1311,13 @@ Tensor2 Dataset::get_feature_data(const string& variable_role) const
 }
 
 
-Tensor2 Dataset::get_data(const string& sample_role, const string& variable_role) const
+MatrixR Dataset::get_data(const string& sample_role, const string& variable_role) const
 {
     const vector<Index> sample_indices = get_sample_indices(sample_role);
 
     const vector<Index> feature_indices = get_feature_indices(variable_role);
 
-    Tensor2 this_data(sample_indices.size(), feature_indices.size());
+    MatrixR this_data(sample_indices.size(), feature_indices.size());
 
     fill_tensor_data(data, sample_indices, feature_indices, this_data.data());
 
@@ -1325,9 +1325,9 @@ Tensor2 Dataset::get_data(const string& sample_role, const string& variable_role
 }
 
 
-Tensor2 Dataset::get_data_from_indices(const vector<Index>& sample_indices, const vector<Index>& feature_indices) const
+MatrixR Dataset::get_data_from_indices(const vector<Index>& sample_indices, const vector<Index>& feature_indices) const
 {
-    Tensor2 this_data(sample_indices.size(), feature_indices.size());
+    MatrixR this_data(sample_indices.size(), feature_indices.size());
 
     fill_tensor_data(data, sample_indices, feature_indices, this_data.data());
 
@@ -1335,9 +1335,9 @@ Tensor2 Dataset::get_data_from_indices(const vector<Index>& sample_indices, cons
 }
 
 
-Tensor1 Dataset::get_sample_data(const Index index) const
+VectorR Dataset::get_sample_data(const Index index) const
 {
-    return data.chip(index, 0);
+    return data.row(index);
 }
 
 
@@ -1355,13 +1355,13 @@ Tensor1 Dataset::get_sample_data(const Index sample_index, const vector<Index>& 
 }
 
 
-Tensor2 Dataset::get_sample_input_data(const Index sample_index) const
+MatrixR Dataset::get_sample_input_data(const Index sample_index) const
 {
     const Index input_features_number = get_features_number("Input");
 
     const vector<Index> input_feature_indices = get_feature_indices("Input");
 
-    Tensor2 inputs(1, input_features_number);
+    MatrixR inputs(1, input_features_number);
 
     for(Index i = 0; i < input_features_number; i++)
         inputs(0, i) = data(sample_index, input_feature_indices[i]);
@@ -1370,11 +1370,11 @@ Tensor2 Dataset::get_sample_input_data(const Index sample_index) const
 }
 
 
-Tensor2 Dataset::get_sample_target_data(const Index sample_index) const
+MatrixR Dataset::get_sample_target_data(const Index sample_index) const
 {
     const vector<Index> target_feature_indices = get_feature_indices("Target");
 
-    Tensor2 sample_target_data(1, target_feature_indices.size());
+    MatrixR sample_target_data(1, target_feature_indices.size());
 
     fill_tensor_data(data, vector<Index>(sample_index), target_feature_indices, sample_target_data.data());
 
@@ -1450,10 +1450,10 @@ vector<Index> Dataset::get_feature_indices(const Index variable_index) const
 }
 
 
-Tensor2 Dataset::get_variable_data(const Index variable_index) const
+MatrixR Dataset::get_variable_data(const Index variable_index) const
 {
     Index variables_number = 1;
-    const Index rows_number = data.dimension(0);
+    const Index rows_number = data.rows();
 
     if (variables[variable_index].type == VariableType::Categorical)
         variables_number = variables[variable_index].get_categories_number();
@@ -1465,12 +1465,12 @@ Tensor2 Dataset::get_variable_data(const Index variable_index) const
 }
 
 
-Tensor1 Dataset::get_sample(const Index sample_index) const
+VectorR Dataset::get_sample(const Index sample_index) const
 {
-    if (sample_index >= data.dimension(0))
+    if (sample_index >= data.rows())
         throw runtime_error("Sample index out of bounds.");
 
-    return data.chip(sample_index, 0);
+    return data.row(sample_index);
 }
 
 
@@ -1487,9 +1487,9 @@ string Dataset::get_sample_category(const Index sample_index, Index column_index
 }
 
 
-Tensor2 Dataset::get_variable_data(const Index variable_index, const vector<Index>& row_indices) const
+MatrixR Dataset::get_variable_data(const Index variable_index, const vector<Index>& row_indices) const
 {
-    Tensor2 variable_data(row_indices.size(), get_feature_indices(variable_index).size());
+    MatrixR variable_data(row_indices.size(), get_feature_indices(variable_index).size());
 
     fill_tensor_data(data, row_indices, get_feature_indices(variable_index), variable_data.data());
 
@@ -1497,7 +1497,7 @@ Tensor2 Dataset::get_variable_data(const Index variable_index, const vector<Inde
 }
 
 
-Tensor2 Dataset::get_variable_data(const string& column_name) const
+MatrixR Dataset::get_variable_data(const string& column_name) const
 {
     const Index variable_index = get_variable_index(column_name);
 
@@ -1617,12 +1617,12 @@ void Dataset::set_default()
 }
 
 
-void Dataset::set_data(const Tensor2& new_data)
+void Dataset::set_data(const MatrixR& new_data)
 {
-    if (new_data.dimension(0) != get_samples_number())
+    if (new_data.rows() != get_samples_number())
         throw runtime_error("Rows number is not equal to samples number");
 
-    if (new_data.dimension(1) != get_features_number())
+    if (new_data.cols() != get_features_number())
         throw runtime_error("Columns number is not equal to variables number");
 
     data = new_data;
@@ -1905,9 +1905,9 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
         {
             const Index categories_number = variable.get_categories_number();
 
-            Tensor1 categories_frequencies(categories_number);
+            VectorR categories_frequencies(categories_number);
             categories_frequencies.setZero();
-            Tensor1 centers(categories_number);
+            VectorR centers(categories_number);
 
             for(Index j = 0; j < categories_number; j++)
             {
@@ -1929,7 +1929,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
 
         case VariableType::Binary:
         {
-            Tensor1 binary_frequencies(2);
+            VectorR binary_frequencies(2);
             binary_frequencies.setZero();
 
             for(Index j = 0; j < used_samples_number; j++)
@@ -1978,7 +1978,7 @@ vector<BoxPlot> Dataset::calculate_variables_box_plots() const
         {
             if (variable.role != "None")
             {
-                box_plots[i] = box_plot(data.chip(feature_index, 1), used_sample_indices);
+                box_plots[i] = box_plot(data.col(feature_index), used_sample_indices);
 
                 //used_variable_index++;
             }
@@ -2183,8 +2183,8 @@ vector<Descriptives> Dataset::calculate_testing_target_variable_descriptives() c
 // }
 
 
-Tensor1 Dataset::calculate_means(const string& sample_role,
-                                         const string& variable_role) const
+VectorR Dataset::calculate_means(const string& sample_role,
+                                 const string& variable_role) const
 {
     const vector<Index> sample_indices = get_sample_indices(sample_role);
 
@@ -2224,12 +2224,12 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_variable_pearson_correlat
     for(Index i = 0; i < input_variables_number; i++)
     {
         const Index input_variable_index = input_variable_indices[i];
-        const Tensor2 input_variable_data = get_variable_data(input_variable_index, used_sample_indices);
+        const MatrixR input_variable_data = get_variable_data(input_variable_index, used_sample_indices);
 
         for(Index j = 0; j < target_variables_number; j++)
         {
             const Index target_variable_index = target_variable_indices[j];
-            const Tensor2 target_variable_data = get_variable_data(target_variable_index, used_sample_indices);
+            const MatrixR target_variable_data = get_variable_data(target_variable_index, used_sample_indices);
             correlations(i, j) = correlation(device.get(), input_variable_data, target_variable_data);
         }
     }
@@ -2272,7 +2272,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_variable_spearman_correla
 
 bool Dataset::has_nan() const
 {
-    const Index rows_number = data.dimension(0);
+    const Index rows_number = data.rows();
 
     for(Index i = 0; i < rows_number; i++)
         if (sample_roles[i] != "None")
@@ -2302,9 +2302,9 @@ void Dataset::print_missing_values_information() const
 
     cout << "Missing values number: " << missing_values_number << " (" << missing_values_number * 100 / data.size() << "%)" << endl
          << "Variables with missing values: " << missing_variables_number
-         << " (" << missing_variables_number * 100 / data.dimension(1) << "%)" << endl
+         << " (" << missing_variables_number * 100 / data.cols() << "%)" << endl
          << "Samples with missing values: "
-         << samples_with_missing_values << " (" << samples_with_missing_values * 100 / data.dimension(0) << "%)" << endl;
+         << samples_with_missing_values << " (" << samples_with_missing_values * 100 / data.rows() << "%)" << endl;
 }
 
 
@@ -2408,7 +2408,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_spearman_correlations()
 
         const Index input_variable_index_i = input_variable_indices[i];
 
-        const Tensor2 input_i = get_variable_data(input_variable_index_i);
+        const MatrixR input_i = get_variable_data(input_variable_index_i);
 
         if (is_constant(input_i)) continue;
 
@@ -2419,7 +2419,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_spearman_correlations()
         {
             const Index input_variable_index_j = input_variable_indices[j];
 
-            const Tensor2 input_j = get_variable_data(input_variable_index_j);
+            const MatrixR input_j = get_variable_data(input_variable_index_j);
 
             correlations_spearman(i, j) = correlation_spearman(device.get(), input_i, input_j);
 
@@ -2494,7 +2494,7 @@ Tensor<Index, 1> Dataset::calculate_correlations_rank() const
 
     const Tensor2 absolute_correlations = get_correlation_values(correlations).abs();
 
-    Tensor1 absolute_mean_correlations(absolute_correlations.dimension(0));
+    VectorR absolute_mean_correlations(absolute_correlations.dimension(0));
 
     for(Index i = 0; i < absolute_correlations.dimension(0); i++)
     {
@@ -2983,31 +2983,31 @@ void Dataset::print_data_preview() const
 
     if (samples_number > 0)
     {
-        const Tensor1 first_sample = data.chip(0, 0);
+        const VectorR first_sample = data.row(0);
 
         cout << "First sample: \n";
 
-        for(int i = 0; i < first_sample.dimension(0); i++)
+        for(int i = 0; i < first_sample.size(); i++)
             cout << first_sample(i) << "  ";
     }
 
     if (samples_number > 1)
     {
-        const Tensor1 second_sample = data.chip(1, 0);
+        const VectorR second_sample = data.row(1);
 
         cout << "Second sample: \n";
 
-        for(int i = 0; i < second_sample.dimension(0); i++)
+        for(int i = 0; i < second_sample.size(); i++)
             cout << second_sample(i) << "  ";
     }
 
     if (samples_number > 2)
     {
-        const Tensor1 last_sample = data.chip(samples_number - 1, 0);
+        const VectorR last_sample = data.row(samples_number - 1);
 
         cout << "Last sample: \n";
 
-        for(int i = 0; i < last_sample.dimension(0); i++)
+        for(int i = 0; i < last_sample.size(); i++)
             cout << last_sample(i) << "  ";
     }
 
@@ -3075,8 +3075,8 @@ void Dataset::save_data_binary(const filesystem::path& binary_data_file_name) co
 
     streamsize size = sizeof(Index);
 
-    Index columns_number = data.dimension(1);
-    Index rows_number = data.dimension(0);
+    Index columns_number = data.cols();
+    Index rows_number = data.rows();
 
     file.write(reinterpret_cast<char*>(&columns_number), size);
     file.write(reinterpret_cast<char*>(&rows_number), size);
@@ -3236,7 +3236,7 @@ vector<vector<Index>> Dataset::calculate_Tukey_outliers(const type cleaning_para
 
             for(Index j = 0; j < samples_number; j++)
             {
-                const Tensor1 sample = get_sample_data(sample_indices[Index(j)]);
+                const VectorR sample = get_sample_data(sample_indices[Index(j)]);
 
                 if (sample(feature_index) < box_plots[i].first_quartile - cleaning_parameter * interquartile_range
                     || sample(feature_index) > box_plots[i].third_quartile + cleaning_parameter * interquartile_range)
@@ -3323,7 +3323,7 @@ vector<vector<Index>> Dataset::replace_Tukey_outliers_with_NaN(const type cleani
 
             for(Index j = 0; j < samples_number; j++)
             {
-                const Tensor1 sample = get_sample_data(sample_indices[Index(j)]);
+                const VectorR sample = get_sample_data(sample_indices[Index(j)]);
 
                 if (sample[feature_index] < (box_plots[i].first_quartile - cleaning_parameter * interquartile_range)
                     || sample[feature_index] > (box_plots[i].third_quartile + cleaning_parameter * interquartile_range))
@@ -3487,7 +3487,7 @@ void Dataset::impute_missing_values_mean()
     if (used_sample_indices.empty() || used_feature_indices.empty())
         return;
 
-    const Tensor1 means = mean(data, used_sample_indices, used_feature_indices);
+    const VectorR means = mean(data, used_sample_indices, used_feature_indices);
 
     const Index samples_number = used_sample_indices.size();
     const Index features_number = used_feature_indices.size();
@@ -3531,7 +3531,7 @@ void Dataset::impute_missing_values_median()
     const vector<Index> input_feature_indices = get_feature_indices("Input");
     const vector<Index> target_feature_indices = get_feature_indices("Target");
 
-    const Tensor1 medians = median(data, used_sample_indices, used_feature_indices);
+    const VectorR medians = median(data, used_sample_indices, used_feature_indices);
 
     const Index samples_number = used_sample_indices.size();
     const Index features_number = used_feature_indices.size();
@@ -4215,8 +4215,8 @@ Index Dataset::count_rows_with_nan() const
 {
     Index rows_with_nan = 0;
 
-    const Index rows_number = data.dimension(0);
-    const Index variables_number = data.dimension(1);
+    const Index rows_number = data.rows();
+    const Index variables_number = data.cols();
 
     bool has_nan = true;
 
