@@ -529,16 +529,19 @@ vector<Index> Dataset::get_feature_dimensions() const
 
     vector<Index> feature_dimensions(used_variables_number);
 
+    Index i = 0;
+
     for(const Dataset::Variable& variable : variables)
-    {       
+    {
+
         if(!variable.is_used())
             continue;
 
-        // @todo try to delete push_back
-
         variable.is_categorical()
-            ? feature_dimensions.push_back(variable.get_categories_number())
-            : feature_dimensions.push_back(1);
+            ? feature_dimensions[i] = variable.get_categories_number()
+            : feature_dimensions[i] = 1;
+
+        i++;
     }
 
     return feature_dimensions;
