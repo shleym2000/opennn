@@ -12,8 +12,6 @@
 #include "dataset.h"
 #include "neural_network.h"
 #include "response_optimization.h"
-//#include <algorithm>
-//#include <numeric>
 
 namespace opennn
 {
@@ -22,19 +20,21 @@ ResponseOptimization::ResponseOptimization(NeuralNetwork* new_neural_network, Da
 {
     set(new_neural_network, new_dataset);
 
-    const unsigned int threads_number = thread::hardware_concurrency();
+
+
+    const unsigned int threads_number = (thread::hardware_concurrency() == 0) ? 1 : thread::hardware_concurrency();
 
     thread_pool = make_unique<ThreadPool>(threads_number);
     device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
+
 }
 
 void ResponseOptimization::set_threads_number(const int& new_threads_number)
 {
-    device.reset();
-    thread_pool.reset();
+    const int threads = new_threads_number > 0 ? new_threads_number : 1;
 
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
+    thread_pool = make_unique<ThreadPool>(threads);
+    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads);
 }
 
 void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_dataset)
@@ -92,8 +92,12 @@ void ResponseOptimization::set_relative_tolerance(type new_relative_tolerance)
 }
 
 
-void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
-{    
+void ResponseOptimization::Domain::set(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
+{
+    cout << "il this" << endl;
+
+    this->thread_pool_device = response_optimization.device.get();
+
     const Index variables_number = static_cast<Index>(feature_dimensions.size());
 
     const Index total_feature_dimensions = accumulate(feature_dimensions.begin(), feature_dimensions.end(), Index(0));
@@ -102,6 +106,8 @@ void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, 
     superior_frontier.resize(total_feature_dimensions);
 
     Index feature_index = 0;
+
+    cout << "prima del for" << endl;
 
     for(Index variable = 0; variable < variables_number; ++variable)
     {
@@ -119,6 +125,8 @@ void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, 
         }
 
         feature_index += feature_dimension;
+
+        cout << "nel for ciclo:" << variable << endl;
     }
 }
 
@@ -129,13 +137,19 @@ ResponseOptimization::Domain ResponseOptimization::get_original_domain(const str
 
     const vector<Index> variable_indices = dataset->get_variable_indices(role);
 
+    cout << "puo essere in gather?" << endl;
+
     const vector<Index> feature_by_role_dimensions = gather_by_index(feature_dimensions, variable_indices);
 
     const vector<Descriptives> feture_descriptives = dataset->calculate_feature_descriptives(role);
 
     const vector<Condition> conditions_by_role = gather_by_index(conditions, variable_indices);
 
+    cout << "o in original domain?" << endl;
+
     Domain original_domain(*this,feature_by_role_dimensions, feture_descriptives);
+
+    cout << "o in bound?" << endl;
 
     original_domain.bound(feature_by_role_dimensions, conditions_by_role);
 
@@ -157,6 +171,8 @@ ResponseOptimization::Objectives::Objectives(const ResponseOptimization& respons
     if (objectives_number == 0)
         throw runtime_error("No Objectives found, make sure to set Minimize or Maximize to any variable");
 
+    cout << "DEBUG: Number of objectives: " << objectives_number << endl;
+
     objective_sources.resize(2,objectives_number);
 
     objective_normalizer.resize(2, objectives_number);
@@ -167,9 +183,16 @@ ResponseOptimization::Objectives::Objectives(const ResponseOptimization& respons
 
     auto process_role = [&](const string& role)
     {
+        cout << "DEBUG: Processing role: " << role << endl;
+
         const vector<Index> variable_indices = response_optimization.dataset->get_variable_indices(role);
         const vector<Index> feature_dimensions_by_role = gather_by_index(feature_dimensions, variable_indices);
+
+        cout << "DEBUG: Getting domain for " << role << endl;
+
         const Domain domain = response_optimization.get_original_domain(role);
+
+        cout << "DEBUG: Got domain for " << role << endl;
 
         const bool is_input = (role == "Input");
 
@@ -189,8 +212,11 @@ ResponseOptimization::Objectives::Objectives(const ResponseOptimization& respons
                 const type superior_frontier = domain.superior_frontier(feature_pointer);
                 const type range = superior_frontier - inferior_frontier;
 
-                objective_normalizer(0, current_objective_index) = 1.0 / range;
-                objective_normalizer(1, current_objective_index) = -inferior_frontier / range;
+                const type epsilon = 1e-9;
+
+                objective_normalizer(0, current_objective_index) = 1.0 / (range < epsilon ? epsilon : range);
+
+                objective_normalizer(1, current_objective_index) = -inferior_frontier / (range < epsilon ? epsilon : range);
 
                 if (current_condition.condition == ConditionType::Maximize)
                 {
@@ -628,6 +654,7 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const Tensor2& 
     }
 
     const type average_boundary_gap = sum_boundary_gaps / static_cast<type>(objectives_number);
+
     const type normalized_boundary_gap = average_boundary_gap / compromise_distance;
 
     return {maximum_internal_gap, normalized_boundary_gap};
@@ -742,7 +769,9 @@ Tensor2 ResponseOptimization::perform_response_optimization() const
     if(!dataset)
         throw runtime_error("Dataset not set\n");
 
+    cout << "DEBUG: Building objectives..." << endl;
     const Objectives objectives = build_objectives();
+    cout << "DEBUG: Objectives built." << endl;
 
     if (objectives.objective_sources.dimension(1) == 0)
         throw runtime_error("No objectives found\n");

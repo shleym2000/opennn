@@ -13,6 +13,8 @@
 #include "pch.h"
 #include "dataset.h"
 #include "statistics.h"
+#include <thread>
+
 
 
 namespace opennn
@@ -23,8 +25,6 @@ class NeuralNetwork;
 class ResponseOptimization
 {
 public:
-
-    void set_threads_number(const int& new_threads_number);
 
     enum class ConditionType {None, Between, EqualTo, LessEqualTo, GreaterEqualTo, LessThan, GreaterThan, Minimize, Maximize};
 
@@ -45,14 +45,12 @@ public:
 
         Domain(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
         {
-            this->thread_pool_device = response_optimization.device.get();
-
-            set(feature_dimensions, descriptives);
+            set(response_optimization, feature_dimensions, descriptives);
         }
 
         ThreadPoolDevice* thread_pool_device = nullptr;
 
-        void set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
+        void set(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
 
         void bound(const vector<Index>& feature_dimensions, const vector<Condition>& conditions);
 
@@ -86,6 +84,8 @@ public:
     Objectives build_objectives() const;
 
     ResponseOptimization(NeuralNetwork* = nullptr, Dataset* = nullptr);
+
+    void set_threads_number(const int& new_threads_number);
 
     void set(NeuralNetwork* = nullptr, Dataset* = nullptr);
 
@@ -142,7 +142,6 @@ private:
     type relative_tolerance = type(0.001);
 
     //minimum number of points?
-    //stopping criteria for pareto points, average distance from utopian
 
     Index threads_number = nbThreads();
 
