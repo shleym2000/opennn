@@ -458,16 +458,11 @@ VectorR column_maximums(const MatrixR& matrix,
 }
 
 
-type mean(const VectorR& vector, Index begin, Index end)
+type mean(const VectorR& v, Index begin, Index end)
 {
-    if(end == begin) return vector[begin];
+    if(end == begin) return NAN;
 
-    long double sum = 0.0;
-
-    for(Index i = begin; i <= end; i++)
-        sum += vector(i);
-
-    return type(sum/(end-begin+1));
+    return v.segment(begin, end - begin + 1).mean();
 }
 
 
@@ -1697,26 +1692,13 @@ VectorI maximal_indices(const VectorR& input_vector, Index number)
 
 VectorI minimal_indices(const MatrixR& matrix)
 {
-    const Index rows_number = matrix.rows();
-    const Index columns_number = matrix.cols();
-
-    type minimum = matrix(0,0);
-
     VectorI minimal_indices(2);
-    minimal_indices.setZero();
 
-    for(Index i = 0; i < rows_number; i++)
-    {
-        for(Index j = 0; j < columns_number; j++)
-        {
-            if(!isnan(matrix(i, j)) && matrix(i, j) < minimum)
-            {
-                minimum = matrix(i, j);
-                minimal_indices(0) = i;
-                minimal_indices(1) = j;
-            }
-        }
-    }
+    Index minRow, minCol;
+
+    matrix.minCoeff(&minRow, &minCol);
+
+    minimal_indices << minRow, minCol;
 
     return minimal_indices;
 }
@@ -1724,26 +1706,13 @@ VectorI minimal_indices(const MatrixR& matrix)
 
 VectorI maximal_indices(const MatrixR& matrix)
 {
-    const Index rows_number = matrix.rows();
-    const Index columns_number = matrix.cols();
-
-    type maximum = matrix(0,0);
-
     VectorI maximal_indices(2);
-    maximal_indices.setZero();
 
-    for(Index i = 0; i < rows_number; i++)
-    {
-        for(Index j = 0; j < columns_number; j++)
-        {
-            if(!isnan(matrix(i, j)) && matrix(i, j) > maximum)
-            {
-                maximum = matrix(i, j);
-                maximal_indices(0) = i;
-                maximal_indices(1) = j;
-            }
-        }
-    }
+    Index maxRow, maxCol;
+
+    matrix.maxCoeff(&maxRow, &maxCol);
+
+    maximal_indices << maxRow, maxCol;
 
     return maximal_indices;
 }

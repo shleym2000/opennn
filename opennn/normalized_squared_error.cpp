@@ -51,44 +51,10 @@ void NormalizedSquaredError::set_normalization_coefficient()
 void NormalizedSquaredError::set_time_series_normalization_coefficient()
 {
     const MatrixR targets = dataset->get_feature_data("Target");
-
     const Index rows = targets.rows() - 1;
-    const Index columns = targets.cols();
 
-    MatrixR targets_t(rows, columns);
-    MatrixR targets_t_1(rows, columns);
-
-    for(Index i = 0; i < columns; i++)
-        memcpy(targets_t_1.data() + targets_t_1.rows() * i,
-               targets.data() + targets.rows() * i,
-               rows * sizeof(type));
-
-    for(Index i = 0; i < columns; i++)
-        memcpy(targets_t.data() + targets_t.rows() * i,
-               targets.data() + targets.rows() * i + 1,
-               rows * sizeof(type));
-
-    normalization_coefficient = calculate_time_series_normalization_coefficient(targets_t_1, targets_t);
+    normalization_coefficient = (targets.topRows(rows) - targets.bottomRows(rows)).squaredNorm();
 }
-
-
-type NormalizedSquaredError::calculate_time_series_normalization_coefficient(const MatrixR& targets_t_1,
-                                                                             const MatrixR& targets_t) const
-{
-    const Index target_samples_number = targets_t_1.rows();
-    const Index target_features_number = targets_t_1.cols();
-
-    type new_normalization_coefficient = type(0);
-
-#pragma omp parallel for reduction(+:new_normalization_coefficient)
-
-    for(Index i = 0; i < target_samples_number; i++)
-        for(Index j = 0; j < target_features_number; j++)
-            new_normalization_coefficient += (targets_t_1(i, j) - targets_t(i, j)) * (targets_t_1(i, j) - targets_t(i, j));
-
-    return new_normalization_coefficient;
-}
-
 
 
 void NormalizedSquaredError::set_default()

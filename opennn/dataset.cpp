@@ -2695,7 +2695,7 @@ void Dataset::missing_values_to_XML(XMLPrinter &printer) const
     if (missing_values_number > 0)
     {
         add_xml_element(printer, "MissingValuesMethod", get_missing_values_method_string());
-        add_xml_element(printer, "VariablesMissingValuesNumber", tensor_to_string<Index, 1>(variables_missing_values_number));
+        add_xml_element(printer, "VariablesMissingValuesNumber", vector_to_string(variables_missing_values_number));
         add_xml_element(printer, "SamplesMissingValuesNumber", to_string(rows_missing_values_number));
     }
 

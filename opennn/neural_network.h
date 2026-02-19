@@ -249,22 +249,21 @@ public:
         return Tensor<type, output_rank>();
     }
 */
-    Tensor3 calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2);
+    Tensor3 calculate_outputs(const Tensor3&, const Tensor3&);
 
-    TensorView run_internal_forward_propagation(const type* data, const Shape& shape);
+    TensorView run_internal_forward_propagation(const type*, const Shape&);
 
-    MatrixR calculate_outputs(const MatrixR& inputs);
+    MatrixR calculate_outputs(const MatrixR&);
 
-    MatrixR calculate_outputs(const Tensor3& inputs);
+    MatrixR calculate_outputs(const Tensor3&);
 
-    MatrixR calculate_outputs(const Tensor4& inputs);
-
+    MatrixR calculate_outputs(const Tensor4&);
 
     MatrixR calculate_directional_inputs(const Index, const VectorR&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
-    MatrixR calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
+    MatrixR calculate_text_outputs(const Tensor<string, 1>&);
 
     // Serialization
 

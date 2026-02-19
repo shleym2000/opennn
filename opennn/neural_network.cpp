@@ -524,7 +524,7 @@ void NeuralNetwork::set_parameters_glorot()
 }
 
 
-Tensor3 NeuralNetwork::calculate_outputs(const Tensor3 &inputs_1, const Tensor3 &inputs_2)
+Tensor3 NeuralNetwork::calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2)
 {
     const Index layers_number = get_layers_number();
 
@@ -749,7 +749,7 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
 }
 
 
-MatrixR NeuralNetwork::calculate_text_outputs(const Tensor<string, 1>&input_documents) const
+MatrixR NeuralNetwork::calculate_text_outputs(const Tensor<string, 1>&input_documents)
 {
     const Index batch_size = input_documents.dimension(0);
 

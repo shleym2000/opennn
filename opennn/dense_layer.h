@@ -613,7 +613,6 @@ public:
 #endif
     }
 
-
     void set_dropout_rate(const type new_dropout_rate)
     {
         if (new_dropout_rate < type(0) || new_dropout_rate >= type(1))

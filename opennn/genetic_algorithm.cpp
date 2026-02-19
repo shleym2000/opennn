@@ -425,7 +425,7 @@ void GeneticAlgorithm::perform_selection()
 
     while (get_selected_individuals_number() < individuals_to_be_selected)
     {
-        const type arrow = random_uniform(type(0), fitness_sum());
+        const type arrow = random_uniform(type(0), fitness_sum);
 
         const Index i = static_cast<Index>(upper_bound(begin, end, arrow) - begin);
 

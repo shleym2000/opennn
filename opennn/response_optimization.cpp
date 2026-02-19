@@ -289,6 +289,7 @@ void ResponseOptimization::Domain::bound(const vector<Index>& feature_dimensions
     }
 }
 
+
 MatrixR ResponseOptimization::calculate_random_inputs(const Domain& input_domain) const
 {
     const Index inputs_features_number = input_domain.inferior_frontier.size();
@@ -510,7 +511,7 @@ MatrixR ResponseOptimization::perform_single_objective_optimization(const Object
     {
         const MatrixR random_inputs = calculate_random_inputs(input_domain_to_iterate);
 
-        auto [feasible_inputs, feasible_outputs] = filter_feasible_points(random_inputs, neural_network->calculate_outputs<2,2>(random_inputs), original_output_domain);
+        auto [feasible_inputs, feasible_outputs] = filter_feasible_points(random_inputs, neural_network->calculate_outputs(random_inputs), original_output_domain);
 
         if(feasible_inputs.rows() == 0)
             break;
@@ -699,7 +700,7 @@ MatrixR ResponseOptimization::perform_multiobjective_optimization(const Objectiv
         {
             const MatrixR local_random_inputs = calculate_random_inputs(local_input_domains[j]);
 
-            auto [local_feasible_inputs, local_feasible_outputs] = filter_feasible_points(local_random_inputs, neural_network->calculate_outputs<2,2>(local_random_inputs), original_output_domain);
+            auto [local_feasible_inputs, local_feasible_outputs] = filter_feasible_points(local_random_inputs, neural_network->calculate_outputs(local_random_inputs), original_output_domain);
             auto [local_pareto_input, local_pareto_output] = calculate_pareto(local_feasible_inputs, local_feasible_outputs, objectives.extract(local_feasible_inputs, local_feasible_outputs));
 
             union_inputs = append_rows(union_inputs, local_pareto_input);

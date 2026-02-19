@@ -27,25 +27,13 @@
 namespace opennn
 {
 
-VectorR autocorrelations(const VectorR& x,
-                         Index past_time_steps)
+VectorR autocorrelations(const VectorR& x, Index past_time_steps)
 {
     VectorR autocorrelation(past_time_steps);
-
     const Index this_size = x.size();
+
     for(Index i = 0; i < past_time_steps; i++)
-    {
-        VectorR column_x(this_size-i);
-        VectorR column_y(this_size-i);
-
-        for(Index j = 0; j < this_size - i; j++)
-        {
-            column_x(j) = x(j);
-            column_y(j) = x(j + i);
-        }
-
-        autocorrelation(i) = linear_correlation(column_x, column_y).r;
-    }
+        autocorrelation(i) = linear_correlation(x.head(this_size - i), x.tail(this_size - i)).r;
 
     return autocorrelation;
 }
@@ -499,7 +487,8 @@ Correlation logistic_correlation_vector_vector(const VectorR& x,
         return correlation;
     }
 
-    const MatrixR data = assemble_vector_vector(x_filter, y_filter);
+    MatrixR data;
+    data << x_filter, y_filter;
 
     Dataset dataset(x_filter.size(), {1}, {1});
     dataset.set_data(data);
@@ -572,7 +561,8 @@ Correlation logistic_correlation_vector_vector_spearman(const VectorR& x,
 
     const VectorR x_rank = calculate_spearman_ranks(x_filter);
 
-    const MatrixR data = assemble_vector_vector(x_rank, y_filter);
+    MatrixR data;
+    data << x_rank, y_filter;
 
     Dataset dataset(x_filter.size(), {1}, {1});
     dataset.set_data(data);
@@ -650,7 +640,8 @@ Correlation logistic_correlation_vector_matrix(const VectorR& x, const MatrixR& 
         return correlation;
     }
 
-    const MatrixR data = opennn::assemble_vector_matrix(x_filter, y_filter);
+    MatrixR data;
+    data << x_filter, y_filter;
 
     vector<Index> input_columns_indices(1);
     input_columns_indices[0] = type(0);
@@ -749,7 +740,8 @@ Correlation logistic_correlation_matrix_matrix(const MatrixR& x, const MatrixR& 
         return correlation;
     }
 
-    const MatrixR data = opennn::assemble_matrix_matrix(x_filter, y_filter);
+    MatrixR data;
+    data << x_filter, y_filter;
 
     vector<Index> input_columns_indices(x_filter.cols());
 

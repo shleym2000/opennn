@@ -201,7 +201,7 @@ void WeightedSquaredError::calculate_error(const Batch& batch,
 
     const type coefficient = type(total_samples_number) / (type(samples_number) * normalization_coefficient);
 
-    back_propagation.error = (errors.array().square() * errors_weights.array()).sum() * coefficient;
+    error = (errors.array().square() * errors_weights.array()).sum() * coefficient;
 }
 
 

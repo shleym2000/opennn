@@ -17,21 +17,10 @@ void scale_mean_standard_deviation(MatrixMap matrix,
                                    Index column_index,
                                    const Descriptives& column_descriptives)
 {
-    const type mean = column_descriptives.mean;
-    const type standard_deviation = column_descriptives.standard_deviation;
-
-    if(standard_deviation > NUMERIC_LIMITS_MIN)
-    {
-        #pragma omp parallel for
-        for(Index i = 0; i < matrix.rows(); i++)
-            matrix(i, column_index) = (matrix(i, column_index) - mean) / standard_deviation;
-    }
+    if(column_descriptives.standard_deviation > NUMERIC_LIMITS_MIN)
+        matrix.col(column_index).array() = (matrix.col(column_index).array() - column_descriptives.mean) / column_descriptives.standard_deviation;
     else
-    {
-        #pragma omp parallel for
-        for(Index i = 0; i < matrix.rows(); i++)
-            matrix(i, column_index) = type(0);
-    }
+        matrix.col(column_index).setZero();
 }
 
 

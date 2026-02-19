@@ -214,9 +214,9 @@ public:
 
     // Multiple classification rates
 
-    Tensor<Tensor<Index,1>, 2> calculate_multiple_classification_rates() const;
+    Tensor<VectorI, 2> calculate_multiple_classification_rates() const;
 
-    Tensor<Tensor<Index,1>, 2> calculate_multiple_classification_rates(const MatrixR&, const MatrixR&, const vector<Index>&) const;
+    Tensor<VectorI, 2> calculate_multiple_classification_rates(const MatrixR&, const MatrixR&, const vector<Index>&) const;
 
     Tensor<string, 2> calculate_well_classified_samples(const MatrixR&, const MatrixR&, const vector<string>&) const;
 
@@ -246,9 +246,9 @@ public:
 
     // Forecasting
 
-    Tensor<Tensor1, 1> calculate_error_autocorrelation(const Index = 10) const;
+    vector<VectorR> calculate_error_autocorrelation(const Index = 10) const;
 
-    Tensor<Tensor1, 1> calculate_inputs_errors_cross_correlation(const Index = 10) const;
+    vector<VectorR> calculate_inputs_errors_cross_correlation(const Index = 10) const;
 
     // Transformer
 

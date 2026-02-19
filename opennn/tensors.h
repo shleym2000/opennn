@@ -427,10 +427,6 @@ VectorR perform_Householder_QR_decomposition(const MatrixR&, const VectorR&);
 
 vector<Index> join_vector_vector(const vector<Index>&, const vector<Index>&);
 
-MatrixR assemble_vector_vector(const VectorR&, const VectorR&);
-MatrixR assemble_vector_matrix(const VectorR&, const MatrixR&);
-MatrixR assemble_matrix_matrix(const MatrixR&, const MatrixR&);
-
 template <typename T>
 void push_back(Tensor<T, 1, AlignedMax>& tensor, const T& value)
 {
@@ -464,6 +460,17 @@ string vector_to_string(const vector<T>& x, const string& separator = " ")
         if (i < x.size() - 1)
             buffer << separator;
     }
+
+    return buffer.str();
+}
+
+
+string vector_to_string(const VectorI& x, const string& separator = " ")
+{
+    ostringstream buffer;
+
+    for(Index i = 0; i < x.size(); i++)
+        buffer << x(i) << separator;
 
     return buffer.str();
 }

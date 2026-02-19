@@ -427,18 +427,11 @@ Tensor<VectorI, 1> TestingAnalysis::calculate_maximal_errors(const Index samples
 
 MatrixR TestingAnalysis::calculate_errors() const
 {
-    const VectorR training_errors = calculate_errors("Training");
-    const VectorR validation_errors = calculate_errors("Validation");
-    const VectorR testing_errors = calculate_errors("Testing");
-
     MatrixR errors(5, 3);
 
-    errors <<
-        training_errors(0), validation_errors(0), testing_errors(0),
-        training_errors(1), validation_errors(1), testing_errors(1),
-        training_errors(2), validation_errors(2), testing_errors(2),
-        training_errors(3), validation_errors(3), testing_errors(3),
-        training_errors(4), validation_errors(4), testing_errors(4);
+    errors.col(0) = calculate_errors("Training");
+    errors.col(1) = calculate_errors("Validation");
+    errors.col(2) = calculate_errors("Testing");
 
     return errors;
 }
@@ -571,8 +564,8 @@ type TestingAnalysis::calculate_cross_entropy_error(const MatrixR& targets,
     const Index testing_samples_number = targets.rows();
     const Index outputs_number = targets.cols();
 
-    Tensor1 targets_row(outputs_number);
-    Tensor1 outputs_row(outputs_number);
+    VectorR targets_row(outputs_number);
+    VectorR outputs_row(outputs_number);
 
     type cross_entropy_error_2d = type(0);
 
@@ -766,25 +759,13 @@ MatrixI TestingAnalysis::calculate_confusion_binary_classification(const MatrixR
 
     MatrixI confusion(3, 3);
 
-    Index true_positive = 0;
-    Index false_negative = 0;
-    Index false_positive = 0;
-    Index true_negative = 0;
+    auto t_pos = targets.col(0).array() >= decision_threshold;
+    auto o_pos = outputs.col(0).array() >= decision_threshold;
 
-    for(Index i = 0; i < testing_samples_number; i++)
-    {
-        const bool is_target_positive = targets(i, 0) >= decision_threshold;
-        const bool is_output_positive = outputs(i, 0) >= decision_threshold;
-
-        if (is_target_positive && is_output_positive)
-            true_positive++;
-        else if (is_target_positive && !is_output_positive)
-            false_negative++;
-        else if(!is_target_positive && is_output_positive)
-            false_positive++;
-        else  // !is_target_positive && !is_output_positive
-            true_negative++;
-    }
+    const Index true_positive = (t_pos && o_pos).count();
+    const Index false_negative = (t_pos && !o_pos).count();
+    const Index false_positive = (!t_pos && o_pos).count();
+    const Index true_negative = (!t_pos && !o_pos).count();
 
     confusion(0,0) = true_positive;
     confusion(0,1) = false_negative;
@@ -1431,20 +1412,14 @@ VectorR TestingAnalysis::calculate_multiple_classification_precision() const
 
     const MatrixI confusion_matrix = calculate_confusion_multiple_classification(targets, outputs);
 
-    type diagonal_sum = type(0);
-    type off_diagonal_sum = type(0);
+    const type total_sum = static_cast<type>(confusion_matrix.sum());
 
-    const Tensor<Index, 0> total_sum = confusion_matrix.sum();
+    const type diagonal_sum = static_cast<type>(confusion_matrix.diagonal().sum());
 
-#pragma omp parallel for
-    for(Index i = 0; i < confusion_matrix.rows(); i++)
-        for(Index j = 0; j < confusion_matrix.cols(); j++)
-            i == j
-                ? diagonal_sum += type(confusion_matrix(i, j))
-                : off_diagonal_sum += type(confusion_matrix(i, j));
+    const type off_diagonal_sum = total_sum - diagonal_sum;
 
-    multiple_classification_tests(0) = diagonal_sum/type(total_sum());
-    multiple_classification_tests(1) = off_diagonal_sum/type(total_sum());
+    multiple_classification_tests(0) = diagonal_sum/type(total_sum);
+    multiple_classification_tests(1) = off_diagonal_sum/type(total_sum);
 
     return multiple_classification_tests;
 }
@@ -1499,7 +1474,7 @@ void TestingAnalysis::save_multiple_classification_tests(const filesystem::path&
 }
 
 
-Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_rates() const
+Tensor<VectorI, 2> TestingAnalysis::calculate_multiple_classification_rates() const
 {
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
@@ -1509,7 +1484,7 @@ Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_ra
 }
 
 
-Tensor<Tensor<Index,1>, 2> TestingAnalysis::calculate_multiple_classification_rates(const MatrixR& targets,
+Tensor<VectorI, 2> TestingAnalysis::calculate_multiple_classification_rates(const MatrixR& targets,
                                                                                     const MatrixR& outputs,
                                                                                     const vector<Index>& testing_indices) const
 {
@@ -1795,7 +1770,7 @@ void TestingAnalysis::save_misclassified_samples_probability_histogram(const Ten
 }
 
 
-Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index maximum_past_time_steps) const
+vector<VectorR> TestingAnalysis::calculate_error_autocorrelation(const Index maximum_past_time_steps) const
 {
     const auto [targets, outputs] = get_targets_and_outputs("Testing");
 
@@ -1803,7 +1778,7 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index 
 
     const MatrixR error = outputs - targets;
 
-    Tensor<Tensor1, 1> error_autocorrelations(targets_number);
+    vector<VectorR> error_autocorrelations(targets_number);
 
     for(Index i = 0; i < targets_number; i++)
         error_autocorrelations[i] = autocorrelations(error.col(i), maximum_past_time_steps);
@@ -1812,7 +1787,7 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_error_autocorrelation(const Index 
 }
 
 
-Tensor<Tensor1, 1> TestingAnalysis::calculate_inputs_errors_cross_correlation(const Index past_time_steps) const
+vector<VectorR> TestingAnalysis::calculate_inputs_errors_cross_correlation(const Index past_time_steps) const
 {
     const Index targets_number = dataset->get_features_number("Target");
 
@@ -1824,7 +1799,7 @@ Tensor<Tensor1, 1> TestingAnalysis::calculate_inputs_errors_cross_correlation(co
 
     const MatrixR errors = outputs - targets;
 
-    Tensor<Tensor1, 1> inputs_errors_cross_correlation(targets_number);
+    vector<VectorR> inputs_errors_cross_correlation(targets_number);
 
     for(Index i = 0; i < targets_number; i++)
         inputs_errors_cross_correlation[i] = cross_correlations(inputs.col(i), errors.col(i), past_time_steps);

@@ -500,68 +500,6 @@ vector<Index> join_vector_vector(const vector<Index>& x, const vector<Index>& y)
 }
 
 
-Tensor2 assemble_vector_vector(const Tensor1& x, const Tensor1& y)
-{
-    const Index rows_number = x.size();
-    const Index columns_number = 2;
-
-    Tensor2 data(rows_number, columns_number);
-
-#pragma omp parallel for
-
-    for(Index i = 0; i < rows_number; i++)
-    {
-        data(i, 0) = x(i);
-        data(i, 1) = y(i);
-    }
-
-    return data;
-}
-
-
-Tensor2 assemble_vector_matrix(const Tensor1& x, const Tensor2& y)
-{
-    const Index rows_number = x.size();
-    const Index columns_number = 1 + y.dimension(1);
-
-    Tensor2 data(rows_number, columns_number);
-
-#pragma omp parallel for
-
-    for(Index i = 0; i < rows_number; i++)
-    {
-        data(i, 0) = x(i);
-
-        for(Index j = 0; j < y.dimension(1); j++)
-            data(i, 1+j) = y(i, j);
-    }
-
-    return data;
-}
-
-
-Tensor2 assemble_matrix_matrix(const Tensor2& x, const Tensor2& y)
-{
-    const Index rows_number = x.dimension(0);
-    const Index columns_number = x.dimension(1) + y.dimension(1);
-
-    Tensor2 data(rows_number, columns_number);
-
-#pragma omp parallel for
-
-    for(Index i = 0; i < rows_number; i++)
-    {
-        for(Index j = 0; j < x.dimension(1); j++)
-            data(i, j) = x(i, j);
-
-        for(Index j = 0; j < y.dimension(1); j++)
-            data(i, x.dimension(1) + j) = y(i, j);
-    }
-
-    return data;
-}
-
-
 string shape_to_string(const Shape& x, const string& separator)
 {
     const Index size = x.size();

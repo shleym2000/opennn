@@ -6,7 +6,6 @@
 // Artificial Intelligence Techniques SL
 // artelnics@artelnics.com
 
-#include "tensors.h"
 #include "kmeans.h"
 #include "random_utilities.h"
 
@@ -39,28 +38,7 @@ void KMeans::fit(const MatrixR& data)
     {              
         for(Index row_index = 0; row_index < rows_number; row_index++)
         {
-            row = data.row(row_index);
-
-            center = cluster_centers.row(0);
-
-            type minimum_distance = (row - center).norm();
-
-            Index minimal_distance_cluster_index = 0;
-
-            for(Index cluster_index = 1; cluster_index < clusters_number; cluster_index++)
-            {
-                center = cluster_centers.row(cluster_index);
-
-                const type distance = (row - center).norm();
-
-                if(distance < minimum_distance)
-                {
-                    minimum_distance = distance;
-                    minimal_distance_cluster_index = cluster_index;
-                }
-            }
-
-            rows_cluster_labels(row_index) = minimal_distance_cluster_index;
+            (cluster_centers.rowwise() - data.row(row_index)).rowwise().squaredNorm().minCoeff(&rows_cluster_labels(row_index));
         }
 
         for(Index cluster_index = 0; cluster_index < clusters_number; cluster_index++)

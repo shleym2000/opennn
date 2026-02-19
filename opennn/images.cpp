@@ -318,26 +318,25 @@ void rotate_image(const ThreadPoolDevice* device,
                        sin_angle, cos_angle, rotation_center_y - sin_angle * rotation_center_x - cos_angle * rotation_center_y,
                        type(0), type(0), type(1);
 
-    VectorR coordinates(3);
-    VectorR transformed_coordinates(3);
+
+    using Vector3T = Matrix<type, 3, 1>;
+
+    #pragma omp parallel for collapse(2)
 
     for(Index x = 0; x < width; x++)
     {
         for(Index y = 0; y < height; y++)
         {
-            coordinates(0) = type(x);
-            coordinates(1) = type(y);
-            coordinates(2) = type(1);
+            Vector3T coordinates;
+            coordinates << static_cast<type>(x), static_cast<type>(y), 1.0f;
 
-            transformed_coordinates = rotation_matrix.contract(coordinates, axes(1,0));
+            const Vector3T transformed = rotation_matrix * coordinates;
 
-            if(transformed_coordinates[0] >= 0
-                && transformed_coordinates[0] < width
-                && transformed_coordinates[1] >= 0
-                && transformed_coordinates[1] < height)
+            if(transformed[0] >= 0 && transformed[0] < width
+            && transformed[1] >= 0 && transformed[1] < height)
                 for(Index channel = 0; channel < channels; channel++)
-                    output(x, y, channel) = input(int(transformed_coordinates[0]),
-                                                  int(transformed_coordinates[1]),
+                    output(x, y, channel) = input(int(transformed[0]),
+                                                  int(transformed[1]),
                                                   channel);
             else
                 for(Index channel = 0; channel < channels; channel++)
