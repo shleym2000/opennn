@@ -18,11 +18,11 @@ public:
 
     KMeans(Index clusters = 3, string distance_calculation_method = "euclidean", Index iter = 100);
 
-    Tensor<Index, 1> calculate_outputs(const Tensor2&);
+    VectorI calculate_outputs(const Tensor2&);
     Tensor1 elbow_method(const Tensor2&, Index max_clusters=10);
     Index find_optimal_clusters(const Tensor1&) const;
 
-    Tensor<Index, 1> get_cluster_labels() const;
+    VectorI get_cluster_labels() const;
     Tensor2 get_cluster_centers() const;
     Index get_clusters_number() const;
 
@@ -37,7 +37,7 @@ private:
     string metric;
 
     Tensor2 cluster_centers;
-    Tensor<Index, 1> rows_cluster_labels;
+    VectorI rows_cluster_labels;
 };
 
 }

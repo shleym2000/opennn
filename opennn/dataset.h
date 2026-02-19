@@ -132,7 +132,7 @@ public:
 
     vector<Index> get_sample_roles_vector() const;
 
-    Tensor<Index, 1> get_sample_role_numbers() const;
+    VectorI get_sample_role_numbers() const;
 
     inline Index get_variables_number() const { return variables.size(); }
     Index get_variables_number(const string&) const;
@@ -192,7 +192,7 @@ public:
 
     MatrixR get_variable_data(const Index) const;
     MatrixR get_variable_data(const Index, const vector<Index>&) const;
-    //Tensor2 get_variable_data(const Tensor<Index, 1>&) const;
+    //Tensor2 get_variable_data(const VectorI&) const;
     MatrixR get_variable_data(const string&) const;
 
     string get_sample_category(const Index, Index) const;
@@ -350,7 +350,7 @@ public:
 
     // Unusing
 
-    //Tensor<Index, 1> unuse_repeated_samples();
+    //VectorI unuse_repeated_samples();
 
     vector<string> unuse_uncorrelated_variables(const type = type(0.25));
     vector<string> unuse_collinear_variables(const type = type(0.95));
@@ -410,7 +410,7 @@ public:
 
     // Filtering
 
-    Tensor<Index, 1> filter_data(const Tensor1&, const Tensor1&);
+    VectorI filter_data(const Tensor1&, const Tensor1&);
 
     // Scaling2d
 
@@ -428,7 +428,7 @@ public:
 
     // Classification
 
-    Tensor<Index, 1> calculate_target_distribution() const;
+    VectorI calculate_target_distribution() const;
 
     // Tuckey outlier detection
 
@@ -487,7 +487,7 @@ public:
     void scrub_missing_values();
     void calculate_missing_values_statistics();
 
-    Tensor<Index, 1> count_nans_per_variable() const;
+    VectorI count_nans_per_variable() const;
     Index count_variables_with_nan() const;
     Index count_rows_with_nan() const;
     Index count_nan() const;
@@ -584,7 +584,7 @@ protected:
 
     Index missing_values_number = 0;
 
-    Tensor<Index, 1> variables_missing_values_number;
+    VectorI variables_missing_values_number;
 
     Index rows_missing_values_number = 0;
 

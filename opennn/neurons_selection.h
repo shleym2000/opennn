@@ -81,7 +81,7 @@ protected:
 
     TrainingStrategy* training_strategy = nullptr;
 
-    Tensor<Index, 1> neurons_history;
+    VectorI neurons_history;
 
     Tensor1 validation_error_history;
 
@@ -117,7 +117,7 @@ struct NeuronsSelectionResults
 
    // Neural network
 
-   Tensor<Index, 1> neurons_number_history;
+   VectorI neurons_number_history;
 
    Index optimal_neurons_number = 1;
 

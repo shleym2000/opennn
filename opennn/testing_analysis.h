@@ -47,7 +47,7 @@ public:
 
     struct RocAnalysis
     {
-        Tensor2 roc_curve;
+        MatrixR roc_curve;
 
         type area_under_curve = 0;
 
@@ -61,11 +61,11 @@ public:
 
     struct KolmogorovSmirnovResults
     {
-        Tensor2 positive_cumulative_gain;
+        MatrixR positive_cumulative_gain;
 
-        Tensor2 negative_cumulative_gain;
+        MatrixR negative_cumulative_gain;
 
-        Tensor1 maximum_gain;
+        VectorR maximum_gain;
     };
 
 
@@ -124,7 +124,7 @@ public:
 
     vector<Histogram> calculate_error_data_histograms(const Index = 10) const;
 
-    Tensor<Tensor<Index, 1>, 1> calculate_maximal_errors(const Index = 10) const;
+    Tensor<VectorI, 1> calculate_maximal_errors(const Index = 10) const;
 
     MatrixR calculate_errors() const;
     VectorR calculate_errors(const MatrixR&, const MatrixR&) const;
@@ -138,11 +138,11 @@ public:
 
     type calculate_normalized_squared_error(const MatrixR&, const MatrixR&) const;
     type calculate_cross_entropy_error(const MatrixR&, const MatrixR&) const;
-    type calculate_cross_entropy_error_3d(const Tensor3&, const Tensor2&) const;
+    type calculate_cross_entropy_error_3d(const Tensor3&, const MatrixR&) const;
     type calculate_weighted_squared_error(const MatrixR&, const MatrixR&, const VectorR& = VectorR()) const;
     type calculate_Minkowski_error(const MatrixR&, const MatrixR&, const type = type(1.5)) const;
 
-    type calculate_masked_accuracy(const Tensor3&, const Tensor2&) const;
+    type calculate_masked_accuracy(const Tensor3&, const MatrixR&) const;
 
     type calculate_determination(const VectorR&, const VectorR&) const;
 
@@ -170,7 +170,7 @@ public:
     MatrixI calculate_confusion(const MatrixR&, const MatrixR&, type = 0.50) const;
     MatrixI calculate_confusion(const type = 0.50) const;
 
-    Tensor<Index, 1> calculate_positives_negatives_rate(const MatrixR&, const MatrixR&) const;
+    VectorI calculate_positives_negatives_rate(const MatrixR&, const MatrixR&) const;
 
     // ROC curve
 

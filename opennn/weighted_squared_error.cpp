@@ -99,7 +99,7 @@ void WeightedSquaredError::set_weights()
 
     if(target_variables.size() == 1 && target_variables[0].is_binary())
     {
-        const Tensor<Index, 1> target_distribution = dataset->calculate_target_distribution();
+        const VectorI target_distribution = dataset->calculate_target_distribution();
 
         const Index negatives = target_distribution[0];
         const Index positives = target_distribution[1];

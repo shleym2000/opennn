@@ -318,7 +318,7 @@ bool is_binary(const TensorR<Rank>& tensor)
     return true;
 }
 
-Tensor2 append_rows(const Tensor2& , const Tensor2& );
+Tensor2 append_rows(const Tensor2& , const Tensor2&);
 
 template<typename T>
 vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
@@ -407,9 +407,9 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 MatrixR filter_column_minimum_maximum(const MatrixR&, Index, type, type);
 
 //type l2_distance(const type, const TensorMap<Tensor<type, 0> >&);
-type l2_distance(const Tensor1&, const Tensor1&);
+type l2_distance(const VectorR&, const VectorR&);
 
-Tensor<Index, 1> get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
+VectorI get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
 
 void fill_tensor_data_row_major(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
 
@@ -607,9 +607,9 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 
 
 template<class T, int n>
-Tensor<Index, 1> get_shape(const Tensor<T, n, AlignedMax>& tensor)
+VectorI get_shape(const Tensor<T, n, AlignedMax>& tensor)
 {
-    Tensor<Index, 1> shape(n);
+    VectorI shape(n);
 
     memcpy(shape.data(), tensor.dimensions().data(), size_t(n)*sizeof(Index));
 

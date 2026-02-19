@@ -322,19 +322,17 @@ MatrixR filter_column_minimum_maximum(const MatrixR& matrix,
 }
 
 
-type l2_distance(const Tensor1& x, const Tensor1& y)
+type l2_distance(const VectorR& x, const VectorR& y)
 {
     if(x.size() != y.size())
         throw runtime_error("x and y vector must  have the same shape.\n");
 
-    Tensor<type, 0> distance;
+    return (x - y).norm();
 
-    distance = (x-y).square().sum().sqrt();
-
-    return distance(0);
 }
 
-Tensor<Index, 1> get_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, int n = 1)
+
+VectorI get_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, int n = 1)
 {
     const Index number_points_to_compare = matrix.dimension(0);
 
@@ -367,7 +365,7 @@ Tensor<Index, 1> get_nearest_points(const Tensor2& matrix,const Tensor<type,1>& 
         dist_index.end(),
         [](const auto& a, const auto& b){ return a.first < b.first; });
 
-    Tensor<Index, 1> nearest_indices(n);
+    VectorI nearest_indices(n);
     for(int i = 0; i < n; ++i)
         nearest_indices(i) = dist_index[i].second;
 

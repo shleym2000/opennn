@@ -39,33 +39,33 @@ struct Correlation
 };
 
 
-Correlation linear_correlation(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation linear_correlation(const VectorR&, const VectorR&);
 
-Correlation logarithmic_correlation(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation logarithmic_correlation(const VectorR&, const VectorR&);
 
-Correlation exponential_correlation(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation exponential_correlation(const VectorR&, const VectorR&);
 
-Correlation power_correlation(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation power_correlation(const VectorR&, const VectorR&);
 
-Correlation logistic_correlation_vector_vector(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation logistic_correlation_vector_vector(const VectorR&, const VectorR&);
 
-Correlation logistic_correlation_vector_matrix(const ThreadPoolDevice*, const VectorR&, const MatrixR&);
+Correlation logistic_correlation_vector_matrix(const VectorR&, const MatrixR&);
 
-Correlation logistic_correlation_matrix_vector(const ThreadPoolDevice*, const MatrixR&, const VectorR&);
+Correlation logistic_correlation_matrix_vector(const MatrixR&, const VectorR&);
 
-Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice*, const MatrixR&, const MatrixR&);
+Correlation logistic_correlation_matrix_matrix(const MatrixR&, const MatrixR&);
 
-Correlation correlation(const ThreadPoolDevice*, const MatrixR&, const MatrixR&);
+Correlation correlation(const MatrixR&, const MatrixR&);
 
 // Spearman correlation
 
-Correlation linear_correlation_spearman(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation linear_correlation_spearman(const VectorR&, const VectorR&);
 
 VectorR calculate_spearman_ranks(const VectorR&);
 
-Correlation logistic_correlation_vector_vector_spearman(const ThreadPoolDevice*, const VectorR&, const VectorR&);
+Correlation logistic_correlation_vector_vector_spearman(const VectorR&, const VectorR&);
 
-Correlation correlation_spearman(const ThreadPoolDevice*, const MatrixR&, const MatrixR&);
+Correlation correlation_spearman(const MatrixR&, const MatrixR&);
 
 // Confidence interval
 
@@ -76,14 +76,9 @@ VectorR confidence_interval_z_correlation(const type, Index);
 
 // Time series correlation
 
-VectorR autocorrelations(const ThreadPoolDevice*,
-                         const VectorR&,
-                         Index  = 10);
+VectorR autocorrelations(const VectorR&, Index  = 10);
 
-VectorR cross_correlations(const ThreadPoolDevice*,
-                           const VectorR&,
-                           const VectorR&,
-                           Index);
+VectorR cross_correlations(const VectorR&, const VectorR&, Index);
 
 MatrixR get_correlation_values(const Tensor<Correlation, 2>&);
 

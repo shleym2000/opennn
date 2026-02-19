@@ -636,7 +636,7 @@ string NeuralNetwork::get_expression() const
 }
 
 
-Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor<Index, 1>& input_shape)
+Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, VectorI& input_shape)
 {
     const Index input_shape_number = input_shape.size();
 
@@ -645,8 +645,8 @@ Tensor2 NeuralNetwork::calculate_scaled_outputs(type* scaled_inputs_data, Tensor
         Tensor2 scaled_outputs;
         Tensor2 last_layer_outputs;
 
-        Tensor<Index, 1> outputs_dimensions;
-        Tensor<Index, 1> last_layer_outputs_dimensions;
+        VectorI outputs_dimensions;
+        VectorI last_layer_outputs_dimensions;
 
         const Index layers_number = get_layers_number();
 
@@ -777,7 +777,7 @@ Index NeuralNetwork::calculate_image_output(const filesystem::path& image_path)
     // for(Index j = 0; j < pixels_number; j++)
     //     input_data(j) = image(j);
 
-    // const Tensor2 outputs = calculate_outputs<4,2>(input_data);
+    // const Matrix outputs = calculate_outputs(input_data);
 
     // Index predicted_index = -1;
 
@@ -814,7 +814,7 @@ Tensor2 NeuralNetwork::calculate_text_outputs(const Tensor<string, 1>&input_docu
     for(Index i = 0; i < (Index)input_vocabulary.size(); ++i)
         vocabulary_map[input_vocabulary[i]] = i;
 
-    Tensor2 inputs(batch_size, sequence_length);
+    MatrixR inputs(batch_size, sequence_length);
     inputs.setConstant(0.0);
 
 #pragma omp parallel for
@@ -852,9 +852,7 @@ Tensor2 NeuralNetwork::calculate_text_outputs(const Tensor<string, 1>&input_docu
             inputs(i, current_index) = 3;
     }
 
-//    return calculate_outputs<2, 2>(encoded_inputs);
-
-    return Tensor2();
+    return calculate_outputs(inputs);
 }
 
 

@@ -90,13 +90,13 @@ void KMeans::fit(const Tensor2& data)
 }
 
 
-Tensor<Index, 1> KMeans::calculate_outputs(const Tensor2& data)
+VectorI KMeans::calculate_outputs(const Tensor2& data)
 {
     const Index rows_number = data.dimension(0);
     Tensor1 row(data.dimension(1));
     Tensor1 center;
 
-    Tensor<Index, 1> predictions(rows_number);
+    VectorI predictions(rows_number);
 
     for(Index row_index = 0; row_index < rows_number; row_index++)
     {
@@ -204,7 +204,7 @@ Tensor2 KMeans::get_cluster_centers() const
 }
 
 
-Tensor<Index, 1> KMeans::get_cluster_labels() const
+VectorI KMeans::get_cluster_labels() const
 {
     return rows_cluster_labels;
 }

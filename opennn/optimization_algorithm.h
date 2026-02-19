@@ -160,8 +160,6 @@ struct OptimizerData
 
 struct TrainingResults
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     TrainingResults(const Index = 0);
     virtual ~TrainingResults() = default;
 

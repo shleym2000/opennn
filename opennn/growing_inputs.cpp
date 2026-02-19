@@ -136,7 +136,7 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     const vector<Index> input_variable_indices = dataset->get_variable_indices("Input");
 
-    Tensor<Index, 1> correlations_rank_descending(input_variable_indices.size());
+    VectorI correlations_rank_descending(input_variable_indices.size());
 
     for(Index i = 0; i < correlations_rank_descending.size(); i++)
         correlations_rank_descending(i) = input_variable_indices[correlation_indices[i]];

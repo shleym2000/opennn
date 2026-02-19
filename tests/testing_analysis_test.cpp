@@ -173,7 +173,7 @@ TEST(TestingAnalysis, ErrorDataHistograms)
 
 TEST(TestingAnalysis, MaximalErrors)
 {
-    Tensor<Tensor<Index, 1>, 1> maximal_errors;
+    Tensor<VectorI, 1> maximal_errors;
 
     const Index samples_number = 1;
     const Index inputs_number = 1;

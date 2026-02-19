@@ -26,8 +26,6 @@ struct NeuralNetworkBackPropagationCuda;
 
 struct ForwardPropagation
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     ForwardPropagation(const Index = 0, NeuralNetwork* = nullptr);
 
     void set(const Index = 0, NeuralNetwork* = nullptr);
@@ -93,8 +91,6 @@ class NeuralNetwork
 {
 
 public:
-
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     NeuralNetwork();
 
@@ -204,7 +200,7 @@ public:
     void set_parameters_glorot();
 
     // Output
-
+/*
     template <Index input_rank, Index output_rank>
     Tensor<type, output_rank> calculate_outputs(const Tensor<type, input_rank>& inputs)
     {
@@ -252,16 +248,50 @@ public:
 
         return Tensor<type, output_rank>();
     }
-
+*/
     Tensor3 calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2);
 
-    Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
+    TensorView run_internal_forward_propagation(const type* data, const Shape& shape)
+    {
+        ForwardPropagation forward_propagation(shape[0], this);
+        TensorView input_view(const_cast<type*>(data), shape);
 
-    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
+        // Core logic
+        forward_propagate({input_view}, forward_propagation, false);
+
+        // Return the view of the result
+        return forward_propagation.layers.back()->get_outputs();
+    }
+
+
+    MatrixR calculate_outputs(const MatrixR& inputs)
+    {
+        TensorView out = run_internal_forward_propagation(inputs.data(), {inputs.rows(), inputs.cols()});
+
+        return Eigen::Map<MatrixR>(out.data, out.shape[0], out.shape[1]);
+    }
+
+    MatrixR calculate_outputs(const Tensor3& inputs)
+    {
+        TensorView out = run_internal_forward_propagation(inputs.data(), {inputs.dimension(0), inputs.dimension(1), inputs.dimension(2)});
+
+        return Map<MatrixR>(out.data, out.shape[0], out.shape[1]);
+    }
+
+    MatrixR calculate_outputs(const Tensor4& inputs)
+    {
+        TensorView out = run_internal_forward_propagation(inputs.data(), {inputs.dimension(0), inputs.dimension(1), inputs.dimension(2), inputs.dimension(3)});
+        return Eigen::Map<MatrixR>(out.data, out.shape[0], out.shape[1]);
+    }
+
+
+    MatrixR calculate_scaled_outputs(type*, VectorI&);
+
+    MatrixR calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
-    Tensor2 calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
+    MatrixR calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
 
     // Serialization
 
@@ -284,7 +314,7 @@ public:
     vector<string> get_layer_labels() const;
     vector<string> get_names_string() const;
 
-    void save_outputs(Tensor2&, const filesystem::path&);
+    void save_outputs(MatrixR&, const filesystem::path&);
     void save_outputs(Tensor3&, const filesystem::path&);
 
     void forward_propagate(const vector<TensorView>&,

@@ -123,7 +123,7 @@ TEST(Dataset, FilterData_MixedFiltering) {
         Tensor1 maximums(2);
         maximums.setValues({ type(2), type(0.5) });
 
-        Tensor<Index, 1> filtered_data = dataset.filter_data(minimums, maximums);
+        VectorI filtered_data = dataset.filter_data(minimums, maximums);
 
         EXPECT_EQ(filtered_data.size(), 2);
         EXPECT_EQ(dataset.get_sample_role(0), "None");
@@ -143,7 +143,7 @@ TEST(Dataset, FilterData_MixedFiltering) {
         Tensor1 maximums(2);
         maximums.setValues({ type(2), type(3) });
 
-        Tensor<Index, 1> filtered_data = dataset.filter_data(minimums, maximums);
+        VectorI filtered_data = dataset.filter_data(minimums, maximums);
 
         EXPECT_EQ(filtered_data.size(), 1);
         EXPECT_EQ(dataset.get_sample_role(0), "Training");
@@ -222,9 +222,9 @@ TEST(Dataset, CalculateTargetDistribution)
 
     dataset.set_variable_indices(input_variables_indices, target_variables_indices);
     
-    Tensor<Index, 1> target_distribution = dataset.calculate_target_distribution();
+    VectorI target_distribution = dataset.calculate_target_distribution();
 
-    Tensor<Index, 1> solution(2);
+    VectorI solution(2);
     solution(0) = 2;
     solution(1) = 2;
 
@@ -258,7 +258,7 @@ TEST(Dataset, CalculateTargetDistribution)
 
     dataset_2.set_variable_indices(input_variables_indices_2, target_variables_indices_2);
 
-    Tensor<Index, 1> target_distribution_2 = dataset_2.calculate_target_distribution();
+    VectorI target_distribution_2 = dataset_2.calculate_target_distribution();
 
     EXPECT_EQ(target_distribution_2[0], 1);
     EXPECT_EQ(target_distribution_2[1], 2);
@@ -352,7 +352,7 @@ TEST(Dataset, ReadCSV_Basic)
     EXPECT_EQ(dataset.get_missing_values_number(), 0);
     EXPECT_FALSE(dataset.has_nan());
     EXPECT_EQ(dataset.count_rows_with_nan(), 0);
-    Tensor<Index, 1> nans_per_raw_var = dataset.count_nans_per_variable();
+    VectorI nans_per_raw_var = dataset.count_nans_per_variable();
     ASSERT_EQ(nans_per_raw_var.size(), 3);
     for (Index i = 0; i < 3; ++i) EXPECT_EQ(nans_per_raw_var(i), 0);
 

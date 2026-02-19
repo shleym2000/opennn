@@ -391,7 +391,7 @@ type minimum(const VectorR& data, const vector<Index>& indices)
 }
 
 
-// Index minimum(const Tensor<Index, 1>& vector)
+// Index minimum(const VectorI& vector)
 // {
 //     if(vector.size() == 0) return 0;
 
@@ -439,7 +439,7 @@ type maximum(const VectorR& data, const vector<Index>& indices)
 }
 
 
-// Index maximum(const Tensor<Index, 1>& vector)
+// Index maximum(const VectorI& vector)
 // {
 //     if(vector.size() == 0) return 0;
 
@@ -525,23 +525,13 @@ type mean(const VectorR& vector, Index begin, Index end)
 
 type mean(const VectorR& vector)
 {
-    const Index size = vector.size();
+    auto is_finite = vector.array().isFinite();
 
-    if(size == 0) return type(0);
+    const Index count = is_finite.count();
 
-    long double sum = 0.0;
+    if (count == 0) return type(0);
 
-    Index count = 0;
-
-    for(Index i = 0; i < size; i++)
-    {
-        if (isnan(vector(i))) continue;
-
-        sum += vector(i);
-        count++;
-    }
-
-    return type(sum/count);
+    return is_finite.select(vector.array(), 0.0f).sum() / static_cast<type>(count);
 }
 
 
@@ -573,9 +563,9 @@ type variance(const VectorR& vector)
 }
 
 
-type variance(const VectorR& vector, const Tensor<Index, 1>& indices)
+type variance(const VectorR& vector, const VectorI& indices)
 {
-    const Index size = indices.dimension(0);
+    const Index size = indices.size();
 
     long double sum = 0.0;
     long double squared_sum = 0.0;
@@ -1107,11 +1097,11 @@ Histogram histogram(const VectorB& v)
 }
 
 
-Tensor<Index, 1> total_frequencies(const Tensor<Histogram, 1>& histograms)
+VectorI total_frequencies(const Tensor<Histogram, 1>& histograms)
 {
     const Index histograms_number = histograms.size();
 
-    Tensor<Index, 1> total_frequencies(histograms_number);
+    VectorI total_frequencies(histograms_number);
 
     for(Index i = 0; i < histograms_number; i++)
         total_frequencies(i) = histograms(i).frequencies(i);
@@ -1211,34 +1201,32 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
                                   const vector<Index>& row_indices,
                                   const vector<Index>& column_indices)
 {
-    const Index row_indices_size = row_indices.size();
-    const Index column_indices_size = column_indices.size();
+    const Index row_indices_size = static_cast<Index>(row_indices.size());
+    const Index column_indices_size = static_cast<Index>(column_indices.size());
 
-    vector<Descriptives> descriptives(column_indices_size);
+    vector<Descriptives> descriptives_results(column_indices_size);
 
-    Tensor1 minimums(column_indices_size);
-    minimums.setZero();
+    // Using VectorR (Matrix API) instead of Tensor1
+    VectorR minimums = VectorR::Zero(column_indices_size);
+    VectorR maximums = VectorR::Zero(column_indices_size);
 
-    Tensor1 maximums(column_indices_size);
-    maximums.setZero();
+    // Use double precision for intermediate accumulation
+    VectorXd sums = VectorXd::Zero(column_indices_size);
+    VectorXd squared_sums = VectorXd::Zero(column_indices_size);
 
-    Tensor<double, 1> sums(column_indices_size);
-    Tensor<double, 1> squared_sums(column_indices_size);
-    Tensor<Index, 1> count(column_indices_size);
+    // Count remains VectorI (assuming Matrix<Index, Dynamic, 1>)
+    VectorI count = VectorI::Zero(column_indices_size);
 
-    sums.setZero();
-    squared_sums.setZero();
-    count.setZero();
-
-    #pragma omp parallel for
+#pragma omp parallel for
     for(Index j = 0; j < column_indices_size; j++)
     {
         const Index column_index = column_indices[j];
-        type& current_min = minimums(j);
-        type& current_max = maximums(j);
-        double& sum = sums(j);
-        double& squared_sum = squared_sums(j);
-        Index& cnt = count(j);
+
+        type current_min = 0;
+        type current_max = 0;
+        double current_sum = 0;
+        double current_sq_sum = 0;
+        Index current_count = 0;
         bool first_iteration = true;
 
         for(Index i = 0; i < row_indices_size; i++)
@@ -1246,7 +1234,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
             const Index row_index = row_indices[i];
             const type value = matrix(row_index, column_index);
 
-            if (isnan(value)) continue;
+            if (std::isnan(value)) continue;
 
             if (first_iteration)
             {
@@ -1254,44 +1242,44 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
                 current_max = value;
                 first_iteration = false;
             }
-            else{
-                current_min = min(current_min, value);
-                current_max = max(current_max, value);
+            else {
+                if (value < current_min) current_min = value;
+                if (value > current_max) current_max = value;
             }
 
-            sum += static_cast<double>(value);
-            squared_sum += static_cast<double>(value) * static_cast<double>(value);
-            cnt++;
+            current_sum += static_cast<double>(value);
+            current_sq_sum += static_cast<double>(value) * static_cast<double>(value);
+            current_count++;
         }
+
+        minimums(j) = current_min;
+        maximums(j) = current_max;
+        sums(j) = current_sum;
+        squared_sums(j) = current_sq_sum;
+        count(j) = current_count;
     }
 
-    const Tensor<double, 1> mean = sums / count.cast<double>();
-    Tensor<double, 1> standard_deviation(column_indices_size);
+    const VectorXd mean = sums.array() / count.cast<double>().array();
+    VectorXd standard_deviation = VectorXd::Zero(column_indices_size);
 
-    if (row_indices_size > 1)
-    {
-        #pragma omp parallel for
-        for(Index i = 0; i < column_indices_size; i++)
-        {
-            const double numerator = squared_sums(i) - sums(i) * sums(i) / count(i);
-            const double variance = numerator / (count(i) - 1);
-            standard_deviation(i) = sqrt(variance);
-        }
-    }
-    else
-    {
-        standard_deviation.setZero();
-    }
-
+    #pragma omp parallel for
     for(Index i = 0; i < column_indices_size; i++)
     {
-        descriptives[i].set(minimums(i),
-            maximums(i),
-            type(mean(i)),
-            type(standard_deviation(i)));
+        if (count(i) > 1)
+        {
+            const double n = static_cast<double>(count(i));
+            const double variance = (squared_sums(i) - (sums(i) * sums(i) / n)) / (n - 1.0);
+            standard_deviation(i) = sqrt(max(0.0, variance));
+        }
+
+        // Populate the results vector
+        descriptives_results[i].set(minimums(i),
+                                    maximums(i),
+                                    static_cast<type>(mean(i)),
+                                    static_cast<type>(standard_deviation(i)));
     }
 
-    return descriptives;
+    return descriptives_results;
 }
 
 
@@ -1420,7 +1408,7 @@ VectorR mean(const MatrixR& matrix)
 }
 
 
-VectorR mean(const MatrixR& matrix, const Tensor<Index, 1>& column_indices)
+VectorR mean(const MatrixR& matrix, const VectorI& column_indices)
 {
     const Index rows_number = matrix.rows();
 
@@ -1592,7 +1580,7 @@ type median(const MatrixR& matrix, Index column_index)
 }
 
 
-VectorR median(const MatrixR& matrix, const Tensor<Index, 1>& column_indices)
+VectorR median(const MatrixR& matrix, const VectorI& column_indices)
 {
     const Index rows_number = matrix.rows();
 
@@ -1711,7 +1699,7 @@ Index maximal_index(const Tensor1& vector)
 }
 
 
-Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, Index number)
+VectorI minimal_indices(const Tensor1& input_vector, Index number)
 {
     vector<type> vector_(input_vector.dimension(0));
     for(Index i = 0; i < input_vector.dimension(0); i++) {
@@ -1719,7 +1707,7 @@ Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, Index number)
     }
 
     const Index size = vector_.size();
-    Tensor<Index, 1> minimal_indices(number);
+    VectorI minimal_indices(number);
 
     Index val_max=0;
     for(Index i = 0; i < size; i++) {
@@ -1750,7 +1738,7 @@ Tensor<Index, 1> minimal_indices(const Tensor1& input_vector, Index number)
 }
 
 
-Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, Index number)
+VectorI maximal_indices(const Tensor1& input_vector, Index number)
 {
     vector<type> vector_(input_vector.dimension(0));
     for(Index i = 0; i < input_vector.dimension(0); i++) {
@@ -1766,7 +1754,7 @@ Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, Index number)
         }
     }
 
-    Tensor<Index, 1> maximal_indices(number);
+    VectorI maximal_indices(number);
 
     for(Index j = 0; j < number; j++)
     {
@@ -1790,14 +1778,14 @@ Tensor<Index, 1> maximal_indices(const Tensor1& input_vector, Index number)
 }
 
 
-Tensor<Index, 1> minimal_indices(const MatrixR& matrix)
+VectorI minimal_indices(const MatrixR& matrix)
 {
     const Index rows_number = matrix.rows();
     const Index columns_number = matrix.cols();
 
     type minimum = matrix(0,0);
 
-    Tensor<Index, 1> minimal_indices(2);
+    VectorI minimal_indices(2);
     minimal_indices.setZero();
 
     for(Index i = 0; i < rows_number; i++)
@@ -1817,14 +1805,14 @@ Tensor<Index, 1> minimal_indices(const MatrixR& matrix)
 }
 
 
-Tensor<Index, 1> maximal_indices(const MatrixR& matrix)
+VectorI maximal_indices(const MatrixR& matrix)
 {
     const Index rows_number = matrix.rows();
     const Index columns_number = matrix.cols();
 
     type maximum = matrix(0,0);
 
-    Tensor<Index, 1> maximal_indices(2);
+    VectorI maximal_indices(2);
     maximal_indices.setZero();
 
     for(Index i = 0; i < rows_number; i++)

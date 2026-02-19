@@ -627,7 +627,7 @@ MatrixR TimeSeriesDataset::calculate_autocorrelations(const Index past_time_step
 
         const VectorMap current_input_i(input_i.data(), input_i.rows());
         
-        autocorrelations_vector = opennn::autocorrelations(device.get(), current_input_i, new_past_time_steps);
+        autocorrelations_vector = opennn::autocorrelations(current_input_i, new_past_time_steps);
 
         for(Index j = 0; j < new_past_time_steps; j++)
             autocorrelations (counter_i, j) = autocorrelations_vector(j) ;
@@ -723,7 +723,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations(const Index past_time_st
             const VectorMap current_input_i(input_i.data(), input_i.rows());
             const VectorMap current_input_j(input_j.data(), input_j.rows());
 
-            cross_correlations_vector = opennn::cross_correlations(device.get(), current_input_i, current_input_j, new_past_time_steps);
+            cross_correlations_vector = opennn::cross_correlations(current_input_i, current_input_j, new_past_time_steps);
 
             for(Index k = 0; k < new_past_time_steps; k++)
                 cross_correlations(counter_i, counter_j, k) = cross_correlations_vector(k) ;
@@ -775,7 +775,7 @@ Tensor3 TimeSeriesDataset::calculate_cross_correlations_spearman(const Index pas
         {
             const VectorR& ranked_series_j = ranked_series.at(numeric_vars_indices[j]);
 
-            const VectorR ccf_vector = opennn::cross_correlations(device.get(), ranked_series_i, ranked_series_j, past_time_steps);
+            const VectorR ccf_vector = opennn::cross_correlations(ranked_series_i, ranked_series_j, past_time_steps);
 
             for(Index k = 0; k < past_time_steps; ++k)
                 cross_correlations(i, j, k) = ccf_vector(k);
