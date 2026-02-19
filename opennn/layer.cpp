@@ -267,7 +267,7 @@ bool Layer::get_is_trainable() const
 }
 
 
-void Layer::add_gradients(const vector<TensorView>&output_gradient_views) const
+void Layer::add_gradients(const vector<TensorView>& output_gradient_views) const
 {
     TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 

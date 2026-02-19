@@ -248,7 +248,7 @@ void GeneticAlgorithm::initialize_population_random()
 
         fill_n(individual_genes.data(), true_count, true);
 
-        shuffle_tensor(individual_genes);
+        shuffle(individual_genes);
 
         population.row(i) = individual_genes;
     }

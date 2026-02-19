@@ -108,14 +108,12 @@ struct Histogram
 };
 
 // Minimum
-type minimum(const VectorR&);
 type minimum(const MatrixR&);
 type minimum(const VectorR&, const vector<Index>&);
 //Index minimum(const VectorI&);
 Tensor1 column_minimums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
 
 // Maximum
-type maximum(const VectorR&);
 type maximum(const MatrixR&);
 type maximum(const VectorR&, const vector<Index>&);
 //Index maximum(const VectorI&);

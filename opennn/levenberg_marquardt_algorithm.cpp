@@ -376,7 +376,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
 
     do
     {
-        sum_diagonal(hessian, damping_parameter);
+        hessian.diagonal().array() += damping_parameter;
 
         parameter_updates = perform_Householder_QR_decomposition(hessian, type(-1)*gradient);
 
@@ -417,7 +417,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
         }
         else
         {
-            sum_diagonal(hessian, -damping_parameter);
+            hessian.diagonal().array() -= damping_parameter;
 
             set_damping_parameter(damping_parameter*damping_parameter_factor);
         }

@@ -198,11 +198,12 @@ void NormalizedSquaredError::calculate_output_gradients_lm(const Batch& batch,
                                                        ForwardPropagation&,
                                                        BackPropagationLM & back_propagation) const
 {
+    // @todo Is this correct?
+
     const Index total_samples_number = dataset->get_used_samples_number();
     const Index batch_samples_number = batch.get_samples_number();
 
-    const TensorView output_gradients_view = back_propagation.get_output_gradients();
-    TensorMap2 output_gradients = tensor_map<2>(output_gradients_view);
+    MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
     const type coefficient = sqrt(type(2.0 * total_samples_number) / (type(batch_samples_number) * normalization_coefficient));
 

@@ -246,7 +246,7 @@ protected:
 
     void softmax_derivatives_times_tensor(const TensorMap3, TensorMap3, TensorMap1) const;
 
-    void add_gradients(const vector<TensorView>& output_gradient_views) const;
+    void add_gradients(const vector<TensorView>&) const;
 
     template <int Rank>
     void normalize_batch(
@@ -305,8 +305,8 @@ protected:
         {
             for(Index i = 0; i < tensor.size(); i++)
                 tensor(i) = (random_uniform(0, 1) < dropout_rate)
-                                ? 0
-                                : tensor(i) * scaling_factor;
+                    ? 0
+                    : tensor(i) * scaling_factor;
         }
     }
 
@@ -334,48 +334,6 @@ protected:
             outputs_matrix(outputs.data(), total_rows, outputs_size);
 
         outputs_matrix.noalias() = (inputs_matrix * weights_matrix).rowwise() + biases_vector;
-    }
-
-
-    template <int Rank>
-    void calculate_gradients(const TensorMapR<Rank> inputs,
-                             const TensorMapR<Rank> output_gradients,
-                             const TensorMap2 weights,
-                             TensorMap2 weight_gradients,
-                             TensorMap1 bias_gradients,
-                             TensorMapR<Rank> input_gradients,
-                             const bool is_first_layer) const
-    {
-        const Index inputs_size = weights.dimension(0);
-        const Index outputs_size = weights.dimension(1);
-        const Index total_rows = inputs.size() / inputs_size;
-
-        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
-            inputs_matrix(inputs.data(), total_rows, inputs_size);
-
-        const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
-            gradients_matrix(output_gradients.data(), total_rows, outputs_size);
-
-        Map<Eigen::Vector<type, Dynamic>>
-            bias_gradients_vector(bias_gradients.data(), outputs_size);
-
-        Map<Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
-            weight_gradients_matrix(weight_gradients.data(), inputs_size, outputs_size);
-
-        bias_gradients_vector.noalias() = gradients_matrix.colwise().sum();
-
-        weight_gradients_matrix.noalias() = inputs_matrix.transpose() * gradients_matrix;
-
-        if(!is_first_layer)
-        {
-            const Map<const Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
-                weights_matrix(weights.data(), inputs_size, outputs_size);
-
-            Map<Matrix<type, Dynamic, Dynamic, ColMajor, AlignedMax>>
-                input_gradients_matrix(input_gradients.data(), total_rows, inputs_size);
-
-            input_gradients_matrix.noalias() = gradients_matrix * weights_matrix.transpose();
-        }
     }
 
 #ifdef OPENNN_CUDA

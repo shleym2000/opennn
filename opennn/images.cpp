@@ -312,15 +312,14 @@ void rotate_image(const ThreadPoolDevice* device,
     const type cos_angle = cos(angle_rad);
     const type sin_angle = sin(angle_rad);
 
-    Tensor2 rotation_matrix(3, 3);
+    MatrixR rotation_matrix(3, 3);
 
-    rotation_matrix.setValues({
-                               {cos_angle, -sin_angle, rotation_center_x - cos_angle * rotation_center_x + sin_angle * rotation_center_y},
-                               {sin_angle, cos_angle, rotation_center_y - sin_angle * rotation_center_x - cos_angle * rotation_center_y},
-                               {type(0), type(0), type(1)}});
+    rotation_matrix << cos_angle, -sin_angle, rotation_center_x - cos_angle * rotation_center_x + sin_angle * rotation_center_y,
+                       sin_angle, cos_angle, rotation_center_y - sin_angle * rotation_center_x - cos_angle * rotation_center_y,
+                       type(0), type(0), type(1);
 
-    Tensor1 coordinates(3);
-    Tensor1 transformed_coordinates(3);
+    VectorR coordinates(3);
+    VectorR transformed_coordinates(3);
 
     for(Index x = 0; x < width; x++)
     {

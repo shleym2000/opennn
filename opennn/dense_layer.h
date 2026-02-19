@@ -555,7 +555,7 @@ public:
             if (get_output_shape()[0] == 1 && new_activation_function == "Softmax")
                 activation_function = "Sigmoid";
             else
-            activation_function = new_activation_function;
+                activation_function = new_activation_function;
         }
         else
             throw runtime_error("Unknown activation function: " + new_activation_function);
@@ -646,44 +646,6 @@ public:
     }
 */
 
-    void apply_batch_normalization_backward(TensorMap2 output_gradients,
-                                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                            unique_ptr<LayerBackPropagation>& layer_back_propagation) const
-    {
-//        const Index batch_size = layer_forward_propagation->batch_size;
-
-        const DenseForwardPropagation<2>* dense2d_forward_propagation =
-            static_cast<const DenseForwardPropagation<2>*>(layer_forward_propagation.get());
-
-        const TensorMap2 normalized_outputs = tensor_map<2>(dense2d_forward_propagation->normalized_outputs);
-//        const TensorMap1 standard_deviations = tensor_map<1>(dense2d_forward_propagation->standard_deviations);
-
-        DenseBackPropagation<2>* dense2d_back_propagation =
-            static_cast<DenseBackPropagation<2>*>(layer_back_propagation.get());
-
-        TensorMap1 gamma_gradients = tensor_map<1>(dense2d_back_propagation->gamma_gradients);
-        TensorMap1 beta_gradients = tensor_map<1>(dense2d_back_propagation->beta_gradients);
-
-        beta_gradients.device(*device) = output_gradients.sum(array_1(0));
-        gamma_gradients.device(*device) = (output_gradients * normalized_outputs).sum(array_1(0));
-/*
-        const array<Index, 2> reshape_dims = { 1, get_outputs_number() };
-        const array<Index, 2> broadcast_dims = { batch_size, 1 };
-
-        const auto inv_m = type(1) / batch_size;
-
-        output_gradients.device(*device) =
-            ((output_gradients * type(batch_size))
-             - beta_gradients.reshape(reshape_dims).broadcast(broadcast_dims)
-             - normalized_outputs *
-                   gamma_gradients.reshape(reshape_dims).broadcast(broadcast_dims)
-             ) * inv_m
-            / standard_deviations.reshape(reshape_dims).broadcast(broadcast_dims)
-            * gammas.reshape(reshape_dims).broadcast(broadcast_dims);
-*/
-    }
-
-
     void forward_propagate(const vector<TensorView>& input_views,
                            unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                            bool is_training) override
@@ -737,15 +699,17 @@ public:
                         unique_ptr<LayerForwardPropagation>& forward_propagation,
                         unique_ptr<LayerBackPropagation>& back_propagation) const override
     {
-        const TensorMap2 inputs = tensor_map<2>(input_views[0]);
-        TensorMap2 output_gradients = tensor_map<2>(output_gradient_views[0]);
+        const MatrixMap inputs = matrix_map(input_views[0]);
+        MatrixMap output_gradients = matrix_map(output_gradient_views[0]);
 
         // Forward propagation
 
-        const DenseForwardPropagation<2>* dense2d_layer_forward_propagation =
+        const DenseForwardPropagation<2>* dense_forward_propagation =
             static_cast<DenseForwardPropagation<2>*>(forward_propagation.get());
 
-        const TensorMap2 activation_derivatives = tensor_map<2>(dense2d_layer_forward_propagation->activation_derivatives);
+        const MatrixMap activation_derivatives = matrix_map(dense_forward_propagation->activation_derivatives);
+
+        const MatrixMap weights_map = matrix_map(weights);
 
         // Back propagation
 
@@ -753,22 +717,30 @@ public:
             static_cast<DenseBackPropagation<2>*>(back_propagation.get());
 
         if(activation_function != "Softmax")
-            output_gradients.device(*device) = output_gradients * activation_derivatives;
+            output_gradients.array() *= activation_derivatives.array();
 
         if (batch_normalization)
-            apply_batch_normalization_backward(output_gradients, forward_propagation, back_propagation);
+        {
+            const MatrixMap normalized_outputs = matrix_map(dense_forward_propagation->normalized_outputs);
 
-        TensorMap2 weight_gradients = tensor_map<2>(dense2d_back_propagation->weight_gradients);
-        TensorMap1 bias_gradients = tensor_map<1>(dense2d_back_propagation->bias_gradients);
-        TensorMap2 input_gradients = tensor_map<2>(back_propagation->input_gradients[0]);
+            VectorMap gamma_gradients = vector_map(dense2d_back_propagation->gamma_gradients);
+            VectorMap beta_gradients = vector_map(dense2d_back_propagation->beta_gradients);
 
-        calculate_gradients<2>(inputs,
-                               output_gradients,
-                               tensor_map<2>(weights),
-                               weight_gradients,
-                               bias_gradients,
-                               input_gradients,
-                               dense2d_back_propagation->is_first_layer);
+            beta_gradients.noalias() = output_gradients.colwise().sum();
+
+            gamma_gradients = (output_gradients.array() * normalized_outputs.array()).colwise().sum().transpose();
+        }
+
+        MatrixMap weight_gradients = matrix_map(dense2d_back_propagation->weight_gradients);
+        VectorMap bias_gradients = vector_map(dense2d_back_propagation->bias_gradients);
+        MatrixMap input_gradients = matrix_map(back_propagation->input_gradients[0]);
+
+        weight_gradients.noalias() = inputs.transpose() * output_gradients;
+
+        bias_gradients.noalias() = output_gradients.colwise().sum();
+
+        if(!dense2d_back_propagation->is_first_layer)
+            input_gradients.noalias() = output_gradients * weights_map.transpose();
     }
 
 
@@ -777,59 +749,51 @@ public:
                            unique_ptr<LayerForwardPropagation>& forward_propagation,
                            unique_ptr<LayerBackPropagationLM>& back_propagation) const override
     {
-        const auto inputs = tensor_map<Rank>(input_views[0]);
-        auto output_gradients = tensor_map<Rank>(output_gradient_views[0]);
+        const MatrixMap inputs = matrix_map(input_views[0]);
+        MatrixMap output_gradients = matrix_map(output_gradient_views[0]);
 
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();
         const Index biases_number = biases.size();
-        const Index total_rows = output_gradients.dimension(0);
 
-        const DenseForwardPropagation<Rank>* dense2d_layer_forward_propagation =
+        // Forward propagation
+
+        const DenseForwardPropagation<Rank>* dense_forward_propagation =
             static_cast<DenseForwardPropagation<Rank>*>(forward_propagation.get());
 
-        const auto activation_derivatives
-            = tensor_map<Rank>(dense2d_layer_forward_propagation->activation_derivatives);
+        const MatrixMap activation_derivatives = matrix_map(dense_forward_propagation->activation_derivatives);
 
-        DenseBackPropagationLM* dense_lm =
+        // Back propagation
+
+        DenseBackPropagationLM* dense_back_propagation_lm =
             static_cast<DenseBackPropagationLM*>(back_propagation.get());
 
-        TensorMap2 squared_errors_Jacobian = tensor_map<2>(dense_lm->squared_errors_Jacobian);
-
-        auto input_gradients = tensor_map<Rank>(dense_lm->input_gradients[0]);
-
-        bool is_first_layer = dense_lm->is_first_layer;
+        MatrixMap squared_errors_Jacobian = matrix_map(dense_back_propagation_lm->squared_errors_Jacobian);
 
         if(activation_function != "Softmax")
-            output_gradients.device(*device) = output_gradients * activation_derivatives;
+            output_gradients.array() *= activation_derivatives.array();
 
-        if constexpr(Rank == 2)
-            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{total_rows, biases_number})
-                .device(*device) = output_gradients;
-        else
-            squared_errors_Jacobian.slice(array<Index, 2>{0, 0}, array<Index, 2>{total_rows, biases_number})
-                .device(*device) = output_gradients.sum(array<Index, Rank-2>{1});
+        squared_errors_Jacobian.leftCols(biases_number).noalias() = output_gradients;
 
         for(Index j = 0; j < outputs_number; j++)
         {
-            const auto delta_j = output_gradients.chip(j, Rank - 1);
-
             for(Index i = 0; i < inputs_number; i++)
             {
-                const auto input_i = inputs.chip(i, Rank - 1);
-                const auto derivative = delta_j * input_i;
+                const Index weight_column_index = biases_number + j * inputs_number + i;
 
-                const Index weight_column_index = biases_number + j * outputs_number + i;
-
-                if constexpr(Rank == 2)
-                    squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative;
-                else
-                    squared_errors_Jacobian.chip(weight_column_index, 1).device(*device) = derivative.sum(array<Index, Rank-2>{1});
+                squared_errors_Jacobian.col(weight_column_index).array()
+                    = output_gradients.col(j).array() * inputs.col(i).array();
             }
         }
 
-        if(!is_first_layer)
-            input_gradients.device(*device) = output_gradients.contract(tensor_map<2>(weights), axes(Rank - 1, 1));
+        if(!dense_back_propagation_lm->is_first_layer)
+        {
+            MatrixMap input_gradients = matrix_map(dense_back_propagation_lm->input_gradients[0]);
+
+            const MatrixMap weights_map = matrix_map(weights);
+
+            input_gradients.noalias() = output_gradients * weights_map.transpose();
+        }
     }
 
 
@@ -895,7 +859,8 @@ public:
     }
 
 
-    string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& new_output_names = vector<string>()) const override
+    string get_expression(const vector<string>& new_feature_names = vector<string>(),
+                          const vector<string>& new_output_names = vector<string>()) const override
     {
         const vector<string> input_names = new_feature_names.empty()
             ? get_default_feature_names()

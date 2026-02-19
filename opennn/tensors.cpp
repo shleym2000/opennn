@@ -60,21 +60,6 @@ Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& ve
 }
 */
 
-void divide_columns(const ThreadPoolDevice* device, MatrixMap matrix, const VectorR& vector)
-{
-    // @ Changes to test (the case in which you can divide by 0)
-    const Index columns_number = matrix.cols();
-    VectorR corrected_vector = vector;
-
-    for(Index i = 0; i < columns_number; i++)
-        for(Index j = 0; j < vector.size(); j++)
-            if(vector(j) == 0)
-                corrected_vector(j) = 1;
-
-    matrix.array().colwise() /= corrected_vector.array();
-
-}
-
 
 Tensor2 append_rows(const Tensor2& starting_matrix, const Tensor2& block)
 {
@@ -303,7 +288,7 @@ MatrixR filter_column_minimum_maximum(const MatrixR& matrix,
     for(Index i = 0; i < rows_number; i++)
     {
         if(matrix(i, column_index) >= minimum
-            && matrix(i, column_index) <= maximum)
+        && matrix(i, column_index) <= maximum)
         {
             const VectorR row = matrix.row(i);
 
@@ -322,21 +307,11 @@ MatrixR filter_column_minimum_maximum(const MatrixR& matrix,
 }
 
 
-type l2_distance(const VectorR& x, const VectorR& y)
+VectorI get_nearest_points(const MatrixR& matrix,const VectorR& point, int n = 1)
 {
-    if(x.size() != y.size())
-        throw runtime_error("x and y vector must  have the same shape.\n");
+    const Index number_points_to_compare = matrix.rows();
 
-    return (x - y).norm();
-
-}
-
-
-VectorI get_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, int n = 1)
-{
-    const Index number_points_to_compare = matrix.dimension(0);
-
-    const Index coordinates_number = matrix.dimension(1);
+    const Index coordinates_number = matrix.cols();
 
     if(point.size() != coordinates_number)
         throw runtime_error("get_nearest_points : Matrix row dimension and point size must match.\n");
@@ -347,16 +322,14 @@ VectorI get_nearest_points(const Tensor2& matrix,const Tensor<type,1>& point, in
     if(n > number_points_to_compare)
         n = number_points_to_compare;
 
-    vector<std::pair<type, Index>> dist_index(number_points_to_compare);
+    vector<pair<type, Index>> dist_index(number_points_to_compare);
 
 #pragma omp parallel for
     for(Index i = 0; i < number_points_to_compare; ++i)
-    {
-        Tensor1 row = matrix.chip(i, 0);
+    {       
+        const type distance = (matrix.row(i) - point).norm();
 
-        type dist = l2_distance(row, point);
-
-        dist_index[i] = make_pair(dist, i);
+        dist_index[i] = make_pair(distance, i);
     }
 
     std::partial_sort(
@@ -381,17 +354,6 @@ void set_identity(Tensor2& matrix)
 #pragma omp parallel for
     for(Index i = 0; i < rows_number; i++)
         matrix(i, i) = type(1);
-}
-
-
-void sum_diagonal(Tensor2& matrix, type value)
-{
-    const Index rows_number = matrix.dimension(0);
-
-#pragma omp parallel for
-
-    for(Index i = 0; i < rows_number; i++)
-        matrix(i,i) += value;
 }
 
 

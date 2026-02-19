@@ -112,7 +112,7 @@ Tensor<Correlation, 1> TestingAnalysis::linear_correlation(const MatrixR& target
     Tensor<Correlation, 1> linear_correlation(outputs_number);
 
     for(Index i = 0; i < outputs_number; i++)
-        linear_correlation(i) = opennn::linear_correlation(device.get(), output.col(i), target.col(i));
+        linear_correlation(i) = opennn::linear_correlation(output.col(i), target.col(i));
 
     return linear_correlation;
 }

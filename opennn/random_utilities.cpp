@@ -152,20 +152,16 @@ void shuffle_vector_blocks(vector<Index>& vec, size_t blocks_number)
 }
 
 
-template<typename T>
-void shuffle_tensor(Tensor<T, 1>& vec)
+void shuffle(VectorB& v)
 {
-    shuffle(vec.data(), vec.data() + vec.size(), get_generator());
+    shuffle(v.data(), v.data() + v.size(), get_generator());
 }
-
-template void shuffle_tensor<bool>(VectorB&);
 
 
 Index get_random_element(const vector<Index>&values)
 {
     if (values.empty())
         throw runtime_error("get_random_element: Input vector is empty.");
-
 
     uniform_int_distribution<size_t> distribution(0, values.size() - 1);
 

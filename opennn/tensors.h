@@ -278,7 +278,7 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
     return array<Index, 5>({a, b, c, d, e});
 }
 
-void set_row(Tensor2&, const Tensor1&, Index);
+void set_row(MatrixR&, const VectorR&, Index);
 
 void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
 
@@ -287,11 +287,7 @@ void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
 
 void set_identity(MatrixR&);
 
-void sum_diagonal(MatrixR&, type);
-
 //Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
-
-void divide_columns(const ThreadPoolDevice*, MatrixMap, const VectorR&);
 
 bool is_binary(const VectorR& tensor)
 {
@@ -406,9 +402,6 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
 MatrixR filter_column_minimum_maximum(const MatrixR&, Index, type, type);
 
-//type l2_distance(const type, const TensorMap<Tensor<type, 0> >&);
-type l2_distance(const VectorR&, const VectorR&);
-
 VectorI get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
 
 void fill_tensor_data_row_major(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
@@ -511,6 +504,19 @@ TensorMap2 tensor_map(const Tensor4&, Index, Index);
 
 TensorMap3 tensor_map_(const TensorMap4, Index);
 //TensorMap1 tensor_map_(const TensorMap2&, Index);
+
+VectorMap vector_map(const TensorView& tensor_view)
+{
+    if(!tensor_view.data)
+        throw runtime_error("tensor_map: Null pointer in pair.");
+
+    if (reinterpret_cast<uintptr_t>(tensor_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)
+        throw runtime_error("tensor_map alignment error: Pointer is not aligned. "
+                            "This will cause a crash with AlignedMax TensorMaps.");
+
+    return VectorMap(tensor_view.data, tensor_view.size() / tensor_view.shape[0]);
+}
+
 
 MatrixMap matrix_map(const TensorView& tensor_view)
 {

@@ -81,9 +81,7 @@ void MeanSquaredError::calculate_output_gradients(const Batch& batch,
 
     const MatrixR& errors = back_propagation.errors;
 
-    const TensorView output_gradients_view = back_propagation.get_output_gradients();
-
-    MatrixMap output_gradients = matrix_map(output_gradients_view);
+    MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
     output_gradients.device(*device) = errors / type(0.5 * outputs_number * samples_number);
 }
@@ -93,18 +91,10 @@ void MeanSquaredError::calculate_output_gradients_lm(const Batch&,
                                                  ForwardPropagation&,
                                                  BackPropagationLM& back_propagation) const
 {
-    const VectorR& errors = back_propagation.errors;
-    VectorR& squared_errors = back_propagation.squared_errors;
+    MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
-    const TensorView output_gradients_view = back_propagation.get_output_gradients();
-    MatrixMap output_gradients = matrix_map(output_gradients_view);
-
-    output_gradients.device(*device) = errors;
-
-    const type epsilon = 1.0e-12;
-    squared_errors.device(*device) = squared_errors.array() + epsilon;
-
-    divide_columns(device.get(), output_gradients, squared_errors);
+    output_gradients.array() = back_propagation.errors.array() /
+                               (back_propagation.squared_errors.array() + numeric_limits<type>::epsilon());
 }
 
 

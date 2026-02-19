@@ -27,8 +27,7 @@
 namespace opennn
 {
 
-VectorR autocorrelations(const ThreadPoolDevice* device,
-                         const VectorR& x,
+VectorR autocorrelations(const VectorR& x,
                          Index past_time_steps)
 {
     VectorR autocorrelation(past_time_steps);
@@ -52,8 +51,7 @@ VectorR autocorrelations(const ThreadPoolDevice* device,
 }
 
 
-Correlation correlation(const ThreadPoolDevice* device,
-                        const MatrixR& x,
+Correlation correlation(const MatrixR& x,
                         const MatrixR& y)
 {
     if(is_constant(x) || is_constant(y))
@@ -629,8 +627,7 @@ Correlation logistic_correlation_vector_vector_spearman(const VectorR& x,
 }
 
 
-Correlation logistic_correlation_vector_matrix(const VectorR& x,
-                                               const MatrixR& y)
+Correlation logistic_correlation_vector_matrix(const VectorR& x, const MatrixR& y)
 {
     Correlation correlation;
     correlation.form = Correlation::Form::Sigmoid;
@@ -715,17 +712,13 @@ Correlation logistic_correlation_vector_matrix(const VectorR& x,
 }
 
 
-Correlation logistic_correlation_matrix_vector(const ThreadPoolDevice* device,
-                                               const MatrixR& y,
-                                               const VectorR& x)
+Correlation logistic_correlation_matrix_vector(const MatrixR& y, const VectorR& x)
 {
-    return logistic_correlation_vector_matrix(device, x,y);
+    return logistic_correlation_vector_matrix(x, y);
 }
 
 
-Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
-                                               const MatrixR& x,
-                                               const MatrixR& y)
+Correlation logistic_correlation_matrix_matrix(const MatrixR& x, const MatrixR& y)
 {
     Correlation correlation;
     correlation.form = Correlation::Form::Sigmoid;
@@ -802,7 +795,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 
     const MatrixR outputs = neural_network.calculate_outputs(inputs);
 
-    correlation.r = linear_correlation(device, outputs.reshaped(), targets.reshaped()).r;
+    correlation.r = linear_correlation(outputs.reshaped(), targets.reshaped()).r;
 
     const type z_correlation = r_correlation_to_z_correlation(correlation.r);
 
@@ -818,9 +811,7 @@ Correlation logistic_correlation_matrix_matrix(const ThreadPoolDevice* device,
 }
 
 
-Correlation power_correlation(const ThreadPoolDevice* device,
-                              const VectorR& x,
-                              const VectorR& y)
+Correlation power_correlation(const VectorR& x, const VectorR& y)
 {
     Correlation power_correlation;
 
@@ -830,14 +821,13 @@ Correlation power_correlation(const ThreadPoolDevice* device,
         return power_correlation;
     }
 
-    power_correlation = linear_correlation(device,
-                                           x.array().log().matrix(),
-                                           y.array().log().matrix());
+    power_correlation = linear_correlation(x.array().log().matrix(), y.array().log().matrix());
 
     power_correlation.form = Correlation::Form::Power;
     power_correlation.a = exp(power_correlation.a);
 
-    return power_correlation;}
+    return power_correlation;
+}
 
 
 void Correlation::set_perfect()

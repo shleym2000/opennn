@@ -251,43 +251,16 @@ public:
 */
     Tensor3 calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2);
 
-    TensorView run_internal_forward_propagation(const type* data, const Shape& shape)
-    {
-        ForwardPropagation forward_propagation(shape[0], this);
-        TensorView input_view(const_cast<type*>(data), shape);
+    TensorView run_internal_forward_propagation(const type* data, const Shape& shape);
 
-        // Core logic
-        forward_propagate({input_view}, forward_propagation, false);
+    MatrixR calculate_outputs(const MatrixR& inputs);
 
-        // Return the view of the result
-        return forward_propagation.layers.back()->get_outputs();
-    }
+    MatrixR calculate_outputs(const Tensor3& inputs);
+
+    MatrixR calculate_outputs(const Tensor4& inputs);
 
 
-    MatrixR calculate_outputs(const MatrixR& inputs)
-    {
-        TensorView out = run_internal_forward_propagation(inputs.data(), {inputs.rows(), inputs.cols()});
-
-        return Eigen::Map<MatrixR>(out.data, out.shape[0], out.shape[1]);
-    }
-
-    MatrixR calculate_outputs(const Tensor3& inputs)
-    {
-        TensorView out = run_internal_forward_propagation(inputs.data(), {inputs.dimension(0), inputs.dimension(1), inputs.dimension(2)});
-
-        return Map<MatrixR>(out.data, out.shape[0], out.shape[1]);
-    }
-
-    MatrixR calculate_outputs(const Tensor4& inputs)
-    {
-        TensorView out = run_internal_forward_propagation(inputs.data(), {inputs.dimension(0), inputs.dimension(1), inputs.dimension(2), inputs.dimension(3)});
-        return Eigen::Map<MatrixR>(out.data, out.shape[0], out.shape[1]);
-    }
-
-
-    MatrixR calculate_scaled_outputs(type*, VectorI&);
-
-    MatrixR calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
+    MatrixR calculate_directional_inputs(const Index, const VectorR&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
