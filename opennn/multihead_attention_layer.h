@@ -124,7 +124,7 @@ public:
     void to_XML(XMLPrinter&) const override;
     void from_XML(const XMLDocument&) override;
 
-    void apply_key_padding_mask(const Tensor<bool, 2>&,Tensor4&) const;
+    void apply_key_padding_mask(const MatrixB&,Tensor4&) const;
 
 #ifdef OPENNN_CUDA
         // @todo

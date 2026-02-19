@@ -278,8 +278,6 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
     return array<Index, 5>({a, b, c, d, e});
 }
 
-type bound(const type value, type minimum, type maximum);
-
 void set_row(Tensor2&, const Tensor1&, Index);
 
 void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
@@ -291,7 +289,7 @@ void set_identity(MatrixR&);
 
 void sum_diagonal(MatrixR&, type);
 
-Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
+//Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
 
 void divide_columns(const ThreadPoolDevice*, MatrixMap, const VectorR&);
 
@@ -400,8 +398,8 @@ Index count_between(const VectorR&, type, type);
 
 Index count_greater_than(const vector<Index>&, Index);
 
-Tensor<Index, 1> calculate_rank_greater(const VectorR&);
-Tensor<Index, 1> calculate_rank_less(const VectorR&);
+VectorI calculate_rank_greater(const VectorR&);
+VectorI calculate_rank_less(const VectorR&);
 
 vector<Index> get_elements_greater_than(const vector<Index>&, Index);
 vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
@@ -436,9 +434,9 @@ VectorR perform_Householder_QR_decomposition(const MatrixR&, const VectorR&);
 
 vector<Index> join_vector_vector(const vector<Index>&, const vector<Index>&);
 
-Tensor2 assemble_vector_vector(const Tensor1&, const Tensor1&);
-Tensor2 assemble_vector_matrix(const Tensor1&, const Tensor2&);
-Tensor2 assemble_matrix_matrix(const Tensor2&, const Tensor2&);
+MatrixR assemble_vector_vector(const VectorR&, const VectorR&);
+MatrixR assemble_vector_matrix(const VectorR&, const MatrixR&);
+MatrixR assemble_matrix_matrix(const MatrixR&, const MatrixR&);
 
 template <typename T>
 void push_back(Tensor<T, 1, AlignedMax>& tensor, const T& value)
@@ -619,21 +617,6 @@ Tensor<Index, 1> get_shape(const Tensor<T, n, AlignedMax>& tensor)
 }
 
 
-template <int Rank>
-bool is_equal(const Tensor<bool, Rank, AlignedMax>& tensor,
-    const bool& value)
-{
-    const Index size = tensor.size();
-
-    for (Index i = 0; i < size; i++)
-    {
-        if (tensor(i) != value)
-            return false;
-    }
-
-    return true;
-}
-
 
 template <typename Type, int Rank>
 bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
@@ -642,11 +625,15 @@ bool is_equal(const Tensor<Type, Rank, AlignedMax>& tensor,
 {
     const Index size = tensor.size();
 
-    for (Index i = 0; i < size; i++)
-    {
-        if (std::abs(tensor(i) - value) > tolerance)
-            return false;
-    }
+    for(Index i = 0; i < size; i++)
+        if constexpr (is_same_v<Type, bool>)
+        {
+            if (tensor(i) != value)
+                return false;
+            else
+                if (std::abs(tensor(i) - value) > tolerance)
+                    return false;
+        }
 
     return true;
 }

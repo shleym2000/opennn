@@ -35,29 +35,21 @@ void MeanSquaredError::calculate_error(const Batch& batch,
     if (outputs_number == 0 || samples_number == 0)
         throw runtime_error("MeanSquaredError: outputs_number or samples_number is zero.");
 
-    const TensorMap2 targets = tensor_map<2>(batch.get_targets());
-
+    const MatrixMap targets = matrix_map(batch.get_targets());
     const TensorView outputs_view = forward_propagation.get_last_trainable_layer_outputs();
+    const MatrixMap outputs = matrix_map(outputs_view);
 
-    const TensorMap2 outputs = tensor_map<2>(outputs_view);
+    MatrixR& errors = back_propagation.errors;
 
-    // Back propagation
+    if(outputs.rows() != targets.rows() || outputs.cols() != targets.cols())
+        throw runtime_error("MeanSquaredError: outputs (" + to_string(outputs.rows()) + "x" + to_string(outputs.cols()) +
+                            ") and targets (" + to_string(targets.rows()) + "x" + to_string(targets.cols()) + ") dimensions do not match.");
 
-    Tensor2& errors = back_propagation.errors;
+    errors = outputs - targets;
 
-    Tensor<type, 0>& error = back_propagation.error;
+    back_propagation.error = errors.squaredNorm() / static_cast<type>(samples_number * outputs_number);
 
-    if(outputs.dimension(0) != targets.dimension(0))
-        throw runtime_error("MeanSquaredError: outputs and target dimension 0 do not match: " + to_string(outputs.dimension(0)) + " " + to_string(targets.dimension(0)));
-
-    if(outputs.dimension(1) != targets.dimension(1))
-        throw runtime_error("MeanSquaredError: outputs and target dimension 1 do not match: " + to_string(outputs.dimension(1)) + " " + to_string(targets.dimension(1)));
-
-    errors.device(*device) = outputs - targets;
-
-    error.device(*device) = errors.contract(errors, axes(0,0,1,1)) / type(samples_number * outputs_number);
-
-    if(isnan(error())) throw runtime_error("\nError is NAN.");
+    if(isnan(back_propagation.error)) throw runtime_error("\nError is NAN.");
 }
 
 
@@ -65,13 +57,13 @@ void MeanSquaredError::calculate_error_lm(const Batch&,
                                           const ForwardPropagation&,
                                           BackPropagationLM& back_propagation) const
 {
-    VectorR& squared_errors = back_propagation.squared_errors;
+    const VectorR& squared_errors = back_propagation.squared_errors;
 
-    Tensor<type, 0>& error = back_propagation.error;
+    type& error = back_propagation.error;
 
-    error.device(*device) = squared_errors.array().square().sum() * type(0.5);
+    error = squared_errors.squaredNorm() * static_cast<type>(0.5);
 
-    if(isnan(error())) throw runtime_error("\nError is NAN.");
+    if(isnan(error)) throw runtime_error("\nError is NAN.");
 }
 
 
@@ -87,11 +79,11 @@ void MeanSquaredError::calculate_output_gradients(const Batch& batch,
 
     // Back propagation
 
-    const Tensor2& errors = back_propagation.errors;
+    const MatrixR& errors = back_propagation.errors;
 
     const TensorView output_gradients_view = back_propagation.get_output_gradients();
 
-    TensorMap2 output_gradients = tensor_map<2>(output_gradients_view);
+    MatrixMap output_gradients = matrix_map(output_gradients_view);
 
     output_gradients.device(*device) = errors / type(0.5 * outputs_number * samples_number);
 }
@@ -125,18 +117,18 @@ void MeanSquaredError::calculate_error_gradient_lm(const Batch&,
 
     VectorR& gradient = back_propagation_lm.gradient;
 
-    gradient.device(*device) = squared_errors_jacobian.contract(squared_errors, axes(0,0));
+    gradient.noalias() = squared_errors_jacobian.transpose() * squared_errors;
 }
 
 
 void MeanSquaredError::calculate_error_hessian_lm(const Batch&,
                                                   BackPropagationLM& back_propagation_lm) const
 {
-    Tensor2& hessian = back_propagation_lm.hessian;
+    const MatrixR& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
 
-    const Tensor2& squared_errors_jacobian = back_propagation_lm.squared_errors_jacobian;
+    MatrixR& hessian = back_propagation_lm.hessian;
 
-    hessian.device(*device) = squared_errors_jacobian.contract(squared_errors_jacobian, axes(0,0));
+    hessian.noalias() = squared_errors_jacobian.transpose() * squared_errors_jacobian;
 }
 
 
@@ -180,7 +172,7 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
 
     type* errors_device = back_propagation.errors;
 
-    Tensor<type,0>& error = back_propagation.error;
+    type& error = back_propagation.error;
 
     const cudnnTensorDescriptor_t output_tensor_descriptor = back_propagation.output_gradients.get_descriptor();
 

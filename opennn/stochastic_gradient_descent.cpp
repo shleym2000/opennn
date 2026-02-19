@@ -294,9 +294,9 @@ TrainingResults StochasticGradientDescent::train()
                                        training_forward_propagation,
                                        training_back_propagation);
 
-            results.training_error_history(epoch) = training_back_propagation.error();
+            results.training_error_history(epoch) = training_back_propagation.error;
 
-            training_error += training_back_propagation.error();
+            training_error += training_back_propagation.error;
             //training_loss += training_back_propagation.loss;
 
             // Gradient
@@ -339,7 +339,7 @@ TrainingResults StochasticGradientDescent::train()
                                             validation_forward_propagation,
                                             validation_back_propagation);
 
-                validation_error += validation_back_propagation.error();
+                validation_error += validation_back_propagation.error;
             }
 
             validation_error /= type(validation_batches_number);
@@ -670,7 +670,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
                                        training_forward_propagation,
                                        training_back_propagation);
 
-            training_error += training_back_propagation.error();
+            training_error += training_back_propagation.error;
 
             if (is_classification_model)
                 training_accuracy += training_back_propagation.accuracy();

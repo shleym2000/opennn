@@ -124,8 +124,8 @@ InputsSelectionResults GrowingInputs::perform_input_selection()
 
     if(display) cout << "Calculating correlations..." << endl;
 
-    const Tensor2 correlations = get_correlation_values(dataset->calculate_input_target_variable_pearson_correlations());
-    const Tensor1 total_correlations = correlations.abs().chip(0, 1);
+    const MatrixR correlations = get_correlation_values(dataset->calculate_input_target_variable_pearson_correlations());
+    const VectorR total_correlations = correlations.col(0).array().abs();
 
     vector<Index> correlation_indices(original_input_variables_number);
     iota(correlation_indices.begin(), correlation_indices.end(), 0);

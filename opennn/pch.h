@@ -130,6 +130,13 @@ using type = float;
 using MatrixR = Matrix<type, Dynamic, Dynamic, ColMajor>;
 using VectorR = Matrix<type, Dynamic, 1, ColMajor>;
 
+using MatrixI = Matrix<Index, Dynamic, Dynamic, ColMajor>;
+using VectorI = Matrix<Index, Dynamic, 1, ColMajor>;
+
+using MatrixB = Matrix<bool, Dynamic, Dynamic, ColMajor>;
+using VectorB = Matrix<bool, Dynamic, 1, ColMajor>;
+
+
 using VectorMap = Map<VectorR, AlignedMax>;
 using MatrixMap = Map<MatrixR, AlignedMax>;
 

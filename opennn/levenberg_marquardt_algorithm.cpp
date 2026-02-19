@@ -260,7 +260,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
 
         loss_index->calculate_error(training_batch, training_forward_propagation, training_back_propagation);
 
-        results.training_error_history(epoch) = training_back_propagation.error();
+        results.training_error_history(epoch) = training_back_propagation.error;
 
         if(has_validation)
         {
@@ -271,7 +271,7 @@ TrainingResults LevenbergMarquardtAlgorithm::train()
 
             loss_index->calculate_error(validation_batch, validation_forward_propagation, validation_back_propagation);
 
-            results.validation_error_history(epoch) = validation_back_propagation.error();
+            results.validation_error_history(epoch) = validation_back_propagation.error;
 
             if(epoch != 0 && results.validation_error_history(epoch) > results.validation_error_history(epoch-1))
                 validation_failures++;
@@ -361,7 +361,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
 
     VectorR& parameters = neural_network->get_parameters();
 
-    type& error = back_propagation_lm.error();
+    type& error = back_propagation_lm.error;
     type& loss = back_propagation_lm.loss;
 
     const VectorR& gradient = back_propagation_lm.gradient;
@@ -518,7 +518,7 @@ void LevenbergMarquardtAlgorithmData::set(LevenbergMarquardtAlgorithm* new_Leven
     //parameters.resize(parameters_number);
     old_parameters.resize(parameters_number);
 
-    parameters_difference.resize(parameters_number);
+    parameter_differences.resize(parameters_number);
 
     potential_parameters.resize(parameters_number);
     parameter_updates.resize(parameters_number);

@@ -396,7 +396,7 @@ void MultiHeadAttention::apply_causal_mask(Tensor4& attention_scores) const
 }
 
 
-void MultiHeadAttention::apply_key_padding_mask(const Tensor<bool, 2>& key_padding_mask,
+void MultiHeadAttention::apply_key_padding_mask(const MatrixB& key_padding_mask,
                                                 Tensor4& attention_weights) const
 {
     // @todo (I don't know if it is building the mask correctly)

@@ -94,7 +94,7 @@ public:
 
     virtual void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>&,
                                                    Index,
-                                                   Tensor2&) const {}
+                                                   MatrixR&) const {}
 
     virtual void from_XML(const tinyxml2::XMLDocument&) {}
 

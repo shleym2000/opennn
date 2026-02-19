@@ -172,7 +172,7 @@ vector<Descriptives> descriptives(const MatrixR&, const vector<Index>&, const ve
 // Histograms
 Histogram histogram(const VectorR&, Index  = 10);
 Histogram histogram_centered(const VectorR&, type = type(0), Index  = 10);
-Histogram histogram(const Tensor<bool, 1>&);
+Histogram histogram(const VectorB&);
 Histogram histogram(const Tensor<Index, 1>&, Index  = 10);
 vector<Histogram> histograms(const Tensor2&, Index = 10);
 Tensor<Index, 1> total_frequencies(const vector<Histogram>&);

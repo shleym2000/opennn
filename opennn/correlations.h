@@ -72,8 +72,7 @@ Correlation correlation_spearman(const ThreadPoolDevice*, const MatrixR&, const 
 type r_correlation_to_z_correlation(const type);
 type z_correlation_to_r_correlation(const type);
 
-Tensor1 confidence_interval_z_correlation(const type, Index);
-
+VectorR confidence_interval_z_correlation(const type, Index);
 
 // Time series correlation
 

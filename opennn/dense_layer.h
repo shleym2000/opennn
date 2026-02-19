@@ -835,57 +835,59 @@ public:
 
     void insert_squared_errors_Jacobian_lm(unique_ptr<LayerBackPropagationLM>& back_propagation,
                                            Index start_column_index,
-                                           Tensor2& global_jacobian) const override
+                                           MatrixR& global_jacobian) const override
     {
         const Index alignment_elements = EIGEN_MAX_ALIGN_BYTES / sizeof(type);
         const Index mask_elements = ~(alignment_elements - 1);
-        const Index total_error_terms = global_jacobian.dimension(0);
+        const Index total_error_terms = global_jacobian.rows();
 
         Index global_offset = start_column_index;
         Index local_offset = 0;
 
         DenseBackPropagationLM* dense_lm = static_cast<DenseBackPropagationLM*>(back_propagation.get());
 
+        MatrixMap layer_jacobian = matrix_map(dense_lm->squared_errors_Jacobian);
+
         const Index biases_size = biases.size();
         if(biases_size > 0)
         {
-            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, biases_size})
-            .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{total_error_terms, biases_size});
+            global_jacobian.block(0, global_offset, total_error_terms, biases_size) =
+                layer_jacobian.block(0, local_offset, total_error_terms, biases_size);
 
             local_offset += biases_size;
             global_offset += (biases_size + alignment_elements - 1) & mask_elements;
         }
 
         const Index weights_size = weights.size();
+
         if(weights_size > 0)
         {
-            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, weights_size})
-                .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                      .slice(array<Index, 2>{0, biases_size}, array<Index, 2>{total_error_terms, weights_size});
+            global_jacobian.block(0, global_offset, total_error_terms, weights_size) =
+                layer_jacobian.block(0, local_offset, total_error_terms, weights_size);
 
+            local_offset += weights_size;
             global_offset += (weights_size + alignment_elements - 1) & mask_elements;
         }
 
         if(!batch_normalization) return;
 
         const Index gammas_size = gammas.size();
+
         if(gammas_size > 0)
         {
-            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, gammas_size})
-            .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{total_error_terms, gammas_size});
+            global_jacobian.block(0, global_offset, total_error_terms, gammas_size) =
+                layer_jacobian.block(0, local_offset, total_error_terms, gammas_size);
 
             local_offset += gammas_size;
             global_offset += (gammas_size + alignment_elements - 1) & mask_elements;
         }
 
         const Index betas_size = betas.size();
+
         if(betas_size > 0)
         {
-            global_jacobian.slice(array<Index, 2>{0, global_offset}, array<Index, 2>{total_error_terms, betas_size})
-            .device(*device) = tensor_map<2>(dense_lm->squared_errors_Jacobian)
-                                   .slice(array<Index, 2>{0, local_offset}, array<Index, 2>{total_error_terms, betas_size});
+            global_jacobian.block(0, global_offset, total_error_terms, betas_size) =
+                layer_jacobian.block(0, local_offset, total_error_terms, betas_size);
 
             local_offset += betas_size;
             global_offset += (betas_size + alignment_elements - 1) & mask_elements;
@@ -896,12 +898,12 @@ public:
     string get_expression(const vector<string>& new_feature_names = vector<string>(), const vector<string>& new_output_names = vector<string>()) const override
     {
         const vector<string> input_names = new_feature_names.empty()
-        ? get_default_feature_names()
-        : new_feature_names;
+            ? get_default_feature_names()
+            : new_feature_names;
 
         const vector<string> output_names = new_output_names.empty()
-                                                ? get_default_output_names()
-                                                : new_output_names;
+            ? get_default_output_names()
+            : new_output_names;
 
         const Index inputs_number = get_inputs_number();
         const Index outputs_number = get_outputs_number();

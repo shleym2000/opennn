@@ -245,7 +245,7 @@ TEST(TestingAnalysis, Confusion)
         {type(0), type(0), type(1)}
     });
     TestingAnalysis testing_analysis;
-    Tensor<Index, 2> confusion = testing_analysis.calculate_confusion_multiple_classification(actual, predicted);
+    MatrixI confusion = testing_analysis.calculate_confusion_multiple_classification(actual, predicted);
 
     Tensor<Index, 0> sum = confusion.sum();
 

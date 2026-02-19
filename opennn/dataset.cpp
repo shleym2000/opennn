@@ -7,7 +7,6 @@
 //   artelnics@artelnics.com
 
 #include "dataset.h"
-#include "image_dataset.h"
 #include "time_series_dataset.h"
 #include "statistics.h"
 #include "scaling.h"
@@ -15,7 +14,7 @@
 #include "tensors.h"
 #include "strings_utilities.h"
 #include "random_utilities.h"
-#include "image_dataset.h"
+//#include "image_dataset.h"
 
 namespace opennn
 {
@@ -1458,10 +1457,9 @@ MatrixR Dataset::get_variable_data(const Index variable_index) const
     if (variables[variable_index].type == VariableType::Categorical)
         variables_number = variables[variable_index].get_categories_number();
 
-    const array<Index, 2> offsets = { 0, get_feature_indices(variable_index)[0] };
-    const array<Index, 2> extents = { rows_number, variables_number };
+    const Index start_column = get_feature_indices(variable_index)[0];
 
-    return data.slice(offsets, extents);
+    return data.block(0, start_column, rows_number, variables_number);
 }
 
 
@@ -1890,7 +1888,7 @@ vector<Histogram> Dataset::calculate_variable_distributions(const Index bins_num
 
         case VariableType::Numeric:
         {
-            Tensor1 variable_data(used_samples_number);
+            VectorR variable_data(used_samples_number);
 
             for(Index j = 0; j < used_samples_number; j++)
                 variable_data(j) = data(used_sample_indices[j], feature_index);
@@ -2051,7 +2049,7 @@ Index Dataset::calculate_negatives(const Index target_index, const string& sampl
                 type threshold = (sample_role == "Training") ? type(1.0e-3) : type(NUMERIC_LIMITS_MIN);
                 if (abs(sample_value - type(1)) > threshold)
                     throw runtime_error("Sample is neither a positive nor a negative: "
-                                        + to_string(sample_value) + "-" + to_string(target_index) + "-" + to_string(data(sample_value, target_index)));
+                                        + to_string(sample_value) + "-" + to_string(target_index) + "-" + to_string(sample_value));
             }
         }
     }
@@ -2256,12 +2254,12 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_variable_spearman_correla
     for(Index i = 0; i < input_variables_number; i++)
     {
         const Index input_index = input_variable_indices[i];
-        const Tensor2 input_variable_data = get_variable_data(input_index, used_sample_indices);
+        const MatrixR input_variable_data = get_variable_data(input_index, used_sample_indices);
 
         for(Index j = 0; j < target_variables_number; j++)
         {
             const Index target_index = target_variable_indices[j];
-            const Tensor2 target_variable_data = get_variable_data(target_index, used_sample_indices);
+            const MatrixR target_variable_data = get_variable_data(target_index, used_sample_indices);
             correlations(i, j) = correlation_spearman(device.get(), input_variable_data, target_variable_data);
         }
     }
@@ -2332,7 +2330,7 @@ void Dataset::print_top_input_target_variables_correlations() const
     const vector<string> input_names = get_feature_names("Input");
     const vector<string> targets_name = get_feature_names("Target");
 
-    const Tensor2 correlations = get_correlation_values(calculate_input_target_variable_pearson_correlations());
+    const MatrixR correlations = get_correlation_values(calculate_input_target_variable_pearson_correlations());
 
     Tensor1 target_correlations(inputs_number);
 
@@ -2367,7 +2365,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_pearson_correlations() 
 
         const Index current_input_index_i = input_variable_indices[i];
 
-        const Tensor2 input_i = get_variable_data(current_input_index_i);
+        const MatrixR input_i = get_variable_data(current_input_index_i);
 
         if (is_constant(input_i)) continue;
 
@@ -2378,7 +2376,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_pearson_correlations() 
         {
             const Index current_input_index_j = input_variable_indices[j];
 
-            const Tensor2 input_j = get_variable_data(current_input_index_j);
+            const MatrixR input_j = get_variable_data(current_input_index_j);
             correlations_pearson(i, j) = correlation(device.get(), input_i, input_j);
 
             if (correlations_pearson(i, j).r > type(1) - NUMERIC_LIMITS_MIN)
@@ -2435,10 +2433,9 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_spearman_correlations()
 
 void Dataset::print_inputs_correlations() const
 {
-    const Tensor2 inputs_correlations
-        = get_correlation_values(calculate_input_variable_pearson_correlations());
+    const MatrixR input_correlations = get_correlation_values(calculate_input_variable_pearson_correlations());
 
-    cout << inputs_correlations << endl;
+    cout << input_correlations << endl;
 }
 
 
@@ -2462,7 +2459,7 @@ void Dataset::print_top_inputs_correlations() const
 
     const vector<string> variables_name = get_feature_names("Input");
 
-    const Tensor2 variables_correlations = get_correlation_values(calculate_input_variable_pearson_correlations());
+    const MatrixR variables_correlations = get_correlation_values(calculate_input_variable_pearson_correlations());
 
     const Index correlations_number = features_number * (features_number - 1) / 2;
 
@@ -2487,23 +2484,18 @@ void Dataset::print_top_inputs_correlations() const
 }
 
 
-Tensor<Index, 1> Dataset::calculate_correlations_rank() const
+VectorI Dataset::calculate_correlations_rank() const
 {
-    const Tensor<Correlation, 2> correlations
-        = calculate_input_target_variable_pearson_correlations();
+    const Tensor<Correlation, 2> correlations = calculate_input_target_variable_pearson_correlations();
 
-    const Tensor2 absolute_correlations = get_correlation_values(correlations).abs();
+    const MatrixR absolute_correlations = get_correlation_values(correlations).array().abs();
 
-    VectorR absolute_mean_correlations(absolute_correlations.dimension(0));
-
-    for(Index i = 0; i < absolute_correlations.dimension(0); i++)
-    {
-        const Tensor1 row_correlations = absolute_correlations.chip(i, 0);
-        absolute_mean_correlations(i) = mean(row_correlations);
-    }
+    const VectorR absolute_mean_correlations = absolute_correlations.rowwise().mean();
 
     return calculate_rank_less(absolute_mean_correlations);
 }
+
+
 
 
 void Dataset::set_default_variables_scalers()
@@ -3589,10 +3581,10 @@ void Dataset::impute_missing_values_interpolate()
 
             if (isnan(data(current_sample, current_variable)))
             {
-                type x1 = type(0);
-                type x2 = type(0);
-                type y1 = type(0);
-                type y2 = type(0);
+                Index x1 = 0;
+                Index x2 = 0;
+                Index y1 = 0;
+                Index y2 = 0;
                 type x = type(0);
                 type y = type(0);
 
@@ -3600,7 +3592,7 @@ void Dataset::impute_missing_values_interpolate()
                 {
                     if (isnan(data(used_sample_indices[k], current_variable))) continue;
 
-                    x1 = type(used_sample_indices[k]);
+                    x1 = used_sample_indices[k];
                     y1 = data(x1, current_variable);
                     break;
                 }
@@ -3609,7 +3601,7 @@ void Dataset::impute_missing_values_interpolate()
                 {
                     if (isnan(data(used_sample_indices[k], current_variable))) continue;
 
-                    x2 = type(used_sample_indices[k]);
+                    x2 = used_sample_indices[k];
                     y2 = data(x2, current_variable);
                     break;
                 }

@@ -79,7 +79,7 @@ bool random_bool(type probability)
 }
 
 
-void set_random_uniform(Tensor1& tensor, type min, type max)
+void set_random_uniform(VectorR& tensor, type min, type max)
 {
     uniform_real_distribution<type> distribution(min, max);
 
@@ -158,7 +158,7 @@ void shuffle_tensor(Tensor<T, 1>& vec)
     shuffle(vec.data(), vec.data() + vec.size(), get_generator());
 }
 
-template void shuffle_tensor<bool>(Tensor<bool, 1>&);
+template void shuffle_tensor<bool>(VectorB&) {}
 
 
 Index get_random_element(const vector<Index>&values)
