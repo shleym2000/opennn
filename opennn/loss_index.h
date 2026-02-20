@@ -220,7 +220,7 @@ struct BackPropagationLM
 
     Index samples_number = 0;
 
-    Tensor1 output_gradients;
+    VectorR output_gradients;
     Shape output_gradient_dimensions;
 
     Loss* loss_index = nullptr;

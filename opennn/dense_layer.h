@@ -475,13 +475,13 @@ public:
 
         if(biases.size() > 0)
         {
-            TensorMap1 biases_map(biases.data, biases.size());
+            VectorMap biases_map(biases.data, biases.size());
             biases_map.setZero();
         }
 
         if(weights.size() > 0)
         {
-            TensorMap1 weights_map(weights.data, weights.size());
+            VectorMap weights_map(weights.data, weights.size());
             set_random_uniform(weights_map, -limit, limit);
         }
 
@@ -489,12 +489,12 @@ public:
         {
             if(gammas.size() > 0)
             {
-                TensorMap1 scales_map(gammas.data, gammas.size());
+                VectorMap scales_map(gammas.data, gammas.size());
                 scales_map.setConstant(1.0);
             }
             if(betas.size() > 0)
             {
-                TensorMap1 offsets_map(betas.data, betas.size());
+                VectorMap offsets_map(betas.data, betas.size());
                 offsets_map.setZero();
             }
         }
@@ -504,23 +504,23 @@ public:
     {
         if(biases.size() > 0)
         {
-            TensorMap1 biases_map(biases.data, biases.size());
+            VectorMap biases_map(biases.data, biases.size());
             biases_map.setZero();
         }
 
         if(weights.size() > 0)
         {
-            TensorMap1 weights_map(weights.data, weights.size());
+            VectorMap weights_map(weights.data, weights.size());
             set_random_uniform(weights_map);
         }
 
         if (batch_normalization)
         {
             if(gammas.size() > 0)
-                TensorMap1(gammas.data, gammas.size()).setConstant(1.0);
+                VectorMap(gammas.data, gammas.size()).setConstant(1.0);
 
             if(betas.size() > 0)
-                TensorMap1(betas.data, betas.size()).setZero();
+                VectorMap(betas.data, betas.size()).setZero();
         }
     }
 
@@ -628,7 +628,7 @@ public:
     }
 
 /*
-    void normalization(Tensor1& means, Tensor1& standard_deviations, const Tensor2& inputs, Tensor2& outputs) const
+    void normalization(VectorR& means, VectorR& standard_deviations, const Tensor2& inputs, Tensor2& outputs) const
     {
         const array<Index, 2> rows({outputs.dimension(0), 1});
 
@@ -654,8 +654,8 @@ public:
         auto outputs = tensor_map<Rank>(dense_forward_propagation->outputs);
 
         calculate_combinations<Rank>(tensor_map<Rank>(input_views[0]),
-                                     tensor_map<2>(weights),
-                                     tensor_map<1>(biases),
+                                     matrix_map(weights),
+                                     vector_map(biases),
                                      outputs);
 
         if(batch_normalization)
@@ -665,12 +665,12 @@ public:
             normalize_batch<Rank>(
                 outputs,
                 normalized_outputs,
-                tensor_map<1>(dense_forward_propagation->means),
-                tensor_map<1>(dense_forward_propagation->standard_deviations),
+                vector_map(dense_forward_propagation->means),
+                vector_map(dense_forward_propagation->standard_deviations),
                 running_means,
                 running_standard_deviations,
-                tensor_map<1>(gammas),
-                tensor_map<1>(betas),
+                vector_map(gammas),
+                vector_map(betas),
                 is_training,
                 momentum);
         }
@@ -683,7 +683,7 @@ public:
         else
         {
             if constexpr(Rank == 2)
-                calculate_activations<Rank>(activation_function, outputs, TensorMap2(empty_2.data(), empty_2.dimensions()));
+                calculate_activations<Rank>(activation_function, outputs, MatrixMap(empty_2.data(), empty_2.dimensions()));
             else if constexpr(Rank == 3)
                 calculate_activations<Rank>(activation_function, outputs, TensorMap3(empty_3.data(), empty_3.dimensions()));
         }
@@ -876,7 +876,7 @@ public:
 /*
         for(Index j = 0; j < outputs_number; j++)
         {
-            const TensorMap1 weights_column = tensor_map(weights, j);
+            const VectorMap weights_column = tensor_map(weights, j);
 
             buffer << output_names[j] << " = " << activation_function << "( " << biases(j) << " + ";
 
@@ -934,8 +934,8 @@ public:
             running_means.resize(neurons_number);
             running_standard_deviations.resize(neurons_number);
 
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "RunningMeans"), running_means);
-            string_to_tensor<type, 1>(read_xml_string(dense2d_layer_element, "RunningStandardDeviations"), running_standard_deviations);
+            string_to_vector(read_xml_string(dense2d_layer_element, "RunningMeans"), running_means);
+            string_to_vector(read_xml_string(dense2d_layer_element, "RunningStandardDeviations"), running_standard_deviations);
         }
     }
 
@@ -952,8 +952,8 @@ public:
 
         if (batch_normalization)
         {
-            add_xml_element(printer, "RunningMeans", tensor_to_string<type, 1>(running_means));
-            add_xml_element(printer, "RunningStandardDeviations", tensor_to_string<type, 1>(running_standard_deviations));
+            add_xml_element(printer, "RunningMeans", vector_to_string(running_means));
+            add_xml_element(printer, "RunningStandardDeviations", vector_to_string(running_standard_deviations));
         }
 
         printer.CloseElement();
@@ -981,7 +981,7 @@ public:
         if (!batch_normalization) return;
 
         CHECK_CUDA(cudaMemcpy(running_means_device.data, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
-        Tensor1 moving_variances = running_standard_deviations.square();
+        VectorR moving_variances = running_standard_deviations.square();
         CHECK_CUDA(cudaMemcpy(running_variances_device.data, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
 
@@ -990,7 +990,7 @@ public:
     {
         if (!batch_normalization) return;
         CHECK_CUDA(cudaMemcpy(running_means.data(), running_means_device.data, running_means.size() * sizeof(type), cudaMemcpyDeviceToHost));
-        Tensor1 moving_variances(running_standard_deviations.size());
+        VectorR moving_variances(running_standard_deviations.size());
         CHECK_CUDA(cudaMemcpy(moving_variances.data(), running_variances_device.data, moving_variances.size() * sizeof(type), cudaMemcpyDeviceToHost));
         running_standard_deviations = moving_variances.sqrt();
     }
@@ -1290,8 +1290,8 @@ private:
     TensorView gammas;
     TensorView betas;
 
-    Tensor1 running_means;
-    Tensor1 running_standard_deviations;
+    VectorR running_means;
+    VectorR running_standard_deviations;
 
     bool batch_normalization = false;
 

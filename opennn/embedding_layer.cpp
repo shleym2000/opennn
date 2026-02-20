@@ -127,7 +127,7 @@ void Embedding::set_parameters_glorot()
 
     const type limit = sqrt(type(6.0) / (vocabulary_size + embedding_dimension));
 
-    TensorMap2 weights_map = tensor_map<2>(weights);
+    MatrixMap weights_map = matrix_map(weights);
 
     weights_map.setRandom();
     weights_map.device(get_device()) = weights_map * limit;
@@ -140,7 +140,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
                                   bool)
 {
-    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+    const MatrixMap inputs = matrix_map(input_views[0]);
 
     TensorMap3 outputs = tensor_map<3>(layer_forward_propagation->outputs);
 
@@ -153,7 +153,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
         throw runtime_error("Batch size mismatch between inputs and outputs: inputs.dimension(0) = "
                             + to_string(batch_size) + ", outputs.dimension(0) = " + to_string(outputs.dimension(0)));
 
-    const TensorMap2 weights_map = tensor_map<2>(weights);
+    const MatrixMap weights_map = matrix_map(weights);
 
     #pragma omp parallel for
     for(Index sample_index = 0; sample_index < batch_size; sample_index++)
@@ -194,7 +194,7 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
     const Index batch_size = input_views[0].shape[0];
     const Index sequence_length = input_views[0].shape[1];
 
-    const TensorMap2 inputs = tensor_map<2>(input_views[0]);
+    const MatrixMap inputs = matrix_map(input_views[0]);
 
     if (output_gradient_views.size() > 1)
         add_gradients(output_gradient_views);
@@ -206,7 +206,7 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
     EmbeddingBackPropagation* embedding_back_propagation =
         static_cast<EmbeddingBackPropagation*>(back_propagation.get());
 
-    TensorMap2 weight_gradients = tensor_map<2>(embedding_back_propagation->weight_gradients);
+    MatrixMap weight_gradients = matrix_map(embedding_back_propagation->weight_gradients);
     weight_gradients.setZero();
 
     if(scale_embedding)

@@ -14,13 +14,13 @@
 namespace opennn
 {
 
-void multiply_matrices(Tensor3& tensor, const Tensor1& vector)
+void multiply_matrices(Tensor3& tensor, const VectorR& vector)
 {
     const Index depth = tensor.dimension(2);
 
     for(Index i = 0; i < depth; i++)
     {
-        TensorMap2 matrix = tensor_map(tensor, i);
+        MatrixMap matrix = tensor_map(tensor, i);
 
         matrix.device(get_device()) = matrix * vector(i);
     }
@@ -33,7 +33,7 @@ void multiply_matrices(Tensor3& tensor, const Tensor2& matrix)
 
     for(Index i = 0; i < depth; i++)
     {
-        TensorMap2 slice = tensor_map(tensor, i);
+        MatrixMap slice = tensor_map(tensor, i);
 
         slice.device(get_device()) = slice * matrix;
     }
@@ -48,7 +48,7 @@ Tensor2 self_kronecker_product(const VectorR& vector)
 
     for(Index i = 0; i < columns_number; i++)
     {
-        TensorMap1 column = tensor_map(matrix, i);
+        VectorMap column = tensor_map(matrix, i);
 
         column.device(get_device()) = vector * vector(i);
     }
@@ -94,13 +94,13 @@ vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& mi
 }
 
 
-void sum_matrices(const Tensor1& vector, Tensor3& tensor)
+void sum_matrices(const VectorR& vector, Tensor3& tensor)
 {
     const Index depth = tensor.dimension(2);
 
     for(Index i = 0; i < depth; i++)
     {
-        TensorMap2 matrix = tensor_map(tensor, i);
+        MatrixMap matrix = tensor_map(tensor, i);
 
         matrix.device(get_device()) = matrix + vector(i);
     }
@@ -224,7 +224,7 @@ Index count_between(const VectorR& vector,type minimum, type maximum)
 }
 
 
-void set_row(Tensor2& matrix, const Tensor1& new_row, Index row_index)
+void set_row(Tensor2& matrix, const VectorR& new_row, Index row_index)
 {
     const Index columns_number = new_row.size();
 
@@ -536,22 +536,22 @@ VectorMap vector_map(const MatrixR& tensor, Index index_1)
 }
 
 
-TensorMap1 tensor_map(const Tensor2& tensor, Index index_1)
+VectorMap tensor_map(const Tensor2& tensor, Index index_1)
 {
-    return TensorMap1((type*)tensor.data() + tensor.dimension(0)*index_1, tensor.dimension(0));
+    return VectorMap((type*)tensor.data() + tensor.dimension(0)*index_1, tensor.dimension(0));
 }
 
 /*
-TensorMap1 tensor_map_(const TensorMap2 tensor, Index index_1)
+VectorMap tensor_map_(const MatrixMap tensor, Index index_1)
 {
-    return TensorMap1((type*)tensor.data() + tensor.dimension(0) * index_1,
+    return VectorMap((type*)tensor.data() + tensor.dimension(0) * index_1,
                                       tensor.dimension(0));
 }
 */
 
-TensorMap2 tensor_map(const Tensor3& tensor, Index index_2)
+MatrixMap tensor_map(const Tensor3& tensor, Index index_2)
 {
-    return TensorMap2((type*)tensor.data() +  tensor.dimension(0) * tensor.dimension(1)* index_2,
+    return MatrixMap((type*)tensor.data() +  tensor.dimension(0) * tensor.dimension(1)* index_2,
                                       tensor.dimension(0), tensor.dimension(1));
 }
 
@@ -570,9 +570,9 @@ TensorMap3 tensor_map_(const TensorMap4 tensor, Index index_3)
 }
 
 
-TensorMap2 tensor_map(const Tensor4& tensor, Index index_3, Index index_2)
+MatrixMap tensor_map(const Tensor4& tensor, Index index_3, Index index_2)
 {
-    return TensorMap2((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1)*(index_3 * tensor.dimension(2) + index_2),
+    return MatrixMap((type*)tensor.data() + tensor.dimension(0) * tensor.dimension(1)*(index_3 * tensor.dimension(2) + index_2),
                                       tensor.dimension(0), tensor.dimension(1));
 }
 

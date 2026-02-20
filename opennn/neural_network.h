@@ -46,7 +46,7 @@ struct ForwardPropagation
 
     vector<unique_ptr<LayerForwardPropagation>> layers;
 
-    Tensor1 workspace;
+    VectorR workspace;
 };
 
 
@@ -232,10 +232,10 @@ public:
                 if (reinterpret_cast<uintptr_t>(output_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)
                     throw runtime_error("tensor_map alignment error: Pointer is not aligned.");
 
-                return TensorMap2(output_view.data, batch_size, features);
+                return MatrixMap(output_view.data, batch_size, features);
             }
 
-            return tensor_map<2>(output_view);
+            return matrix_map(output_view);
         }
         else if constexpr (output_rank == 3)
            return tensor_map<3>(output_view);
@@ -365,7 +365,7 @@ struct NeuralNetworkBackPropagation
     VectorR gradient;
 
     // @todo
-    //Tensor1 input_gradients;
+    //VectorR input_gradients;
 };
 
 
@@ -417,7 +417,7 @@ struct NeuralNetworkBackPropagationLM
 
     vector<unique_ptr<LayerBackPropagationLM>> layers;
 
-    Tensor1 workspace;
+    VectorR workspace;
 };
 
 }

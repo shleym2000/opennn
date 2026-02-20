@@ -89,7 +89,7 @@ void set_random_uniform(VectorR& tensor, type min, type max)
 }
 
 
-void set_random_uniform(Tensor2& tensor, type min, type max)
+void set_random_uniform(MatrixR& tensor, type min, type max)
 {
     uniform_real_distribution<type> distribution(min, max);
 
@@ -99,7 +99,7 @@ void set_random_uniform(Tensor2& tensor, type min, type max)
 }
 
 
-void set_random_uniform(TensorMap1 tensor, type min, type max)
+void set_random_uniform(VectorMap tensor, type min, type max)
 {
     uniform_real_distribution<type> distribution(min, max);
 
@@ -109,7 +109,7 @@ void set_random_uniform(TensorMap1 tensor, type min, type max)
 }
 
 
-void set_random_uniform(TensorMap2 tensor, type min, type max)
+void set_random_uniform(MatrixMap tensor, type min, type max)
 {
     uniform_real_distribution<type> distribution(min, max);
 

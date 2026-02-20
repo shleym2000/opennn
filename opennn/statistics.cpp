@@ -26,10 +26,10 @@ Descriptives::Descriptives(const type new_minimum,
 }
 
 
-Tensor1 Descriptives::to_tensor() const
+VectorR Descriptives::to_tensor() const
 {
-    Tensor1 descriptives_tensor(4);
-    descriptives_tensor.setValues({minimum, maximum, mean, standard_deviation});
+    VectorR descriptives_tensor(4);
+    descriptives_tensor << minimum, maximum, mean, standard_deviation;
 
     return descriptives_tensor;
 }
@@ -231,12 +231,12 @@ Index Histogram::calculate_most_populated_bin() const
 }
 
 
-Tensor1 Histogram::calculate_minimal_centers() const
+VectorR Histogram::calculate_minimal_centers() const
 {
     if (frequencies.size() == 0)
     {
-        Tensor1 nan(1);
-        nan.setValues({ type(NAN) });
+        VectorR nan(1);
+        nan << type(NAN);
         return nan;
     }
 
@@ -255,7 +255,7 @@ Tensor1 Histogram::calculate_minimal_centers() const
 
     Index index = 0;
 
-    Tensor1 minimal_centers(minimal_indices_size);
+    VectorR minimal_centers(minimal_indices_size);
 
     for(Index i = 0; i < frequencies.size(); i++)
         if(frequencies(i) == minimum_frequency)
@@ -265,15 +265,15 @@ Tensor1 Histogram::calculate_minimal_centers() const
 }
 
 
-Tensor1 Histogram::calculate_maximal_centers() const
+VectorR Histogram::calculate_maximal_centers() const
 {
     const Index maximum_frequency = calculate_maximum_frequency();
 
     Index maximal_indices_size = 0;
 
     if (frequencies.size() == 0) {
-        Tensor1 nan(1);
-        nan.setValues({ type(NAN) });
+        VectorR nan(1);
+        nan << type(NAN);
         return nan;
     }
 
@@ -283,7 +283,7 @@ Tensor1 Histogram::calculate_maximal_centers() const
         }
     }
 
-    Tensor1 maximal_centers(maximal_indices_size);
+    VectorR maximal_centers(maximal_indices_size);
     Index index = 0;
 
     for(Index i = 0; i < frequencies.size(); i++)
@@ -712,7 +712,7 @@ VectorR quartiles(const VectorR& input_vector)
 }
 
 
-Tensor1 quartiles(const Tensor1& data, const vector<Index>& indices)
+VectorR quartiles(const VectorR& data, const vector<Index>& indices)
 {
     const Index indices_size = indices.size();
 
@@ -725,7 +725,7 @@ Tensor1 quartiles(const Tensor1& data, const vector<Index>& indices)
         if(!isnan(data(indices[i])))
             new_size++;
 
-    Tensor1 sorted_vector(new_size);
+    VectorR sorted_vector(new_size);
 
     Index sorted_index = 0;
 
@@ -741,8 +741,8 @@ Tensor1 quartiles(const Tensor1& data, const vector<Index>& indices)
 
     // Calculate quartiles
 
-    Tensor1 first_sorted_vector(new_size/2);
-    Tensor1 last_sorted_vector(new_size/2);
+    VectorR first_sorted_vector(new_size/2);
+    VectorR last_sorted_vector(new_size/2);
 
     for(Index i = 0; i < new_size/2 ; i++)
         first_sorted_vector(i) = sorted_vector(i);
@@ -750,7 +750,7 @@ Tensor1 quartiles(const Tensor1& data, const vector<Index>& indices)
     for(Index i = 0; i < new_size/2; i++)
         last_sorted_vector(i) = sorted_vector(i + new_size - new_size/2);
 
-    Tensor1 quartiles(3);
+    VectorR quartiles(3);
 
     if(new_size == 1)
     {
@@ -1069,7 +1069,7 @@ vector<Histogram> histograms(const MatrixR& matrix, Index bins_number)
 }
 
 
-Descriptives vector_descriptives(const Tensor1& x)
+Descriptives vector_descriptives(const VectorR& x)
 {
     Descriptives my_descriptives;
 
@@ -1078,8 +1078,8 @@ Descriptives vector_descriptives(const Tensor1& x)
     if (size <= 0)
         return my_descriptives;
 
-    const Tensor0 minimum = x.minimum();
-    const Tensor0 maximum = x.maximum();
+    const type minimum = x.minCoeff();
+    const type maximum = x.maxCoeff();
 
     long double sum = 0.0;
     long double squared_sum = 0;
@@ -1112,7 +1112,7 @@ Descriptives vector_descriptives(const Tensor1& x)
         standard_deviation = sqrt(numerator / denominator);
     }
 
-    my_descriptives.set(minimum(0), maximum(0), mean, standard_deviation);
+    my_descriptives.set(minimum, maximum, mean, standard_deviation);
 
     return my_descriptives;
 }
@@ -1140,7 +1140,7 @@ vector<Descriptives> descriptives(const MatrixR& matrix)
 }
 
 
-vector<Descriptives> descriptives(const Tensor2& matrix,
+vector<Descriptives> descriptives(const MatrixR& matrix,
                                   const vector<Index>& row_indices,
                                   const vector<Index>& column_indices)
 {
@@ -1149,7 +1149,7 @@ vector<Descriptives> descriptives(const Tensor2& matrix,
 
     vector<Descriptives> descriptives_results(column_indices_size);
 
-    // Using VectorR (Matrix API) instead of Tensor1
+    // Using VectorR (Matrix API) instead of VectorR
     VectorR minimums = VectorR::Zero(column_indices_size);
     VectorR maximums = VectorR::Zero(column_indices_size);
 

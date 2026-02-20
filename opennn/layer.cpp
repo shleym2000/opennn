@@ -177,7 +177,7 @@ void Layer::set_parameters_random()
 
     for(const auto& view : parameter_views)
     {
-        TensorMap1 this_parameters(view->data, view->size());
+        VectorMap this_parameters(view->data, view->size());
 
         set_random_uniform(this_parameters);
     }
@@ -195,7 +195,7 @@ void Layer::set_parameters_glorot()
 
     for(const TensorView* view : parameter_views)
     {
-        TensorMap1 this_parameters(view->data, view->size());
+        VectorMap this_parameters(view->data, view->size());
 
         set_random_uniform(this_parameters, -limit, limit);
     }
@@ -298,15 +298,13 @@ void Layer::set_output_shape(const Shape&)
 }
 
 
-void Layer::softmax(TensorMap2 y) const
+void Layer::softmax(MatrixMap y) const
 {
-    MatrixMap y_map(y.data(), y.dimension(0), y.dimension(1));
+    y.colwise() -= y.rowwise().maxCoeff();
 
-    y_map.colwise() -= y_map.rowwise().maxCoeff();
+    y = y.array().exp();
 
-    y_map = y_map.array().exp();
-
-    y_map.array().colwise() /= y_map.rowwise().sum().array();
+    y.array().colwise() /= y.rowwise().sum().array();
 }
 
 
@@ -388,37 +386,30 @@ void Layer::softmax(TensorMap4 y) const
 
 void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
                                              TensorMap3 result,
-                                             TensorMap1 aux_rows) const
+                                             VectorMap aux_rows) const
 {
     const Index rows = softmax.dimension(0);
     const Index columns = softmax.dimension(1);
     const Index depth = softmax.dimension(2);
 
-    type* softmax_data = (type*)softmax.data();
+    type* softmax_data = const_cast<type*>(softmax.data());
     type* result_data = result.data();
-
-    type* softmax_vector_data = nullptr;
-    type* result_vector_data = nullptr;
-
-    Tensor0 sum;
 
     for(Index i = 0; i < depth; i++)
     {
         for(Index j = 0; j < columns; j++)
         {
-            softmax_vector_data = softmax_data + rows * (i * columns + j);
-            result_vector_data = result_data + rows * (i * columns + j);
+            const Index offset = rows * (i * columns + j);
 
-            const TensorMap1 softmax_vector(softmax_vector_data, rows);
-            const TensorMap1 tensor_vector(result_vector_data, rows);
+            const VectorMap softmax_vector(softmax_data + offset, rows);
+            const VectorMap tensor_vector(result_data + offset, rows);
+            VectorMap result_vector(result_data + offset, rows);
 
-            TensorMap1 result_vector(result_vector_data, rows);
+            aux_rows.array() = softmax_vector.array() * tensor_vector.array();
 
-            aux_rows.device(get_device()) = softmax_vector * tensor_vector;
+            const type sum_val = aux_rows.sum();
 
-            sum.device(get_device()) = aux_rows.sum();
-
-            result_vector.device(get_device()) = aux_rows - softmax_vector * sum();
+            result_vector.array() = aux_rows.array() - (softmax_vector.array() * sum_val);
         }
     }
 }

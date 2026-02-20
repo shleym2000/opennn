@@ -364,7 +364,7 @@ void translate_image_x(const Tensor3& input, Tensor3& output, Index shift)
                                                                 height,
                                                                 1);
 
-        TensorMap2 output_column_map(output.data() + (variable + shift)*height + channel*input_size,
+        MatrixMap output_column_map(output.data() + (variable + shift)*height + channel*input_size,
                                                      height,
                                                      1);
 

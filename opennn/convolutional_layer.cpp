@@ -73,7 +73,7 @@ void Convolutional::calculate_convolutions(const Tensor4& inputs, TensorMap4 con
     const Index kernels_number = get_kernels_number();
 
     const TensorMap4 weights_map = tensor_map<4>(weights);
-    const TensorMap1 biases_map = tensor_map<1>(biases);
+    const VectorMap biases_map = vector_map(biases);
 
     for(Index kernel_index = 0; kernel_index < kernels_number; kernel_index++)
     {
@@ -110,12 +110,12 @@ void Convolutional::forward_propagate(const vector<TensorView>& input_views,
         normalize_batch<4>(
             outputs,
             outputs,
-            tensor_map<1>(convolutional_forward_propagation->means),
-            tensor_map<1>(convolutional_forward_propagation->standard_deviations),
+            vector_map(convolutional_forward_propagation->means),
+            vector_map(convolutional_forward_propagation->standard_deviations),
             running_means,
             running_standard_deviations,
-            tensor_map<1>(gammas),
-            tensor_map<1>(betas),
+            vector_map(gammas),
+            vector_map(betas),
             is_training);
     
 
@@ -163,7 +163,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     ConvolutionalBackPropagation* convolutional_back_propagation =
         static_cast<ConvolutionalBackPropagation*>(back_propagation.get());
 
-    TensorMap1 bias_gradients = tensor_map<1>(convolutional_back_propagation->bias_gradients);
+    VectorMap bias_gradients = vector_map(convolutional_back_propagation->bias_gradients);
 
     type* weight_gradients_data = convolutional_back_propagation->weight_gradients.data;
 
@@ -192,7 +192,12 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     
     // Bias derivatives
 
-    bias_gradients.device(get_device()) = output_gradients.sum(array<Index, 3>({0, 1, 2}));
+    const Index features = bias_gradients.size();
+    const Index total_elements_to_sum = output_gradients.size() / features;
+
+    MatrixMap output_grads_mat(output_gradients.data(), total_elements_to_sum, features);
+
+    bias_gradients.noalias() = output_grads_mat.colwise().sum();
 
     // Weights derivatives
 
@@ -526,13 +531,13 @@ void Convolutional::set_parameters_glorot()
 
     if (biases.size() > 0)
     {
-        TensorMap1 biases_map(biases.data, biases.size());
+        VectorMap biases_map(biases.data, biases.size());
         biases_map.setZero();
     }
 
     if (weights.size() > 0)
     {
-        TensorMap1 weights_map(weights.data, weights.size());
+        VectorMap weights_map(weights.data, weights.size());
         set_random_uniform(weights_map, -limit, limit);
     }
 
@@ -540,12 +545,12 @@ void Convolutional::set_parameters_glorot()
     {
         if (gammas.size() > 0)
         {
-            TensorMap1 scales_map(gammas.data, gammas.size());
+            VectorMap scales_map(gammas.data, gammas.size());
             scales_map.setConstant(1.0);
         }
         if (betas.size() > 0)
         {
-            TensorMap1 offsets_map(betas.data, betas.size());
+            VectorMap offsets_map(betas.data, betas.size());
             offsets_map.setZero();
         }
     }
@@ -556,23 +561,23 @@ void Convolutional::set_parameters_random()
 {
     if (biases.size() > 0)
     {
-        TensorMap1 biases_map(biases.data, biases.size());
+        VectorMap biases_map(biases.data, biases.size());
         biases_map.setZero();
     }
 
     if (weights.size() > 0)
     {
-        TensorMap1 weights_map(weights.data, weights.size());
+        VectorMap weights_map(weights.data, weights.size());
         set_random_uniform(weights_map);
     }
 
     if (batch_normalization)
     {
         if (gammas.size() > 0)
-            TensorMap1(gammas.data, gammas.size()).setConstant(1.0);
+            VectorMap(gammas.data, gammas.size()).setConstant(1.0);
 
         if (betas.size() > 0)
-            TensorMap1(betas.data, betas.size()).setZero();
+            VectorMap(betas.data, betas.size()).setZero();
     }
 }
 
@@ -1117,7 +1122,7 @@ void Convolutional::copy_parameters_device()
     if (batch_normalization)
     {
         CHECK_CUDA(cudaMemcpy(running_means_device.data, running_means.data(), running_means.size() * sizeof(type), cudaMemcpyHostToDevice));
-        Tensor1 moving_variances = running_standard_deviations.square();
+        VectorR moving_variances = running_standard_deviations.square();
         CHECK_CUDA(cudaMemcpy(running_variances_device.data, moving_variances.data(), moving_variances.size() * sizeof(type), cudaMemcpyHostToDevice));
     }
 }

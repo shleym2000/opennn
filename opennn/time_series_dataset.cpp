@@ -468,7 +468,7 @@ void TimeSeriesDataset::fill_target_tensor(const vector<Index>& sample_indices,
     const Index target_size = target_indices.size();
     const Index total_rows_in_data = data.rows();
 
-    TensorMap2 targets(target_tensor_data, batch_size, target_size);
+    MatrixMap targets(target_tensor_data, batch_size, target_size);
     const type* const matrix_data = data.data();
 
 #pragma omp parallel for
@@ -500,7 +500,7 @@ void TimeSeriesDataset::fill_target_tensor(const vector<Index>& sample_indices,
     const Index target_size = target_indices.size();
     const Index total_rows_in_data = data.dimension(0);
 
-    TensorMap2 targets(target_tensor_data, batch_size, target_size);
+    MatrixMap targets(target_tensor_data, batch_size, target_size);
     const type* const matrix_data = data.data();
 
 #pragma omp parallel for

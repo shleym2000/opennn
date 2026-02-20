@@ -221,8 +221,8 @@ Tensor3 TestingAnalysis::calculate_error_data() const
     if(!unscaling_layer)
         throw runtime_error("Unscaling layer not found.\n");
 
-    const Tensor1& output_minimums = unscaling_layer->get_minimums();
-    const Tensor1& output_maximums = unscaling_layer->get_maximums();
+    const VectorR& output_minimums = unscaling_layer->get_minimums();
+    const VectorR& output_maximums = unscaling_layer->get_maximums();
 
     Tensor3 error_data(testing_samples_number, 3, outputs_number);
 
@@ -265,8 +265,8 @@ MatrixR TestingAnalysis::calculate_percentage_error_data() const
     if(!unscaling_layer)
         throw runtime_error("Unscaling layer not found.\n");
 
-    const Tensor1& output_minimums = unscaling_layer->get_minimums();
-    const Tensor1& output_maximums = unscaling_layer->get_maximums();
+    const VectorR& output_minimums = unscaling_layer->get_minimums();
+    const VectorR& output_maximums = unscaling_layer->get_maximums();
 
     const MatrixR errors = (targets - outputs);
 
@@ -1101,7 +1101,7 @@ MatrixR TestingAnalysis::calculate_cumulative_gain(const MatrixR& targets, const
                 sorted_indices.data()+sorted_indices.size(),
                 [outputs](Index i1, Index i2) {return outputs(i1,0) > outputs(i2,0);});
 
-    Tensor1 sorted_targets(testing_samples_number);
+    VectorR sorted_targets(testing_samples_number);
 
     for(Index i = 0; i < testing_samples_number; i++)
         sorted_targets(i) = targets(sorted_indices(i),0);
@@ -1156,7 +1156,7 @@ MatrixR TestingAnalysis::calculate_negative_cumulative_gain(const MatrixR& targe
 
     stable_sort(sorted_indices.data(), sorted_indices.data()+sorted_indices.size(), [outputs](Index i1, Index i2) {return outputs(i1,0) > outputs(i2,0);});
 
-    Tensor1 sorted_targets(testing_samples_number);
+    VectorR sorted_targets(testing_samples_number);
 
     for(Index i = 0; i < testing_samples_number; i++)
         sorted_targets(i) = targets(sorted_indices(i),0);
@@ -1882,7 +1882,7 @@ string TestingAnalysis::test_transformer(const vector<string>& context_string, b
 }
 
 
-Tensor1 TestingAnalysis::calculate_binary_classification_tests(const type decision_threshold) const
+VectorR TestingAnalysis::calculate_binary_classification_tests(const type decision_threshold) const
 {
     const MatrixI confusion = calculate_confusion(decision_threshold);
 
@@ -1959,24 +1959,23 @@ Tensor1 TestingAnalysis::calculate_binary_classification_tests(const type decisi
                                 ? precision - type(1)
                                 : precision + negative_predictive_value - type(1);
 
-    Tensor1 binary_classification_test(15);
+    VectorR binary_classification_test(15);
 
-    binary_classification_test.setValues(
-        {classification_accuracy,
-         error_rate,
-         sensitivity,
-         specificity,
-         precision,
-         positive_likelihood,
-         negative_likelihood,
-         f1_score,
-         false_positive_rate,
-         false_discovery_rate,
-         false_negative_rate,
-         negative_predictive_value,
-         Matthews_correlation_coefficient,
-         informedness,
-         markedness});
+    binary_classification_test << classification_accuracy,
+                                  error_rate,
+                                  sensitivity,
+                                  specificity,
+                                  precision,
+                                  positive_likelihood,
+                                  negative_likelihood,
+                                  f1_score,
+                                  false_positive_rate,
+                                  false_discovery_rate,
+                                  false_negative_rate,
+                                  negative_predictive_value,
+                                  Matthews_correlation_coefficient,
+                                  informedness,
+                                  markedness;
 
     return binary_classification_test;
 }
@@ -1984,7 +1983,7 @@ Tensor1 TestingAnalysis::calculate_binary_classification_tests(const type decisi
 
 void TestingAnalysis::print_binary_classification_tests() const
 {
-    const Tensor1 binary_classification_tests = calculate_binary_classification_tests();
+    const VectorR binary_classification_tests = calculate_binary_classification_tests();
 
     cout << "Binary classification tests: " << endl
          << "Classification accuracy : " << binary_classification_tests[0] << endl

@@ -22,8 +22,8 @@ namespace opennn
     void set_random_uniform(VectorR&, type = -0.1, type = 0.1);
     void set_random_uniform(MatrixR&, type = -0.1, type = 0.1);
 
-    void set_random_uniform(TensorMap1, type = -0.1, type = 0.1);
-    void set_random_uniform(TensorMap2, type = -0.1, type = 0.1);
+    void set_random_uniform(VectorMap, type = -0.1, type = 0.1);
+    void set_random_uniform(MatrixMap, type = -0.1, type = 0.1);
 
     void set_random_integer(MatrixR&, Index, Index);
 
