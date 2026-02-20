@@ -600,10 +600,10 @@ type TestingAnalysis::calculate_cross_entropy_error_3d(const Tensor3& outputs, c
     MatrixB matches(batch_size, outputs_number);
     MatrixB mask(batch_size, outputs_number);
 
-    Tensor<type, 0> cross_entropy_error_2d;
+    Tensor0 cross_entropy_error_2d;
     mask = targets != targets.constant(0);
 
-    Tensor<type, 0> mask_sum;
+    Tensor0 mask_sum;
     mask_sum = mask.cast<type>().sum();
 
     for(Index i = 0; i < batch_size; i++)
@@ -660,7 +660,7 @@ type TestingAnalysis::calculate_weighted_squared_error(const MatrixR& targets,
 
     f_3.device(*device) = targets.constant(type(0));
 
-    Tensor<type, 0> mean_squared_error;
+    Tensor0 mean_squared_error;
     mean_squared_error.device(*device) = (if_sentence.select(f_1, else_sentence.select(f_2, f_3))).sum();
 
     Index negatives = 0;
@@ -689,7 +689,7 @@ type TestingAnalysis::calculate_Minkowski_error(const MatrixR& targets,
     if (predictions_number == 0)
         return type(0);
 
-    Tensor<type, 0> minkowski_error;
+    Tensor0 minkowski_error;
 
     minkowski_error.device(*device) =
         (((outputs - targets).array().abs().pow(minkowski_parameter).sum()) / predictions_number).pow(type(1.0) / minkowski_parameter);
@@ -710,11 +710,11 @@ type TestingAnalysis::calculate_masked_accuracy(const Tensor3& outputs, const Ma
     MatrixB matches(batch_size, outputs_number);
     MatrixB mask(batch_size, outputs_number);
 
-    Tensor<type, 0> accuracy;
+    Tensor0 accuracy;
 
     mask = targets != targets.constant(0);
 
-    const Tensor<type, 0> mask_sum = mask.cast<type>().sum();
+    const Tensor0 mask_sum = mask.cast<type>().sum();
 
     predictions = outputs.argmax(2).cast<type>();
 

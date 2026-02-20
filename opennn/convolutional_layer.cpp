@@ -201,8 +201,13 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
     {
         const TensorMap3 kernel_convolution_gradients = tensor_map_(output_gradients, kernel_index);
 
-        TensorMap<Tensor<type, 4>, Unaligned> kernel_weight_gradients(weight_gradients_data + kernel_index*kernel_size,
-                                                                   1, kernel_height, kernel_width, kernel_channels);
+        // @todo check this. If it does not work aligned put TensorMap<Tensor<type, 4>, RowMajor | Unaligned>
+
+//        TensorMap<Tensor<type, 4>, Unaligned> kernel_weight_gradients(weight_gradients_data + kernel_index*kernel_size,
+//                                                                   1, kernel_height, kernel_width, kernel_channels);
+
+        TensorMap4 kernel_weight_gradients(weight_gradients_data + kernel_index*kernel_size,
+                                           1, kernel_height, kernel_width, kernel_channels);
 
         kernel_weight_gradients = preprocessed_inputs.convolve(kernel_convolution_gradients, array<Index, 3>({0, 1, 2}));
     }

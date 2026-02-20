@@ -636,7 +636,7 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const MatrixR& 
 
     for (Index i = 0; i < objectives_number; ++i)
     {
-        Tensor<type, 0> maximum_objective_tensor;
+        Tensor0 maximum_objective_tensor;
         maximum_objective_tensor.device(*device) = objective_matrix.col(i).maxCoeff();
 
         const type best_objective_value = maximum_objective_tensor(0);

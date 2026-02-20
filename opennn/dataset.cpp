@@ -1344,7 +1344,7 @@ Tensor1 Dataset::get_sample_data(const Index sample_index, const vector<Index>& 
 {
     const Index features_number = feature_indices.size();
 
-    Tensor<type, 1 > row(features_number);
+    Tensor1 row(features_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < features_number; i++)

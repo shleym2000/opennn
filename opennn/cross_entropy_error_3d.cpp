@@ -58,10 +58,10 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
 
     // 6. Aggregate Error
     // Sum only the non-masked (non-padding) elements
-    Tensor<type, 0> total_masked_loss;
+    Tensor0 total_masked_loss;
     total_masked_loss.device(*device) = (elementwise_loss * mask.cast<type>()).sum();
 
-    Tensor<type, 0> active_elements;
+    Tensor0 active_elements;
     active_elements.device(*device) = mask.cast<type>().sum();
 
 

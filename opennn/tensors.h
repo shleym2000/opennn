@@ -291,6 +291,7 @@ void set_identity(MatrixR&);
 
 bool is_binary(const VectorR& tensor)
 {
+
     const Index size = tensor.size();
 
     for(Index i = 0; i < size; i++)
@@ -477,7 +478,7 @@ string vector_to_string(const VectorI& x, const string& separator = " ")
 
 
 template <typename T, size_t Rank>
-string tensor_to_string(const Tensor<T, Rank>& x, const string& separator = " ")
+string tensor_to_string(const TensorR<Rank>& x, const string& separator = " ")
 {
     ostringstream buffer;
 
@@ -489,7 +490,7 @@ string tensor_to_string(const Tensor<T, Rank>& x, const string& separator = " ")
 
 
 template <typename T, size_t Rank>
-void string_to_tensor(const string& input, Tensor<T, Rank, AlignedMax>& x)
+void string_to_tensor(const string& input, TensorR<Rank>& x)
 {
     istringstream stream(input);
     T value;

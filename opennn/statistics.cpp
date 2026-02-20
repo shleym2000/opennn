@@ -1078,8 +1078,8 @@ Descriptives vector_descriptives(const Tensor1& x)
     if (size <= 0)
         return my_descriptives;
 
-    const Tensor<type, 0> minimum = x.minimum();
-    const Tensor<type, 0> maximum = x.maximum();
+    const Tensor0 minimum = x.minimum();
+    const Tensor0 maximum = x.maximum();
 
     long double sum = 0.0;
     long double squared_sum = 0;

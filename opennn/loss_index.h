@@ -281,7 +281,7 @@ struct BackPropagation
     VectorR output_gradients;
     Shape output_gradient_dimensions;
 
-    Tensor<type, 0> accuracy;
+    Tensor0 accuracy;
     MatrixR predictions;
 
     MatrixB matches;
@@ -318,7 +318,7 @@ struct BackPropagationCuda
 
     float* errors = nullptr;
 
-    Tensor<type, 0> error;
+    Tensor0 error;
     float* error_device = nullptr;
 
     type regularization = type(0);
@@ -333,7 +333,7 @@ struct BackPropagationCuda
 
     TensorCuda output_gradients;
 
-    Tensor<type, 0> accuracy;
+    Tensor0 accuracy;
     float* predictions = nullptr;
     float* matches = nullptr;
     float* mask = nullptr;

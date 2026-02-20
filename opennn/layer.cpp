@@ -408,14 +408,13 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
     const Index columns = softmax.dimension(1);
     const Index depth = softmax.dimension(2);
 
-
     type* softmax_data = (type*)softmax.data();
     type* result_data = result.data();
 
     type* softmax_vector_data = nullptr;
     type* result_vector_data = nullptr;
 
-    Tensor<type, 0> sum;
+    Tensor0 sum;
 
     for(Index i = 0; i < depth; i++)
     {
@@ -433,7 +432,7 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
 
             sum.device(*device) = aux_rows.sum();
 
-            result_vector.device(*device) = aux_rows - softmax_vector * sum(0);
+            result_vector.device(*device) = aux_rows - softmax_vector * sum();
         }
     }
 }

@@ -141,7 +141,7 @@ Tensor3 load_image(const filesystem::path& path)
     const Index width = biWidth;
     const Index channels = (biBitCount == 8 && is_grayscale) ? 1 : 3;
 
-    Tensor<float, 3> image(height, width, channels);
+    Tensor3 image(height, width, channels);
 
     const bool top_down = (biHeight_signed < 0);
 
@@ -234,7 +234,7 @@ Tensor3 resize_image(const Tensor3& input_image,
     const Index input_width = input_image.dimension(1);
     const Index channels = input_image.dimension(2);
 
-    Tensor<float, 3> output_image(output_height, output_width, channels);
+    Tensor3 output_image(output_height, output_width, channels);
 
     const float scale_y = static_cast<float>(input_height) / output_height;
     const float scale_x = static_cast<float>(input_width) / output_width;
