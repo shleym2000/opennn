@@ -335,11 +335,6 @@ protected:
 
 public:
 
-    void create_cuda();
-    void destroy_cuda();
-
-    cudnnHandle_t get_cudnn_handle();
-
     virtual void forward_propagate(const vector<TensorViewCuda>&,
                                    unique_ptr<LayerForwardPropagationCuda>&,
                                    bool)
@@ -365,12 +360,6 @@ public:
     virtual void print_parameters_cuda() {}
 
 protected:
-
-    cublasHandle_t cublas_handle = nullptr;
-    cudnnHandle_t cudnn_handle = nullptr;
-
-    cudnnOpTensorDescriptor_t operator_multiplication_descriptor = nullptr;
-    cudnnOpTensorDescriptor_t operator_sum_descriptor = nullptr;
 
     const float alpha = 1.0f;
     const float beta = 0.0f;

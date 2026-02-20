@@ -114,24 +114,7 @@ protected:
 
 #ifdef OPENNN_CUDA
 
-protected:
-
-    cublasHandle_t cublas_handle;
-    cudnnHandle_t cudnn_handle;
-
 public:
-
-    void create_cuda()
-    {
-        cublasCreate(&cublas_handle);
-        cudnnCreate(&cudnn_handle);
-    }
-
-    void destroy_cuda()
-    {
-        cublasDestroy(cublas_handle);
-        cudnnDestroy(cudnn_handle);
-    }
 
     virtual TrainingResults train_cuda() = 0;
 

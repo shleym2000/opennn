@@ -423,51 +423,6 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
     }
 }
 
-
-#ifdef OPENNN_CUDA
-
-void Layer::create_cuda()
-{
-    cublasCreate(&cublas_handle);
-    cudnnCreate(&cudnn_handle);
-
-    // Multiplication
-
-    cudnnCreateOpTensorDescriptor(&operator_multiplication_descriptor);
-
-    cudnnSetOpTensorDescriptor(operator_multiplication_descriptor,
-                               CUDNN_OP_TENSOR_MUL,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN);
-
-    // Sum
-
-    cudnnCreateOpTensorDescriptor(&operator_sum_descriptor);
-
-    cudnnSetOpTensorDescriptor(operator_sum_descriptor,
-                               CUDNN_OP_TENSOR_ADD,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN);
-}
-
-
-void Layer::destroy_cuda()
-{
-    cublasDestroy(cublas_handle);
-    cudnnDestroy(cudnn_handle);
-
-    cudnnDestroyOpTensorDescriptor(operator_multiplication_descriptor);
-    cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
-}
-
-
-cudnnHandle_t Layer::get_cudnn_handle()
-{
-    return cudnn_handle;
-}
-
-#endif
-
 } 
 
 

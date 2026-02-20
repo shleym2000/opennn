@@ -1410,25 +1410,6 @@ void Loss::add_regularization_cuda(BackPropagationCuda& back_propagation) const
 }
 
 
-void Loss::create_cuda()
-{
-    cublasCreate(&cublas_handle);
-    cudnnCreate(&cudnn_handle);
-}
-
-
-void Loss::destroy_cuda()
-{
-    cublasDestroy(cublas_handle);
-    cudnnDestroy(cudnn_handle);
-}
-
-cudnnHandle_t Loss::get_cudnn_handle()
-{
-    return cudnn_handle;
-}
-
-
 // CUDA structs
 
 BackPropagationCuda::BackPropagationCuda(const Index new_samples_number, Loss* new_loss)
@@ -1493,7 +1474,7 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
                                1,
                                1);
 
-    cudnnGetReductionWorkspaceSize(loss_index->get_cudnn_handle(),
+    cudnnGetReductionWorkspaceSize(get_cudnn_handle(),
                                    reduce_tensor_descriptor,
                                    output_gradients.get_descriptor(),
                                    output_reduce_tensor_descriptor,

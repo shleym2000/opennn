@@ -210,7 +210,7 @@ void CrossEntropyError2d::calculate_binary_error(const BatchCuda& batch,
 
     calculate_binary_cross_entropy_cuda(size, errors, targets, outputs, numeric_limits<type>::epsilon());
 
-    cudnnReduceTensor(cudnn_handle,
+    cudnnReduceTensor(get_cudnn_handle(),
                       reduce_tensor_descriptor,
                       nullptr,
                       0,
@@ -265,7 +265,7 @@ void CrossEntropyError2d::calculate_multiple_error(const BatchCuda& batch,
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
-    cudnnReduceTensor(cudnn_handle,
+    cudnnReduceTensor(get_cudnn_handle(),
                       reduce_tensor_descriptor,
                       nullptr, 0,
                       workspace, workspace_size,

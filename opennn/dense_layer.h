@@ -218,9 +218,9 @@ struct DenseForwardPropagationCuda : public LayerForwardPropagationCuda
         if (dense_layer->get_dropout_rate() > 0)
         {
             cudnnCreateDropoutDescriptor(&dropout_descriptor);
-            cudnnDropoutGetStatesSize(dense_layer->get_cudnn_handle(), &dropout_states_size);
+            cudnnDropoutGetStatesSize(get_cudnn_handle(), &dropout_states_size);
             CHECK_CUDA(cudaMalloc(&dropout_states, dropout_states_size));
-            cudnnSetDropoutDescriptor(dropout_descriptor, dense_layer->get_cudnn_handle(), (float)dense_layer->get_dropout_rate(), dropout_states, dropout_states_size, dropout_seed);
+            cudnnSetDropoutDescriptor(dropout_descriptor, get_cudnn_handle(), (float)dense_layer->get_dropout_rate(), dropout_states, dropout_states_size, dropout_seed);
             cudnnDropoutGetReserveSpaceSize(outputs.get_descriptor(), &dropout_reserve_space_size);
             CHECK_CUDA(cudaMalloc(&dropout_reserve_space, dropout_reserve_space_size));
         }
@@ -1023,7 +1023,7 @@ public:
 
         // Combinations
 
-        CHECK_CUBLAS(cublasSgemm(cublas_handle,
+        CHECK_CUBLAS(cublasSgemm(get_cublas_handle(),
                     CUBLAS_OP_N, CUBLAS_OP_N,
                     batch_size, outputs_number, inputs_number,
                     &alpha,
@@ -1035,7 +1035,7 @@ public:
                     outputs_buffer,
                     batch_size));
 
-        CHECK_CUDNN(cudnnAddTensor(cudnn_handle,
+        CHECK_CUDNN(cudnnAddTensor(get_cudnn_handle(),
                                    &alpha,
                                    biases_device.get_descriptor(),
                                    biases_device.data,
@@ -1047,7 +1047,7 @@ public:
 
         if (batch_normalization && is_training)
                 CHECK_CUDNN(cudnnBatchNormalizationForwardTraining(
-                    cudnn_handle,
+                    get_cudnn_handle(),
                     CUDNN_BATCHNORM_PER_ACTIVATION,
                     &alpha,
                     &beta_add,
@@ -1066,7 +1066,7 @@ public:
                     dense_forward_propagation->bn_saved_inv_variance.data));
         else if (batch_normalization && !is_training)
                 CHECK_CUDNN(cudnnBatchNormalizationForwardInference(
-                    cudnn_handle,
+                    get_cudnn_handle(),
                     CUDNN_BATCHNORM_PER_ACTIVATION,
                     &alpha, &beta_add,
                     outputs.get_descriptor(),
@@ -1085,7 +1085,7 @@ public:
         if (activation_function == "Linear")
             cudaMemcpy(outputs.data, combinations, batch_size * outputs_number * sizeof(type), cudaMemcpyDeviceToDevice);
         else if (activation_function == "Softmax")
-            cudnnSoftmaxForward(cudnn_handle,
+            cudnnSoftmaxForward(get_cudnn_handle(),
                                 CUDNN_SOFTMAX_ACCURATE,
                                 CUDNN_SOFTMAX_MODE_CHANNEL,
                                 &alpha,
@@ -1095,7 +1095,7 @@ public:
                                 output_softmax_tensor_descriptor,
                                 outputs.data);
         else
-            cudnnActivationForward(cudnn_handle,
+            cudnnActivationForward(get_cudnn_handle(),
                                    activation_descriptor,
                                    &alpha,
                                    outputs.get_descriptor(),
@@ -1107,7 +1107,7 @@ public:
         // Droput
 
         if (is_training && activation_function != "Softmax" && get_dropout_rate() > type(0))
-            CHECK_CUDNN(cudnnDropoutForward(cudnn_handle,
+            CHECK_CUDNN(cudnnDropoutForward(get_cudnn_handle(),
                                             dense_forward_propagation->dropout_descriptor,
                                             outputs.get_descriptor(),
                                             outputs.data,
@@ -1156,7 +1156,7 @@ public:
         // Dropout
 
         if (get_dropout_rate() > type(0) && activation_function != "Softmax")
-            CHECK_CUDNN(cudnnDropoutBackward(cudnn_handle,
+            CHECK_CUDNN(cudnnDropoutBackward(get_cudnn_handle(),
                                              dense_forward_propagation->dropout_descriptor,
                                              gradients_tensor_descriptor,
                                              output_gradients[0].data,
@@ -1168,7 +1168,7 @@ public:
         // Error combinations derivatives
 
         if (activation_function != "Linear" && activation_function != "Softmax" && use_combinations)
-            CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
+            CHECK_CUDNN(cudnnActivationBackward(get_cudnn_handle(),
                                                 activation_descriptor,
                                                 &alpha,
                                                 gradients_tensor_descriptor,
@@ -1181,7 +1181,7 @@ public:
                                                 gradients_tensor_descriptor,
                                                 output_gradients[0].data));
         else if (activation_function != "Linear" && activation_function != "Softmax" && !use_combinations)
-            CHECK_CUDNN(cudnnActivationBackward(cudnn_handle,
+            CHECK_CUDNN(cudnnActivationBackward(get_cudnn_handle(),
                                                 activation_descriptor,
                                                 &alpha,
                                                 gradients_tensor_descriptor,
@@ -1198,7 +1198,7 @@ public:
 
         if (batch_normalization)
             CHECK_CUDNN(cudnnBatchNormalizationBackward(
-                cudnn_handle,
+                get_cudnn_handle(),
                 CUDNN_BATCHNORM_PER_ACTIVATION,
                 &alpha, &beta,
                 &alpha, &beta,
@@ -1218,7 +1218,7 @@ public:
 
         // Bias derivatives
 
-        CHECK_CUBLAS(cublasSgemm(cublas_handle, CUBLAS_OP_T, CUBLAS_OP_N,
+        CHECK_CUBLAS(cublasSgemm(get_cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N,
                     outputs_number,
                     1,
                     batch_size,
@@ -1233,7 +1233,7 @@ public:
 
         // Weight derivatives
 
-        CHECK_CUBLAS(cublasSgemm(cublas_handle, CUBLAS_OP_T, CUBLAS_OP_N,
+        CHECK_CUBLAS(cublasSgemm(get_cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N,
                     inputs_number,
                     outputs_number,
                     batch_size,
@@ -1248,7 +1248,7 @@ public:
 
         // Input derivatives
 
-        CHECK_CUBLAS(cublasSgemm(cublas_handle, CUBLAS_OP_N, CUBLAS_OP_T,
+        CHECK_CUBLAS(cublasSgemm(get_cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_T,
                     batch_size,
                     inputs_number,
                     outputs_number,

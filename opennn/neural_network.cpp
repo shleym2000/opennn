@@ -1586,23 +1586,6 @@ TensorViewCuda NeuralNetwork::calculate_outputs(TensorViewCuda input_device, Ind
 }
 
 
-void NeuralNetwork::create_cuda() const
-{
-    const vector<unique_ptr<Layer>>& neural_network_layers = get_layers();
-
-    for(const unique_ptr<Layer>& layer : neural_network_layers)
-        layer->create_cuda();
-}
-
-
-void NeuralNetwork::destroy_cuda() const
-{
-    const vector<unique_ptr<Layer>>& neural_network_layers = get_layers();
-
-    for(const unique_ptr<Layer>& layer : neural_network_layers)
-        layer->destroy_cuda();
-}
-
 TensorCuda &NeuralNetwork::get_parameters_device()
 {
     return parameters_device;

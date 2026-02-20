@@ -162,11 +162,6 @@ public:
 
 public:
 
-    void create_cuda();
-    void destroy_cuda();
-
-    cudnnHandle_t get_cudnn_handle();
-
     virtual void calculate_error(const BatchCuda&,
                                       const ForwardPropagationCuda&,
                                       BackPropagationCuda&) const = 0;
@@ -186,9 +181,6 @@ public:
     void add_regularization_cuda(BackPropagationCuda&) const;
 
 protected:
-
-    cublasHandle_t cublas_handle = nullptr;
-    cudnnHandle_t cudnn_handle = nullptr;
 
     const float alpha = 1.0f;
     const float beta = 0.0f;
