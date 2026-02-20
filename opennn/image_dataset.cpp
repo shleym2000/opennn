@@ -314,30 +314,19 @@ void ImageDataset::perform_augmentation(type* input_data) const
         Tensor3 image = inputs.chip(batch_index, 0);
 
         if(random_reflection_axis_x)
-            reflect_image_x(device.get(),
-                            image);
+            reflect_image_x(image);
 
         if(random_reflection_axis_y)
-            reflect_image_y(device.get(),
-                            image);
+            reflect_image_y(image);
 
         if(random_rotation_minimum != 0 && random_rotation_maximum != 0)
-            rotate_image(device.get(),
-                         image,
-                         image,
-                         random_uniform(random_rotation_minimum, random_rotation_maximum));
+            rotate_image(image, image, random_uniform(random_rotation_minimum, random_rotation_maximum));
 
         if(random_horizontal_translation_minimum != 0 && random_horizontal_translation_maximum != 0)
-            translate_image_x(device.get(),
-                              image,
-                              image,
-                              random_uniform(random_horizontal_translation_minimum, random_horizontal_translation_maximum));
+            translate_image_x(image, image, random_uniform(random_horizontal_translation_minimum, random_horizontal_translation_maximum));
 
         if(random_vertical_translation_minimum != 0 && random_vertical_translation_maximum != 0)
-            translate_image_y(device.get(),
-                              image,
-                              image,
-                              random_uniform(random_vertical_translation_minimum, random_vertical_translation_maximum));
+            translate_image_y(image, image, random_uniform(random_vertical_translation_minimum, random_vertical_translation_maximum));
     }
 }
 
@@ -417,7 +406,7 @@ vector<Descriptives> ImageDataset::scale_features(const string&)
                            input_shape[1],
                            input_shape[2]);
 
-    inputs_data.device(*device) = inputs_data / type(255);
+    inputs_data.device(get_device()) = inputs_data / type(255);
 
     return vector<Descriptives>();
 }
@@ -431,7 +420,7 @@ void ImageDataset::unscale_features(const string&)
                            input_shape[1],
                            input_shape[2]);
 
-    inputs_data.device(*device) = inputs_data * type(255);
+    inputs_data.device(get_device()) = inputs_data * type(255);
 }
 
 

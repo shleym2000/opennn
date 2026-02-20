@@ -161,7 +161,7 @@ struct QuasiNewtonMethodData final : public OptimizerData
 
     Index epoch = 0;
 
-    Tensor<type, 0> training_slope;
+    Tensor0 training_slope;
 
     type learning_rate = type(0);
     type old_learning_rate = type(0);

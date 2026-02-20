@@ -207,7 +207,7 @@ public:
 
                 if(scaler == "None")
                 {
-                    outputs.chip(j, 2).device(*device) = inputs.chip(j, 2);
+                    outputs.chip(j, 2).device(get_device()) = inputs.chip(j, 2);
                     continue;
                 }
 
@@ -217,18 +217,18 @@ public:
                     auto output_slice = outputs.chip(j, 2).chip(t, 1);
 
                     if(scaler == "MeanStandardDeviation")
-                        output_slice.device(*device) = (input_slice - descriptive.mean) / (descriptive.standard_deviation + NUMERIC_LIMITS_MIN);
+                        output_slice.device(get_device()) = (input_slice - descriptive.mean) / (descriptive.standard_deviation + NUMERIC_LIMITS_MIN);
                     else if(scaler == "MinimumMaximum")
                     {
                         const type range = descriptive.maximum - descriptive.minimum;
-                        output_slice.device(*device) = (input_slice - descriptive.minimum) / (range + NUMERIC_LIMITS_MIN) * (max_range - min_range) + min_range;
+                        output_slice.device(get_device()) = (input_slice - descriptive.minimum) / (range + NUMERIC_LIMITS_MIN) * (max_range - min_range) + min_range;
                     }
                     else if(scaler == "StandardDeviation")
-                        output_slice.device(*device) = input_slice / (descriptive.standard_deviation + NUMERIC_LIMITS_MIN);
+                        output_slice.device(get_device()) = input_slice / (descriptive.standard_deviation + NUMERIC_LIMITS_MIN);
                     else if(scaler == "Logarithm")
-                        output_slice.device(*device) = input_slice.log();
+                        output_slice.device(get_device()) = input_slice.log();
                     else if(scaler == "ImageMinMax")
-                        output_slice.device(*device) = input_slice / type(255.0);
+                        output_slice.device(get_device()) = input_slice / type(255.0);
                     else
                         throw runtime_error("Unknown scaling method in Scaling Layer: " + scaler);
                 }
@@ -241,7 +241,7 @@ public:
 
             MatrixMap outputs = matrix_map(layer_forward_propagation->outputs);
 
-            outputs.device(*device) = inputs;
+            outputs.device(get_device()) = inputs;
 
             for(Index i = 0; i < total_features; i++)
             {
@@ -258,10 +258,7 @@ public:
                 else if(scaler == "Logarithm")
                     scale_logarithmic(outputs, i);
                 else if(scaler == "ImageMinMax")
-                {
-                    auto column = outputs.col(i);
-                    column.device(*device) = column / type(255.0);
-                }
+                    outputs.col(i) /= type(255.0);
                 else
                     throw runtime_error("Unknown scaling method in Scaling Layer: " + scaler);
             }

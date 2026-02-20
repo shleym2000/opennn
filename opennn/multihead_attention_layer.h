@@ -74,7 +74,7 @@ public:
         const TensorMap2 W = tensor_map<2>(weights);
         const TensorMap1 B = tensor_map<1>(biases);
 
-        output.device(*device) =
+        output.device(get_device()) =
             (inputs.reshape(array_2(batch_size * sequence_length, embed_dim))
                  .contract(W, axes(1, 0))
              + B.reshape(array_2(1, embed_dim))
@@ -106,17 +106,17 @@ public:
 
         // Calculate Gradients
         // dW = Input^T * Delta
-        d_weights.device(*device) = input.reshape(flat_dims).contract(d_reshaped.reshape(flat_dims), axes(0, 0));
+        d_weights.device(get_device()) = input.reshape(flat_dims).contract(d_reshaped.reshape(flat_dims), axes(0, 0));
 
         // db = Sum(Delta)
-        d_bias.device(*device) = d_reshaped.sum(array_2(0, 1));
+        d_bias.device(get_device()) = d_reshaped.sum(array_2(0, 1));
 
         // Calculate Input Delta (Error signal to previous layer)
         // dX = Delta * W^T
         if (accumulate)
-            d_input.device(*device) += d_reshaped.contract(W, axes(2, 1));
+            d_input.device(get_device()) += d_reshaped.contract(W, axes(2, 1));
         else
-            d_input.device(*device) = d_reshaped.contract(W, axes(2, 1));
+            d_input.device(get_device()) = d_reshaped.contract(W, axes(2, 1));
     }
 
     void print() const override;

@@ -141,7 +141,7 @@ Tensor3 load_image(const filesystem::path& path)
     const Index width = biWidth;
     const Index channels = (biBitCount == 8 && is_grayscale) ? 1 : 3;
 
-    Tensor<float, 3> image(height, width, channels);
+    Tensor3 image(height, width, channels);
 
     const bool top_down = (biHeight_signed < 0);
 
@@ -150,14 +150,13 @@ Tensor3 load_image(const filesystem::path& path)
     if(!file)
         throw runtime_error("Failed to seek to pixel data offset (" + to_string(bfOffBits) + ") in BMP: " + image_path_str);
 
-
     const int bytes_per_pixel_in_file = (biBitCount == 32) ? 4 : (biBitCount == 24) ? 3 : 1;
     const long long row_data_bytes = width * bytes_per_pixel_in_file;
     const long long row_stride_in_file = ((row_data_bytes + 3) / 4) * 4;
 
     vector<unsigned char> row(row_stride_in_file);
 
-    for(Index y_row = 0; y_row < height; ++y_row)
+    for(Index y_row = 0; y_row < height; y_row++)
     {
         const Index tensor_y_coord = top_down ? y_row : (height - 1 - y_row);
 
@@ -234,7 +233,7 @@ Tensor3 resize_image(const Tensor3& input_image,
     const Index input_width = input_image.dimension(1);
     const Index channels = input_image.dimension(2);
 
-    Tensor<float, 3> output_image(output_height, output_width, channels);
+    Tensor3 output_image(output_height, output_width, channels);
 
     const float scale_y = static_cast<float>(input_height) / output_height;
     const float scale_x = static_cast<float>(input_width) / output_width;
@@ -282,24 +281,19 @@ Tensor3 resize_image(const Tensor3& input_image,
 }
 
 
-void reflect_image_x(const ThreadPoolDevice* device,
-                     Tensor3& image)
+void reflect_image_x(Tensor3& image)
 {
-    image.device(*device) = image.reverse(array<bool, 3>({false, true, false}));
+    image.device(get_device()) = image.reverse(array<bool, 3>({false, true, false}));
 }
 
 
-void reflect_image_y(const ThreadPoolDevice* device,
-                     Tensor3& image)
+void reflect_image_y(Tensor3& image)
 {
-    image.device(*device) = image.reverse(array<bool, 3>({true, false, false}));
+    image.device(get_device()) = image.reverse(array<bool, 3>({true, false, false}));
 }
 
 
-void rotate_image(const ThreadPoolDevice* device,
-                  const Tensor3& input,
-                  Tensor3& output,
-                  type angle_degree)
+void rotate_image(const Tensor3& input, Tensor3& output, type angle_degree)
 {
     const Index width = input.dimension(0);
     const Index height = input.dimension(1);
@@ -346,10 +340,7 @@ void rotate_image(const ThreadPoolDevice* device,
 }
 
 
-void translate_image_x(const ThreadPoolDevice* device,
-                       const Tensor3& input,
-                       Tensor3& output,
-                       Index shift)
+void translate_image_x(const Tensor3& input, Tensor3& output, Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));
@@ -382,10 +373,7 @@ void translate_image_x(const ThreadPoolDevice* device,
 }
 
 
-void translate_image_y(const ThreadPoolDevice* device,
-                       const Tensor3& input,
-                       Tensor3& output,
-                       Index shift)
+void translate_image_y(const Tensor3& input, Tensor3& output, Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));

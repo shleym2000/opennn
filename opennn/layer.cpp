@@ -135,10 +135,6 @@ vector<TensorViewCuda> LayerBackPropagationCuda::get_input_gradient_views() cons
 
 Layer::Layer()
 {
-    const unsigned int threads_number = thread::hardware_concurrency();
-
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 }
 
 
@@ -219,16 +215,6 @@ Index Layer::get_parameters_number()
 }
 
 
-void Layer::set_threads_number(const int& new_threads_number)
-{
-    thread_pool.reset();
-    device.reset();
-
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
-}
-
-
 string Layer::get_expression(const vector<string>&, const vector<string>&) const
 {
     return string();
@@ -272,7 +258,7 @@ void Layer::add_gradients(const vector<TensorView>& output_gradient_views) const
     TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
     for(Index i = 1; i < Index(output_gradient_views.size()); i++)
-        output_gradients.device(*device) += tensor_map<3>(output_gradient_views[i]);
+        output_gradients.device(get_device()) += tensor_map<3>(output_gradient_views[i]);
 }
 
 
@@ -408,14 +394,13 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
     const Index columns = softmax.dimension(1);
     const Index depth = softmax.dimension(2);
 
-
     type* softmax_data = (type*)softmax.data();
     type* result_data = result.data();
 
     type* softmax_vector_data = nullptr;
     type* result_vector_data = nullptr;
 
-    Tensor<type, 0> sum;
+    Tensor0 sum;
 
     for(Index i = 0; i < depth; i++)
     {
@@ -429,59 +414,14 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
 
             TensorMap1 result_vector(result_vector_data, rows);
 
-            aux_rows.device(*device) = softmax_vector * tensor_vector;
+            aux_rows.device(get_device()) = softmax_vector * tensor_vector;
 
-            sum.device(*device) = aux_rows.sum();
+            sum.device(get_device()) = aux_rows.sum();
 
-            result_vector.device(*device) = aux_rows - softmax_vector * sum(0);
+            result_vector.device(get_device()) = aux_rows - softmax_vector * sum();
         }
     }
 }
-
-
-#ifdef OPENNN_CUDA
-
-void Layer::create_cuda()
-{
-    cublasCreate(&cublas_handle);
-    cudnnCreate(&cudnn_handle);
-
-    // Multiplication
-
-    cudnnCreateOpTensorDescriptor(&operator_multiplication_descriptor);
-
-    cudnnSetOpTensorDescriptor(operator_multiplication_descriptor,
-                               CUDNN_OP_TENSOR_MUL,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN);
-
-    // Sum
-
-    cudnnCreateOpTensorDescriptor(&operator_sum_descriptor);
-
-    cudnnSetOpTensorDescriptor(operator_sum_descriptor,
-                               CUDNN_OP_TENSOR_ADD,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN);
-}
-
-
-void Layer::destroy_cuda()
-{
-    cublasDestroy(cublas_handle);
-    cudnnDestroy(cudnn_handle);
-
-    cudnnDestroyOpTensorDescriptor(operator_multiplication_descriptor);
-    cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
-}
-
-
-cudnnHandle_t Layer::get_cudnn_handle()
-{
-    return cudnn_handle;
-}
-
-#endif
 
 } 
 

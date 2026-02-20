@@ -280,17 +280,18 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
 
 void set_row(MatrixR&, const VectorR&, Index);
 
-void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
+void sum_matrices(const Tensor1&, Tensor3&);
 
-void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor1&);
-void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
+void multiply_matrices(Tensor3&, const Tensor1&);
+void multiply_matrices(Tensor3&, const Tensor2&);
 
 void set_identity(MatrixR&);
 
-//Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
+//Tensor2 self_kronecker_product(const VectorR&);
 
 bool is_binary(const VectorR& tensor)
 {
+
     const Index size = tensor.size();
 
     for(Index i = 0; i < size; i++)
@@ -314,7 +315,7 @@ bool is_binary(const TensorR<Rank>& tensor)
     return true;
 }
 
-Tensor2 append_rows(const Tensor2& , const Tensor2&);
+MatrixR append_rows(const MatrixR& , const MatrixR&);
 
 template<typename T>
 vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
@@ -328,8 +329,7 @@ vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
     return result;
 }
 
-vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums);
-
+vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& minimums, const VectorR& maximums);
 
 bool is_constant(const VectorR& tensor)
 {
@@ -402,7 +402,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
 MatrixR filter_column_minimum_maximum(const MatrixR&, Index, type, type);
 
-VectorI get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
+VectorI get_nearest_points(const MatrixR& ,const VectorR& , int );
 
 void fill_tensor_data_row_major(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
 
@@ -477,7 +477,7 @@ string vector_to_string(const VectorI& x, const string& separator = " ")
 
 
 template <typename T, size_t Rank>
-string tensor_to_string(const Tensor<T, Rank>& x, const string& separator = " ")
+string tensor_to_string(const TensorR<Rank>& x, const string& separator = " ")
 {
     ostringstream buffer;
 
@@ -489,7 +489,7 @@ string tensor_to_string(const Tensor<T, Rank>& x, const string& separator = " ")
 
 
 template <typename T, size_t Rank>
-void string_to_tensor(const string& input, Tensor<T, Rank, AlignedMax>& x)
+void string_to_tensor(const string& input, TensorR<Rank>& x)
 {
     istringstream stream(input);
     T value;
@@ -830,6 +830,68 @@ void link(type*, vector<vector<TensorViewCuda*>>);
 
 Index get_size(const vector<TensorViewCuda*>);
 Index get_size(vector<vector<TensorViewCuda*>>);
+
+#endif
+
+class Device
+{
+public:
+    static Device& instance();
+    ThreadPoolDevice* get_thread_pool_device();
+    void set_threads_number(int num_threads);
+
+#ifdef OPENNN_CUDA
+    cublasHandle_t get_cublas_handle();
+    cudnnHandle_t get_cudnn_handle();
+    cudnnOpTensorDescriptor_t get_operator_sum_descriptor();
+    cudnnOpTensorDescriptor_t get_operator_multiplication_descriptor();
+#endif
+
+private:
+    Device();
+    ~Device();
+
+    unique_ptr<ThreadPool> thread_pool;
+    unique_ptr<ThreadPoolDevice> thread_pool_device;
+
+#ifdef OPENNN_CUDA
+    cublasHandle_t cublas_handle = nullptr;
+    cudnnHandle_t cudnn_handle = nullptr;
+    cudnnOpTensorDescriptor_t operator_sum_descriptor = nullptr;
+    cudnnOpTensorDescriptor_t operator_multiplication_descriptor = nullptr;
+#endif
+};
+
+inline ThreadPoolDevice& get_device()
+{
+    return *Device::instance().get_thread_pool_device();
+}
+
+void set_threads_number(int num_threads);
+
+#ifdef OPENNN_CUDA
+    inline cublasHandle_t get_cublas_handle()
+    {
+        return Device::instance().get_cublas_handle();
+    }
+
+
+    inline cudnnHandle_t get_cudnn_handle()
+    {
+        return Device::instance().get_cudnn_handle();
+    }
+
+
+    inline cudnnOpTensorDescriptor_t get_operator_sum_descriptor()
+    {
+        return Device::instance().get_operator_sum_descriptor();
+    }
+
+
+    inline cudnnOpTensorDescriptor_t get_operator_multiplication_descriptor()
+    {
+        return Device::instance().get_operator_multiplication_descriptor();
+    }
 
 #endif
 

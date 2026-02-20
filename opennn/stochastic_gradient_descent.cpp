@@ -145,20 +145,20 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 
     if (momentum <= type(0))
     {
-        parameter_updates.device(*device) = gradient * (-learning_rate);
-        parameters.device(*device) += parameter_updates;
+        parameter_updates = gradient * (-learning_rate);
+        parameters += parameter_updates;
     }
     else if (momentum > type(0) && !nesterov)
     {
-        parameter_updates.device(*device) = gradient*(-learning_rate) + momentum*last_parameter_updates;
-        last_parameter_updates.device(*device) = parameter_updates;
-        parameters.device(*device) += parameter_updates;
+        parameter_updates = gradient*(-learning_rate) + momentum*last_parameter_updates;
+        last_parameter_updates = parameter_updates;
+        parameters += parameter_updates;
     }
     else if (momentum > type(0) && nesterov)
     {
-        parameter_updates.device(*device) = gradient*(-learning_rate) + momentum*last_parameter_updates;
-        last_parameter_updates.device(*device) = parameter_updates;
-        parameters.device(*device) += parameter_updates*momentum - gradient*learning_rate;
+        parameter_updates = gradient*(-learning_rate) + momentum*last_parameter_updates;
+        last_parameter_updates = parameter_updates;
+        parameters += parameter_updates*momentum - gradient*learning_rate;
     }
 }
 
@@ -744,7 +744,7 @@ TrainingResults StochasticGradientDescent::train_cuda()
                                             *validation_forward_propagation,
                                             *validation_back_propagation);
 
-                validation_error += validation_back_propagation->error();
+                validation_error += validation_back_propagation->error;
 
                 if (is_classification_model)
                     validation_accuracy += validation_back_propagation->accuracy();

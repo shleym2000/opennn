@@ -58,8 +58,6 @@ public:
 
     void set(const NeuralNetwork* = nullptr, const Dataset* = nullptr);
 
-    void set_threads_number(const int&);
-
     void set_neural_network(const NeuralNetwork*);
 
     virtual void set_dataset(const Dataset*);
@@ -164,11 +162,6 @@ public:
 
 public:
 
-    void create_cuda();
-    void destroy_cuda();
-
-    cudnnHandle_t get_cudnn_handle();
-
     virtual void calculate_error(const BatchCuda&,
                                       const ForwardPropagationCuda&,
                                       BackPropagationCuda&) const = 0;
@@ -189,9 +182,6 @@ public:
 
 protected:
 
-    cublasHandle_t cublas_handle = nullptr;
-    cudnnHandle_t cudnn_handle = nullptr;
-
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
@@ -200,9 +190,6 @@ protected:
     void print(){}
 
 protected:
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 
     NeuralNetwork* neural_network = nullptr;
 
@@ -281,7 +268,7 @@ struct BackPropagation
     VectorR output_gradients;
     Shape output_gradient_dimensions;
 
-    Tensor<type, 0> accuracy;
+    Tensor0 accuracy;
     MatrixR predictions;
 
     MatrixB matches;
@@ -318,7 +305,7 @@ struct BackPropagationCuda
 
     float* errors = nullptr;
 
-    Tensor<type, 0> error;
+    type error;
     float* error_device = nullptr;
 
     type regularization = type(0);
@@ -333,13 +320,11 @@ struct BackPropagationCuda
 
     TensorCuda output_gradients;
 
-    Tensor<type, 0> accuracy;
+    Tensor0 accuracy;
     float* predictions = nullptr;
     float* matches = nullptr;
     float* mask = nullptr;
     bool built_mask = false;
-
-    cudnnOpTensorDescriptor_t operator_sum_descriptor = nullptr;
 };
 
 #endif

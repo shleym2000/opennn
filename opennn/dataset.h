@@ -249,8 +249,6 @@ public:
 
     void set_default();
 
-    void set_threads_number(const int&);
-
     // Samples set
 
     void set_sample_roles(const string&);
@@ -535,9 +533,6 @@ public:
 
 protected:
 
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
-
     // DATA
 
     MatrixR data;
@@ -642,9 +637,6 @@ struct Batch
 
     Shape target_shape;
     Tensor1 target_tensor;
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 };
 
 

@@ -55,8 +55,6 @@ public:
 
     void set(const Loss* = nullptr);
 
-    virtual void set_threads_number(const int&);
-
     virtual void set_loss_index(Loss*);
 
     virtual void set_display(bool);
@@ -94,9 +92,6 @@ public:
 
 protected:
 
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
-
     Loss* loss_index = nullptr;
 
     Index maximum_epochs = 10000;
@@ -119,24 +114,7 @@ protected:
 
 #ifdef OPENNN_CUDA
 
-protected:
-
-    cublasHandle_t cublas_handle;
-    cudnnHandle_t cudnn_handle;
-
 public:
-
-    void create_cuda()
-    {
-        cublasCreate(&cublas_handle);
-        cudnnCreate(&cudnn_handle);
-    }
-
-    void destroy_cuda()
-    {
-        cublasDestroy(cublas_handle);
-        cudnnDestroy(cudnn_handle);
-    }
 
     virtual TrainingResults train_cuda() = 0;
 

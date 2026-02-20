@@ -7,7 +7,6 @@
 //   artelnics@artelnics.com
 
 #include "tensors.h"
-
 #include "random_utilities.h"
 
 #include "../eigen/Eigen/Dense"
@@ -15,9 +14,7 @@
 namespace opennn
 {
 
-void multiply_matrices(const ThreadPoolDevice* device,
-                       Tensor3& tensor,
-                       const Tensor1& vector)
+void multiply_matrices(Tensor3& tensor, const Tensor1& vector)
 {
     const Index depth = tensor.dimension(2);
 
@@ -25,12 +22,12 @@ void multiply_matrices(const ThreadPoolDevice* device,
     {
         TensorMap2 matrix = tensor_map(tensor, i);
 
-        matrix.device(*device) = matrix * vector(i);
+        matrix.device(get_device()) = matrix * vector(i);
     }
 }
 
 
-void multiply_matrices(const ThreadPoolDevice* device, Tensor3& tensor, const Tensor2& matrix)
+void multiply_matrices(Tensor3& tensor, const Tensor2& matrix)
 {
     const Index depth = tensor.dimension(2);
 
@@ -38,12 +35,12 @@ void multiply_matrices(const ThreadPoolDevice* device, Tensor3& tensor, const Te
     {
         TensorMap2 slice = tensor_map(tensor, i);
 
-        slice.device(*device) = slice * matrix;
+        slice.device(get_device()) = slice * matrix;
     }
 }
 
 /*
-Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& vector)
+Tensor2 self_kronecker_product(const VectorR& vector)
 {
     const Index columns_number = vector.size();
 
@@ -53,79 +50,51 @@ Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& ve
     {
         TensorMap1 column = tensor_map(matrix, i);
 
-        column.device(*device) = vector * vector(i);
+        column.device(get_device()) = vector * vector(i);
     }
 
     return matrix;
 }
 */
 
-
-Tensor2 append_rows(const Tensor2& starting_matrix, const Tensor2& block)
+MatrixR append_rows(const MatrixR& starting_matrix, const MatrixR& block)
 {
     if (starting_matrix.size() == 0)
         return block;
-
     if (block.size() == 0)
         return starting_matrix;
 
-    const Index old_rows = starting_matrix.dimension(0);
-    const Index cols = starting_matrix.dimension(1);
-    const Index new_rows = block.dimension(0);
+    MatrixR final_matrix(starting_matrix.rows() + block.rows(), starting_matrix.cols());
 
-    Tensor2 final_matrix(old_rows + new_rows, cols);
-
-    final_matrix.slice(array_2(0, 0), array_2(old_rows, cols)) = starting_matrix;
-
-    final_matrix.slice(array_2(old_rows, 0), array_2(new_rows, cols)) = block;
+    final_matrix << starting_matrix, block;
 
     return final_matrix;
 }
 
-vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums)
-{
-    const Index rows_unfiltered = outputs.dimension(0);
-    const Index variables_to_filter = outputs.dimension(1);
+vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& minimums, const VectorR& maximums)
+{    
+    const Index rows_unfiltered =  outputs.rows();
+    const Index variables_to_filter = outputs.cols();
 
     if(minimums.size() != variables_to_filter || maximums.size() != variables_to_filter)
         throw runtime_error("Minimums/maximums size mismatch.\n");
 
-    vector<uint8_t> binary_mask_filtered(static_cast<size_t>(rows_unfiltered), 1);
-    Index number_filtered_rows = rows_unfiltered;
-
-    for(Index j = 0; j < variables_to_filter; ++j)
-    {
-        const type minimum = minimums(j);
-        const type maximum = maximums(j);
-        number_filtered_rows = 0;
-
-        for(Index i = 0; i < rows_unfiltered; ++i)
-        {
-            if(!binary_mask_filtered[i])
-                continue;
-
-            const type y = static_cast<type>(outputs(i, j));
-
-            if(y < minimum || y > maximum)
-                binary_mask_filtered[i] = 0;
-            else
-                ++number_filtered_rows;
-        }
-        if(number_filtered_rows == 0) break;
-    }
-
     vector<Index> feasible_rows;
-    feasible_rows.reserve(static_cast<size_t>(number_filtered_rows));
 
-    for(Index i = 0; i < rows_unfiltered; ++i)
-        if(binary_mask_filtered[i])
+    feasible_rows.reserve(static_cast<size_t>(rows_unfiltered));
+
+    const auto min_array = minimums.array().transpose();
+    const auto max_array = maximums.array().transpose();
+
+    for (Index i = 0; i < rows_unfiltered; ++i)
+        if (((outputs.row(i).array() >= min_array) && (outputs.row(i).array() <= max_array)).all())
             feasible_rows.push_back(i);
 
     return feasible_rows;
 }
 
 
-void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3& tensor)
+void sum_matrices(const Tensor1& vector, Tensor3& tensor)
 {
     const Index depth = tensor.dimension(2);
 
@@ -133,7 +102,7 @@ void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3
     {
         TensorMap2 matrix = tensor_map(tensor, i);
 
-        matrix.device(*device) = matrix + vector(i);
+        matrix.device(get_device()) = matrix + vector(i);
     }
 }
 
@@ -792,6 +761,60 @@ void shuffle_rows(MatrixR& matrix)
     }
 }
 
+#endif
+
+Device::Device()
+{
+    int max_threads = std::thread::hardware_concurrency();
+    if (max_threads <= 0) max_threads = omp_get_max_threads();
+    if (max_threads <= 0) max_threads = 1;
+
+    set_threads_number(max_threads);
+
+#ifdef OPENNN_CUDA
+    CHECK_CUBLAS(cublasCreate(&cublas_handle));
+    CHECK_CUDNN(cudnnCreate(&cudnn_handle));
+
+    CHECK_CUDNN(cudnnCreateOpTensorDescriptor(&operator_sum_descriptor));
+    CHECK_CUDNN(cudnnSetOpTensorDescriptor(operator_sum_descriptor, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
+
+    CHECK_CUDNN(cudnnCreateOpTensorDescriptor(&operator_multiplication_descriptor));
+    CHECK_CUDNN(cudnnSetOpTensorDescriptor(operator_multiplication_descriptor, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
+#endif
+}
+
+Device::~Device()
+{
+#ifdef OPENNN_CUDA
+    if (operator_sum_descriptor) cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
+    if (operator_multiplication_descriptor) cudnnDestroyOpTensorDescriptor(operator_multiplication_descriptor);
+    if (cublas_handle) cublasDestroy(cublas_handle);
+    if (cudnn_handle) cudnnDestroy(cudnn_handle);
+#endif
+}
+
+
+void Device::set_threads_number(int num_threads)
+{
+    if (num_threads <= 0)
+    {
+        num_threads = thread::hardware_concurrency();
+        if (num_threads <= 0) num_threads = omp_get_max_threads();
+        if (num_threads <= 0) num_threads = 1;
+    }
+
+    thread_pool = make_unique<ThreadPool>(num_threads);
+    thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), num_threads);
+
+    omp_set_num_threads(num_threads);
+}
+
+
+#ifdef OPENNN_CUDA
+cublasHandle_t Device::get_cublas_handle() { return cublas_handle; }
+cudnnHandle_t Device::get_cudnn_handle() { return cudnn_handle; }
+cudnnOpTensorDescriptor_t Device::get_operator_sum_descriptor() { return operator_sum_descriptor; }
+cudnnOpTensorDescriptor_t Device::get_operator_multiplication_descriptor() { return operator_multiplication_descriptor; }
 #endif
 
 }

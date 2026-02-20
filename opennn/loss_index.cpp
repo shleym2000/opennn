@@ -17,10 +17,6 @@ namespace opennn
 
 Loss::Loss(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
 {
-    const unsigned int threads_number = thread::hardware_concurrency();
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
-
     set(new_neural_network, new_dataset);
 }
 
@@ -61,19 +57,6 @@ void Loss::set(const NeuralNetwork* new_neural_network, const Dataset* new_datas
     dataset = const_cast<Dataset*>(new_dataset);
 
     regularization_method = "L2";
-}
-
-
-void Loss::set_threads_number(const int& new_threads_number)
-{
-    if(thread_pool)
-        thread_pool.reset();
-
-    if(device)
-        device.reset();
-
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
 }
 
 
@@ -120,7 +103,7 @@ void Loss::calculate_errors_lm(const Batch& batch,
 
     const MatrixMap targets = matrix_map(targets_view);
 
-    back_propagation.errors.device(*device) = outputs - targets;
+    back_propagation.errors = outputs - targets;
 }
 
 
@@ -350,7 +333,7 @@ void Loss::add_regularization_gradient(VectorR& gradient) const
     }
     else if (regularization_method == "L2")
     {
-        gradient.device(*device) += parameters * regularization_weight;
+        gradient += parameters * regularization_weight;
     }
     else
     {
@@ -371,9 +354,9 @@ void Loss::add_regularization_to_gradients(BackPropagation& back_propagation) co
     VectorR& gradient = back_propagation.neural_network.gradient;
 
     if(regularization_method == "L1")
-        gradient.device(*device) += regularization_weight * parameters.array().sign();
+        gradient.array() += regularization_weight * parameters.array().sign();
     else if(regularization_method == "L2")
-        gradient.device(*device) += parameters*regularization_weight;
+        gradient += parameters*regularization_weight;
     else
         throw runtime_error("Unknown regularization method: " + regularization_method);
 }
@@ -1427,25 +1410,6 @@ void Loss::add_regularization_cuda(BackPropagationCuda& back_propagation) const
 }
 
 
-void Loss::create_cuda()
-{
-    cublasCreate(&cublas_handle);
-    cudnnCreate(&cudnn_handle);
-}
-
-
-void Loss::destroy_cuda()
-{
-    cublasDestroy(cublas_handle);
-    cudnnDestroy(cudnn_handle);
-}
-
-cudnnHandle_t Loss::get_cudnn_handle()
-{
-    return cudnn_handle;
-}
-
-
 // CUDA structs
 
 BackPropagationCuda::BackPropagationCuda(const Index new_samples_number, Loss* new_loss)
@@ -1474,7 +1438,7 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
     neural_network.set(samples_number, neural_network_ptr);
 
     loss = type(0);
-    error(0) = type(0);
+    error = type(0);
     regularization = type(0);
 
     CHECK_CUDA(cudaMalloc(&errors, samples_number * outputs_number * sizeof(float)));
@@ -1510,7 +1474,7 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
                                1,
                                1);
 
-    cudnnGetReductionWorkspaceSize(loss_index->get_cudnn_handle(),
+    cudnnGetReductionWorkspaceSize(get_cudnn_handle(),
                                    reduce_tensor_descriptor,
                                    output_gradients.get_descriptor(),
                                    output_reduce_tensor_descriptor,
@@ -1519,13 +1483,6 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
     CHECK_CUDA(cudaMalloc(&workspace, workspace_size));
 
     // Sum
-
-    cudnnCreateOpTensorDescriptor(&operator_sum_descriptor);
-
-    cudnnSetOpTensorDescriptor(operator_sum_descriptor,
-                               CUDNN_OP_TENSOR_ADD,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN);
 
     //if (is_instance_of<CrossEntropyError3d>(loss_index))
     //{
@@ -1603,7 +1560,6 @@ void BackPropagationCuda::free()
     workspace = nullptr;
 
     cudnnDestroyReduceTensorDescriptor(reduce_tensor_descriptor);
-    cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
     cudnnDestroyTensorDescriptor(output_reduce_tensor_descriptor);
 }
 

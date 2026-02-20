@@ -727,7 +727,7 @@ TrainingResults AdaptiveMomentEstimation::train_cuda()
                                         *validation_forward_propagation,
                                         *validation_back_propagation);
 
-                validation_error += validation_back_propagation->error();
+                validation_error += validation_back_propagation->error;
 
                 if (is_classification_model)
                     validation_accuracy += validation_back_propagation->accuracy();

@@ -83,7 +83,7 @@ void MeanSquaredError::calculate_output_gradients(const Batch& batch,
 
     MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
-    output_gradients.device(*device) = errors / type(0.5 * outputs_number * samples_number);
+    output_gradients = errors / type(0.5 * outputs_number * samples_number);
 }
 
 
@@ -145,7 +145,6 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
                                             const ForwardPropagationCuda& forward_propagation,
                                             BackPropagationCuda& back_propagation) const
 {
-
     const Index outputs_number = neural_network->get_outputs_number();
 
     // Batch
@@ -168,8 +167,8 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
 
     const float alpha_minus_one = -1.0f;
 
-    cudnnOpTensor(cudnn_handle,
-                  back_propagation.operator_sum_descriptor,
+    cudnnOpTensor(get_cudnn_handle(),
+                  get_operator_sum_descriptor(),
                   &alpha_minus_one,
                   output_tensor_descriptor,
                   targets,
@@ -180,13 +179,13 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
                   output_tensor_descriptor,
                   errors_device);
 
-    CHECK_CUBLAS(cublasSdot(cublas_handle, samples_number * outputs_number, errors_device, 1, errors_device, 1, &error(0)));
+    CHECK_CUBLAS(cublasSdot(get_cublas_handle(), samples_number * outputs_number, errors_device, 1, errors_device, 1, &error));
 
     const type coefficient = type(1.0)/type(samples_number * outputs_number);
 
-    error(0) = error(0) * coefficient;
+    error *= coefficient;
 
-    if (isnan(error())) throw runtime_error("\nError is NAN.");
+    if (isnan(error)) throw runtime_error("\nError is NAN.");
 }
 
 
@@ -210,7 +209,7 @@ void MeanSquaredError::calculate_output_gradients(const BatchCuda& batch,
 
     cudaMemcpy(output_gradients_device, errors_device, outputs_number * samples_number * sizeof(float), cudaMemcpyDeviceToDevice);
 
-    CHECK_CUBLAS(cublasSscal(cublas_handle, outputs_number * samples_number, &coefficient, output_gradients_device, 1));
+    CHECK_CUBLAS(cublasSscal(get_cublas_handle(), outputs_number * samples_number, &coefficient, output_gradients_device, 1));
 }
 
 #endif

@@ -41,14 +41,12 @@ public:
         Domain() = default;
         virtual ~Domain() = default;
 
-        Domain(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
+        Domain(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
         {
-            set(response_optimization, feature_dimensions, descriptives);
+            set(feature_dimensions, descriptives);
         }
 
-        ThreadPoolDevice* thread_pool_device = nullptr;
-
-        void set(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
+        void set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
 
         void bound(const vector<Index>& feature_dimensions, const vector<Condition>& conditions);
 
@@ -66,8 +64,6 @@ public:
     {
         Objectives(const ResponseOptimization& response_optimization);
 
-        ThreadPoolDevice* thread_pool_device = nullptr;
-
         MatrixR objective_sources; //Row 0: if is input or not, Row 1 : feature index in input or target subsets
 
         MatrixR utopian_and_senses; // Row 0: Utopian point, Row 1: Senses of optimization (1 for max, -1 for min)
@@ -82,8 +78,6 @@ public:
     Objectives build_objectives() const;
 
     ResponseOptimization(NeuralNetwork* = nullptr, Dataset* = nullptr);
-
-    void set_threads_number(const int& new_threads_number);
 
     void set(NeuralNetwork* = nullptr, Dataset* = nullptr);
 
@@ -140,11 +134,6 @@ private:
     type relative_tolerance = type(0.001);
 
     //minimum number of points?
-
-    Index threads_number = nbThreads();
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 };
 
 }

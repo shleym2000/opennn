@@ -380,7 +380,7 @@ void LevenbergMarquardtAlgorithm::update_parameters(const Batch& batch,
 
         parameter_updates = perform_Householder_QR_decomposition(hessian, type(-1)*gradient);
 
-        potential_parameters.device(*device) = parameters + parameter_updates;
+        potential_parameters = parameters + parameter_updates;
 
         neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters,

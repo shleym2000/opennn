@@ -96,8 +96,6 @@ public:
 
     void set_display(bool);
 
-    void set_threads_number(const int&);
-
     void set_batch_size(const Index);
 
     // Checking
@@ -272,9 +270,6 @@ public:
 #endif
 
 private:
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 
     NeuralNetwork* neural_network = nullptr;
 

@@ -163,8 +163,6 @@ public:
 
     void set_default();
 
-    void set_threads_number(const int&);
-
     void set_display(bool);
 
     void set_input_vocabulary(const vector<string>&);
@@ -303,9 +301,6 @@ public:
 
 public:
 
-    void create_cuda() const;
-    void destroy_cuda() const;
-
     TensorCuda& get_parameters_device();
 
     vector<vector<TensorViewCuda*>> get_layer_parameter_views_device();
@@ -321,9 +316,6 @@ public:
     TensorViewCuda calculate_outputs(TensorViewCuda, Index);
 
 protected:
-
-    cublasHandle_t cublas_handle;
-    cudnnHandle_t cudnn_handle;
 
     TensorCuda parameters_device;
 
