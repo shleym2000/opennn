@@ -158,7 +158,7 @@ void Bounding::forward_propagate(const vector<TensorView>& input_views,
 
     if(bounding_method == BoundingMethod::NoBounding)
     {
-        outputs.device(*device) = inputs;
+        outputs.device(get_device()) = inputs;
         return;
     }
 

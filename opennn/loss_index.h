@@ -58,8 +58,6 @@ public:
 
     void set(const NeuralNetwork* = nullptr, const Dataset* = nullptr);
 
-    void set_threads_number(const int&);
-
     void set_neural_network(const NeuralNetwork*);
 
     virtual void set_dataset(const Dataset*);
@@ -201,9 +199,6 @@ protected:
 
 protected:
 
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
-
     NeuralNetwork* neural_network = nullptr;
 
     Dataset* dataset = nullptr;
@@ -318,7 +313,7 @@ struct BackPropagationCuda
 
     float* errors = nullptr;
 
-    Tensor0 error;
+    type error;
     float* error_device = nullptr;
 
     type regularization = type(0);

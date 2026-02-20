@@ -19,23 +19,8 @@ namespace opennn
 ResponseOptimization::ResponseOptimization(NeuralNetwork* new_neural_network, Dataset* new_dataset)
 {
     set(new_neural_network, new_dataset);
-
-
-
-    const unsigned int threads_number = (thread::hardware_concurrency() == 0) ? 1 : thread::hardware_concurrency();
-
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
-
 }
 
-void ResponseOptimization::set_threads_number(const int& new_threads_number)
-{
-    const int threads = new_threads_number > 0 ? new_threads_number : 1;
-
-    thread_pool = make_unique<ThreadPool>(threads);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads);
-}
 
 void ResponseOptimization::set(NeuralNetwork* new_neural_network, Dataset* new_dataset)
 {
@@ -94,8 +79,6 @@ void ResponseOptimization::set_relative_tolerance(type new_relative_tolerance)
 
 void ResponseOptimization::Domain::set(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
 {
-    this->thread_pool_device = response_optimization.device.get();
-
     const Index variables_number = static_cast<Index>(feature_dimensions.size());
 
     const Index total_feature_dimensions = accumulate(feature_dimensions.begin(), feature_dimensions.end(), Index(0));
@@ -150,10 +133,9 @@ ResponseOptimization::Domain ResponseOptimization::get_original_domain(const str
     return original_domain;
 }
 
+
 ResponseOptimization::Objectives::Objectives(const ResponseOptimization& response_optimization)
 {
-    this->thread_pool_device = response_optimization.device.get();
-
     const vector<Index> feature_dimensions = response_optimization.dataset->get_feature_dimensions();
 
     Index objectives_number = 0;
@@ -637,7 +619,7 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const MatrixR& 
     for (Index i = 0; i < objectives_number; ++i)
     {
         Tensor0 maximum_objective_tensor;
-        maximum_objective_tensor.device(*device) = objective_matrix.col(i).maxCoeff();
+        maximum_objective_tensor.device(get_device()) = objective_matrix.col(i).maxCoeff();
 
         const type best_objective_value = maximum_objective_tensor(0);
 

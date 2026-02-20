@@ -80,7 +80,7 @@ void Convolutional::calculate_convolutions(const Tensor4& inputs, TensorMap4 con
         const TensorMap3 kernel_weights = tensor_map_(weights_map, kernel_index);
         TensorMap3 kernel_convolutions = tensor_map_(convolutions, kernel_index);
 
-        kernel_convolutions.device(*device) =
+        kernel_convolutions.device(get_device()) =
             (inputs.convolve(kernel_weights, array_3( 1, 2, 3)))
                 .reshape(kernel_convolutions.dimensions()) + biases_map(kernel_index);
     }
@@ -188,11 +188,11 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 
     preprocess_inputs(inputs, preprocessed_inputs);
 
-    output_gradients.device(*device) = output_gradients*activation_derivatives;
+    output_gradients.device(get_device()) = output_gradients*activation_derivatives;
     
     // Bias derivatives
 
-    bias_gradients.device(*device) = output_gradients.sum(array<Index, 3>({0, 1, 2}));
+    bias_gradients.device(get_device()) = output_gradients.sum(array<Index, 3>({0, 1, 2}));
 
     // Weights derivatives
 
@@ -214,7 +214,7 @@ void Convolutional::back_propagate(const vector<TensorView>& input_views,
 
     // Input derivatives
 
-    rotated_weights.device(*device) = tensor_map<4>(weights).reverse(array<Index, 4>({1, 1, 0, 0}));
+    rotated_weights.device(get_device()) = tensor_map<4>(weights).reverse(array<Index, 4>({1, 1, 0, 0}));
 
 
 #pragma omp parallel for //schedule(static)

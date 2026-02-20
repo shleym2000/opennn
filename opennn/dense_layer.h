@@ -634,9 +634,9 @@ public:
 
         const array<int, 1> axis_x({0});
 
-        means.device(*device) = outputs.mean(axis_x);
+        means.device(get_device()) = outputs.mean(axis_x);
 
-        standard_deviations.device(*device)
+        standard_deviations.device(get_device())
             = (outputs - means.broadcast(rows)).square().mean(axis_x).sqrt();
 
         outputs = inputs;// -means.broadcast(array<Index, 2>({ outputs.dimension(0), 1 }));

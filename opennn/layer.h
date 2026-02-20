@@ -70,8 +70,6 @@ public:
 
     Index get_outputs_number() const;
 
-    void set_threads_number(const int&);
-
     // Forward propagation
 
     virtual void forward_propagate(const vector<TensorView>&,
@@ -109,9 +107,6 @@ public:
     bool get_is_trainable() const;
 
 protected:
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 
     string label = "my_layer";
 
@@ -152,7 +147,7 @@ protected:
     template <int Rank>
     FORCE_INLINE void binary(TensorR<Rank>& y, TensorR<Rank>& dy_dx, type threshold) const
     {
-        y.device(*device) = (y < threshold).select(type(0), type(1));
+        y.device(get_device()) = (y < threshold).select(type(0), type(1));
 
         if (dy_dx.size() == 0) return;
 
@@ -174,55 +169,55 @@ protected:
     {
         const type alpha = type(1);
 
-        y.device(*device) = (y > type(0)).select(y, alpha * (y.exp() - type(1)));
+        y.device(get_device()) = (y > type(0)).select(y, alpha * (y.exp() - type(1)));
 
         if (dy_dx.size() == 0) return;
 
-        dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(type(1)), y + alpha);
+        dy_dx.device(get_device()) = (y > type(0)).select(dy_dx.constant(type(1)), y + alpha);
     }
 
 
     template <int Rank>
     FORCE_INLINE void hyperbolic_tangent(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
-        y.device(*device) = y.tanh();
+        y.device(get_device()) = y.tanh();
 
         if (dy_dx.size() == 0) return;
 
-        dy_dx.device(*device) = (type(1) - y.square()).eval();
+        dy_dx.device(get_device()) = (type(1) - y.square()).eval();
     }
 
 
     template <int Rank>
     FORCE_INLINE void logistic(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
-        y.device(*device) = (type(1) + (-y).exp()).inverse();
+        y.device(get_device()) = (type(1) + (-y).exp()).inverse();
 
         if (dy_dx.size() == 0) return;
 
-        dy_dx.device(*device) = (y * (type(1) - y)).eval();
+        dy_dx.device(get_device()) = (y * (type(1) - y)).eval();
     }
 
 
     template <int Rank>
     FORCE_INLINE void rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx) const
     {
-        y.device(*device) = y.cwiseMax(type(0));
+        y.device(get_device()) = y.cwiseMax(type(0));
 
         if (dy_dx.size() == 0) return;
 
-        dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(type(1)), dy_dx.constant(type(0)));
+        dy_dx.device(get_device()) = (y > type(0)).select(dy_dx.constant(type(1)), dy_dx.constant(type(0)));
     }
 
 
     template <int Rank>
     FORCE_INLINE void leaky_rectified_linear(TensorMapR<Rank> y, TensorMapR<Rank> dy_dx, type slope) const
     {
-        y.device(*device) = (y > type(0)).select(y, slope * y);
+        y.device(get_device()) = (y > type(0)).select(y, slope * y);
 
         if (dy_dx.size() == 0) return;
 
-        dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(type(1)), dy_dx.constant(type(slope)));
+        dy_dx.device(get_device()) = (y > type(0)).select(dy_dx.constant(type(1)), dy_dx.constant(type(slope)));
     }
 
 
@@ -233,11 +228,11 @@ protected:
 
         const type alpha = type(1.6733);
 
-        y.device(*device) = (y > type(0)).select(lambda * y, lambda * alpha * (y.exp() - type(1)));
+        y.device(get_device()) = (y > type(0)).select(lambda * y, lambda * alpha * (y.exp() - type(1)));
 
         if (dy_dx.size() == 0) return;
 
-        dy_dx.device(*device) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
+        dy_dx.device(get_device()) = (y > type(0)).select(dy_dx.constant(lambda), y + alpha * lambda);
     }
 
     void softmax(TensorMap2) const;
@@ -276,22 +271,22 @@ protected:
 
         if(is_training)
         {
-            batch_means.device(*device) = outputs.mean(reduction_axes);
+            batch_means.device(get_device()) = outputs.mean(reduction_axes);
 
-            normalized_outputs.device(*device) = (outputs - batch_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions));
+            normalized_outputs.device(get_device()) = (outputs - batch_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions));
 
-            batch_variances.device(*device) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
+            batch_variances.device(get_device()) = (normalized_outputs.square().mean(reduction_axes) + epsilon).sqrt();
 
-            normalized_outputs.device(*device) = normalized_outputs / batch_variances.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
+            normalized_outputs.device(get_device()) = normalized_outputs / batch_variances.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
 
-            running_means.device(*device) = running_means * momentum + batch_means * (type(1) - momentum);
-            running_variances.device(*device) = running_variances * momentum + batch_variances * (type(1) - momentum);
+            running_means.device(get_device()) = running_means * momentum + batch_means * (type(1) - momentum);
+            running_variances.device(get_device()) = running_variances * momentum + batch_variances * (type(1) - momentum);
         }
         else
-            normalized_outputs.device(*device) = (outputs - running_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
+            normalized_outputs.device(get_device()) = (outputs - running_means.reshape(reshape_dimensions).broadcast(broadcast_dimensions)) /
                                                  (running_variances.reshape(reshape_dimensions).broadcast(broadcast_dimensions) + epsilon);
 
-        outputs.device(*device) = normalized_outputs * gammas.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
+        outputs.device(get_device()) = normalized_outputs * gammas.reshape(reshape_dimensions).broadcast(broadcast_dimensions) +
                                   betas.reshape(reshape_dimensions).broadcast(broadcast_dimensions);
     }
 

@@ -14,7 +14,7 @@
 #include "tensors.h"
 #include "strings_utilities.h"
 #include "random_utilities.h"
-//#include "image_dataset.h"
+#include "image_dataset.h"
 
 namespace opennn
 {
@@ -1599,10 +1599,6 @@ void Dataset::set_display(bool new_display)
 
 void Dataset::set_default()
 {
-    const unsigned int threads_number = thread::hardware_concurrency();
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
-
     has_header = false;
 
     has_sample_ids = false;
@@ -1722,16 +1718,6 @@ void Dataset::set_missing_values_method(const string& new_missing_values_method)
         missing_values_method = MissingValuesMethod::Interpolation;
     else
         throw runtime_error("Unknown method type.\n");
-}
-
-
-void Dataset::set_threads_number(const int& new_threads_number)
-{
-    thread_pool.reset();
-    device.reset();
-
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
 }
 
 
@@ -4383,10 +4369,6 @@ void Batch::fill(const vector<Index>& sample_indices,
 
 Batch::Batch(const Index new_samples_number, const Dataset* new_dataset)
 {
-    const unsigned int threads_number = thread::hardware_concurrency();
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
-
     set(new_samples_number, new_dataset);
 }
 

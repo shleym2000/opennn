@@ -1526,35 +1526,38 @@ type median(const MatrixR& matrix, Index column_index)
 VectorR median(const MatrixR& matrix, const VectorI& column_indices)
 {
     const Index rows_number = matrix.rows();
-
     const Index column_indices_size = column_indices.size();
 
-    Index column_index;
-
-    // median
-
-    VectorR median(column_indices_size);
+    VectorR medians(column_indices_size);
 
     for(Index j = 0; j < column_indices_size; j++)
     {
-        column_index = column_indices(j);
-
-        Tensor1 sorted_column(0);
-
+        const Index column_index = column_indices(j);
         const VectorR column = matrix.col(column_index);
 
+        const Index n = column.array().isFinite().count();
+
+        if (n == 0)
+        {
+            medians(j) = numeric_limits<type>::quiet_NaN();
+            continue;
+        }
+
+        VectorR valid_values(n);
+        Index k = 0;
+
         for(Index i = 0; i < column.size(); i++)
-            if(!isnan(column(i)))
-                push_back(sorted_column,column(i));
+            if(isfinite(column(i)))
+                valid_values(k++) = column(i);
 
-        sort(sorted_column.data(), sorted_column.data() + sorted_column.size(), less<type>());
+        sort(valid_values.data(), valid_values.data() + n);
 
-        median(j) = (rows_number % 2 == 0)
-            ? (sorted_column[sorted_column.size() * 2 / 4] + sorted_column[sorted_column.size() * 2 / 4 + 1]) / type(2)
-            : sorted_column[sorted_column.size() * 2 / 4];
+        medians(j) = (n % 2 == 0)
+                         ? (valid_values(n / 2 - 1) + valid_values(n / 2)) / 2.0f
+                         : valid_values(n / 2);
     }
 
-    return median;
+    return medians;
 }
 
 
@@ -1565,36 +1568,38 @@ VectorR median(const MatrixR& matrix,
     const Index row_indices_size = row_indices.size();
     const Index column_indices_size = column_indices.size();
 
-    Index column_index;
-
-    // median
-
-    VectorR median(column_indices_size);
-
+    VectorR medians(column_indices_size);
+/*
     for(Index j = 0; j < column_indices_size; j++)
     {
-        column_index = column_indices[j];
-
-        Tensor1 sorted_column;
+        const Index column_index = column_indices[j];
+        Index n = 0;
 
         for(Index k = 0; k < row_indices_size; k++)
-        {
-            const Index row_index = row_indices[k];
+            if(isfinite(matrix(row_indices, column_index)))
+                n++;
 
-            if(!isnan(matrix(row_index, column_index)))
-                push_back(sorted_column, matrix(row_index, column_index));
+        if (n == 0)
+        {
+            medians(j) = numeric_limits<type>::quiet_NaN();
+            continue;
         }
 
-        sort(sorted_column.data(), sorted_column.data() + sorted_column.size(), less<type>());
+        VectorR valid_values(n);
+        Index idx = 0;
 
-        const Index sorted_list_size = sorted_column.size();
+        for(Index row_index = 0; row_index < row_indices_size; row_index++)
+            if(isfinite(matrix(row_indices, column_index)))
+                valid_values(idx++) = matrix(row_index, column_index);
 
-        median(j) = (sorted_list_size % 2 == 0)
-            ? (sorted_column[sorted_list_size * 2 / 4] + sorted_column[sorted_list_size * 2 / 4 + 1]) / type(2)
-            : sorted_column[sorted_list_size * 2 / 4];
+        sort(valid_values.data(), valid_values.data() + n);
+
+        medians(j) = (n % 2 == 0)
+            ? (valid_values(n / 2 - 1) + valid_values(n / 2)) / 2.0f
+            : valid_values(n / 2);
     }
-
-    return median;
+*/
+    return medians;
 }
 
 

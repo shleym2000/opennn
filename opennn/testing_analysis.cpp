@@ -21,11 +21,6 @@ TestingAnalysis::TestingAnalysis(const NeuralNetwork* new_neural_network, const 
 {
     neural_network = const_cast<NeuralNetwork*>(new_neural_network);
     dataset = const_cast<Dataset*>(new_dataset);
-
-    const unsigned int threads_number = thread::hardware_concurrency();
-
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 }
 
 
@@ -50,16 +45,6 @@ bool TestingAnalysis::get_display() const
 Index TestingAnalysis::get_batch_size()
 {
     return batch_size;
-}
-
-
-void TestingAnalysis::set_threads_number(const int& new_threads_number)
-{
-    thread_pool.reset();
-    device.reset();
-
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
 }
 
 
@@ -654,14 +639,14 @@ type TestingAnalysis::calculate_weighted_squared_error(const MatrixR& targets,
     MatrixR f_2(targets.rows(), targets.cols());
     MatrixR f_3(targets.rows(), targets.cols());
 
-    f_1.device(*device) = (targets - outputs).square() * positives_weight;
+    f_1.device(get_device()) = (targets - outputs).square() * positives_weight;
 
-    f_2.device(*device) = (targets - outputs).square()*negatives_weight;
+    f_2.device(get_device()) = (targets - outputs).square()*negatives_weight;
 
-    f_3.device(*device) = targets.constant(type(0));
+    f_3.device(get_device()) = targets.constant(type(0));
 
     Tensor0 mean_squared_error;
-    mean_squared_error.device(*device) = (if_sentence.select(f_1, else_sentence.select(f_2, f_3))).sum();
+    mean_squared_error.device(get_device()) = (if_sentence.select(f_1, else_sentence.select(f_2, f_3))).sum();
 
     Index negatives = 0;
 
@@ -691,7 +676,7 @@ type TestingAnalysis::calculate_Minkowski_error(const MatrixR& targets,
 
     Tensor0 minkowski_error;
 
-    minkowski_error.device(*device) =
+    minkowski_error.device(get_device()) =
         (((outputs - targets).array().abs().pow(minkowski_parameter).sum()) / predictions_number).pow(type(1.0) / minkowski_parameter);
 
     return minkowski_error();

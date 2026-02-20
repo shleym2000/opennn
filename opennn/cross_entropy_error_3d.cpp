@@ -41,7 +41,7 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     // In sequence tasks, we ignore padding. We assume target 0 is padding if built_mask is used.
     // If you want to include all tokens, you can skip the mask multiplication.
 
-    back_propagation.mask.device(*device) = (targets != targets.constant(0.0f));
+    back_propagation.mask.device(get_device()) = (targets != targets.constant(0.0f));
     const MatrixB& mask = back_propagation.mask;
 
     // 4. Reshape outputs to [Batch, Sequence] to match targets
@@ -53,21 +53,21 @@ void CrossEntropyError3d::calculate_binary_error(const Batch& batch,
     // We reuse the errors member in back_propagation to store element-wise loss
     Tensor2& elementwise_loss = back_propagation.errors;
 
-    elementwise_loss.device(*device) = -(targets * (outputs_2d + epsilon).log() +
+    elementwise_loss.device(get_device()) = -(targets * (outputs_2d + epsilon).log() +
         (targets.constant(1.0f) - targets) * (targets.constant(1.0f) - outputs_2d + epsilon).log());
 
     // 6. Aggregate Error
     // Sum only the non-masked (non-padding) elements
     Tensor0 total_masked_loss;
-    total_masked_loss.device(*device) = (elementwise_loss * mask.cast<type>()).sum();
+    total_masked_loss.device(get_device()) = (elementwise_loss * mask.cast<type>()).sum();
 
     Tensor0 active_elements;
-    active_elements.device(*device) = mask.cast<type>().sum();
+    active_elements.device(get_device()) = mask.cast<type>().sum();
 
 
     // Average the error over the number of non-padded tokens
     if (active_elements() > 0.0f)
-        back_propagation.error.device(*device) = total_masked_loss / active_elements();
+        back_propagation.error.device(get_device()) = total_masked_loss / active_elements();
     else
         back_propagation.error.setZero();
     */
@@ -92,7 +92,7 @@ void CrossEntropyError3d::calculate_multiple_error(const Batch& batch,
     // 3. Prepare Masking
     // We assume index 0 is the [PAD] token.
     // The mask is true for actual words and false for padding.
-    back_propagation.mask.device(*device) = (targets != targets.constant(0.0f));
+    back_propagation.mask.device(get_device()) = (targets != targets.constant(0.0f));
     const MatrixB& mask = back_propagation.mask;
 
     type total_log_loss = 0.0f;

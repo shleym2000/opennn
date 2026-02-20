@@ -83,7 +83,7 @@ void MeanSquaredError::calculate_output_gradients(const Batch& batch,
 
     MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
-    output_gradients.device(*device) = errors / type(0.5 * outputs_number * samples_number);
+    output_gradients.device(get_device()) = errors / type(0.5 * outputs_number * samples_number);
 }
 
 
@@ -180,13 +180,13 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
                   output_tensor_descriptor,
                   errors_device);
 
-    CHECK_CUBLAS(cublasSdot(cublas_handle, samples_number * outputs_number, errors_device, 1, errors_device, 1, &error(0)));
+    CHECK_CUBLAS(cublasSdot(cublas_handle, samples_number * outputs_number, errors_device, 1, errors_device, 1, &error));
 
     const type coefficient = type(1.0)/type(samples_number * outputs_number);
 
-    error(0) = error(0) * coefficient;
+    error *= coefficient;
 
-    if (isnan(error())) throw runtime_error("\nError is NAN.");
+    if (isnan(error)) throw runtime_error("\nError is NAN.");
 }
 
 

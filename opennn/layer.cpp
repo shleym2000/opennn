@@ -135,10 +135,6 @@ vector<TensorViewCuda> LayerBackPropagationCuda::get_input_gradient_views() cons
 
 Layer::Layer()
 {
-    const unsigned int threads_number = thread::hardware_concurrency();
-
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
 }
 
 
@@ -219,16 +215,6 @@ Index Layer::get_parameters_number()
 }
 
 
-void Layer::set_threads_number(const int& new_threads_number)
-{
-    thread_pool.reset();
-    device.reset();
-
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
-}
-
-
 string Layer::get_expression(const vector<string>&, const vector<string>&) const
 {
     return string();
@@ -272,7 +258,7 @@ void Layer::add_gradients(const vector<TensorView>& output_gradient_views) const
     TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
     for(Index i = 1; i < Index(output_gradient_views.size()); i++)
-        output_gradients.device(*device) += tensor_map<3>(output_gradient_views[i]);
+        output_gradients.device(get_device()) += tensor_map<3>(output_gradient_views[i]);
 }
 
 
@@ -428,11 +414,11 @@ void Layer::softmax_derivatives_times_tensor(const TensorMap3 softmax,
 
             TensorMap1 result_vector(result_vector_data, rows);
 
-            aux_rows.device(*device) = softmax_vector * tensor_vector;
+            aux_rows.device(get_device()) = softmax_vector * tensor_vector;
 
-            sum.device(*device) = aux_rows.sum();
+            sum.device(get_device()) = aux_rows.sum();
 
-            result_vector.device(*device) = aux_rows - softmax_vector * sum();
+            result_vector.device(get_device()) = aux_rows - softmax_vector * sum();
         }
     }
 }

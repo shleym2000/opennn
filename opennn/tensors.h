@@ -280,14 +280,14 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
 
 void set_row(MatrixR&, const VectorR&, Index);
 
-void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
+void sum_matrices(const Tensor1&, Tensor3&);
 
-void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor1&);
-void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
+void multiply_matrices(Tensor3&, const Tensor1&);
+void multiply_matrices(Tensor3&, const Tensor2&);
 
 void set_identity(MatrixR&);
 
-//Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
+//Tensor2 self_kronecker_product(const VectorR&);
 
 bool is_binary(const VectorR& tensor)
 {
@@ -314,6 +314,7 @@ bool is_binary(const TensorR<Rank>& tensor)
 
     return true;
 }
+
 
 Tensor2 append_rows(const Tensor2& , const Tensor2&);
 
@@ -832,6 +833,48 @@ void link(type*, vector<vector<TensorViewCuda*>>);
 Index get_size(const vector<TensorViewCuda*>);
 Index get_size(vector<vector<TensorViewCuda*>>);
 
+#endif
+
+
+class Device
+{
+public:
+    static Device& instance();
+    ThreadPoolDevice* get_thread_pool_device();
+    void set_threads_number(int num_threads);
+
+#ifdef OPENNN_CUDA
+    cublasHandle_t get_cublas_handle();
+    cudnnHandle_t get_cudnn_handle();
+    cudnnOpTensorDescriptor_t get_operator_sum_descriptor();
+    cudnnOpTensorDescriptor_t get_operator_multiplication_descriptor();
+#endif
+
+private:
+    Device();
+    ~Device(); // Added destructor to clean up CUDA context
+
+    unique_ptr<ThreadPool> thread_pool;
+    unique_ptr<ThreadPoolDevice> thread_pool_device;
+
+#ifdef OPENNN_CUDA
+    cublasHandle_t cublas_handle = nullptr;
+    cudnnHandle_t cudnn_handle = nullptr;
+    cudnnOpTensorDescriptor_t operator_sum_descriptor = nullptr;
+    cudnnOpTensorDescriptor_t operator_multiplication_descriptor = nullptr;
+#endif
+};
+
+inline ThreadPoolDevice& get_device() {
+    return *Device::instance().get_thread_pool_device();
+}
+void set_threads_number(int num_threads);
+
+#ifdef OPENNN_CUDA
+inline cublasHandle_t get_cublas_handle() { return Device::instance().get_cublas_handle(); }
+inline cudnnHandle_t get_cudnn_handle() { return Device::instance().get_cudnn_handle(); }
+inline cudnnOpTensorDescriptor_t get_operator_sum_descriptor() { return Device::instance().get_operator_sum_descriptor(); }
+inline cudnnOpTensorDescriptor_t get_operator_multiplication_descriptor() { return Device::instance().get_operator_multiplication_descriptor(); }
 #endif
 
 }

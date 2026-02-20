@@ -208,7 +208,7 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
     }
 
     if (use_causal_mask)
-        attention_weights.device(*device) += causal_mask.reshape(array_4(1, 1, query_sequence_length, source_sequence_length))
+        attention_weights.device(get_device()) += causal_mask.reshape(array_4(1, 1, query_sequence_length, source_sequence_length))
                                                         .broadcast(array_4(batch_size, heads_number, 1, 1));
 
     // @todo Optimization: Call the padding mask here if your LanguageDataset provides it
@@ -223,16 +223,16 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
         const auto v_mat = value.reshape(array_2(total_heads, source_sequence_length * head_dimension)).chip(i, 0).reshape(array_2(source_sequence_length, head_dimension));
         auto o_mat = attention_outputs.reshape(array_2(total_heads, query_sequence_length * head_dimension)).chip(i, 0).reshape(array_2(query_sequence_length, head_dimension));
 
-        o_mat.device(*device) = w_mat.contract(v_mat, axes(1, 0));
+        o_mat.device(get_device()) = w_mat.contract(v_mat, axes(1, 0));
     }
 
-    concatenated_attention_outputs.device(*device) = attention_outputs.shuffle(array_4(0, 2, 1, 3))
+    concatenated_attention_outputs.device(get_device()) = attention_outputs.shuffle(array_4(0, 2, 1, 3))
                                                                       .reshape(concatenated_attention_outputs.dimensions());
 
     const TensorMap2 projection_weights_map = tensor_map<2>(projection_weights);
     const TensorMap1 projection_biases_map = tensor_map<1>(projection_biases);
 
-    outputs.device(*device) =
+    outputs.device(get_device()) =
         concatenated_attention_outputs.contract(projection_weights_map, axes(2, 0))
         + projection_biases_map.reshape(array_3(1, 1, embedding_dimension))
         .broadcast(array_3(batch_size, query_sequence_length, 1));
@@ -295,16 +295,16 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     const type scaling_factor = get_scaling_factor();
     const Index total_heads = batch_size * heads_number;
 
-    projection_weight_gradients.device(*device) =
+    projection_weight_gradients.device(get_device()) =
         concatenated_attention_outputs.reshape(array_2(batch_size * query_sequence_length, embedding_dimension))
         .contract(delta_Y.reshape(array_2(batch_size * query_sequence_length, embedding_dimension)), axes(0, 0));
 
-    projection_bias_gradients.device(*device) = delta_Y.sum(array_2(0, 1));
+    projection_bias_gradients.device(get_device()) = delta_Y.sum(array_2(0, 1));
 /*
-    concatenated_attention_output_gradients.device(*device) =
+    concatenated_attention_output_gradients.device(get_device()) =
         delta_Y.contract(projection_weights, axes(2, 1));
 */
-    attention_output_gradients.device(*device) =
+    attention_output_gradients.device(get_device()) =
         concatenated_attention_output_gradients.reshape(array_4(batch_size, query_sequence_length, heads_number, head_dimension))
                                             .shuffle(array_4(0, 2, 1, 3));
 
@@ -319,17 +319,17 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
             const auto do_slice = attention_output_gradients.chip(b, 0).chip(h, 0); // [Lq, Dh]
             const auto v_slice = value.chip(b, 0).chip(h, 0); // [Ls, Dh]
 
-            value_gradients.chip(b, 0).chip(h, 0).device(*device) =
+            value_gradients.chip(b, 0).chip(h, 0).device(get_device()) =
                 w_slice.contract(do_slice, axes(0, 0));
 
-            attention_weight_gradients.chip(b, 0).chip(h, 0).device(*device) =
+            attention_weight_gradients.chip(b, 0).chip(h, 0).device(get_device()) =
                 do_slice.contract(v_slice, axes(1, 1));
         }
     }
 
     auto dot_product = (attention_weights * attention_weight_gradients).sum(array_1(3));
 
-    softmax_gradients.device(*device) = attention_weights * (attention_weight_gradients -
+    softmax_gradients.device(get_device()) = attention_weights * (attention_weight_gradients -
         dot_product.reshape(array_4(batch_size, heads_number, query_sequence_length, 1))
         .broadcast(array_4(1, 1, 1, source_sequence_length)));
 
@@ -342,10 +342,10 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
             const auto q_slice = query.chip(b, 0).chip(h, 0); // [Lq, Dh]
             const auto k_slice = key.chip(b, 0).chip(h, 0); // [Ls, Dh]
 
-            query_gradients.chip(b, 0).chip(h, 0).device(*device) =
+            query_gradients.chip(b, 0).chip(h, 0).device(get_device()) =
                 sd_slice.contract(k_slice, axes(1, 0)) * scaling_factor;
 
-            key_gradients.chip(b, 0).chip(h, 0).device(*device) =
+            key_gradients.chip(b, 0).chip(h, 0).device(get_device()) =
                 sd_slice.contract(q_slice, axes(0, 0)) * scaling_factor;
         }
     }
@@ -366,7 +366,7 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
                                   input_source_gradients, batch_size, true);
 
     if(input_views.size() == 1)
-        input_query_gradients.device(*device) += input_source_gradients;
+        input_query_gradients.device(get_device()) += input_source_gradients;
 
 }
 
@@ -390,7 +390,7 @@ void MultiHeadAttention::apply_causal_mask(Tensor4& attention_scores) const
                                                 source_sequence_length,
                                                 query_sequence_length);
 
-             sample_attention_scores.device(*device) += causal_mask;
+             sample_attention_scores.device(get_device()) += causal_mask;
          }
     }
 }
@@ -411,7 +411,7 @@ void MultiHeadAttention::apply_key_padding_mask(const MatrixB& key_padding_mask,
         {
             TensorMap2 head_sample_attention_weights = tensor_map(attention_weights,h,b);
 
-            head_sample_attention_weights.device(*device)
+            head_sample_attention_weights.device(get_device())
                 += key_padding_mask.row(b)
                        .cast<type>()
                        .reshape(array<Index,2>{source_sequence_length, 1})

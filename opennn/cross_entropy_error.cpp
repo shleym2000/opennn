@@ -146,7 +146,7 @@ void CrossEntropyError2d::calculate_multiple_output_gradients(const Batch& batch
 
     MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
-    output_gradients.device(*device) = (outputs - targets) / type(samples_number);
+    output_gradients.device(get_device()) = (outputs - targets) / type(samples_number);
 }
 
 
@@ -223,11 +223,11 @@ void CrossEntropyError2d::calculate_binary_error(const BatchCuda& batch,
                       output_reduce_tensor_descriptor,
                       error_device);
 
-    CHECK_CUDA(cudaMemcpy(error.data(), error_device, sizeof(float), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(&error, error_device, sizeof(float), cudaMemcpyDeviceToHost));
 
     error = error / type(-samples_number);
 
-    if (isnan(error())) throw runtime_error("\nError is NAN.");
+    if (isnan(error)) throw runtime_error("\nError is NAN.");
 }
 
 
@@ -274,11 +274,11 @@ void CrossEntropyError2d::calculate_multiple_error(const BatchCuda& batch,
                       &beta,
                       output_reduce_tensor_descriptor, error_device);
 
-    CHECK_CUDA(cudaMemcpy(error.data(), error_device, sizeof(type), cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaMemcpy(&error, error_device, sizeof(type), cudaMemcpyDeviceToHost));
 
     error = error / type(-samples_number);
 
-    if (isnan(error())) throw runtime_error("\nError is NAN.");
+    if (isnan(error)) throw runtime_error("\nError is NAN.");
 }
 
 

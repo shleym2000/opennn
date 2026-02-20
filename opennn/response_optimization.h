@@ -83,8 +83,6 @@ public:
 
     ResponseOptimization(NeuralNetwork* = nullptr, Dataset* = nullptr);
 
-    void set_threads_number(const int& new_threads_number);
-
     void set(NeuralNetwork* = nullptr, Dataset* = nullptr);
 
     void clear_conditions();
@@ -142,9 +140,6 @@ private:
     //minimum number of points?
 
     Index threads_number = nbThreads();
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 };
 
 }

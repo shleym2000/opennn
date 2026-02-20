@@ -15,9 +15,7 @@
 namespace opennn
 {
 
-void multiply_matrices(const ThreadPoolDevice* device,
-                       Tensor3& tensor,
-                       const Tensor1& vector)
+void multiply_matrices(Tensor3& tensor, const Tensor1& vector)
 {
     const Index depth = tensor.dimension(2);
 
@@ -25,12 +23,12 @@ void multiply_matrices(const ThreadPoolDevice* device,
     {
         TensorMap2 matrix = tensor_map(tensor, i);
 
-        matrix.device(*device) = matrix * vector(i);
+        matrix.device(get_device()) = matrix * vector(i);
     }
 }
 
 
-void multiply_matrices(const ThreadPoolDevice* device, Tensor3& tensor, const Tensor2& matrix)
+void multiply_matrices(Tensor3& tensor, const Tensor2& matrix)
 {
     const Index depth = tensor.dimension(2);
 
@@ -38,12 +36,12 @@ void multiply_matrices(const ThreadPoolDevice* device, Tensor3& tensor, const Te
     {
         TensorMap2 slice = tensor_map(tensor, i);
 
-        slice.device(*device) = slice * matrix;
+        slice.device(get_device()) = slice * matrix;
     }
 }
 
 /*
-Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& vector)
+Tensor2 self_kronecker_product(const VectorR& vector)
 {
     const Index columns_number = vector.size();
 
@@ -53,7 +51,7 @@ Tensor2 self_kronecker_product(const ThreadPoolDevice* device, const VectorR& ve
     {
         TensorMap1 column = tensor_map(matrix, i);
 
-        column.device(*device) = vector * vector(i);
+        column.device(get_device()) = vector * vector(i);
     }
 
     return matrix;
@@ -125,7 +123,7 @@ vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& mi
 }
 
 
-void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3& tensor)
+void sum_matrices(const Tensor1& vector, Tensor3& tensor)
 {
     const Index depth = tensor.dimension(2);
 
@@ -133,7 +131,7 @@ void sum_matrices(const ThreadPoolDevice* device, const Tensor1& vector, Tensor3
     {
         TensorMap2 matrix = tensor_map(tensor, i);
 
-        matrix.device(*device) = matrix + vector(i);
+        matrix.device(get_device()) = matrix + vector(i);
     }
 }
 
@@ -792,6 +790,41 @@ void shuffle_rows(MatrixR& matrix)
     }
 }
 
+#endif
+
+Device::Device()
+{
+    int num_threads = thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 1;
+    set_threads_number(num_threads);
+
+#ifdef OPENNN_CUDA
+    CHECK_CUBLAS(cublasCreate(&cublas_handle));
+    CHECK_CUDNN(cudnnCreate(&cudnn_handle));
+
+    CHECK_CUDNN(cudnnCreateOpTensorDescriptor(&operator_sum_descriptor));
+    CHECK_CUDNN(cudnnSetOpTensorDescriptor(operator_sum_descriptor, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
+
+    CHECK_CUDNN(cudnnCreateOpTensorDescriptor(&operator_multiplication_descriptor));
+    CHECK_CUDNN(cudnnSetOpTensorDescriptor(operator_multiplication_descriptor, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_NOT_PROPAGATE_NAN));
+#endif
+}
+
+Device::~Device()
+{
+#ifdef OPENNN_CUDA
+    if (operator_sum_descriptor) cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
+    if (operator_multiplication_descriptor) cudnnDestroyOpTensorDescriptor(operator_multiplication_descriptor);
+    if (cublas_handle) cublasDestroy(cublas_handle);
+    if (cudnn_handle) cudnnDestroy(cudnn_handle);
+#endif
+}
+
+#ifdef OPENNN_CUDA
+cublasHandle_t Device::get_cublas_handle() { return cublas_handle; }
+cudnnHandle_t Device::get_cudnn_handle() { return cudnn_handle; }
+cudnnOpTensorDescriptor_t Device::get_operator_sum_descriptor() { return operator_sum_descriptor; }
+cudnnOpTensorDescriptor_t Device::get_operator_multiplication_descriptor() { return operator_multiplication_descriptor; }
 #endif
 
 }

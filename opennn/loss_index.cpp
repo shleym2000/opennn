@@ -17,10 +17,6 @@ namespace opennn
 
 Loss::Loss(const NeuralNetwork* new_neural_network, const Dataset* new_dataset)
 {
-    const unsigned int threads_number = thread::hardware_concurrency();
-    thread_pool = make_unique<ThreadPool>(threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), threads_number);
-
     set(new_neural_network, new_dataset);
 }
 
@@ -61,19 +57,6 @@ void Loss::set(const NeuralNetwork* new_neural_network, const Dataset* new_datas
     dataset = const_cast<Dataset*>(new_dataset);
 
     regularization_method = "L2";
-}
-
-
-void Loss::set_threads_number(const int& new_threads_number)
-{
-    if(thread_pool)
-        thread_pool.reset();
-
-    if(device)
-        device.reset();
-
-    thread_pool = make_unique<ThreadPool>(new_threads_number);
-    device = make_unique<ThreadPoolDevice>(thread_pool.get(), new_threads_number);
 }
 
 
@@ -120,7 +103,7 @@ void Loss::calculate_errors_lm(const Batch& batch,
 
     const MatrixMap targets = matrix_map(targets_view);
 
-    back_propagation.errors.device(*device) = outputs - targets;
+    back_propagation.errors.device(get_device()) = outputs - targets;
 }
 
 
@@ -350,7 +333,7 @@ void Loss::add_regularization_gradient(VectorR& gradient) const
     }
     else if (regularization_method == "L2")
     {
-        gradient.device(*device) += parameters * regularization_weight;
+        gradient.device(get_device()) += parameters * regularization_weight;
     }
     else
     {
@@ -371,9 +354,9 @@ void Loss::add_regularization_to_gradients(BackPropagation& back_propagation) co
     VectorR& gradient = back_propagation.neural_network.gradient;
 
     if(regularization_method == "L1")
-        gradient.device(*device) += regularization_weight * parameters.array().sign();
+        gradient.device(get_device()) += regularization_weight * parameters.array().sign();
     else if(regularization_method == "L2")
-        gradient.device(*device) += parameters*regularization_weight;
+        gradient.device(get_device()) += parameters*regularization_weight;
     else
         throw runtime_error("Unknown regularization method: " + regularization_method);
 }
@@ -1474,7 +1457,7 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
     neural_network.set(samples_number, neural_network_ptr);
 
     loss = type(0);
-    error(0) = type(0);
+    error = type(0);
     regularization = type(0);
 
     CHECK_CUDA(cudaMalloc(&errors, samples_number * outputs_number * sizeof(float)));

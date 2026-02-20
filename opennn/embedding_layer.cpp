@@ -112,7 +112,7 @@ void Embedding::set_parameters_random()
     const type scale = 0.05;
 
     weights_map.setRandom();
-    weights_map.device(*device) = weights_map * scale;
+    weights_map.device(get_device()) = weights_map * scale;
 
     weights_map.chip(0, 0).setZero();
 }
@@ -130,7 +130,7 @@ void Embedding::set_parameters_glorot()
     TensorMap2 weights_map = tensor_map<2>(weights);
 
     weights_map.setRandom();
-    weights_map.device(*device) = weights_map * limit;
+    weights_map.device(get_device()) = weights_map * limit;
 
     weights_map.chip(0, 0).setZero();
 }
@@ -176,7 +176,7 @@ void Embedding::forward_propagate(const vector<TensorView>& input_views,
     }
 
     if(add_positional_encoding)
-        outputs.device(*device) += positional_encoding
+        outputs.device(get_device()) += positional_encoding
                                   .reshape(array_3(1, sequence_length, embedding_dimension))
                                   .broadcast(array_3(batch_size, 1, 1));
 
@@ -210,7 +210,7 @@ void Embedding::back_propagate(const vector<TensorView>& input_views,
     weight_gradients.setZero();
 
     if(scale_embedding)
-        output_gradients.device(*device) = output_gradients*sqrt(type(embedding_dimension));
+        output_gradients.device(get_device()) = output_gradients*sqrt(type(embedding_dimension));
 
     #pragma omp parallel for
     for(Index sample_index = 0; sample_index < batch_size; sample_index++)

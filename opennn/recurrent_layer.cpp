@@ -135,7 +135,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
         if(time_step > 0)
         {
             Tensor2 evaluated_previous_hidden_state = all_hidden_states.chip(time_step - 1, 1);
-            current_hidden_state_map.device(*device) += evaluated_previous_hidden_state.contract(hidden_to_hidden_weights_map, axes(1, 0));
+            current_hidden_state_map.device(get_device()) += evaluated_previous_hidden_state.contract(hidden_to_hidden_weights_map, axes(1, 0));
         }
 
         if(is_training)
@@ -144,7 +144,7 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
             TensorMap2 current_step_activation_derivatives_map(current_step_activation_derivatives.data(), batch_size, output_size);
 
             calculate_activations(activation_function, current_hidden_state_map, current_step_activation_derivatives_map);
-            all_activation_derivatives.chip(time_step, 1).device(*device) = current_step_activation_derivatives_map;
+            all_activation_derivatives.chip(time_step, 1).device(get_device()) = current_step_activation_derivatives_map;
         }
         else
         {
@@ -152,11 +152,11 @@ void Recurrent::forward_propagate(const vector<TensorView>& input_views,
             calculate_activations(activation_function, current_hidden_state_map, null_activation_derivatives);
         }
 
-        all_hidden_states.chip(time_step, 1).device(*device) = current_hidden_state_map;
+        all_hidden_states.chip(time_step, 1).device(get_device()) = current_hidden_state_map;
     }
 
     TensorMap2 outputs_map = tensor_map<2>(recurrent_forward_propagation->outputs);
-    outputs_map.device(*device) = all_hidden_states.chip(past_time_steps - 1, 1);
+    outputs_map.device(get_device()) = all_hidden_states.chip(past_time_steps - 1, 1);
 }
 
 
@@ -199,29 +199,29 @@ void Recurrent::back_propagate(const vector<TensorView>& input_views,
     for(Index t = past_time_steps - 1; t >= 0; t--)
     {
         if(t == past_time_steps - 1)
-            current_error_delta.device(*device) = external_output_gradients;
+            current_error_delta.device(get_device()) = external_output_gradients;
         else
-            current_error_delta.device(*device) = error_delta_from_next_step;
+            current_error_delta.device(get_device()) = error_delta_from_next_step;
 
         Tensor2 der_eval = all_activation_derivatives.chip(t, 1);
-        current_error_delta.device(*device) = current_error_delta * der_eval;
+        current_error_delta.device(get_device()) = current_error_delta * der_eval;
 
         Tensor2 input_eval = input_sequences.chip(t, 1);
-        input_weight_gradients_map.device(*device) += input_eval.contract(current_error_delta, axes(0, 0));
+        input_weight_gradients_map.device(get_device()) += input_eval.contract(current_error_delta, axes(0, 0));
 
         if(t > 0)
         {
             Tensor2 h_prev_eval = all_hidden_states.chip(t - 1, 1);
-            recurrent_weight_gradients_map.device(*device) += h_prev_eval.contract(current_error_delta, axes(0, 0));
+            recurrent_weight_gradients_map.device(get_device()) += h_prev_eval.contract(current_error_delta, axes(0, 0));
         }
 
-        bias_gradients_map.device(*device) += current_error_delta.sum(array_1(0));
+        bias_gradients_map.device(get_device()) += current_error_delta.sum(array_1(0));
 
         if(!recurrent_back_propagation->is_first_layer)
-            input_gradients_map.chip(t, 1).device(*device) = current_error_delta.contract(input_to_hidden_weights_map, axes(1, 1));
+            input_gradients_map.chip(t, 1).device(get_device()) = current_error_delta.contract(input_to_hidden_weights_map, axes(1, 1));
 
         if (t > 0)
-            error_delta_from_next_step.device(*device) = current_error_delta.contract(hidden_to_hidden_weights_map, axes(1, 1));
+            error_delta_from_next_step.device(get_device()) = current_error_delta.contract(hidden_to_hidden_weights_map, axes(1, 1));
     }
 }
 

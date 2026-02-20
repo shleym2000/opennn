@@ -282,24 +282,19 @@ Tensor3 resize_image(const Tensor3& input_image,
 }
 
 
-void reflect_image_x(const ThreadPoolDevice* device,
-                     Tensor3& image)
+void reflect_image_x(Tensor3& image)
 {
-    image.device(*device) = image.reverse(array<bool, 3>({false, true, false}));
+    image.device(get_device()) = image.reverse(array<bool, 3>({false, true, false}));
 }
 
 
-void reflect_image_y(const ThreadPoolDevice* device,
-                     Tensor3& image)
+void reflect_image_y(Tensor3& image)
 {
-    image.device(*device) = image.reverse(array<bool, 3>({true, false, false}));
+    image.device(get_device()) = image.reverse(array<bool, 3>({true, false, false}));
 }
 
 
-void rotate_image(const ThreadPoolDevice* device,
-                  const Tensor3& input,
-                  Tensor3& output,
-                  type angle_degree)
+void rotate_image(const Tensor3& input, Tensor3& output, type angle_degree)
 {
     const Index width = input.dimension(0);
     const Index height = input.dimension(1);
@@ -346,10 +341,7 @@ void rotate_image(const ThreadPoolDevice* device,
 }
 
 
-void translate_image_x(const ThreadPoolDevice* device,
-                       const Tensor3& input,
-                       Tensor3& output,
-                       Index shift)
+void translate_image_x(const Tensor3& input, Tensor3& output, Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));
@@ -382,10 +374,7 @@ void translate_image_x(const ThreadPoolDevice* device,
 }
 
 
-void translate_image_y(const ThreadPoolDevice* device,
-                       const Tensor3& input,
-                       Tensor3& output,
-                       Index shift)
+void translate_image_y(const Tensor3& input, Tensor3& output, Index shift)
 {
     assert(input.dimension(0) == output.dimension(0));
     assert(input.dimension(1) == output.dimension(1));

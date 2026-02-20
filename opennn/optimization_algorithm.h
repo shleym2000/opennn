@@ -55,8 +55,6 @@ public:
 
     void set(const Loss* = nullptr);
 
-    virtual void set_threads_number(const int&);
-
     virtual void set_loss_index(Loss*);
 
     virtual void set_display(bool);
@@ -93,9 +91,6 @@ public:
     void set_vocabularies();
 
 protected:
-
-    unique_ptr<ThreadPool> thread_pool = nullptr;
-    unique_ptr<ThreadPoolDevice> device = nullptr;
 
     Loss* loss_index = nullptr;
 
