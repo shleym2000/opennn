@@ -145,7 +145,6 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
                                             const ForwardPropagationCuda& forward_propagation,
                                             BackPropagationCuda& back_propagation) const
 {
-
     const Index outputs_number = neural_network->get_outputs_number();
 
     // Batch
@@ -169,7 +168,7 @@ void MeanSquaredError::calculate_error(const BatchCuda& batch,
     const float alpha_minus_one = -1.0f;
 
     cudnnOpTensor(get_cudnn_handle(),
-                  back_propagation.operator_sum_descriptor,
+                  get_operator_sum_descriptor(),
                   &alpha_minus_one,
                   output_tensor_descriptor,
                   targets,

@@ -150,14 +150,13 @@ Tensor3 load_image(const filesystem::path& path)
     if(!file)
         throw runtime_error("Failed to seek to pixel data offset (" + to_string(bfOffBits) + ") in BMP: " + image_path_str);
 
-
     const int bytes_per_pixel_in_file = (biBitCount == 32) ? 4 : (biBitCount == 24) ? 3 : 1;
     const long long row_data_bytes = width * bytes_per_pixel_in_file;
     const long long row_stride_in_file = ((row_data_bytes + 3) / 4) * 4;
 
     vector<unsigned char> row(row_stride_in_file);
 
-    for(Index y_row = 0; y_row < height; ++y_row)
+    for(Index y_row = 0; y_row < height; y_row++)
     {
         const Index tensor_y_coord = top_down ? y_row : (height - 1 - y_row);
 

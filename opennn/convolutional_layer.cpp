@@ -1242,10 +1242,9 @@ void ConvolutionalForwardPropagationCuda::print() const
 {
     const Shape output_shape = layer->get_output_shape();
 
-    cout << layer->get_name() + " forward propagation" << endl;
-
-    cout << "Outputs:" << endl;
-    cout << matrix_4d_from_device(outputs.data, batch_size, output_shape[0], output_shape[1], output_shape[2]) << endl;
+    cout << layer->get_name() + " forward propagation" << endl
+         << "Outputs:" << endl
+         << matrix_4d_from_device(outputs.data, batch_size, output_shape[0], output_shape[1], output_shape[2]) << endl;
 }
 
 
@@ -1289,9 +1288,6 @@ void ConvolutionalBackPropagationCuda::initialize()
 
     const Index stride_height = convolutional_layer->get_row_stride();
     const Index stride_width = convolutional_layer->get_column_stride();
-
-    const size_t input_size = batch_size * channels * input_height * input_width;
-    const size_t kernel_size = kernels_number * channels * kernel_height * kernel_width;
 
     // Input Deltas
 
