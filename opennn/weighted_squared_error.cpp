@@ -192,7 +192,7 @@ void WeightedSquaredError::calculate_error(const Batch& batch,
     MatrixR& errors_weights = back_propagation.errors_weights;
     type& error = back_propagation.error;
 
-    errors.device(get_device()) = outputs - targets;
+    errors = outputs - targets;
 
     for(Index i = 0; i < targets.size(); i++)
         errors_weights(i) = (targets(i) == type(0))
@@ -229,7 +229,7 @@ void WeightedSquaredError::calculate_output_gradients(const Batch& batch,
 
     const type coefficient = type(2*total_samples_number)/(type(batch_size)*normalization_coefficient);
 
-    output_gradients.device(get_device()) = coefficient * (errors_weights * errors);
+    output_gradients = coefficient * (errors_weights * errors);
 }
 
 

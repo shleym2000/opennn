@@ -107,14 +107,14 @@ void Embedding::set_parameters_random()
 {        
     if(weights.size() == 0) return;
 
-    TensorMap2 weights_map = tensor_map<2>(weights);
+    MatrixMap weights_map = matrix_map(weights);
 
-    const type scale = 0.05;
+    const type scale = type(0.05);
 
     weights_map.setRandom();
-    weights_map.device(get_device()) = weights_map * scale;
+    weights_map *= scale;
 
-    weights_map.chip(0, 0).setZero();
+    weights_map.row(0).setZero();
 }
 
 
@@ -138,7 +138,7 @@ void Embedding::set_parameters_glorot()
 
 void Embedding::forward_propagate(const vector<TensorView>& input_views,
                                   unique_ptr<LayerForwardPropagation>& layer_forward_propagation,
-                                  bool is_training)
+                                  bool)
 {
     const TensorMap2 inputs = tensor_map<2>(input_views[0]);
 

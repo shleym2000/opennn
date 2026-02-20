@@ -194,7 +194,7 @@ void Unscaling::forward_propagate(const vector<TensorView>& input_views,
 
     const MatrixMap inputs = matrix_map(input_views[0]);
 
-    outputs.device(get_device()) = inputs;
+    outputs = inputs;
 
     for(Index i = 0; i < outputs_number; i++)
     {

@@ -559,8 +559,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
         triplet.B.first = optimization_data.initial_learning_rate*type(count);
 
-        potential_parameters.device(get_device())
-            = parameters + training_direction * triplet.B.first;
+        potential_parameters = parameters + training_direction * triplet.B.first;
 
         neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters, forward_propagation);
@@ -577,8 +576,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
         triplet.B.first *= golden_ratio;
 
-        potential_parameters.device(get_device())
-            = parameters + training_direction*triplet.B.first;
+        potential_parameters = parameters + training_direction*triplet.B.first;
 
         neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters,
@@ -595,8 +593,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
             triplet.B.first *= golden_ratio;
 
-            potential_parameters.device(get_device())
-                = parameters + training_direction*triplet.B.first;
+            potential_parameters = parameters + training_direction*triplet.B.first;
 
             neural_network->forward_propagate(batch.get_inputs(),
                                               potential_parameters,
@@ -611,8 +608,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
     {
         triplet.U.first = triplet.A.first + (triplet.B.first - triplet.A.first)*type(0.382);
 
-        potential_parameters.device(get_device())
-            = parameters + training_direction*triplet.U.first;
+        potential_parameters = parameters + training_direction*triplet.U.first;
 
         neural_network->forward_propagate(batch.get_inputs(),
                                           potential_parameters,
@@ -628,8 +624,7 @@ Triplet QuasiNewtonMethod::calculate_bracketing_triplet(const Batch& batch,
 
             triplet.U.first = triplet.A.first + (triplet.B.first-triplet.A.first)*type(0.382);
 
-            potential_parameters.device(get_device())
-                = parameters + training_direction*triplet.U.first;
+            potential_parameters = parameters + training_direction*triplet.U.first;
 
             neural_network->forward_propagate(batch.get_inputs(), potential_parameters, forward_propagation);
 
@@ -692,7 +687,7 @@ pair<type, type> QuasiNewtonMethod::calculate_directional_point(
 
     for(int i = 0; i < 20; ++i)
     {
-        potential_parameters.device(get_device()) = parameters + training_direction * alpha;
+        potential_parameters = parameters + training_direction * alpha;
 
         neural_network->forward_propagate(batch.get_inputs(), potential_parameters, forward_propagation);
         loss_index->calculate_error(batch, forward_propagation, back_propagation);

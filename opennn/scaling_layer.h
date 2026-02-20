@@ -258,10 +258,7 @@ public:
                 else if(scaler == "Logarithm")
                     scale_logarithmic(outputs, i);
                 else if(scaler == "ImageMinMax")
-                {
-                    auto column = outputs.col(i);
-                    column.device(get_device()) = column / type(255.0);
-                }
+                    outputs.col(i) /= type(255.0);
                 else
                     throw runtime_error("Unknown scaling method in Scaling Layer: " + scaler);
             }

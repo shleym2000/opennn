@@ -146,7 +146,7 @@ void CrossEntropyError2d::calculate_multiple_output_gradients(const Batch& batch
 
     MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
-    output_gradients.device(get_device()) = (outputs - targets) / type(samples_number);
+    output_gradients = (outputs - targets) / type(samples_number);
 }
 
 

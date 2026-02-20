@@ -585,10 +585,12 @@ void GeneticAlgorithm::perform_mutation()
 
         for(Index j = 0; j < genes_number; ++j)
             if (random_uniform(0.0, 1.0) < mutation_rate)
+            {
                 if (individual(j))
                     to_false_mutations.push_back(j);
                 else
                     to_true_mutations.push_back(j);
+            }
 
         shuffle_vector(to_true_mutations);
         shuffle_vector(to_false_mutations);

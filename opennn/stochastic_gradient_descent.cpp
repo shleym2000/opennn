@@ -145,20 +145,20 @@ void StochasticGradientDescent::update_parameters(BackPropagation& back_propagat
 
     if (momentum <= type(0))
     {
-        parameter_updates.device(get_device()) = gradient * (-learning_rate);
-        parameters.device(get_device()) += parameter_updates;
+        parameter_updates = gradient * (-learning_rate);
+        parameters += parameter_updates;
     }
     else if (momentum > type(0) && !nesterov)
     {
-        parameter_updates.device(get_device()) = gradient*(-learning_rate) + momentum*last_parameter_updates;
-        last_parameter_updates.device(get_device()) = parameter_updates;
-        parameters.device(get_device()) += parameter_updates;
+        parameter_updates = gradient*(-learning_rate) + momentum*last_parameter_updates;
+        last_parameter_updates = parameter_updates;
+        parameters += parameter_updates;
     }
     else if (momentum > type(0) && nesterov)
     {
-        parameter_updates.device(get_device()) = gradient*(-learning_rate) + momentum*last_parameter_updates;
-        last_parameter_updates.device(get_device()) = parameter_updates;
-        parameters.device(get_device()) += parameter_updates*momentum - gradient*learning_rate;
+        parameter_updates = gradient*(-learning_rate) + momentum*last_parameter_updates;
+        last_parameter_updates = parameter_updates;
+        parameters += parameter_updates*momentum - gradient*learning_rate;
     }
 }
 
