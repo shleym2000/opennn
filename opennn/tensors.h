@@ -315,8 +315,7 @@ bool is_binary(const TensorR<Rank>& tensor)
     return true;
 }
 
-
-Tensor2 append_rows(const Tensor2& , const Tensor2&);
+MatrixR append_rows(const MatrixR& , const MatrixR&);
 
 template<typename T>
 vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
@@ -330,8 +329,7 @@ vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
     return result;
 }
 
-vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums);
-
+vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& minimums, const VectorR& maximums);
 
 bool is_constant(const VectorR& tensor)
 {
@@ -404,7 +402,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
 MatrixR filter_column_minimum_maximum(const MatrixR&, Index, type, type);
 
-VectorI get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
+VectorI get_nearest_points(const MatrixR& ,const VectorR& , int );
 
 void fill_tensor_data_row_major(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
 

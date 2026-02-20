@@ -41,14 +41,12 @@ public:
         Domain() = default;
         virtual ~Domain() = default;
 
-        Domain(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
+        Domain(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
         {
-            set(response_optimization, feature_dimensions, descriptives);
+            set(feature_dimensions, descriptives);
         }
 
-        ThreadPoolDevice* thread_pool_device = nullptr;
-
-        void set(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
+        void set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives);
 
         void bound(const vector<Index>& feature_dimensions, const vector<Condition>& conditions);
 
@@ -65,8 +63,6 @@ public:
     struct Objectives
     {
         Objectives(const ResponseOptimization& response_optimization);
-
-        ThreadPoolDevice* thread_pool_device = nullptr;
 
         MatrixR objective_sources; //Row 0: if is input or not, Row 1 : feature index in input or target subsets
 
@@ -138,8 +134,6 @@ private:
     type relative_tolerance = type(0.001);
 
     //minimum number of points?
-
-    Index threads_number = nbThreads();
 };
 
 }

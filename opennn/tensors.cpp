@@ -57,65 +57,37 @@ Tensor2 self_kronecker_product(const VectorR& vector)
 }
 */
 
-
-Tensor2 append_rows(const Tensor2& starting_matrix, const Tensor2& block)
+MatrixR append_rows(const MatrixR& starting_matrix, const MatrixR& block)
 {
     if (starting_matrix.size() == 0)
         return block;
-
     if (block.size() == 0)
         return starting_matrix;
 
-    const Index old_rows = starting_matrix.dimension(0);
-    const Index cols = starting_matrix.dimension(1);
-    const Index new_rows = block.dimension(0);
+    MatrixR final_matrix(starting_matrix.rows() + block.rows(), starting_matrix.cols());
 
-    Tensor2 final_matrix(old_rows + new_rows, cols);
-
-    final_matrix.slice(array_2(0, 0), array_2(old_rows, cols)) = starting_matrix;
-
-    final_matrix.slice(array_2(old_rows, 0), array_2(new_rows, cols)) = block;
+    final_matrix << starting_matrix, block;
 
     return final_matrix;
 }
 
-vector<Index> build_feasible_rows_mask(const Tensor2& outputs, const Tensor1& minimums, const Tensor1& maximums)
-{
-    const Index rows_unfiltered = outputs.dimension(0);
-    const Index variables_to_filter = outputs.dimension(1);
+vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& minimums, const VectorR& maximums)
+{    
+    const Index rows_unfiltered =  outputs.rows();
+    const Index variables_to_filter = outputs.cols();
 
     if(minimums.size() != variables_to_filter || maximums.size() != variables_to_filter)
         throw runtime_error("Minimums/maximums size mismatch.\n");
 
-    vector<uint8_t> binary_mask_filtered(static_cast<size_t>(rows_unfiltered), 1);
-    Index number_filtered_rows = rows_unfiltered;
-
-    for(Index j = 0; j < variables_to_filter; ++j)
-    {
-        const type minimum = minimums(j);
-        const type maximum = maximums(j);
-        number_filtered_rows = 0;
-
-        for(Index i = 0; i < rows_unfiltered; ++i)
-        {
-            if(!binary_mask_filtered[i])
-                continue;
-
-            const type y = static_cast<type>(outputs(i, j));
-
-            if(y < minimum || y > maximum)
-                binary_mask_filtered[i] = 0;
-            else
-                ++number_filtered_rows;
-        }
-        if(number_filtered_rows == 0) break;
-    }
-
     vector<Index> feasible_rows;
-    feasible_rows.reserve(static_cast<size_t>(number_filtered_rows));
 
-    for(Index i = 0; i < rows_unfiltered; ++i)
-        if(binary_mask_filtered[i])
+    feasible_rows.reserve(static_cast<size_t>(rows_unfiltered));
+
+    const auto min_array = minimums.array().transpose();
+    const auto max_array = maximums.array().transpose();
+
+    for (Index i = 0; i < rows_unfiltered; ++i)
+        if (((outputs.row(i).array() >= min_array) && (outputs.row(i).array() <= max_array)).all())
             feasible_rows.push_back(i);
 
     return feasible_rows;

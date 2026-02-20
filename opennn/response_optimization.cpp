@@ -77,7 +77,7 @@ void ResponseOptimization::set_relative_tolerance(type new_relative_tolerance)
 }
 
 
-void ResponseOptimization::Domain::set(const ResponseOptimization& response_optimization, const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
+void ResponseOptimization::Domain::set(const vector<Index>& feature_dimensions, const vector<Descriptives>& descriptives)
 {
     const Index variables_number = static_cast<Index>(feature_dimensions.size());
 
@@ -124,7 +124,7 @@ ResponseOptimization::Domain ResponseOptimization::get_original_domain(const str
 
     cout << "o in original domain?" << endl;
 
-    Domain original_domain(*this,feature_by_role_dimensions, feture_descriptives);
+    Domain original_domain(feature_by_role_dimensions, feture_descriptives);
 
     cout << "o in bound?" << endl;
 
@@ -293,11 +293,16 @@ MatrixR ResponseOptimization::calculate_random_inputs(const Domain& input_domain
 
         if(categories_number == 1)
         {
-            if(input_variable_types[input_variable] == Dataset::VariableType::Binary)
-                random_inputs.col(current_feature_index) = random_inputs.col(current_feature_index).array().round();
+            if (input_variable_types[input_variable] != Dataset::VariableType::Binary)
+                random_inputs.col(current_feature_index).array() = random_inputs.col(current_feature_index).array().round();
             else
-                random_inputs.col(current_feature_index) = random_inputs.col(current_feature_index) * (input_domain.superior_frontier(current_feature_index) - input_domain.inferior_frontier(current_feature_index)) + input_domain.inferior_frontier(current_feature_index);
+            {
+                const type inf = input_domain.inferior_frontier(current_feature_index);
+                const type sup = input_domain.superior_frontier(current_feature_index);
+                const type range = sup - inf;
 
+                random_inputs.col(current_feature_index).array() = random_inputs.col(current_feature_index).array() * range + inf;
+            }
             current_feature_index++;
         }
         else
@@ -386,7 +391,7 @@ MatrixR ResponseOptimization::Objectives::extract(const MatrixR& inputs, const M
     MatrixR objective_matrix(inputs.rows(), objectives_number);
 
     for (Index j = 0; j < objectives_number; ++j)
-        objective_matrix.col(j).device(*thread_pool_device) = (objective_sources(0, j) > 0.5)
+        objective_matrix.col(j)= (objective_sources(0, j) > 0.5)
               ? inputs.col(static_cast<Index>(objective_sources(1, j)))
               : outputs.col(static_cast<Index>(objective_sources(1, j)));
 
@@ -396,10 +401,11 @@ MatrixR ResponseOptimization::Objectives::extract(const MatrixR& inputs, const M
 
 void ResponseOptimization::Objectives::normalize(MatrixR& objective_matrix) const
 {
-    const Index objectives_number = objective_sources.cols();
+    const auto combined_scale = (objective_normalizer.row(0).array() * utopian_and_senses.row(1).array());
+    const auto combined_offset = (objective_normalizer.row(1).array() * utopian_and_senses.row(1).array());
 
-    for (Index j = 0; j < objectives_number; ++j)
-        objective_matrix.col(j) = (objective_matrix.col(j)*objective_normalizer(0, j) + objective_normalizer(1, j)) * utopian_and_senses(1, j);
+    objective_matrix.array().rowwise() *= combined_scale;
+    objective_matrix.array().rowwise() += combined_offset;
 }
 
 
@@ -411,7 +417,7 @@ pair<MatrixR, MatrixR> ResponseOptimization::calculate_optimal_points(const Matr
 
     objectives.normalize(objective_matrix);
 
-    const VectorR normalized_utopian_point = (objectives.utopian_and_senses.row(1) + (type)1.0) / (type)2.0;
+    const VectorR normalized_utopian_point = (objectives.utopian_and_senses.row(1).array() + (type)1.0) / (type)2.0;
 
     const VectorI nearest_rows = get_nearest_points(objective_matrix, normalized_utopian_point , (int)subset_dimension);
 
@@ -578,7 +584,7 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const MatrixR& 
     const Index points_number = inputs.rows();
 
     if (points_number == 0)
-        return {1e6, 1e6};
+        return {static_cast<type>(1e6), static_cast<type>(1e6)};
 
     MatrixR objective_matrix = objectives.extract(inputs, outputs);
     objectives.normalize(objective_matrix);
@@ -592,19 +598,13 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const MatrixR& 
 
     for (Index i = 0; i < points_number; ++i)
     {
-        type minimum_neighbor_distance = numeric_limits<type>::max();
+        const auto current_point = objective_matrix.row(i);
 
-        const VectorR current_point = objective_matrix.row(i);
+        VectorR  distances = (objective_matrix.rowwise() - current_point).rowwise().squaredNorm();
 
-        for (Index j = 0; j < points_number; ++j)
-        {
-            if (i == j)
-                continue;
+        distances(i) = numeric_limits<type>::max();
 
-            const type current_distance = (current_point - objective_matrix.row(j)).norm();
-
-            minimum_neighbor_distance = min(minimum_neighbor_distance, current_distance);
-        }
+        const type minimum_neighbor_distance = sqrt(distances.minCoeff());
 
         maximum_internal_gap = max(maximum_internal_gap, minimum_neighbor_distance);
     }
@@ -614,20 +614,11 @@ pair<type, type> ResponseOptimization::calculate_quality_metrics(const MatrixR& 
 
     maximum_internal_gap /= hypercube_diagonal;
 
-    type sum_boundary_gaps = 0.0;
+    VectorR max_objectives = objective_matrix.colwise().maxCoeff();
 
-    for (Index i = 0; i < objectives_number; ++i)
-    {
-        Tensor0 maximum_objective_tensor;
-        maximum_objective_tensor.device(get_device()) = objective_matrix.col(i).maxCoeff();
-
-        const type best_objective_value = maximum_objective_tensor(0);
-
-        sum_boundary_gaps += abs(1.0 - best_objective_value);
-    }
+    const type sum_boundary_gaps = (1.0 - max_objectives.array()).abs().sum();
 
     const type average_boundary_gap = sum_boundary_gaps / static_cast<type>(objectives_number);
-
     const type normalized_boundary_gap = average_boundary_gap / compromise_distance;
 
     return {maximum_internal_gap, normalized_boundary_gap};
