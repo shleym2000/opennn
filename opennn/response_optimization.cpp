@@ -188,7 +188,7 @@ ResponseOptimization::Objectives::Objectives(const ResponseOptimization& respons
                 const type superior_frontier = domain.superior_frontier(feature_pointer);
                 const type range = superior_frontier - inferior_frontier;
 
-                const type epsilon = 1e-9;
+                const type epsilon = 1e-9F;
 
                 objective_normalizer(0, current_objective_index) = 1.0 / (range < epsilon ? epsilon : range);
 

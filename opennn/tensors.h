@@ -289,7 +289,7 @@ void set_identity(MatrixR&);
 
 //Tensor2 self_kronecker_product(const VectorR&);
 
-bool is_binary(const VectorR& tensor)
+inline bool is_binary(const VectorR& tensor)
 {
 
     const Index size = tensor.size();
@@ -330,8 +330,7 @@ vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
 }
 
 vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& minimums, const VectorR& maximums);
-
-bool is_constant(const VectorR& tensor)
+inline bool is_constant(const VectorR& tensor)
 {
     const Index size = tensor.size();
 
@@ -378,7 +377,7 @@ bool is_constant(const TensorR<Rank>& tensor)
 void save_csv(const Tensor2&, const filesystem::path&);
 
 
-Index count_NAN(const MatrixR& x)
+inline Index count_NAN(const MatrixR& x)
 {
     return count_if(x.data(), x.data() + x.size(), [](type value) {return std::isnan(value); });
 }
@@ -465,7 +464,7 @@ string vector_to_string(const vector<T>& x, const string& separator = " ")
 }
 
 
-string vector_to_string(const VectorI& x, const string& separator = " ")
+inline string vector_to_string(const VectorI& x, const string& separator = " ")
 {
     ostringstream buffer;
 
@@ -512,7 +511,7 @@ TensorMap2 tensor_map(const Tensor4&, Index, Index);
 TensorMap3 tensor_map_(const TensorMap4, Index);
 //TensorMap1 tensor_map_(const TensorMap2&, Index);
 
-VectorMap vector_map(const TensorView& tensor_view)
+inline VectorMap vector_map(const TensorView& tensor_view)
 {
     if(!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
@@ -525,7 +524,7 @@ VectorMap vector_map(const TensorView& tensor_view)
 }
 
 
-MatrixMap matrix_map(const TensorView& tensor_view)
+inline MatrixMap matrix_map(const TensorView& tensor_view)
 {
     if(!tensor_view.data)
         throw runtime_error("tensor_map: Null pointer in pair.");
