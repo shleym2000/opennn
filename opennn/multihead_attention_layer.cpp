@@ -229,8 +229,8 @@ void MultiHeadAttention::forward_propagate(const vector<TensorView>& input_views
     concatenated_attention_outputs.device(get_device()) = attention_outputs.shuffle(array_4(0, 2, 1, 3))
                                                                       .reshape(concatenated_attention_outputs.dimensions());
 
-    const TensorMap2 projection_weights_map = tensor_map<2>(projection_weights);
-    const TensorMap1 projection_biases_map = tensor_map<1>(projection_biases);
+    const MatrixMap projection_weights_map = matrix_map(projection_weights);
+    const VectorMap projection_biases_map = vector_map(projection_biases);
 
     outputs.device(get_device()) =
         concatenated_attention_outputs.contract(projection_weights_map, axes(2, 0))
@@ -269,20 +269,20 @@ void MultiHeadAttention::back_propagate(const vector<TensorView>& input_views,
     MultiHeadAttentionBackPropagation* this_back_propagation =
         static_cast<MultiHeadAttentionBackPropagation*>(back_propagation.get());
 
-    TensorMap2 projection_weight_gradients = tensor_map<2>(this_back_propagation->projection_weight_gradients);
-    TensorMap1 projection_bias_gradients = tensor_map<1>(this_back_propagation->projection_bias_gradients);
+    MatrixMap projection_weight_gradients = matrix_map(this_back_propagation->projection_weight_gradients);
+    VectorMap projection_bias_gradients = vector_map(this_back_propagation->projection_bias_gradients);
     Tensor3& concatenated_attention_output_gradients = this_back_propagation->concatenated_attention_output_gradients;
     Tensor4& attention_output_gradients = this_back_propagation->attention_output_gradients;
     Tensor4& attention_weight_gradients = this_back_propagation->attention_weight_gradients;
     Tensor4& query_gradients = this_back_propagation->query_gradients;
     Tensor4& key_gradients = this_back_propagation->key_gradients;
     Tensor4& value_gradients = this_back_propagation->value_gradients;
-    TensorMap2 query_weight_gradients = tensor_map<2>(this_back_propagation->query_weight_gradients);
-    TensorMap1 query_bias_gradients = tensor_map<1>(this_back_propagation->query_bias_gradients);
-    TensorMap2 key_weight_gradients = tensor_map<2>(this_back_propagation->key_weight_gradients);
-    TensorMap1 key_bias_gradients = tensor_map<1>(this_back_propagation->key_bias_gradients);
-    TensorMap2 value_weight_gradients = tensor_map<2>(this_back_propagation->value_weight_gradients);
-    TensorMap1 value_bias_gradients = tensor_map<1>(this_back_propagation->value_bias_gradients);
+    MatrixMap query_weight_gradients = matrix_map(this_back_propagation->query_weight_gradients);
+    VectorMap query_bias_gradients = vector_map(this_back_propagation->query_bias_gradients);
+    MatrixMap key_weight_gradients = matrix_map(this_back_propagation->key_weight_gradients);
+    VectorMap key_bias_gradients = vector_map(this_back_propagation->key_bias_gradients);
+    MatrixMap value_weight_gradients = matrix_map(this_back_propagation->value_weight_gradients);
+    VectorMap value_bias_gradients = vector_map(this_back_propagation->value_bias_gradients);
 
     TensorMap3 input_query_gradients = tensor_map<3>(back_propagation->input_gradients[0]);
     TensorMap3 input_source_gradients = tensor_map<3>(back_propagation->input_gradients[1]);
@@ -386,7 +386,7 @@ void MultiHeadAttention::apply_causal_mask(Tensor4& attention_scores) const
             type* sample_attention_scores_data = attention_scores.data()
              + (sample_index + head_index * batch_size) * context_input_size;
 
-             TensorMap2 sample_attention_scores(sample_attention_scores_data,
+             MatrixMap sample_attention_scores(sample_attention_scores_data,
                                                 source_sequence_length,
                                                 query_sequence_length);
 
@@ -409,7 +409,7 @@ void MultiHeadAttention::apply_key_padding_mask(const MatrixB& key_padding_mask,
     {
         for(Index b = 0; b < batch_size; ++b)
         {
-            TensorMap2 head_sample_attention_weights = tensor_map(attention_weights,h,b);
+            MatrixMap head_sample_attention_weights = tensor_map(attention_weights,h,b);
 
             head_sample_attention_weights.device(get_device())
                 += key_padding_mask.row(b)

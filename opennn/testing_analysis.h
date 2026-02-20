@@ -156,7 +156,7 @@ public:
 
     // Binary classifcation
 
-    Tensor1 calculate_binary_classification_tests(const type = 0.50) const;
+    VectorR calculate_binary_classification_tests(const type = 0.50) const;
 
     void print_binary_classification_tests() const;
 

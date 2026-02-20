@@ -71,8 +71,8 @@ public:
         const Index embed_dim = get_embedding_dimension();
         const Index h_dim = get_head_dimension();
 
-        const TensorMap2 W = tensor_map<2>(weights);
-        const TensorMap1 B = tensor_map<1>(biases);
+        const MatrixMap W = matrix_map(weights);
+        const VectorMap B = vector_map(biases);
 
         output.device(get_device()) =
             (inputs.reshape(array_2(batch_size * sequence_length, embed_dim))
@@ -86,8 +86,8 @@ public:
     void calculate_projection_gradient(const Tensor4& d_head,
                                        const TensorMap3 input,
                                        const TensorView& weights,
-                                       TensorMap1 d_bias,
-                                       TensorMap2 d_weights,
+                                       VectorMap d_bias,
+                                       MatrixMap d_weights,
                                        TensorMap3 d_input,
                                        Index batch_size,
                                        bool accumulate) const
@@ -95,7 +95,7 @@ public:
         const Index embedding_dimension = get_embedding_dimension();
 
         // Map parameters view to Eigen TensorMap for calculation
-        const TensorMap2 W = tensor_map<2>(weights);
+        const MatrixMap W = matrix_map(weights);
 
         // Reinterpret 4D head gradients as 3D [Batch, Sequence, Embedding]
         // const_cast is required because TensorMap constructor expects non-const pointer,
@@ -207,7 +207,7 @@ struct MultiHeadAttentionBackPropagation final : LayerBackPropagation
     TensorView value_bias_gradients;
     TensorView projection_bias_gradients;
 
-    Tensor1 aux_rows;
+    VectorR aux_rows;
 
 //    Tensor3 input_query_gradients;
 //    Tensor3 input_source_gradients;

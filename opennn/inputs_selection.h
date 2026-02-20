@@ -120,17 +120,17 @@ struct InputsSelectionResults
 
     // Loss index
 
-    Tensor1 training_error_history;
+    VectorR training_error_history;
 
-    Tensor1 validation_error_history;
+    VectorR validation_error_history;
 
     // Mean Validation Error of different neural networks
 
-    Tensor1  mean_validation_error_history;
+    VectorR  mean_validation_error_history;
 
     // Mean Training Error of different neural networks
 
-    Tensor1 mean_training_error_history;
+    VectorR mean_training_error_history;
 
     type optimum_training_error = numeric_limits<type>::max();
 

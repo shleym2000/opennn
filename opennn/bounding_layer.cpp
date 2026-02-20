@@ -27,7 +27,7 @@ const Bounding::BoundingMethod& Bounding::get_bounding_method() const
 
 Shape Bounding::get_input_shape() const
 {
-    return { lower_bounds.dimension(0) };
+    return { lower_bounds.rows() };
 }
 
 
@@ -37,7 +37,7 @@ type Bounding::get_lower_bound(const Index i) const
 }
 
 
-const Tensor1& Bounding::get_lower_bounds() const
+const VectorR& Bounding::get_lower_bounds() const
 {
     return lower_bounds;
 }
@@ -45,7 +45,7 @@ const Tensor1& Bounding::get_lower_bounds() const
 
 Shape Bounding::get_output_shape() const
 {
-    return { lower_bounds.dimension(0) };
+    return { lower_bounds.rows() };
 }
 
 
@@ -55,7 +55,7 @@ type Bounding::get_upper_bound(const Index i) const
 }
 
 
-const Tensor1& Bounding::get_upper_bounds() const
+const VectorR& Bounding::get_upper_bounds() const
 {
     return upper_bounds;
 }
@@ -113,7 +113,7 @@ void Bounding::set_lower_bound(const Index index, type new_lower_bound)
 }
 
 
-void Bounding::set_lower_bounds(const Tensor1& new_lower_bounds)
+void Bounding::set_lower_bounds(const VectorR& new_lower_bounds)
 {
     lower_bounds = new_lower_bounds;
 }
@@ -129,7 +129,7 @@ void Bounding::set_output_shape(const Shape& new_output_shape)
 }
 
 
-void Bounding::set_upper_bounds(const Tensor1& new_upper_bounds)
+void Bounding::set_upper_bounds(const VectorR& new_upper_bounds)
 {
     upper_bounds = new_upper_bounds;
 }

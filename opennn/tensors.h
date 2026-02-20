@@ -280,9 +280,9 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
 
 void set_row(MatrixR&, const VectorR&, Index);
 
-void sum_matrices(const Tensor1&, Tensor3&);
+void sum_matrices(const VectorR&, Tensor3&);
 
-void multiply_matrices(Tensor3&, const Tensor1&);
+void multiply_matrices(Tensor3&, const VectorR&);
 void multiply_matrices(Tensor3&, const Tensor2&);
 
 void set_identity(MatrixR&);
@@ -300,7 +300,6 @@ inline bool is_binary(const VectorR& tensor)
 
     return true;
 }
-
 
 
 template <int Rank>
@@ -330,6 +329,7 @@ vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
 }
 
 vector<Index> build_feasible_rows_mask(const MatrixR& outputs, const VectorR& minimums, const VectorR& maximums);
+
 inline bool is_constant(const VectorR& tensor)
 {
     const Index size = tensor.size();
@@ -475,6 +475,17 @@ inline string vector_to_string(const VectorI& x, const string& separator = " ")
 }
 
 
+inline string vector_to_string(const VectorR& x, const string& separator = " ")
+{
+    ostringstream buffer;
+
+    for(Index i = 0; i < x.size(); i++)
+        buffer << x(i) << separator;
+
+    return buffer.str();
+}
+
+
 template <typename T, size_t Rank>
 string tensor_to_string(const TensorR<Rank>& x, const string& separator = " ")
 {
@@ -498,18 +509,34 @@ void string_to_tensor(const string& input, TensorR<Rank>& x)
         x(i++) = value;
 }
 
+
+inline void string_to_vector(const string& input, VectorR& x)
+{
+    istringstream stream(input);
+    type value;
+    vector<type> buffer;
+
+    while (stream >> value)
+        buffer.push_back(value);
+
+    x.resize(static_cast<Index>(buffer.size()));
+
+    for (Index i = 0; i < x.size(); ++i)
+        x(i) = buffer[i];
+}
+
 type round_to_precision(type, const int&);
 
 VectorMap vector_map(const MatrixR&, Index);
 
-TensorMap1 tensor_map(const Tensor2&, Index);
+VectorMap tensor_map(const Tensor2&, Index);
 
-TensorMap2 tensor_map(const Tensor3&, Index);
+MatrixMap tensor_map(const Tensor3&, Index);
 TensorMap3 tensor_map(const Tensor4&, Index);
-TensorMap2 tensor_map(const Tensor4&, Index, Index);
+MatrixMap tensor_map(const Tensor4&, Index, Index);
 
 TensorMap3 tensor_map_(const TensorMap4, Index);
-//TensorMap1 tensor_map_(const TensorMap2&, Index);
+//VectorMap tensor_map_(const MatrixMap&, Index);
 
 inline VectorMap vector_map(const TensorView& tensor_view)
 {
@@ -537,7 +564,6 @@ inline MatrixMap matrix_map(const TensorView& tensor_view)
 }
 
 
-
 template <Index rank>
 TensorMapR<rank> tensor_map(const TensorView& tensor_view)
 {
@@ -550,7 +576,7 @@ TensorMapR<rank> tensor_map(const TensorView& tensor_view)
 
     if constexpr (rank == 2)
         if (tensor_view.rank() == 4)
-            return TensorMap2(tensor_view.data,
+            return MatrixMap(tensor_view.data,
                               tensor_view.shape[0],
                               tensor_view.size() / tensor_view.shape[0]);
 
@@ -558,9 +584,9 @@ TensorMapR<rank> tensor_map(const TensorView& tensor_view)
         throw runtime_error("Dimensions is " + to_string(tensor_view.rank()) + " and must be " + to_string(rank));
 
     if constexpr (rank == 1)
-        return TensorMap1(tensor_view.data, tensor_view.shape[0]);
+        return VectorMap(tensor_view.data, tensor_view.shape[0]);
     else if constexpr (rank == 2)
-        return TensorMap2(tensor_view.data,
+        return MatrixMap(tensor_view.data,
                           tensor_view.shape[0],
                           tensor_view.shape[1]);
     else if constexpr (rank == 3)
@@ -617,7 +643,6 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 }
 
 
-
 template<class T, int n>
 VectorI get_shape(const Tensor<T, n, AlignedMax>& tensor)
 {
@@ -627,7 +652,6 @@ VectorI get_shape(const Tensor<T, n, AlignedMax>& tensor)
 
     return shape;
 }
-
 
 
 template <typename Type, int Rank>

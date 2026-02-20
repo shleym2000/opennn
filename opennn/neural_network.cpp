@@ -1086,7 +1086,7 @@ void NeuralNetwork::load_parameters_binary(const filesystem::path& file_name)
 
     const Index parameters_number = parameters.size();
 
-//    Tensor1 new_parameters(parameters_number);
+//    VectorR new_parameters(parameters_number);
 
     file.read(reinterpret_cast<char*>(parameters.data()), parameters_number * sizeof(type));
 

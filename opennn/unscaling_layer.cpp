@@ -43,11 +43,11 @@ vector<Descriptives> Unscaling::get_descriptives() const
 }
 
 
-Tensor1 Unscaling::get_minimums() const
+VectorR Unscaling::get_minimums() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor1 minimums(outputs_number);
+    VectorR minimums(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -57,11 +57,11 @@ Tensor1 Unscaling::get_minimums() const
 }
 
 
-Tensor1 Unscaling::get_maximums() const
+VectorR Unscaling::get_maximums() const
 {
     const Index outputs_number = get_outputs_number();
 
-    Tensor1 maximums(outputs_number);
+    VectorR maximums(outputs_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < outputs_number; i++)
@@ -251,7 +251,7 @@ void Unscaling::to_XML(XMLPrinter& printer) const
     {
         printer.OpenElement("UnscalingNeuron");
         printer.PushAttribute("Index", int(i + 1));
-        add_xml_element(printer, "Descriptives", tensor_to_string<type, 1>(descriptives[i].to_tensor()));
+        add_xml_element(printer, "Descriptives", vector_to_string(descriptives[i].to_tensor()));
         add_xml_element(printer, "Scaler", scalers[i]);
 
         printer.CloseElement();

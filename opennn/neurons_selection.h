@@ -83,9 +83,9 @@ protected:
 
     VectorI neurons_history;
 
-    Tensor1 validation_error_history;
+    VectorR validation_error_history;
 
-    Tensor1 training_error_history;
+    VectorR training_error_history;
 
     Index minimum_neurons = 0;
 
@@ -125,9 +125,9 @@ struct NeuronsSelectionResults
 
    // Loss index
 
-   Tensor1 training_error_history;
+   VectorR training_error_history;
 
-   Tensor1 validation_error_history;
+   VectorR validation_error_history;
 
    type optimum_training_error = type(10);
 

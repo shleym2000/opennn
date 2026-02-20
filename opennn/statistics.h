@@ -17,7 +17,7 @@ struct Descriptives
 {
     Descriptives(const type = type(NAN), type = type(NAN), type = type(NAN), type = type(NAN));
 
-    Tensor1 to_tensor() const;
+    VectorR to_tensor() const;
 
     void set(const type = type(NAN), type = type(NAN), type = type(NAN), type = type(NAN));
 
@@ -88,9 +88,9 @@ struct Histogram
 
     Index calculate_most_populated_bin() const;
 
-    Tensor1 calculate_minimal_centers() const;
+    VectorR calculate_minimal_centers() const;
 
-    Tensor1 calculate_maximal_centers() const;
+    VectorR calculate_maximal_centers() const;
 
     Index calculate_bin(const type) const;
 
@@ -111,13 +111,13 @@ struct Histogram
 type minimum(const MatrixR&);
 type minimum(const VectorR&, const vector<Index>&);
 //Index minimum(const VectorI&);
-Tensor1 column_minimums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
+VectorR column_minimums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
 
 // Maximum
 type maximum(const MatrixR&);
 type maximum(const VectorR&, const vector<Index>&);
 //Index maximum(const VectorI&);
-Tensor1 column_maximums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
+VectorR column_maximums(const Tensor2&, const vector<Index>& = vector<Index>(), const vector<Index>& = vector<Index>());
 
 // Range
 type range(const VectorR&);
@@ -143,7 +143,7 @@ type variance(const VectorR&, const VectorI&);
 
 // Standard deviation
 type standard_deviation(const VectorR&);
-//type standard_deviation(const Tensor1&, const VectorI&);
+//type standard_deviation(const VectorR&, const VectorI&);
 VectorR standard_deviation(const VectorR&, Index);
 
 // Assymetry

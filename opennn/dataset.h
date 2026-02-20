@@ -186,7 +186,7 @@ public:
     MatrixR get_data_from_indices(const vector<Index>&, const vector<Index>&) const;
 
     VectorR get_sample_data(const Index) const;
-    Tensor1 get_sample_data(const Index, const vector<Index>&) const;
+    VectorR get_sample_data(const Index, const vector<Index>&) const;
     MatrixR get_sample_input_data(const Index) const;
     MatrixR get_sample_target_data(const Index) const;
 
@@ -370,7 +370,7 @@ public:
 
     vector<Descriptives> calculate_testing_target_variable_descriptives() const;
 
-    //Tensor1 calculate_used_variables_minimums() const;
+    //VectorR calculate_used_variables_minimums() const;
 
     VectorR calculate_means(const string& , const string&) const;
 
@@ -408,7 +408,7 @@ public:
 
     // Filtering
 
-    VectorI filter_data(const Tensor1&, const Tensor1&);
+    VectorI filter_data(const VectorR&, const VectorR&);
 
     // Scaling2d
 
@@ -630,13 +630,13 @@ struct Batch
     Dataset* dataset = nullptr;
 
     Shape input_shape;
-    Tensor1 input_tensor;
+    VectorR input_tensor;
 
     Shape decoder_shape;
-    Tensor1 decoder_tensor;
+    VectorR decoder_tensor;
 
     Shape target_shape;
-    Tensor1 target_tensor;
+    VectorR target_tensor;
 };
 
 

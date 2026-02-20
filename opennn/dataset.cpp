@@ -1340,11 +1340,11 @@ VectorR Dataset::get_sample_data(const Index index) const
 }
 
 
-Tensor1 Dataset::get_sample_data(const Index sample_index, const vector<Index>& feature_indices) const
+VectorR Dataset::get_sample_data(const Index sample_index, const vector<Index>& feature_indices) const
 {
     const Index features_number = feature_indices.size();
 
-    Tensor1 row(features_number);
+    VectorR row(features_number);
 
 #pragma omp parallel for
     for(Index i = 0; i < features_number; i++)
@@ -2161,7 +2161,7 @@ vector<Descriptives> Dataset::calculate_testing_target_variable_descriptives() c
 }
 
 
-// Tensor1 Dataset::calculate_used_variables_minimums() const
+// VectorR Dataset::calculate_used_variables_minimums() const
 // {
 //     return column_minimums(data, get_used_sample_indices(), get_used_feature_indices());
 // }
@@ -2318,7 +2318,7 @@ void Dataset::print_top_input_target_variables_correlations() const
 
     const MatrixR correlations = get_correlation_values(calculate_input_target_variable_pearson_correlations());
 
-    Tensor1 target_correlations(inputs_number);
+    VectorR target_correlations(inputs_number);
 
     Tensor<string, 2> top_correlations(inputs_number, 2);
 
@@ -3374,8 +3374,8 @@ void Dataset::set_data_binary_classification()
 }
 
 
-VectorI Dataset::filter_data(const Tensor1& minimums,
-                                      const Tensor1& maximums)
+VectorI Dataset::filter_data(const VectorR& minimums,
+                                      const VectorR& maximums)
 {
     const vector<Index> used_feature_indices = get_used_feature_indices();
 
@@ -3383,7 +3383,7 @@ VectorI Dataset::filter_data(const Tensor1& minimums,
 
     const Index samples_number = get_samples_number();
 
-    Tensor1 filtered_indices(samples_number);
+    VectorR filtered_indices(samples_number);
     filtered_indices.setZero();
 
     const vector<Index> used_sample_indices = get_used_sample_indices();
@@ -4437,7 +4437,7 @@ void Batch::print() const
                                            input_shape[1],
                                            input_shape[2]);
     else if (input_shape.size() == 2)
-        cout << TensorMap2((type*)input_tensor.data(),
+        cout << MatrixMap((type*)input_tensor.data(),
                                            input_shape[0],
                                            input_shape[1]);
 
@@ -4449,7 +4449,7 @@ void Batch::print() const
     cout << "Targets:" << endl
          << "Target shape:" << target_shape << endl;
 */
-    cout << TensorMap2((type*)target_tensor.data(),
+    cout << MatrixMap((type*)target_tensor.data(),
                                        target_shape[0],
                                        target_shape[1]) << endl;
 }

@@ -161,9 +161,9 @@ struct TrainingResults
 
     void resize_validation_error_history(const Index);
 
-    Tensor1 training_error_history;
+    VectorR training_error_history;
 
-    Tensor1 validation_error_history;
+    VectorR validation_error_history;
 
     string elapsed_time;
 

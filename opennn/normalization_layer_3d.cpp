@@ -139,8 +139,8 @@ void Normalization3d::back_propagate(const vector<TensorView>& input_views,
     Normalization3dBackPropagation* this_back_propagation =
         static_cast<Normalization3dBackPropagation*>(back_propagation.get());
 
-    TensorMap1 gamma_derivatives = tensor_map<1>(this_back_propagation->gamma_derivatives);
-    TensorMap1 beta_derivatives = tensor_map<1>(this_back_propagation->beta_derivatives);
+    VectorMap gamma_derivatives = vector_map(this_back_propagation->gamma_derivatives);
+    VectorMap beta_derivatives = vector_map(this_back_propagation->beta_derivatives);
 
     Tensor3& scaled_gradients = this_back_propagation->scaled_gradients;
     Tensor3& standard_deviation_derivatives = this_back_propagation->standard_deviation_derivatives;
