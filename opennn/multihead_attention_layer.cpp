@@ -399,10 +399,11 @@ void MultiHeadAttention::apply_causal_mask(Tensor4& attention_scores) const
 void MultiHeadAttention::apply_key_padding_mask(const MatrixB& key_padding_mask,
                                                 Tensor4& attention_weights) const
 {
+/*
     // @todo (I don't know if it is building the mask correctly)
     const Index batch_size  = attention_weights.dimension(2);
 
-    Tensor2 key_padding_mask_type(key_padding_mask.dimension(0),key_padding_mask.dimension(1));
+    Tensor2 key_padding_mask_type(key_padding_mask.rows(),key_padding_mask.cols());
 
     for(Index h = 0; h < heads_number; ++h)
     {
@@ -411,13 +412,14 @@ void MultiHeadAttention::apply_key_padding_mask(const MatrixB& key_padding_mask,
             TensorMap2 head_sample_attention_weights = tensor_map(attention_weights,h,b);
 
             head_sample_attention_weights.device(*device)
-                += key_padding_mask.chip(b, 0)
+                += key_padding_mask.row(b)
                        .cast<type>()
                        .reshape(array<Index,2>{source_sequence_length, 1})
                        .broadcast(array<Index,2>{1, query_sequence_length})
                    * type(-10e9);
         }
     }
+*/
 }
 
 

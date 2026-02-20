@@ -114,9 +114,7 @@ void CrossEntropyError2d::calculate_binary_output_gradients(const Batch& batch,
 
     // Back propagation
 
-    const TensorView output_gradients_view = back_propagation.get_output_gradients();
-
-    MatrixMap output_gradients = matrix_map(output_gradients_view);
+    MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
     const type epsilon = numeric_limits<type>::epsilon();
 
@@ -146,9 +144,7 @@ void CrossEntropyError2d::calculate_multiple_output_gradients(const Batch& batch
 
     // Back propagation
 
-    const TensorView output_gradients_view = back_propagation.get_output_gradients();
-
-    MatrixMap output_gradients = matrix_map(output_gradients_view);
+    MatrixMap output_gradients = matrix_map(back_propagation.get_output_gradients());
 
     output_gradients.device(*device) = (outputs - targets) / type(samples_number);
 }

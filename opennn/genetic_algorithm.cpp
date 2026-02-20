@@ -248,7 +248,7 @@ void GeneticAlgorithm::initialize_population_random()
 
         fill_n(individual_genes.data(), true_count, true);
 
-        shuffle_tensor(individual_genes);
+        shuffle(individual_genes);
 
         population.row(i) = individual_genes;
     }
@@ -425,7 +425,7 @@ void GeneticAlgorithm::perform_selection()
 
     while (get_selected_individuals_number() < individuals_to_be_selected)
     {
-        const type arrow = random_uniform(type(0), fitness_sum());
+        const type arrow = random_uniform(type(0), fitness_sum);
 
         const Index i = static_cast<Index>(upper_bound(begin, end, arrow) - begin);
 
@@ -436,7 +436,7 @@ void GeneticAlgorithm::perform_selection()
 
 Index GeneticAlgorithm::get_selected_individuals_number() const
 {
-    return count(selection.data(), selection.data() + selection.size(), 1);
+    return count(selection.data(), selection.data() + selection.size(), true);
 }
 
 

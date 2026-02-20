@@ -99,7 +99,7 @@ void WeightedSquaredError::set_weights()
 
     if(target_variables.size() == 1 && target_variables[0].is_binary())
     {
-        const Tensor<Index, 1> target_distribution = dataset->calculate_target_distribution();
+        const VectorI target_distribution = dataset->calculate_target_distribution();
 
         const Index negatives = target_distribution[0];
         const Index positives = target_distribution[1];
@@ -201,7 +201,7 @@ void WeightedSquaredError::calculate_error(const Batch& batch,
 
     const type coefficient = type(total_samples_number) / (type(samples_number) * normalization_coefficient);
 
-    back_propagation.error = (errors.array().square() * errors_weights.array()).sum() * coefficient;
+    error = (errors.array().square() * errors_weights.array()).sum() * coefficient;
 }
 
 

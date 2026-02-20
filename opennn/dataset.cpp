@@ -203,9 +203,9 @@ bool Dataset::is_sample_used(const Index index) const
 }
 
 
-Tensor<Index, 1> Dataset::get_sample_role_numbers() const
+VectorI Dataset::get_sample_role_numbers() const
 {
-    Tensor<Index, 1> count(4);
+    VectorI count(4);
     count.setZero();
 
     const Index samples_number = get_samples_number();
@@ -2228,7 +2228,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_variable_pearson_correlat
         {
             const Index target_variable_index = target_variable_indices[j];
             const MatrixR target_variable_data = get_variable_data(target_variable_index, used_sample_indices);
-            correlations(i, j) = correlation(device.get(), input_variable_data, target_variable_data);
+            correlations(i, j) = correlation(input_variable_data, target_variable_data);
         }
     }
 
@@ -2260,7 +2260,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_target_variable_spearman_correla
         {
             const Index target_index = target_variable_indices[j];
             const MatrixR target_variable_data = get_variable_data(target_index, used_sample_indices);
-            correlations(i, j) = correlation_spearman(device.get(), input_variable_data, target_variable_data);
+            correlations(i, j) = correlation_spearman(input_variable_data, target_variable_data);
         }
     }
 
@@ -2377,7 +2377,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_pearson_correlations() 
             const Index current_input_index_j = input_variable_indices[j];
 
             const MatrixR input_j = get_variable_data(current_input_index_j);
-            correlations_pearson(i, j) = correlation(device.get(), input_i, input_j);
+            correlations_pearson(i, j) = correlation(input_i, input_j);
 
             if (correlations_pearson(i, j).r > type(1) - NUMERIC_LIMITS_MIN)
                 correlations_pearson(i, j).r = type(1);
@@ -2419,7 +2419,7 @@ Tensor<Correlation, 2> Dataset::calculate_input_variable_spearman_correlations()
 
             const MatrixR input_j = get_variable_data(input_variable_index_j);
 
-            correlations_spearman(i, j) = correlation_spearman(device.get(), input_i, input_j);
+            correlations_spearman(i, j) = correlation_spearman(input_i, input_j);
 
             if (correlations_spearman(i, j).r > type(1) - NUMERIC_LIMITS_MIN)
                 correlations_spearman(i, j).r = type(1);
@@ -2695,7 +2695,7 @@ void Dataset::missing_values_to_XML(XMLPrinter &printer) const
     if (missing_values_number > 0)
     {
         add_xml_element(printer, "MissingValuesMethod", get_missing_values_method_string());
-        add_xml_element(printer, "VariablesMissingValuesNumber", tensor_to_string<Index, 1>(variables_missing_values_number));
+        add_xml_element(printer, "VariablesMissingValuesNumber", vector_to_string(variables_missing_values_number));
         add_xml_element(printer, "SamplesMissingValuesNumber", to_string(rows_missing_values_number));
     }
 
@@ -3110,13 +3110,13 @@ void Dataset::load_data_binary()
 }
 
 
-Tensor<Index, 1> Dataset::calculate_target_distribution() const
+VectorI Dataset::calculate_target_distribution() const
 {
     const Index samples_number = get_samples_number();
     const Index targets_number = get_features_number("Target");
     const vector<Index> target_feature_indices = get_feature_indices("Target");
 
-    Tensor<Index, 1> class_distribution;
+    VectorI class_distribution;
 
     if (targets_number == 1)
     {
@@ -3388,7 +3388,7 @@ void Dataset::set_data_binary_classification()
 }
 
 
-Tensor<Index, 1> Dataset::filter_data(const Tensor1& minimums,
+VectorI Dataset::filter_data(const Tensor1& minimums,
                                       const Tensor1& maximums)
 {
     const vector<Index> used_feature_indices = get_used_feature_indices();
@@ -3445,7 +3445,7 @@ Tensor<Index, 1> Dataset::filter_data(const Tensor1& minimums,
                            return value > type(0.5);
                        }));
 
-    Tensor<Index, 1> filtered_samples_indices(filtered_samples_number);
+    VectorI filtered_samples_indices(filtered_samples_number);
 
     Index index = 0;
 
@@ -4163,12 +4163,12 @@ bool Dataset::has_missing_values(const vector<string>& row) const
 }
 
 
-Tensor<Index, 1> Dataset::count_nans_per_variable() const
+VectorI Dataset::count_nans_per_variable() const
 {
     const Index variables_number = get_variables_number();
     const Index rows_number = get_samples_number();
 
-    Tensor<Index, 1> variables_with_nan(variables_number);
+    VectorI variables_with_nan(variables_number);
     variables_with_nan.setZero();
 
 #pragma omp parallel for
@@ -4191,11 +4191,11 @@ Tensor<Index, 1> Dataset::count_nans_per_variable() const
 
 Index Dataset::count_variables_with_nan() const
 {
-    Tensor<Index, 1> variables_with_nan = count_nans_per_variable();
+    VectorI variables_with_nan = count_nans_per_variable();
 
     Index missing_variables_number = 0;
 
-    for(Index i = 0; i < variables_with_nan.dimension(0); i++)
+    for(Index i = 0; i < variables_with_nan.size(); i++)
         if (variables_with_nan(i) > 0)
             missing_variables_number++;
 

@@ -220,8 +220,6 @@ protected:
 
 struct BackPropagationLM
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     BackPropagationLM(const Index = 0, Loss* = nullptr);
     virtual ~BackPropagationLM() = default;
 
@@ -260,8 +258,6 @@ struct BackPropagationLM
 
 struct BackPropagation
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     BackPropagation(const Index = 0, const Loss* = nullptr);
     virtual ~BackPropagation() = default;
 

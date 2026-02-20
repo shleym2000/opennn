@@ -267,7 +267,7 @@ bool Layer::get_is_trainable() const
 }
 
 
-void Layer::add_gradients(const vector<TensorView>&output_gradient_views) const
+void Layer::add_gradients(const vector<TensorView>& output_gradient_views) const
 {
     TensorMap3 output_gradients = tensor_map<3>(output_gradient_views[0]);
 
@@ -314,32 +314,13 @@ void Layer::set_output_shape(const Shape&)
 
 void Layer::softmax(TensorMap2 y) const
 {
-    const Index rows_number = y.dimension(0);
-    const Index columns_number = y.dimension(1);
+    MatrixMap y_map(y.data(), y.dimension(0), y.dimension(1));
 
-    #pragma omp parallel for
-    for(Index i = 0; i < rows_number; i++)
-    {
-        type max_value = -numeric_limits<type>::infinity();
-        for(Index j = 0; j < columns_number; j++)
-            if(y(i, j) > max_value)
-                max_value = y(i, j);
+    y_map.colwise() -= y_map.rowwise().maxCoeff();
 
-        type sum = 0.0;
-        for(Index j = 0; j < columns_number; j++)
-        {
-            y(i, j) = exp(y(i, j) - max_value);
-            sum += y(i, j);
-        }
+    y_map = y_map.array().exp();
 
-        if(sum > 0.0)
-        {
-            const type inv_sum = type(1.0) / sum;
-
-            for(Index j = 0; j < columns_number; j++)
-                y(i, j) *= inv_sum;
-        }
-    }
+    y_map.array().colwise() /= y_map.rowwise().sum().array();
 }
 
 

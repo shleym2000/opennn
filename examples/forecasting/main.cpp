@@ -131,7 +131,7 @@ int main()
             }
         });
         cout << "Inputs: \n" << inputs << endl;
-        const Tensor2 outputs = forecasting_network.calculate_outputs<3,2>(inputs);
+        const MatrixR outputs = forecasting_network.calculate_outputs(inputs);
         cout << "outputs: " << outputs << endl;
 
         /// Pruebas output funcion seno

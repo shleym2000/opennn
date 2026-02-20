@@ -26,8 +26,6 @@ struct NeuralNetworkBackPropagationCuda;
 
 struct ForwardPropagation
 {
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     ForwardPropagation(const Index = 0, NeuralNetwork* = nullptr);
 
     void set(const Index = 0, NeuralNetwork* = nullptr);
@@ -93,8 +91,6 @@ class NeuralNetwork
 {
 
 public:
-
-    //EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     NeuralNetwork();
 
@@ -204,7 +200,7 @@ public:
     void set_parameters_glorot();
 
     // Output
-
+/*
     template <Index input_rank, Index output_rank>
     Tensor<type, output_rank> calculate_outputs(const Tensor<type, input_rank>& inputs)
     {
@@ -252,16 +248,22 @@ public:
 
         return Tensor<type, output_rank>();
     }
+*/
+    Tensor3 calculate_outputs(const Tensor3&, const Tensor3&);
 
-    Tensor3 calculate_outputs(const Tensor3& inputs_1, const Tensor3& inputs_2);
+    TensorView run_internal_forward_propagation(const type*, const Shape&);
 
-    Tensor2 calculate_scaled_outputs(type*, Tensor<Index, 1>& );
+    MatrixR calculate_outputs(const MatrixR&);
 
-    Tensor2 calculate_directional_inputs(const Index, const Tensor1&, type, type, Index = 101) const;
+    MatrixR calculate_outputs(const Tensor3&);
+
+    MatrixR calculate_outputs(const Tensor4&);
+
+    MatrixR calculate_directional_inputs(const Index, const VectorR&, type, type, Index = 101) const;
 
     Index calculate_image_output(const filesystem::path&);
 
-    Tensor2 calculate_text_outputs(const Tensor<string, 1>& input_documents) const;
+    MatrixR calculate_text_outputs(const Tensor<string, 1>&);
 
     // Serialization
 
@@ -284,7 +286,7 @@ public:
     vector<string> get_layer_labels() const;
     vector<string> get_names_string() const;
 
-    void save_outputs(Tensor2&, const filesystem::path&);
+    void save_outputs(MatrixR&, const filesystem::path&);
     void save_outputs(Tensor3&, const filesystem::path&);
 
     void forward_propagate(const vector<TensorView>&,

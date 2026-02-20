@@ -30,8 +30,6 @@ public:
 
     type calculate_normalization_coefficient(const MatrixR&, const VectorR&) const;
 
-    type calculate_time_series_normalization_coefficient(const MatrixR&, const MatrixR&) const;
-
     void calculate_error(const Batch&,
                          const ForwardPropagation&,
                          BackPropagation&) const override;

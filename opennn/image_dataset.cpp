@@ -147,7 +147,7 @@ void ImageDataset::set_data_random()
     }
     else
     {
-        Tensor<Index, 1> images_number(targets_number);
+        VectorI images_number(targets_number);
         images_number.setZero();
 
         const Index images_per_category = samples_number / targets_number;
@@ -447,7 +447,7 @@ void ImageDataset::read_bmp(const Shape& new_input_shape)
 
     const Index folders_number = directory_path.size();
 
-    Tensor<Index, 1> images_number(folders_number + 1);
+    VectorI images_number(folders_number + 1);
     images_number.setZero();
     
     Index samples_number = 0;

@@ -278,7 +278,7 @@ inline array<Index, 5> array_5(const Index a, Index b, Index c, Index d, Index e
     return array<Index, 5>({a, b, c, d, e});
 }
 
-void set_row(Tensor2&, const Tensor1&, Index);
+void set_row(MatrixR&, const VectorR&, Index);
 
 void sum_matrices(const ThreadPoolDevice*, const Tensor1&, Tensor3&);
 
@@ -287,11 +287,7 @@ void multiply_matrices(const ThreadPoolDevice*, Tensor3&, const Tensor2&);
 
 void set_identity(MatrixR&);
 
-void sum_diagonal(MatrixR&, type);
-
 //Tensor2 self_kronecker_product(const ThreadPoolDevice*, const VectorR&);
-
-void divide_columns(const ThreadPoolDevice*, MatrixMap, const VectorR&);
 
 bool is_binary(const VectorR& tensor)
 {
@@ -318,7 +314,7 @@ bool is_binary(const TensorR<Rank>& tensor)
     return true;
 }
 
-Tensor2 append_rows(const Tensor2& , const Tensor2& );
+Tensor2 append_rows(const Tensor2& , const Tensor2&);
 
 template<typename T>
 vector<T> gather_by_index(const vector<T>& data, const vector<Index>& indices)
@@ -406,10 +402,7 @@ vector<Index> get_elements_greater_than(const vector<vector<Index>>&, Index);
 
 MatrixR filter_column_minimum_maximum(const MatrixR&, Index, type, type);
 
-//type l2_distance(const type, const TensorMap<Tensor<type, 0> >&);
-type l2_distance(const Tensor1&, const Tensor1&);
-
-Tensor<Index, 1> get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
+VectorI get_nearest_points(const Tensor2& ,const Tensor<type,1>& , int );
 
 void fill_tensor_data_row_major(const MatrixR&, const vector<Index>&, const vector<Index>&, type*);
 
@@ -433,10 +426,6 @@ bool contains(const vector<string>&, const string&);
 VectorR perform_Householder_QR_decomposition(const MatrixR&, const VectorR&);
 
 vector<Index> join_vector_vector(const vector<Index>&, const vector<Index>&);
-
-MatrixR assemble_vector_vector(const VectorR&, const VectorR&);
-MatrixR assemble_vector_matrix(const VectorR&, const MatrixR&);
-MatrixR assemble_matrix_matrix(const MatrixR&, const MatrixR&);
 
 template <typename T>
 void push_back(Tensor<T, 1, AlignedMax>& tensor, const T& value)
@@ -471,6 +460,17 @@ string vector_to_string(const vector<T>& x, const string& separator = " ")
         if (i < x.size() - 1)
             buffer << separator;
     }
+
+    return buffer.str();
+}
+
+
+string vector_to_string(const VectorI& x, const string& separator = " ")
+{
+    ostringstream buffer;
+
+    for(Index i = 0; i < x.size(); i++)
+        buffer << x(i) << separator;
 
     return buffer.str();
 }
@@ -511,6 +511,19 @@ TensorMap2 tensor_map(const Tensor4&, Index, Index);
 
 TensorMap3 tensor_map_(const TensorMap4, Index);
 //TensorMap1 tensor_map_(const TensorMap2&, Index);
+
+VectorMap vector_map(const TensorView& tensor_view)
+{
+    if(!tensor_view.data)
+        throw runtime_error("tensor_map: Null pointer in pair.");
+
+    if (reinterpret_cast<uintptr_t>(tensor_view.data) % EIGEN_MAX_ALIGN_BYTES != 0)
+        throw runtime_error("tensor_map alignment error: Pointer is not aligned. "
+                            "This will cause a crash with AlignedMax TensorMaps.");
+
+    return VectorMap(tensor_view.data, tensor_view.size() / tensor_view.shape[0]);
+}
+
 
 MatrixMap matrix_map(const TensorView& tensor_view)
 {
@@ -607,9 +620,9 @@ ostream& operator << (ostream& os, const vector<T>& vec)
 
 
 template<class T, int n>
-Tensor<Index, 1> get_shape(const Tensor<T, n, AlignedMax>& tensor)
+VectorI get_shape(const Tensor<T, n, AlignedMax>& tensor)
 {
-    Tensor<Index, 1> shape(n);
+    VectorI shape(n);
 
     memcpy(shape.data(), tensor.dimensions().data(), size_t(n)*sizeof(Index));
 
