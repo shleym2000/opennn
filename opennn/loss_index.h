@@ -325,8 +325,6 @@ struct BackPropagationCuda
     float* matches = nullptr;
     float* mask = nullptr;
     bool built_mask = false;
-
-    cudnnOpTensorDescriptor_t operator_sum_descriptor = nullptr;
 };
 
 #endif

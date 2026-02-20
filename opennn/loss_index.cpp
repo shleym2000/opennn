@@ -1484,13 +1484,6 @@ void BackPropagationCuda::set(const Index new_samples_number, Loss* new_loss)
 
     // Sum
 
-    cudnnCreateOpTensorDescriptor(&operator_sum_descriptor);
-
-    cudnnSetOpTensorDescriptor(operator_sum_descriptor,
-                               CUDNN_OP_TENSOR_ADD,
-                               CUDNN_DATA_FLOAT,
-                               CUDNN_NOT_PROPAGATE_NAN);
-
     //if (is_instance_of<CrossEntropyError3d>(loss_index))
     //{
     /* @todo CudaMalloc transformers GPU
@@ -1567,7 +1560,6 @@ void BackPropagationCuda::free()
     workspace = nullptr;
 
     cudnnDestroyReduceTensorDescriptor(reduce_tensor_descriptor);
-    cudnnDestroyOpTensorDescriptor(operator_sum_descriptor);
     cudnnDestroyTensorDescriptor(output_reduce_tensor_descriptor);
 }
 

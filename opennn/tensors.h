@@ -835,7 +835,6 @@ Index get_size(vector<vector<TensorViewCuda*>>);
 
 #endif
 
-
 class Device
 {
 public:
@@ -852,7 +851,7 @@ public:
 
 private:
     Device();
-    ~Device(); // Added destructor to clean up CUDA context
+    ~Device();
 
     unique_ptr<ThreadPool> thread_pool;
     unique_ptr<ThreadPoolDevice> thread_pool_device;
@@ -865,16 +864,37 @@ private:
 #endif
 };
 
-inline ThreadPoolDevice& get_device() {
+inline ThreadPoolDevice& get_device()
+{
     return *Device::instance().get_thread_pool_device();
 }
+
 void set_threads_number(int num_threads);
 
 #ifdef OPENNN_CUDA
-inline cublasHandle_t get_cublas_handle() { return Device::instance().get_cublas_handle(); }
-inline cudnnHandle_t get_cudnn_handle() { return Device::instance().get_cudnn_handle(); }
-inline cudnnOpTensorDescriptor_t get_operator_sum_descriptor() { return Device::instance().get_operator_sum_descriptor(); }
-inline cudnnOpTensorDescriptor_t get_operator_multiplication_descriptor() { return Device::instance().get_operator_multiplication_descriptor(); }
+    inline cublasHandle_t get_cublas_handle()
+    {
+        return Device::instance().get_cublas_handle();
+    }
+
+
+    inline cudnnHandle_t get_cudnn_handle()
+    {
+        return Device::instance().get_cudnn_handle();
+    }
+
+
+    inline cudnnOpTensorDescriptor_t get_operator_sum_descriptor()
+    {
+        return Device::instance().get_operator_sum_descriptor();
+    }
+
+
+    inline cudnnOpTensorDescriptor_t get_operator_multiplication_descriptor()
+    {
+        return Device::instance().get_operator_multiplication_descriptor();
+    }
+
 #endif
 
 }

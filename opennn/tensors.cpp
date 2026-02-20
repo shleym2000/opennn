@@ -7,7 +7,6 @@
 //   artelnics@artelnics.com
 
 #include "tensors.h"
-
 #include "random_utilities.h"
 
 #include "../eigen/Eigen/Dense"
@@ -794,9 +793,11 @@ void shuffle_rows(MatrixR& matrix)
 
 Device::Device()
 {
-    int num_threads = thread::hardware_concurrency();
-    if (num_threads == 0) num_threads = 1;
-    set_threads_number(num_threads);
+    int max_threads = std::thread::hardware_concurrency();
+    if (max_threads <= 0) max_threads = omp_get_max_threads();
+    if (max_threads <= 0) max_threads = 1;
+
+    set_threads_number(max_threads);
 
 #ifdef OPENNN_CUDA
     CHECK_CUBLAS(cublasCreate(&cublas_handle));
@@ -819,6 +820,23 @@ Device::~Device()
     if (cudnn_handle) cudnnDestroy(cudnn_handle);
 #endif
 }
+
+
+void Device::set_threads_number(int num_threads)
+{
+    if (num_threads <= 0)
+    {
+        num_threads = thread::hardware_concurrency();
+        if (num_threads <= 0) num_threads = omp_get_max_threads();
+        if (num_threads <= 0) num_threads = 1;
+    }
+
+    thread_pool = make_unique<ThreadPool>(num_threads);
+    thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), num_threads);
+
+    omp_set_num_threads(num_threads);
+}
+
 
 #ifdef OPENNN_CUDA
 cublasHandle_t Device::get_cublas_handle() { return cublas_handle; }
