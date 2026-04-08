@@ -74,7 +74,7 @@ int main()
             throw runtime_error("AdaptiveMomentEstimation optimizer not found.");
 
         adam->set_batch_size(16);
-        adam->set_learning_rate(0.0005);
+        adam->set_learning_rate(0.0005F);
         adam->set_maximum_epochs(50);
         adam->set_display_period(5);
 
