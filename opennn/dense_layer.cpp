@@ -33,8 +33,13 @@ namespace opennn
     REGISTER(LayerForwardPropagation, DenseForwardPropagation2d, "Dense2d")
     REGISTER(LayerBackPropagation, DenseBackPropagation2d, "Dense2d")
 
+<<<<<<< HEAD
     //if (get_output_dimensions()[0] == 1 && new_activation_function == "Softmax")
     //    activation_function = "Logistic";
+=======
+    if (get_output_dimensions()[0] == 1 && new_activation_function == "Softmax")
+        activation_function = "Logistic";
+>>>>>>> master
 
 #ifdef OPENNN_CUDA
     REGISTER(LayerForwardPropagationCuda, DenseForwardPropagationCuda2d, "Dense2d")

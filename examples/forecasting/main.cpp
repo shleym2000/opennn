@@ -22,6 +22,11 @@
 #include "../../opennn/standard_networks.h"
 #include "../../opennn/normalized_squared_error.h"
 #include "../../opennn/training_strategy.h"
+#include "../../opennn/adaptive_moment_estimation.h"
+#include "../../opennn/quasi_newton_method.h"
+#include "../../opennn/stochastic_gradient_descent.h"
+#include "../../opennn/testing_analysis.h"
+#include "../../opennn/recurrent_layer.h"
 
 using namespace opennn;
 
