@@ -601,6 +601,8 @@ void LanguageDataset::from_XML(const XMLDocument& data_set_document)
 
     set_display(read_xml_bool(data_set_element, "Display"));
 
+    has_header = false;
+
     ifstream file(data_path);
 
     if(!file.is_open())
