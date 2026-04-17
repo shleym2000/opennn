@@ -19,6 +19,7 @@
 #include "../../opennn/standard_networks.h"
 #include "../../opennn/normalized_squared_error.h"
 #include "../../opennn/training_strategy.h"
+#include "../../opennn/adaptive_moment_estimation.h"
 
 using namespace opennn;
 
