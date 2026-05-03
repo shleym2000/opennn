@@ -41,6 +41,12 @@ void NormalizedSquaredError::set_normalization_coefficient()
         return;
     }
 
+    if(has_neural_network() && neural_network->has("Recurrent"))
+    {
+        set_time_series_normalization_coefficient();
+        return;
+    }
+
     const VectorR training_target_means = dataset->calculate_means("Training", "Target");
     const MatrixR training_target_data = dataset->get_data("Training", "Target");
 
@@ -53,7 +59,9 @@ void NormalizedSquaredError::set_time_series_normalization_coefficient()
     const MatrixR targets = dataset->get_feature_data("Target");
     const Index rows = targets.rows() - 1;
 
-    normalization_coefficient = (targets.topRows(rows) - targets.bottomRows(rows)).squaredNorm();
+    const type raw = (targets.topRows(rows) - targets.bottomRows(rows)).squaredNorm();
+
+    normalization_coefficient = (raw < EPSILON) ? type(1) : raw;
 }
 
 
