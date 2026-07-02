@@ -33,13 +33,13 @@
 #include "../../opennn/optimizer.h"
 #include "../../opennn/variable.h"
 #include "../../opennn/response_optimization.h"
-#include "adaptive_moment_estimation.h"
-#include "recurrent_layer.h"
-#include "time_series_dataset.h"
-#include "dense_layer.h"
-#include "growing_neurons.h"
-#include "normalized_squared_error.h"
-#include "registry.h"
+#include "../../opennn/adaptive_moment_estimation.h"
+#include "../../opennn/recurrent_layer.h"
+#include "../../opennn/time_series_dataset.h"
+#include "../../opennn/dense_layer.h"
+#include "../../opennn/growing_neurons.h"
+#include "../../opennn/normalized_squared_error.h"
+#include "../../opennn/registry.h"
 
 using namespace opennn;
 
@@ -115,7 +115,7 @@ int main()
         time_series_dataset.set_shape("Target", {targets_count});
 
         time_series_dataset.set_default_variable_scalers();
-        time_series_dataset.split_samples_sequential(0.7, 0.15, 0.15);
+        time_series_dataset.split_samples_sequential(0.7F, 0.15F, 0.15F);
 
         cout << "Inputs: "  << inputs_count
              << ", Targets: " << targets_count << endl;
@@ -198,7 +198,7 @@ int main()
             growing_neurons->set_maximum_neurons(60);
             growing_neurons->set_neurons_increment(5);
             growing_neurons->set_trials_number(1);
-            growing_neurons->set_maximum_time(1e12);
+            growing_neurons->set_maximum_time(1e12F);
 
             NeuronsSelectionResults neuron_results = model_selection.perform_neurons_selection();
 
@@ -332,7 +332,7 @@ int main()
 
             resp_opt.set_iterations(15);
             resp_opt.set_evaluations_number(1000);
-            resp_opt.set_zoom_factor(0.7);
+            resp_opt.set_zoom_factor(0.7F);
 
             MatrixR results = resp_opt.perform_response_optimization();
 
